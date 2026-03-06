@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nexus"
+version = "0.1.0"
+description = "NEXUS - Agentic AI Company as a Service"
+requires-python = ">=3.12"
+dependencies = [
+    # API Framework
+    "litestar[standard]>=2.15.0,<3.0",
+    # ORM + Database
+    "advanced-alchemy[litestar]>=0.28.0,<1.0",
+    "asyncpg>=0.30.0,<1.0",
+    "alembic>=1.14.0,<2.0",
+    "pgvector>=0.3.6,<1.0",
+    # AI Framework
+    "pydantic-ai[anthropic,google]>=0.1.0,<1.0",
+    # Validation
+    "pydantic>=2.10.0,<3.0",
+    "pydantic-settings>=2.7.0,<3.0",
+    # Kafka
+    "aiokafka>=0.12.0,<1.0",
+    # Redis
+    "redis[hiredis]>=5.2.0,<6.0",
+    # Task Queue
+    "taskiq>=0.11.0,<1.0",
+    "taskiq-aio-kafka>=0.3.0,<1.0",
+    "taskiq-redis>=1.0.0,<2.0",
+    # Logging
+    "structlog>=24.4.0,<25.0",
+    # HTTP client (for A2A outbound, embeddings)
+    "httpx>=0.28.0,<1.0",
+    # Utilities
+    "uvicorn[standard]>=0.34.0,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0,<9.0",
+    "pytest-asyncio>=0.25.0,<1.0",
+    "pytest-cov>=6.0.0,<7.0",
+    "ruff>=0.9.0,<1.0",
+    "mypy>=1.14.0,<2.0",
+    "httpx>=0.28.0,<1.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "C4",  # flake8-comprehensions
+    "T20", # flake8-print (bans print())
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nexus"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aiokafka.*",
+    "taskiq.*",
+    "taskiq_aio_kafka.*",
+    "taskiq_redis.*",
+    "advanced_alchemy.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["nexus/tests"]
+filterwarnings = ["error"]

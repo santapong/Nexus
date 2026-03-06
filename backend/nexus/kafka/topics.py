@@ -1,0 +1,34 @@
+from __future__ import annotations
+
+
+class Topics:
+    """All Kafka topic names. Single source of truth.
+
+    No hardcoded topic strings anywhere else in the codebase.
+    """
+
+    TASK_QUEUE = "task.queue"
+    TASK_RESULTS = "task.results"
+    TASK_REVIEW_QUEUE = "task.review_queue"
+    AGENT_COMMANDS = "agent.commands"
+    AGENT_RESPONSES = "agent.responses"
+    MEETING_ROOM = "meeting.room"
+    MEMORY_UPDATES = "memory.updates"
+    TOOLS_REQUESTS = "tools.requests"
+    TOOLS_RESPONSES = "tools.responses"
+    AUDIT_LOG = "audit.log"
+    AGENT_HEARTBEAT = "agent.heartbeat"
+    HUMAN_INPUT_NEEDED = "human.input_needed"
+    A2A_INBOUND = "a2a.inbound"
+    PROMPT_IMPROVEMENT = "prompt.improvement_requests"
+    PROMPT_BENCHMARK = "prompt.benchmark_requests"
+    PROMPT_PROPOSALS = "prompt.proposals"
+
+    @classmethod
+    def all_topics(cls) -> list[str]:
+        """Return all topic names for creation at startup."""
+        return [
+            v
+            for k, v in vars(cls).items()
+            if not k.startswith("_") and isinstance(v, str) and k != "all_topics"
+        ]

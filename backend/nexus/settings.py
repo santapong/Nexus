@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from decimal import Decimal
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables only."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+
+    # Database
+    database_url: str = "postgresql+asyncpg://nexus:nexus_dev@localhost:5432/nexus"
+
+    # Redis
+    redis_url: str = "redis://localhost:6379"
+
+    # Kafka
+    kafka_bootstrap_servers: str = "localhost:9092"
+
+    # LLM API Keys
+    anthropic_api_key: str = ""
+    google_api_key: str = ""
+
+    # Cost Controls
+    daily_spend_limit_usd: Decimal = Decimal("5.00")
+    default_token_budget_per_task: int = 50_000
+
+    # Application
+    app_env: str = "development"
+    log_level: str = "INFO"
+
+    # Agent Model Map (role -> model name)
+    model_ceo: str = "claude-sonnet-4-20250514"
+    model_engineer: str = "claude-sonnet-4-20250514"
+    model_analyst: str = "gemini-2.0-flash"
+    model_writer: str = "claude-haiku-4-5-20251001"
+    model_qa: str = "claude-haiku-4-5-20251001"
+    model_prompt_creator: str = "claude-sonnet-4-20250514"
+
+    @property
+    def is_development(self) -> bool:
+        return self.app_env == "development"
+
+
+settings = Settings()
