@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.agents.base import AgentBase
 from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand, AgentResponse
-from nexus.llm.usage import record_usage
+from nexus.llm.usage import calculate_cost, record_usage
 
 logger = structlog.get_logger()
 
@@ -66,14 +66,15 @@ class EngineerAgent(AgentBase):
             output_tokens = usage.response_tokens or 0
             total_tokens = input_tokens + output_tokens
 
+            model_name = str(self.llm_agent.model)
             await record_usage(
                 session=session,
                 task_id=task_id,
                 agent_id=self.agent_id,
-                model_name=str(self.llm_agent.model),
+                model_name=model_name,
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
-                cost_usd=0.0,  # TODO: calculate from model pricing
+                cost_usd=calculate_cost(model_name, input_tokens, output_tokens),
             )
         except Exception as exc:
             logger.warning(

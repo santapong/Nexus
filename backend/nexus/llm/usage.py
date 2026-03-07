@@ -9,6 +9,36 @@ from nexus.settings import settings
 
 logger = structlog.get_logger()
 
+# Cost per 1 million tokens (input, output) in USD
+_MODEL_PRICING: dict[str, dict[str, float]] = {
+    "claude-opus-4-6": {"input": 15.0, "output": 75.0},
+    "claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
+    "claude-sonnet-4-20250514": {"input": 3.0, "output": 15.0},
+    "claude-haiku-4-5-20251001": {"input": 0.25, "output": 1.25},
+    "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+    "gemini-1.5-pro": {"input": 1.25, "output": 5.0},
+}
+
+
+def calculate_cost(model_name: str, input_tokens: int, output_tokens: int) -> float:
+    """Calculate USD cost for an LLM call.
+
+    Args:
+        model_name: Model identifier (e.g. 'claude-sonnet-4-20250514').
+        input_tokens: Number of input/prompt tokens.
+        output_tokens: Number of output/completion tokens.
+
+    Returns:
+        Cost in USD, or 0.0 if model pricing is unknown.
+    """
+    pricing = _MODEL_PRICING.get(model_name)
+    if not pricing:
+        logger.warning("unknown_model_pricing", model_name=model_name)
+        return 0.0
+    return (
+        input_tokens * pricing["input"] + output_tokens * pricing["output"]
+    ) / 1_000_000
+
 
 async def check_daily_spend() -> bool:
     """Check if daily spend limit has been reached.

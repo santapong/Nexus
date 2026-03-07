@@ -1,0 +1,171 @@
+"""Task result consumer — bridges agent.responses to task DB updates.
+
+Consumes AgentResponse messages from agent.responses topic, updates task
+status in PostgreSQL, publishes final results to task.results, and
+broadcasts events via Redis pub/sub for WebSocket streaming.
+"""
+from __future__ import annotations
+
+import json
+from collections.abc import Callable
+from datetime import datetime, timezone
+from typing import Any
+
+import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from nexus.db.models import Task, TaskStatus
+from nexus.kafka.consumer import check_idempotency, create_consumer
+from nexus.kafka.producer import publish
+from nexus.kafka.schemas import AgentResponse, TaskResult
+from nexus.kafka.topics import Topics
+from nexus.redis.clients import redis_pubsub
+
+logger = structlog.get_logger()
+
+
+async def run_result_consumer(db_session_factory: Callable[..., Any]) -> None:
+    """Consume agent.responses and update task state to completion.
+
+    This consumer closes the task lifecycle loop by:
+    1. Receiving AgentResponse messages from all agents
+    2. Updating task status, output, and completion time in PostgreSQL
+    3. Publishing TaskResult to task.results topic
+    4. Broadcasting events via Redis pub/sub for WebSocket dashboard
+
+    Runs indefinitely until stopped. Idempotent — duplicate messages are skipped.
+    """
+    consumer = await create_consumer(
+        Topics.AGENT_RESPONSES, group_id="result-consumer"
+    )
+    logger.info("result_consumer_started")
+
+    try:
+        async for msg in consumer:
+            try:
+                await _handle_response(msg.value, db_session_factory)
+            except Exception as exc:
+                logger.error(
+                    "result_consumer_message_error",
+                    error=str(exc),
+                    exc_info=True,
+                )
+    finally:
+        await consumer.stop()
+        logger.info("result_consumer_stopped")
+
+
+async def _handle_response(
+    raw: dict[str, Any],
+    db_session_factory: Callable[..., Any],
+) -> None:
+    """Process a single AgentResponse message."""
+    try:
+        response = AgentResponse.model_validate(raw)
+    except Exception:
+        logger.warning(
+            "result_consumer_invalid_message",
+            raw_keys=list(raw.keys()),
+        )
+        return
+
+    msg_id = str(response.message_id)
+    task_id = str(response.task_id)
+
+    # Idempotency: skip already-processed responses
+    is_new = await check_idempotency(f"result:{msg_id}")
+    if not is_new:
+        logger.info(
+            "result_consumer_duplicate_skipped",
+            message_id=msg_id,
+            task_id=task_id,
+        )
+        return
+
+    # Skip delegation-only responses from CEO (no real task output)
+    if response.output and response.output.get("action") == "delegated_to_engineer":
+        logger.debug("result_consumer_skip_delegation", task_id=task_id)
+        return
+
+    # Map agent response status to task status
+    task_status = _map_status(response.status)
+
+    # Update task in DB
+    async with db_session_factory() as session:
+        await _update_task_in_db(session, task_id, task_status, response)
+        await session.commit()
+
+    # Publish final result to task.results topic
+    task_result = TaskResult(
+        task_id=response.task_id,
+        trace_id=response.trace_id,
+        agent_id=response.agent_id,
+        payload={},
+        status=task_status,
+        output=response.output,
+        error=response.error,
+    )
+    await publish(Topics.TASK_RESULTS, task_result, key=task_id)
+
+    # Broadcast to Redis pub/sub for WebSocket dashboard
+    event = {
+        "event": "task_result",
+        "task_id": task_id,
+        "status": task_status,
+        "output": response.output,
+        "error": response.error,
+        "tokens_used": response.tokens_used,
+    }
+    await redis_pubsub.publish(
+        f"agent_activity:{task_id}", json.dumps(event)
+    )
+
+    logger.info(
+        "task_result_processed",
+        task_id=task_id,
+        status=task_status,
+        agent_id=response.agent_id,
+        tokens_used=response.tokens_used,
+    )
+
+
+def _map_status(agent_status: str) -> str:
+    """Map AgentResponse status to TaskStatus value."""
+    mapping = {
+        "success": TaskStatus.COMPLETED.value,
+        "failed": TaskStatus.FAILED.value,
+        "partial": TaskStatus.FAILED.value,
+        "escalated": TaskStatus.ESCALATED.value,
+    }
+    return mapping.get(agent_status, TaskStatus.COMPLETED.value)
+
+
+async def _update_task_in_db(
+    session: AsyncSession,
+    task_id: str,
+    status: str,
+    response: AgentResponse,
+) -> None:
+    """Update task record with completion data."""
+    stmt = select(Task).where(Task.id == task_id)
+    result = await session.execute(stmt)
+    task = result.scalar_one_or_none()
+
+    if task is None:
+        logger.warning("result_consumer_task_not_found", task_id=task_id)
+        return
+
+    task.status = status
+    task.output = response.output
+    task.error = response.error
+    task.tokens_used = response.tokens_used
+    task.completed_at = datetime.now(timezone.utc)
+    session.add(task)
+
+    logger.info(
+        "task_db_updated",
+        task_id=task_id,
+        status=status,
+        tokens_used=response.tokens_used,
+    )
