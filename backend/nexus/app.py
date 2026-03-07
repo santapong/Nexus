@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import structlog
 from advanced_alchemy.extensions.litestar import SQLAlchemyPlugin
 from litestar import Litestar
@@ -10,10 +12,33 @@ from nexus.db.session import sqlalchemy_config
 from nexus.kafka.producer import close_producer
 from nexus.settings import settings
 
+logger = structlog.get_logger()
+
+# Background agent tasks — kept alive for the app lifetime
+_agent_tasks: list[asyncio.Task[None]] = []
+
+
+async def _on_startup() -> None:
+    """Start all agents and result consumer as background tasks."""
+    try:
+        from nexus.agents.runner import start_all_agents
+
+        tasks = await start_all_agents()
+        _agent_tasks.extend(tasks)
+        logger.info("agents_started_on_startup", count=len(tasks))
+    except Exception as exc:
+        # Log but don't crash the API — agents may start later via runner
+        logger.error("agent_startup_failed", error=str(exc), exc_info=True)
+
 
 async def _on_shutdown() -> None:
-    """Gracefully close Kafka producer on app shutdown."""
+    """Gracefully stop agents and Kafka producer on app shutdown."""
+    for task in _agent_tasks:
+        task.cancel()
+    if _agent_tasks:
+        await asyncio.gather(*_agent_tasks, return_exceptions=True)
     await close_producer()
+    logger.info("app_shutdown_complete")
 
 
 def create_app() -> Litestar:
@@ -42,6 +67,7 @@ def create_app() -> Litestar:
         route_handlers=[api_router, health_router],
         plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
         cors_config=cors_config,
+        on_startup=[_on_startup],
         on_shutdown=[_on_shutdown],
         debug=settings.is_development,
     )
