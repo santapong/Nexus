@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-07] — Add full setup and start script
+
+### Added
+- `scripts/setup.sh` — Single command to go from fresh clone to running application.
+  Checks prerequisites (Docker, Docker Compose), creates `.env` from template, builds
+  containers, starts all 5 services, waits for health checks, runs migrations, seeds
+  the database, and prints access URLs. Idempotent — safe to re-run.
+
+### Changed
+- `Makefile` — Added `setup` target that runs `scripts/setup.sh`
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-07] — Populate documentation with starter content from CLAUDE.md
 
 ### Added
