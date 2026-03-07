@@ -30,6 +30,9 @@
 | ADR-008 | Kafka fallback: Redis Streams if Kafka unstable in Phase 1 | accepted | 2026-03 |
 | ADR-009 | PostgreSQL as sole source of truth — Redis is volatile | accepted | 2026-03 |
 | ADR-010 | Reject LangGraph — conflicts with Kafka orchestration | accepted | 2026-03 |
+| ADR-011 | Semantic memory contradiction resolution strategy | proposed | 2026-03-07 |
+| ADR-012 | Log aggregation approach for v1 | proposed | 2026-03-07 |
+| ADR-013 | Meeting room termination signal | proposed | 2026-03-07 |
 
 ---
 
@@ -423,11 +426,142 @@ superseding ADR with clear justification of how it avoids the dual-orchestration
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-011 -->
+## ADR-011 — Semantic memory contradiction resolution strategy
+
+**Date:** 2026-03-07
+**Status:** proposed
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §12, §25
+**Supersedes:** n/a
+
+### Context
+
+The `semantic_memory` table has a UNIQUE constraint on `(agent_id, namespace, key)`, which
+means writes to the same key are upserts. When two tasks produce conflicting values for the
+same semantic fact (e.g., "preferred_testing_framework" set to "pytest" by one task and
+"unittest" by another), we need a deterministic resolution strategy.
+
+This must be decided before agents start writing semantic memory in Phase 1, otherwise
+conflicting writes will silently overwrite each other with no traceability.
+
+### Options under consideration
+
+**Option A: Newest wins (simple upsert)**
+- Pros: Simplest implementation — just overwrite on conflict. No extra logic needed.
+- Cons: A later task with bad information silently overwrites correct knowledge.
+  No way to detect or recover from an incorrect overwrite.
+
+**Option B: Highest confidence wins**
+- Pros: Each write carries a `confidence` float (0-1). Higher confidence overwrites lower.
+  Allows the system to express certainty levels.
+- Cons: Confidence is set by the agent — an agent that's wrong but confident wins.
+  Requires a confidence calibration strategy.
+
+**Option C: Human resolves conflicts**
+- Pros: Safest — publish to `human.input_needed` when a conflict is detected.
+  Human picks the correct value. Zero risk of silent corruption.
+- Cons: Slowest. Creates friction if conflicts are frequent. May not scale in Phase 4.
+
+**Option D: Newest wins + audit trail**
+- Pros: Same simplicity as Option A, but the old value is logged to `audit_log` before
+  overwrite. Humans can review overwrites asynchronously. Balances speed and safety.
+- Cons: Slightly more write overhead. Requires monitoring audit log for suspicious overwrites.
+
+### Recommended direction
+
+Option D (newest wins + audit trail) appears to balance simplicity with traceability.
+Awaiting human review before accepting.
 
 ---
 
-*Last updated: 2026-03*
-*Next ADR ID: ADR-011*
-*Decision count: 10 accepted*
+## ADR-012 — Log aggregation approach for v1
+
+**Date:** 2026-03-07
+**Status:** proposed
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §25, §23 Prevention Rule 5
+**Supersedes:** n/a
+
+### Context
+
+CLAUDE.md specifies structured JSON logging with `task_id` on every line. The open question
+is where these logs go: file-based JSON, Loki, or OpenSearch. This decision is marked
+"Medium priority — decide before Phase 3" in CLAUDE.md §25 but the logging infrastructure
+should be in place from Phase 0.
+
+### Options under consideration
+
+**Option A: File-based JSON logs (stdout + Docker log driver)**
+- Pros: Zero infrastructure. Docker captures stdout automatically. Can use `docker compose logs`
+  and `jq` for filtering. No new services in docker-compose.yml.
+- Cons: No search UI. Hard to query across multiple services. Logs rotate and disappear.
+  Not suitable for production.
+
+**Option B: Loki + Grafana**
+- Pros: Purpose-built for log aggregation. Grafana provides search UI. Lightweight compared
+  to OpenSearch. Docker Compose compatible.
+- Cons: Two additional services (Loki + Grafana). Configuration overhead. Overkill for solo v1.
+
+**Option C: OpenSearch**
+- Pros: Full-text search, rich dashboards, handles high volume.
+- Cons: Heavy resource usage (Java-based). Three additional services (OpenSearch + Dashboards +
+  log shipper). Significant infrastructure overhead for v1.
+
+### Recommended direction
+
+Option A for Phases 0-2 (file-based JSON to stdout, query with `jq`). Revisit for Loki in
+Phase 3 when observability hardening begins. See BACKLOG-006.
+
+---
+
+## ADR-013 — Meeting room termination signal
+
+**Date:** 2026-03-07
+**Status:** proposed
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §10, §25
+**Supersedes:** n/a
+
+### Context
+
+The meeting room pattern uses temporary Kafka topics (`meeting.room.{task_id}`) for multi-agent
+collaboration. When agents join a meeting to discuss and resolve a complex task, something must
+signal that the meeting is over and the result should be finalized. Without a clear termination
+signal, meetings can run indefinitely, consuming tokens and blocking task completion.
+
+### Options under consideration
+
+**Option A: CEO-initiated timeout**
+- Pros: Simple — CEO sets a max duration or max rounds when creating the meeting.
+  When the limit is reached, CEO summarizes and closes.
+- Cons: Fixed timeout may cut off productive discussions early or wait too long for
+  simple decisions.
+
+**Option B: Explicit consensus vote**
+- Pros: Each agent signals "I'm done" when they have nothing more to contribute.
+  Meeting closes when all participants have signaled.
+- Cons: Requires a voting protocol. An agent that never signals blocks everyone.
+  Needs a fallback timeout anyway.
+
+**Option C: CEO decides + timeout fallback**
+- Pros: CEO monitors the discussion and closes the meeting when it judges the question
+  is resolved. If CEO doesn't close within a configurable timeout, the meeting auto-closes
+  with a summary of what was discussed.
+- Cons: Requires CEO to actively monitor meeting topics (additional consumer subscription).
+
+### Recommended direction
+
+Option C (CEO decides + timeout fallback) provides the most natural flow. CEO is already
+the orchestrator — it should own meeting lifecycle. Timeout provides a safety net.
+See BACKLOG-004.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-014 -->
+
+---
+
+*Last updated: 2026-03-07*
+*Next ADR ID: ADR-014*
+*Decision count: 10 accepted, 3 proposed*
