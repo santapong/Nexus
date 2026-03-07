@@ -74,8 +74,98 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
-<!-- ERROR LOG IS EMPTY — project has not started coding yet -->
-<!-- First error entry will be ERROR-001 -->
+## ERROR-003 — PRE-BUILD WARNING: Irreversible tool action before approval flow exists
+
+**Date:** 2026-03-07
+**Severity:** critical
+**Status:** open
+**Found by:** claude_code during pre-build documentation review
+**Affected files:** `nexus/tools/adapter.py`, `nexus/tools/guards.py`, `nexus/db/models.py`
+
+### What happened
+This is a pre-build warning, not a discovered bug. CLAUDE.md §23 Prevention Rule 4
+identifies a critical risk: if any agent runs before `require_approval()` and the
+`human_approvals` table exist, irreversible tools (file_write, git_push, send_email)
+could execute without human consent.
+
+### Root cause
+The approval flow is infrastructure, not a feature. If treated as a Phase 2 feature,
+agents in Phase 1 testing could trigger irreversible actions with no safety gate.
+
+### Fix needed
+Build `require_approval()` guard in `tools/guards.py` and `human_approvals` table
+migration during Phase 0 (Day 2-3), before any agent code runs. All irreversible tools
+must be disabled by default in Phase 1 testing until the approval UI is functional.
+
+### Prevention
+- Phase 0 gate: `human_approvals` table must exist before any agent runs
+- Phase 1 gate: `require_approval()` guard must be unit tested before wiring to adapter.py
+- CI: adapter.py must not import any irreversible tool function without a corresponding
+  `require_approval()` call (enforce via behavior test)
+
+---
+
+## ERROR-002 — PRE-BUILD WARNING: Unbounded agent loop cost explosion
+
+**Date:** 2026-03-07
+**Severity:** critical
+**Status:** open
+**Found by:** claude_code during pre-build documentation review
+**Affected files:** `nexus/agents/base.py`, `nexus/llm/usage.py`, `nexus/redis/clients.py`
+
+### What happened
+This is a pre-build warning, not a discovered bug. CLAUDE.md §23 Prevention Rule 2
+identifies a critical risk: without token budget enforcement, a single multi-agent task
+could burn $50+ in LLM API costs before anyone notices. Agent loops (tool call -> LLM ->
+tool call) can iterate indefinitely if not bounded.
+
+### Root cause
+LLM API calls have real cost. Without a hard cap checked before every call, there is no
+upper bound on spending per task or per day.
+
+### Fix needed
+Implement before any real LLM call runs:
+1. Redis db:1 token tracker: `token_budget:{task_id}` with per-task limit (default 50,000)
+2. Daily spending cap: `daily_spend:{date}` with $5/day hard limit
+3. `AgentBase._check_budget()` called before every `self.llm.run()` call
+4. At 90% budget: pause task, publish to `human.input_needed`
+5. 20-tool-call limit per task (CLAUDE.md §20 Rule 4)
+
+### Prevention
+- Phase 0 gate: Redis token tracker keys must be writable before agent code runs
+- Phase 1 gate: `_check_budget()` must be unit tested with boundary cases (89%, 90%, 100%)
+- Behavior test: agent with budget=100 tokens must pause and publish to human.input_needed
+
+---
+
+## ERROR-001 — PRE-BUILD WARNING: Building orchestration before core agent loop works
+
+**Date:** 2026-03-07
+**Severity:** high
+**Status:** open
+**Found by:** claude_code during pre-build documentation review
+**Affected files:** `nexus/agents/base.py`
+
+### What happened
+This is a pre-build warning, not a discovered bug. CLAUDE.md §23 Prevention Rule 1
+identifies a high risk: if multi-agent orchestration (CEO delegation, meeting rooms,
+QA pipeline) is built before the core single-agent loop is proven reliable, a bug in
+AgentBase will cascade to every agent and invalidate weeks of work.
+
+### Root cause
+AgentBase is the most critical class in the system. Every agent inherits from it.
+Its guard chain (idempotency -> budget -> load memory -> handle_task -> write memory ->
+publish -> broadcast) must work flawlessly before any multi-agent interaction is attempted.
+
+### Fix needed
+Phase 1 must produce exactly ONE working agent (Engineer) with a proven guard chain.
+The 50-task stress test (pass rate >= 90%) is the hard gate before Phase 2 starts.
+Do not build CEO delegation, meeting rooms, or QA review pipeline until this gate passes.
+
+### Prevention
+- Phase 1 DoD: 50-task stress test at >= 90% pass rate
+- Phase 2 is BLOCKED until this gate clears
+- Behavior tests for every step in the guard chain must pass before stress test
 
 ---
 
@@ -137,5 +227,5 @@ outside of `kafka/topics.py`.
 
 ---
 
-*Last updated: 2026-03-06*
-*Next error ID: ERROR-001*
+*Last updated: 2026-03-07*
+*Next error ID: ERROR-004*

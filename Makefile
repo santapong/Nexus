@@ -1,4 +1,7 @@
-.PHONY: up down logs migrate seed test-unit test-behavior test-e2e test-all kafka-test kafka-topics shell-db shell-redis lint typecheck
+.PHONY: setup up down logs migrate seed test-unit test-behavior test-e2e test-all kafka-test kafka-topics shell-db shell-redis lint typecheck
+
+setup:
+	bash scripts/setup.sh
 
 up:
 	docker compose up -d

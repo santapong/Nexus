@@ -40,6 +40,51 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-07] — Add full setup and start script
+
+### Added
+- `scripts/setup.sh` — Single command to go from fresh clone to running application.
+  Checks prerequisites (Docker, Docker Compose), creates `.env` from template, builds
+  containers, starts all 5 services, waits for health checks, runs migrations, seeds
+  the database, and prints access URLs. Idempotent — safe to re-run.
+
+### Changed
+- `Makefile` — Added `setup` target that runs `scripts/setup.sh`
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
+## [2026-03-07] — Populate documentation with starter content from CLAUDE.md
+
+### Added
+- `BACKLOG.md` — 9 backlog items (BACKLOG-001 through BACKLOG-009) sourced from CLAUDE.md
+  §25 open questions and §24 prerequisites. Covers: MCP package audit, Engineer prompt
+  testing, semantic memory contradiction handling, meeting room termination, embedding
+  timing, log aggregation, secrets management, agent naming, and Kafka fallback decision.
+- `DECISIONS.md` — 3 proposed ADRs (ADR-011 through ADR-013) for open architectural
+  questions: semantic memory contradiction resolution, log aggregation approach, and
+  meeting room termination signal. Each includes options analysis and recommended direction.
+- `ERRORLOG.md` — 3 pre-build risk warnings (ERROR-001 through ERROR-003) derived from
+  CLAUDE.md §23 Prevention Rules. Covers: building orchestration before core loop works,
+  unbounded agent loop cost explosion, and irreversible tool actions before approval flow.
+
+### Changed
+- `CHANGELOG.md` — added this entry documenting the documentation population work
+
+### Status at this entry
+- All design complete. No code written yet.
+- Documentation now fully seeded with actionable items for Phase 0 kickoff.
+- Next action: Phase 0 scaffolding (create directory structure, pyproject.toml, docker-compose.yml)
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-06] — Initial project planning complete — pre-build baseline
 
 ### Added
