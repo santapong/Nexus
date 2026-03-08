@@ -6,6 +6,7 @@ Or import start_all_agents() for Litestar startup integration.
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import structlog
 from sqlalchemy import select
@@ -96,7 +97,7 @@ async def main() -> None:
             structlog.dev.ConsoleRenderer(),
         ],
         wrapper_class=structlog.make_filtering_bound_logger(
-            structlog.get_level_from_name(settings.log_level)
+            getattr(logging, settings.log_level.upper(), logging.INFO)
         ),
     )
 

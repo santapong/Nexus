@@ -344,7 +344,7 @@ class AgentBase(ABC):
                 producer = await get_producer()
                 await producer.send_and_wait(
                     Topics.AGENT_HEARTBEAT,
-                    value=json.dumps(hb.model_dump(mode="json")).encode("utf-8"),
+                    value=hb.model_dump(mode="json"),
                 )
             except Exception as exc:
                 logger.warning(

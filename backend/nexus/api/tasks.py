@@ -56,6 +56,7 @@ class TaskController(Controller):
         )
         db_session.add(task)
         await db_session.flush()
+        await db_session.commit()
 
         logger.info(
             "task_created",

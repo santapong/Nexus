@@ -38,9 +38,9 @@ class ModelFactory:
         model_name = override or _AGENT_MODEL_MAP[role]
 
         if model_name.startswith("claude"):
-            return AnthropicModel(model_name, api_key=settings.anthropic_api_key)
+            return AnthropicModel(model_name)
         if model_name.startswith("gemini"):
-            return GeminiModel(model_name, api_key=settings.google_api_key)
+            return GeminiModel(model_name)
 
         msg = f"Unknown model: {model_name}"
         raise ValueError(msg)

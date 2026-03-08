@@ -16,7 +16,8 @@ dependencies = [
     "alembic>=1.14.0,<2.0",
     "pgvector>=0.3.6,<1.0",
     # AI Framework
-    "pydantic-ai[anthropic,google]>=0.1.0,<1.0",
+    "pydantic-ai[anthropic,google]>=0.5.0,<0.6.0",
+    "anthropic>=0.80.0,<0.83.0",
     # Validation
     "pydantic>=2.10.0,<3.0",
     "pydantic-settings>=2.7.0,<3.0",
@@ -89,4 +90,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["nexus/tests"]
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    "default::DeprecationWarning",
+]

@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import asyncio
 
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from nexus.db.models import Agent, AgentRole, Prompt
 from nexus.kafka.topics import Topics
 from nexus.settings import settings
+
+logger = structlog.get_logger()
 
 # ─── Agent seed data ─────────────────────────────────────────────────────────
 
@@ -101,7 +104,7 @@ async def seed() -> None:
         await session.commit()
 
     await engine.dispose()
-    print("Seed complete.")
+    logger.info("seed_complete")
 
 
 async def _seed_agents(session: AsyncSession) -> None:
@@ -111,12 +114,12 @@ async def _seed_agents(session: AsyncSession) -> None:
         existing = result.scalar_one_or_none()
 
         if existing:
-            print(f"  Agent '{agent_data['role']}' already exists, skipping.")
+            logger.info("agent_already_exists", role=agent_data["role"])
             continue
 
         agent = Agent(**agent_data)
         session.add(agent)
-        print(f"  Created agent: {agent_data['role']}")
+        logger.info("agent_created", role=agent_data["role"])
 
 
 async def _seed_prompts(session: AsyncSession) -> None:
@@ -129,12 +132,12 @@ async def _seed_prompts(session: AsyncSession) -> None:
         existing = result.scalar_one_or_none()
 
         if existing:
-            print(f"  Prompt '{prompt_data['agent_role']}' v{prompt_data['version']} exists, skipping.")
+            logger.info("prompt_already_exists", role=prompt_data["agent_role"], version=prompt_data["version"])
             continue
 
         prompt = Prompt(**prompt_data)
         session.add(prompt)
-        print(f"  Created prompt: {prompt_data['agent_role']} v{prompt_data['version']}")
+        logger.info("prompt_created", role=prompt_data["agent_role"], version=prompt_data["version"])
 
 
 if __name__ == "__main__":

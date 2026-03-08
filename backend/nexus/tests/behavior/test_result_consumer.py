@@ -64,30 +64,34 @@ def test_map_status_unknown_defaults_to_completed() -> None:
 # ─── Full handler behavior ────────────────────────────────────────────────────
 
 
+def _make_session_factory(mock_task: MagicMock) -> MagicMock:
+    """Build a mock session factory that returns an async context manager."""
+    mock_session = MagicMock()
+    mock_session.commit = AsyncMock()
+    mock_session.add = MagicMock()
+    mock_session.execute = AsyncMock(
+        return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=mock_task))
+    )
+
+    cm = AsyncMock()
+    cm.__aenter__ = AsyncMock(return_value=mock_session)
+    cm.__aexit__ = AsyncMock(return_value=False)
+
+    return MagicMock(return_value=cm)
+
+
 @pytest.mark.asyncio
 async def test_handle_response_updates_task_to_completed() -> None:
     """Successful response should update task status to 'completed' in DB."""
     raw = _make_response_raw(status="success", tokens_used=700)
-
     mock_task = MagicMock()
-    mock_session = AsyncMock()
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-    mock_session.commit = AsyncMock()
-
-    # Fake DB query returning our mock task
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = mock_task
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_session_factory = MagicMock(return_value=mock_session)
+    mock_session_factory = _make_session_factory(mock_task)
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", return_value=True),
+        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
-        patch("nexus.kafka.result_consumer.redis_pubsub") as mock_redis,
+        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
-        mock_redis.publish = AsyncMock()
         await _handle_response(raw, mock_session_factory)
 
     assert mock_task.status == "completed"
@@ -99,25 +103,14 @@ async def test_handle_response_updates_task_to_completed() -> None:
 async def test_handle_response_updates_task_to_failed() -> None:
     """Failed response should update task status to 'failed' in DB."""
     raw = _make_response_raw(status="failed", error="Tool execution timed out")
-
     mock_task = MagicMock()
-    mock_session = AsyncMock()
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-    mock_session.commit = AsyncMock()
-
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = mock_task
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_session_factory = MagicMock(return_value=mock_session)
+    mock_session_factory = _make_session_factory(mock_task)
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", return_value=True),
+        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
-        patch("nexus.kafka.result_consumer.redis_pubsub") as mock_redis,
+        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
-        mock_redis.publish = AsyncMock()
         await _handle_response(raw, mock_session_factory)
 
     assert mock_task.status == "failed"
@@ -131,7 +124,7 @@ async def test_handle_response_skips_duplicate_messages() -> None:
     mock_session_factory = MagicMock()
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", return_value=False),
+        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=False),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
@@ -148,7 +141,7 @@ async def test_handle_response_skips_ceo_delegation() -> None:
     mock_session_factory = MagicMock()
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", return_value=True),
+        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
@@ -163,29 +156,18 @@ async def test_handle_response_publishes_task_result() -> None:
     from nexus.kafka.topics import Topics
 
     raw = _make_response_raw(status="success")
-
     mock_task = MagicMock()
-    mock_session = AsyncMock()
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-    mock_session.commit = AsyncMock()
-
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none.return_value = mock_task
-    mock_session.execute = AsyncMock(return_value=mock_result)
-
-    mock_session_factory = MagicMock(return_value=mock_session)
+    mock_session_factory = _make_session_factory(mock_task)
     published: list[tuple[str, object]] = []
 
     async def capture(topic: str, msg: object, *, key: str | None = None) -> None:
         published.append((topic, msg))
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", return_value=True),
+        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
         patch("nexus.kafka.result_consumer.publish", side_effect=capture),
-        patch("nexus.kafka.result_consumer.redis_pubsub") as mock_redis,
+        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
-        mock_redis.publish = AsyncMock()
         await _handle_response(raw, mock_session_factory)
 
     assert len(published) == 1
