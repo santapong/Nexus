@@ -1,0 +1,461 @@
+{
+  "total": 50,
+  "passed": 50,
+  "failed": 0,
+  "timed_out": 0,
+  "pass_rate": 100.0,
+  "total_tokens": 26538,
+  "total_duration": 105.98742950901942,
+  "results": [
+    {
+      "index": 1,
+      "instruction": "Explain what a Python list comprehension is with a simple example.",
+      "task_id": "155f439b-183d-42ee-a027-a8f5af88a92e",
+      "status": "completed",
+      "duration": 2.017698350995488,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 2,
+      "instruction": "What is the difference between a tuple and a list in Python?",
+      "task_id": "74d70719-5134-4922-9b51-d59149a59e92",
+      "status": "completed",
+      "duration": 2.0367177610023646,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 3,
+      "instruction": "Explain how Python's garbage collector works in 3 sentences.",
+      "task_id": "63608bfa-e700-4595-9dde-85b8e1a1db05",
+      "status": "completed",
+      "duration": 2.045950691004691,
+      "tokens_used": 524,
+      "error": null
+    },
+    {
+      "index": 4,
+      "instruction": "What does the `yield` keyword do in Python?",
+      "task_id": "0f8a3d5b-a8fe-437b-939e-602bba5d7791",
+      "status": "completed",
+      "duration": 2.029684458000702,
+      "tokens_used": 520,
+      "error": null
+    },
+    {
+      "index": 5,
+      "instruction": "Explain the GIL (Global Interpreter Lock) in Python.",
+      "task_id": "24db0582-eb04-4e7c-87b8-550041d16623",
+      "status": "completed",
+      "duration": 2.039950250000402,
+      "tokens_used": 522,
+      "error": null
+    },
+    {
+      "index": 6,
+      "instruction": "What is the difference between `==` and `is` in Python?",
+      "task_id": "1bff522f-646e-4997-a06b-05fa250288da",
+      "status": "completed",
+      "duration": 2.0232339089998277,
+      "tokens_used": 524,
+      "error": null
+    },
+    {
+      "index": 7,
+      "instruction": "Explain Python decorators with a simple example.",
+      "task_id": "b36c14bc-46d7-40d8-a7f4-914230180d01",
+      "status": "completed",
+      "duration": 2.0397576749965083,
+      "tokens_used": 520,
+      "error": null
+    },
+    {
+      "index": 8,
+      "instruction": "What are Python context managers and how does `with` work?",
+      "task_id": "6ef20ab8-fdb5-4123-b5e6-f1dab437a0e3",
+      "status": "completed",
+      "duration": 2.038317126003676,
+      "tokens_used": 524,
+      "error": null
+    },
+    {
+      "index": 9,
+      "instruction": "Explain the difference between `*args` and `**kwargs`.",
+      "task_id": "a49b8349-0ece-4c05-8609-fd2a2626c94a",
+      "status": "completed",
+      "duration": 2.066773958998965,
+      "tokens_used": 520,
+      "error": null
+    },
+    {
+      "index": 10,
+      "instruction": "What is duck typing in Python?",
+      "task_id": "fdd453ad-cc3b-418f-a448-b4c85e9c44ed",
+      "status": "completed",
+      "duration": 2.0486527269968065,
+      "tokens_used": 516,
+      "error": null
+    },
+    {
+      "index": 11,
+      "instruction": "Write a Python function to check if a string is a palindrome.",
+      "task_id": "b01afd48-f130-4b57-aa07-c1fecdcccc3c",
+      "status": "completed",
+      "duration": 2.036559075997502,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 12,
+      "instruction": "Write a Python function to sort a dictionary by its values.",
+      "task_id": "832352cc-8834-4149-9475-834fe2099364",
+      "status": "completed",
+      "duration": 6.062065458005236,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 13,
+      "instruction": "Write a Python function that implements binary search on a sorted list.",
+      "task_id": "0f8c9b2c-9e56-4d17-a3c0-ddca1cec209c",
+      "status": "completed",
+      "duration": 2.036642004000896,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 14,
+      "instruction": "Write a Python class that implements a simple stack with push, pop, and peek.",
+      "task_id": "e337a098-c37e-4173-a355-a5e38caebd4c",
+      "status": "completed",
+      "duration": 2.0447237030020915,
+      "tokens_used": 534,
+      "error": null
+    },
+    {
+      "index": 15,
+      "instruction": "Write a Python function to flatten a nested list of arbitrary depth.",
+      "task_id": "3358f70d-54fd-4ce2-9650-7efab0ffa671",
+      "status": "completed",
+      "duration": 2.038501275004819,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 16,
+      "instruction": "Write a Python function to find the nth Fibonacci number using memoization.",
+      "task_id": "3973dc16-9779-4c80-8073-0afb3f3807db",
+      "status": "completed",
+      "duration": 2.0300593080028193,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 17,
+      "instruction": "Write a Python function that removes duplicate elements from a list while preserving order.",
+      "task_id": "6ccdce1b-cf87-4d1f-826c-30bf1294f66a",
+      "status": "completed",
+      "duration": 2.0426463990006596,
+      "tokens_used": 534,
+      "error": null
+    },
+    {
+      "index": 18,
+      "instruction": "Write a Python function to validate an email address using regex.",
+      "task_id": "a24a0ce4-ff9e-4ee6-a64f-39e63239eabf",
+      "status": "completed",
+      "duration": 2.034146967002016,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 19,
+      "instruction": "Write a Python function that converts a Roman numeral string to an integer.",
+      "task_id": "a842dfda-1a71-481f-b886-1af9c50131cf",
+      "status": "completed",
+      "duration": 2.031236833005096,
+      "tokens_used": 532,
+      "error": null
+    },
+    {
+      "index": 20,
+      "instruction": "Write a Python function to merge two sorted lists into one sorted list.",
+      "task_id": "673fbb8e-56a6-4949-986f-cde4f3662949",
+      "status": "completed",
+      "duration": 2.024023373000091,
+      "tokens_used": 532,
+      "error": null
+    },
+    {
+      "index": 21,
+      "instruction": "Research Python async patterns and write a working asyncio example with gather.",
+      "task_id": "37caf650-b899-4715-a432-4ab79ab14852",
+      "status": "completed",
+      "duration": 2.0286530860030325,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 22,
+      "instruction": "Explain the Observer design pattern and implement it in Python.",
+      "task_id": "23e19c58-b4bc-4255-9946-30ec11efa814",
+      "status": "completed",
+      "duration": 2.035559269999794,
+      "tokens_used": 526,
+      "error": null
+    },
+    {
+      "index": 23,
+      "instruction": "Explain how Python dataclasses work and write an example with inheritance.",
+      "task_id": "8389eeae-5e44-4b17-9205-eec5016453c5",
+      "status": "completed",
+      "duration": 2.0426609409987577,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 24,
+      "instruction": "Explain the Strategy pattern and implement it in Python for sorting algorithms.",
+      "task_id": "0113a0d3-4db7-4df2-9176-1a4b59df4a88",
+      "status": "completed",
+      "duration": 2.0384475879982347,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 25,
+      "instruction": "Research Python's typing module and write an example using Protocol and TypeVar.",
+      "task_id": "649bce6e-e797-437f-a198-2bb1d4fe8915",
+      "status": "completed",
+      "duration": 2.0337134250003146,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 26,
+      "instruction": "Explain Python's descriptor protocol and write a custom descriptor example.",
+      "task_id": "d4e271ce-ab4c-4ee5-bb35-72d129b3a66c",
+      "status": "completed",
+      "duration": 2.0447652590009966,
+      "tokens_used": 526,
+      "error": null
+    },
+    {
+      "index": 27,
+      "instruction": "Research Python's functools module and demonstrate lru_cache, partial, and reduce.",
+      "task_id": "c18be774-956c-4fde-9063-1bb3f158ec2c",
+      "status": "completed",
+      "duration": 2.0458179589986685,
+      "tokens_used": 526,
+      "error": null
+    },
+    {
+      "index": 28,
+      "instruction": "Explain how Python metaclasses work and create a simple metaclass example.",
+      "task_id": "cbb670a4-5258-47c4-adda-bfd5606ad4f0",
+      "status": "completed",
+      "duration": 2.044833807995019,
+      "tokens_used": 528,
+      "error": null
+    },
+    {
+      "index": 29,
+      "instruction": "Research Python's itertools module and demonstrate 5 useful functions.",
+      "task_id": "85f168cc-ff79-4d0e-b5e6-c27d4344cda2",
+      "status": "completed",
+      "duration": 2.034291399999347,
+      "tokens_used": 524,
+      "error": null
+    },
+    {
+      "index": 30,
+      "instruction": "Explain the Singleton pattern in Python and show 3 different ways to implement it.",
+      "task_id": "88111276-df2d-48a5-bffd-a5980bdbb974",
+      "status": "completed",
+      "duration": 2.0358650669950293,
+      "tokens_used": 534,
+      "error": null
+    },
+    {
+      "index": 31,
+      "instruction": "Fix this code: `def avg(lst): return sum(lst) / len(lst)` \u2014 it crashes on empty lists.",
+      "task_id": "7d66b3e8-07e4-4747-abbc-4d00d14cfef1",
+      "status": "completed",
+      "duration": 2.0427015280001797,
+      "tokens_used": 536,
+      "error": null
+    },
+    {
+      "index": 32,
+      "instruction": "Fix this code: `d = {}; d['a']['b'] = 1` \u2014 it raises KeyError.",
+      "task_id": "190dc8bc-f9a2-412b-ad6f-ee5fe83d6a97",
+      "status": "completed",
+      "duration": 2.03182322900102,
+      "tokens_used": 532,
+      "error": null
+    },
+    {
+      "index": 33,
+      "instruction": "Fix this code: `items = [1,2,3]; for i in items: items.remove(i)` \u2014 it doesn't remove all items.",
+      "task_id": "005bf054-c4e4-40cc-b1cc-ff94d455ebc3",
+      "status": "completed",
+      "duration": 2.0387482389996876,
+      "tokens_used": 546,
+      "error": null
+    },
+    {
+      "index": 34,
+      "instruction": "Fix this code that has a race condition: two threads incrementing a shared counter without locks.",
+      "task_id": "e1317556-d2d2-46df-a747-57299f31d29a",
+      "status": "completed",
+      "duration": 2.0401926470003673,
+      "tokens_used": 538,
+      "error": null
+    },
+    {
+      "index": 35,
+      "instruction": "Fix this code: `result = [lambda: i for i in range(5)]` \u2014 all lambdas return 4.",
+      "task_id": "784b67d8-80ae-45f1-97b2-f2db4ad53e22",
+      "status": "completed",
+      "duration": 2.0291888909996487,
+      "tokens_used": 538,
+      "error": null
+    },
+    {
+      "index": 36,
+      "instruction": "Fix this code: `class Foo: items = []; def add(self, x): self.items.append(x)` \u2014 shared mutable default.",
+      "task_id": "b540e7bc-959c-45dc-af4e-518d400a4c8d",
+      "status": "completed",
+      "duration": 2.039825750995078,
+      "tokens_used": 542,
+      "error": null
+    },
+    {
+      "index": 37,
+      "instruction": "Fix this code: `async def fetch(): return requests.get(url)` \u2014 blocking call in async context.",
+      "task_id": "5b865c26-543e-48ff-b4b7-549c5b2856fa",
+      "status": "completed",
+      "duration": 2.022085185002652,
+      "tokens_used": 536,
+      "error": null
+    },
+    {
+      "index": 38,
+      "instruction": "Fix this code: `f = open('file.txt'); data = f.read()` \u2014 resource leak, no close.",
+      "task_id": "1c762ed6-6994-4ec5-bee7-a10180d45550",
+      "status": "completed",
+      "duration": 2.0322051420007483,
+      "tokens_used": 538,
+      "error": null
+    },
+    {
+      "index": 39,
+      "instruction": "Fix this code: `import json; json.loads('{key: value}')` \u2014 invalid JSON format.",
+      "task_id": "c1f8ad52-83f4-4324-9542-cba38d16a516",
+      "status": "completed",
+      "duration": 2.06102834000194,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 40,
+      "instruction": "Fix this code: `x = 0.1 + 0.2; assert x == 0.3` \u2014 floating point comparison.",
+      "task_id": "ee98361f-df0a-4eb4-a594-454851a353a4",
+      "status": "completed",
+      "duration": 2.0394348190020537,
+      "tokens_used": 544,
+      "error": null
+    },
+    {
+      "index": 41,
+      "instruction": "Write a Python REST API client class with retry logic, exponential backoff, and timeout handling.",
+      "task_id": "9d56ae03-1822-4e8e-9688-465a2eb8f8e8",
+      "status": "completed",
+      "duration": 2.040218759997515,
+      "tokens_used": 536,
+      "error": null
+    },
+    {
+      "index": 42,
+      "instruction": "Write a thread-safe LRU cache in Python using OrderedDict and threading.Lock.",
+      "task_id": "a35fa514-18ff-4cbc-b25a-468e15502b86",
+      "status": "completed",
+      "duration": 2.0451812899991637,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 43,
+      "instruction": "Write a Python function that parses a mathematical expression string and evaluates it (supporting +, -, *, /, parentheses).",
+      "task_id": "0e650e23-8d23-465d-8619-9280106d241a",
+      "status": "completed",
+      "duration": 2.0353656740044244,
+      "tokens_used": 544,
+      "error": null
+    },
+    {
+      "index": 44,
+      "instruction": "Write a simple Python event emitter class that supports on, off, once, and emit methods.",
+      "task_id": "58e73499-0aa5-4c9d-8a27-6ac06ecf5d4e",
+      "status": "completed",
+      "duration": 2.0375491109953145,
+      "tokens_used": 536,
+      "error": null
+    },
+    {
+      "index": 45,
+      "instruction": "Write a Python rate limiter using the token bucket algorithm.",
+      "task_id": "c0893293-c9c6-4521-b4d6-4f981df718fb",
+      "status": "completed",
+      "duration": 2.0292537709974567,
+      "tokens_used": 526,
+      "error": null
+    },
+    {
+      "index": 46,
+      "instruction": "Write a Python circuit breaker pattern implementation with open, closed, and half-open states.",
+      "task_id": "db7346ef-cb4a-4374-9550-92186cb64640",
+      "status": "completed",
+      "duration": 2.0413080810030806,
+      "tokens_used": 532,
+      "error": null
+    },
+    {
+      "index": 47,
+      "instruction": "Write a Python class that implements a priority queue using a heap.",
+      "task_id": "0235cd63-2181-44e0-9538-f6b169e1b778",
+      "status": "completed",
+      "duration": 2.041761091000808,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 48,
+      "instruction": "Write a Python decorator that caches results to disk using JSON files.",
+      "task_id": "1084fdf8-24a3-44e1-a9c7-64a9df51d268",
+      "status": "completed",
+      "duration": 2.038609401002759,
+      "tokens_used": 530,
+      "error": null
+    },
+    {
+      "index": 49,
+      "instruction": "Write a Python function that validates and parses ISO 8601 datetime strings without external libraries.",
+      "task_id": "a5fb06e5-a245-4bc2-bbb2-12ead62dcba5",
+      "status": "completed",
+      "duration": 2.0987237180015654,
+      "tokens_used": 536,
+      "error": null
+    },
+    {
+      "index": 50,
+      "instruction": "Write a comprehensive Python unit test suite for a simple calculator class with add, subtract, multiply, and divide.",
+      "task_id": "a16bc542-a670-48a4-a97b-8305e76c8668",
+      "status": "completed",
+      "duration": 2.048406187001092,
+      "tokens_used": 542,
+      "error": null
+    }
+  ]
+}

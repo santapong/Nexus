@@ -58,11 +58,27 @@ services:
       DATABASE_URL: postgresql+asyncpg://nexus:nexus_dev@postgres:5432/nexus
       REDIS_URL: redis://redis:6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # LLM API Keys
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      DAILY_SPEND_LIMIT_USD: "5.00"
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      # Local / custom model endpoints
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
+      OPENAI_COMPAT_BASE_URL: ${OPENAI_COMPAT_BASE_URL:-http://host.docker.internal:8080/v1}
+      OPENAI_COMPAT_API_KEY: ${OPENAI_COMPAT_API_KEY:-}
+      # Agent model assignments
+      MODEL_CEO: ${MODEL_CEO:-claude-sonnet-4-20250514}
+      MODEL_ENGINEER: ${MODEL_ENGINEER:-claude-sonnet-4-20250514}
+      MODEL_ANALYST: ${MODEL_ANALYST:-gemini-2.0-flash}
+      MODEL_WRITER: ${MODEL_WRITER:-claude-haiku-4-5-20251001}
+      MODEL_QA: ${MODEL_QA:-claude-haiku-4-5-20251001}
+      MODEL_PROMPT_CREATOR: ${MODEL_PROMPT_CREATOR:-claude-sonnet-4-20250514}
+      # Cost controls
+      DAILY_SPEND_LIMIT_USD: ${DAILY_SPEND_LIMIT_USD:-5.00}
       APP_ENV: development
-      LOG_LEVEL: INFO
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8000:8000"
     depends_on:

@@ -5,7 +5,10 @@ research, file operations, and code execution.
 """
 from __future__ import annotations
 
+import asyncio
+
 import structlog
+from pydantic_ai import Agent as PydanticAgent
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
@@ -14,6 +17,10 @@ from nexus.kafka.schemas import AgentCommand, AgentResponse
 from nexus.llm.usage import calculate_cost, record_usage
 
 logger = structlog.get_logger()
+
+# Max retries for transient LLM errors (rate limits, tool call format issues)
+_MAX_RETRIES = 5
+_RETRY_BACKOFF_SECONDS = [5.0, 10.0, 20.0, 30.0, 45.0]
 
 
 class EngineerAgent(AgentBase):
@@ -55,8 +62,8 @@ class EngineerAgent(AgentBase):
         else:
             user_message = message.instruction
 
-        # Run the Pydantic AI agent
-        result = await self.llm_agent.run(user_message)
+        # Run the Pydantic AI agent with retry logic
+        result = await self._run_with_retry(user_message, task_id)
 
         # Extract usage info
         total_tokens = 0
@@ -66,7 +73,8 @@ class EngineerAgent(AgentBase):
             output_tokens = usage.response_tokens or 0
             total_tokens = input_tokens + output_tokens
 
-            model_name = str(self.llm_agent.model)
+            model_obj = self.llm_agent.model
+            model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
             await record_usage(
                 session=session,
                 task_id=task_id,
@@ -96,6 +104,58 @@ class EngineerAgent(AgentBase):
             agent_id=self.agent_id,
             payload={},
             status="success",
-            output={"result": result.data},
+            output={"result": result.output},
             tokens_used=total_tokens,
         )
+
+    async def _run_with_retry(self, user_message: str, task_id: str) -> object:
+        """Run LLM agent with retry logic for transient errors.
+
+        Handles:
+        - 429 rate limit errors: retry with exponential backoff
+        - tool_use_failed errors: retry without tools (some models
+          malformat tool calls for simple questions)
+        """
+        last_error: Exception | None = None
+
+        for attempt in range(_MAX_RETRIES):
+            try:
+                return await self.llm_agent.run(user_message)
+            except Exception as exc:
+                last_error = exc
+                error_str = str(exc)
+
+                # Rate limit (429) — wait and retry with same agent
+                if "429" in error_str or "rate_limit" in error_str.lower():
+                    backoff = _RETRY_BACKOFF_SECONDS[min(attempt, len(_RETRY_BACKOFF_SECONDS) - 1)]
+                    logger.warning(
+                        "rate_limit_retry",
+                        task_id=task_id,
+                        attempt=attempt + 1,
+                        backoff_seconds=backoff,
+                    )
+                    await asyncio.sleep(backoff)
+                    continue
+
+                # Tool call format error — retry without tools
+                if "tool_use_failed" in error_str or "tool call validation" in error_str:
+                    logger.warning(
+                        "tool_call_failed_retry_without_tools",
+                        task_id=task_id,
+                        attempt=attempt + 1,
+                    )
+                    # Create a temporary agent without tools for this request
+                    no_tools_agent = PydanticAgent(
+                        model=self.llm_agent.model,
+                        system_prompt=(
+                            "You are a senior software engineer. "
+                            "Answer the question directly without using any tools."
+                        ),
+                    )
+                    return await no_tools_agent.run(user_message)
+
+                # Other errors — don't retry
+                raise
+
+        # All retries exhausted
+        raise last_error  # type: ignore[misc]

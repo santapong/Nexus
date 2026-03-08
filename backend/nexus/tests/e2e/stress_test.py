@@ -16,8 +16,8 @@ from dataclasses import dataclass, field
 import httpx
 
 BASE_URL = "http://localhost:8000"
-TASK_TIMEOUT_SECONDS = 120
-DELAY_BETWEEN_TASKS = 1.0
+TASK_TIMEOUT_SECONDS = 180
+DELAY_BETWEEN_TASKS = 5.0  # Groq free tier: ~30 RPM, need spacing
 
 # ─── Task definitions ────────────────────────────────────────────────────────
 

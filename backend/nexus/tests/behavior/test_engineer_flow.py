@@ -26,7 +26,7 @@ def _make_engineer() -> EngineerAgent:
     # Mock Pydantic AI Agent
     mock_llm = MagicMock()
     mock_result = MagicMock()
-    mock_result.data = "def hello():\n    return 'Hello, World!'"
+    mock_result.output = "def hello():\n    return 'Hello, World!'"
     mock_usage = MagicMock()
     mock_usage.request_tokens = 500
     mock_usage.response_tokens = 200

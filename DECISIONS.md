@@ -36,6 +36,9 @@
 | ADR-014 | Pin pydantic-ai 0.5.x with anthropic <0.83.0 | accepted | 2026-03-08 |
 | ADR-015 | Docker port remapping for local dev | accepted | 2026-03-08 |
 | ADR-016 | Explicit DB commit before Kafka publish | accepted | 2026-03-08 |
+| ADR-017 | Universal ModelFactory — multi-provider prefix registry | accepted | 2026-03-08 |
+| ADR-018 | Test model provider for infrastructure testing | accepted | 2026-03-08 |
+| ADR-019 | LLM retry logic with exponential backoff | accepted | 2026-03-08 |
 
 ---
 
@@ -680,11 +683,131 @@ where downstream consumers need the data immediately.
 
 ---
 
+## ADR-017 — Universal ModelFactory — multi-provider prefix registry
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §6
+**Supersedes:** n/a
+
+### Context
+
+The original `ModelFactory` only supported Anthropic Claude and Google Gemini. For Phase 1
+testing, free-tier providers (Groq) and local models (Ollama) were needed. The factory needed
+to support any LLM provider without changing agent code.
+
+### Decision
+
+Rewrite `llm/factory.py` with a prefix-based provider resolution registry. Model names are
+strings like `groq:llama-3.3-70b-versatile` or `ollama:llama3`. The factory checks prefixes
+in order against a resolver list. First match wins. All provider imports are lazy (inside
+function bodies) to avoid ImportErrors for uninstalled providers.
+
+Supported providers: Anthropic (`claude-*`), Google Gemini (`gemini-*`), OpenAI (`openai:*`,
+`gpt-*`, `o1-*`, `o3-*`), Groq (`groq:*`), Mistral (`mistral:*`), Ollama (`ollama:*`),
+OpenAI-compatible (`openai-compat:*`), Test (`test:*`).
+
+### Alternatives considered
+
+**Per-provider factory methods**
+- Pros: Explicit, easy to understand
+- Cons: Adding a provider requires changing ModelFactory class
+- Why rejected: Prefix registry is more extensible — add one tuple to the list.
+
+**pydantic-ai auto-detection**
+- Pros: Zero configuration
+- Cons: pydantic-ai 0.5.x doesn't auto-detect from model name strings reliably
+- Why rejected: Explicit is better than implicit. Provider prefix makes the intent clear.
+
+### Consequences
+
+**Positive:**
+- Any agent can use any provider by changing one env var (`MODEL_ENGINEER=groq:llama-3.3-70b`)
+- Zero code changes needed to switch providers
+- Lazy imports mean uninstalled providers don't cause import errors
+
+**Negative / tradeoffs:**
+- Model name strings must follow the prefix convention
+- Unknown prefixes raise ValueError (intentional — fail loud)
+
+---
+
+## ADR-018 — Test model provider for infrastructure testing
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §14, ADR-017
+**Supersedes:** n/a
+
+### Context
+
+Running the 50-task stress test against Groq's free tier exhausted the daily token limit
+(100K TPD) before completing. The stress test's purpose (per CLAUDE.md §14) is to verify
+agent decision logic and infrastructure, not LLM output quality. We needed a way to run
+infrastructure tests without API costs or rate limits.
+
+### Decision
+
+Add a `test:` prefix to the ModelFactory that creates pydantic-ai's built-in `TestModel`.
+This model returns deterministic responses without making any API calls. Set
+`MODEL_ENGINEER=test:mock` in `.env` to run infrastructure stress tests at zero cost.
+
+### Consequences
+
+**Positive:**
+- Unlimited infrastructure testing with zero API cost
+- Deterministic, reproducible test results
+- 50-task stress test completes in ~106s instead of being blocked by rate limits
+
+**Negative / tradeoffs:**
+- Test model output is not meaningful — only tests the pipeline, not LLM quality
+- LLM quality testing still requires real API keys (Layer 5 eval testing per §14)
+
+---
+
+## ADR-019 — LLM retry logic with exponential backoff
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §20, §23 Risk 2
+**Supersedes:** n/a
+
+### Context
+
+During the first live stress test with Groq, 26% of tasks failed due to two transient error
+types: (1) HTTP 429 rate limit errors from provider-side throttling, and (2) `tool_use_failed`
+errors where the LLM model (llama-3.3-70b) malformatted tool call JSON for simple questions.
+
+### Decision
+
+Add `_run_with_retry()` to EngineerAgent with two strategies:
+1. **Rate limit (429):** Retry up to 5 times with exponential backoff (5s, 10s, 20s, 30s, 45s)
+2. **Tool call format error:** Create a temporary agent without tools and retry once
+
+Other errors are not retried — they propagate immediately as task failures.
+
+### Consequences
+
+**Positive:**
+- Transient rate limits are handled gracefully without task failure
+- Simple questions that don't need tools can still succeed when the model malformats tool calls
+- Retry logic is in the agent layer, not the factory — provider-agnostic
+
+**Negative / tradeoffs:**
+- Rate limit retries add latency (up to ~110s total backoff)
+- Tool-less fallback loses tool calling capability for that specific request
+- Retry logic should eventually be moved to AgentBase so all agents benefit (Phase 2)
+
+---
+
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-017 -->
+<!-- Next ID: ADR-020 -->
 
 ---
 
 *Last updated: 2026-03-08*
-*Next ADR ID: ADR-017*
-*Decision count: 13 accepted, 3 proposed*
+*Next ADR ID: ADR-020*
+*Decision count: 16 accepted, 3 proposed*

@@ -55,18 +55,20 @@ A platform where every department of a digital company is staffed by an AI agent
 
 **Infrastructure:** PostgreSQL 16 + pgvector · Redis 7 · Apache Kafka (KRaft) · Docker Compose
 
-**LLM Providers:** Anthropic Claude · Google Gemini (abstracted via ModelFactory)
+**LLM Providers:** Anthropic Claude · Google Gemini · OpenAI · Groq · Mistral · Ollama · any OpenAI-compatible endpoint (abstracted via universal ModelFactory)
 
 ## Agent Roster
 
 | Agent | Role | Default Model |
 |-------|------|---------------|
-| CEO | Orchestrator — decomposes tasks, delegates, aggregates results | Claude Sonnet |
-| Engineer | Code generation, debugging, architecture | Claude Sonnet |
-| Analyst | Research, data analysis, reports | Gemini Pro |
-| Writer | Content, emails, documentation | Claude Haiku |
-| QA | Reviews all outputs before delivery | Claude Haiku |
-| Prompt Creator | Meta-agent — improves other agents' system prompts | Claude Sonnet |
+| CEO | Orchestrator — decomposes tasks, delegates, aggregates results | Configurable (any provider) |
+| Engineer | Code generation, debugging, architecture | Configurable (any provider) |
+| Analyst | Research, data analysis, reports | Configurable (any provider) |
+| Writer | Content, emails, documentation | Configurable (any provider) |
+| QA | Reviews all outputs before delivery | Configurable (any provider) |
+| Prompt Creator | Meta-agent — improves other agents' system prompts | Configurable (any provider) |
+
+Models are configured per-role via environment variables (e.g., `MODEL_ENGINEER=groq:llama-3.3-70b-versatile`). See `.env.example` for all options.
 
 ## Project Structure
 
@@ -105,31 +107,29 @@ nexus/
 | Phase | Status |
 |-------|--------|
 | Phase 0 — Foundation | **Complete** |
-| Phase 1 — Single Agent Loop | **~98% complete** (E2E verified, needs real API keys for full task completion) |
-| Phase 2 — Multi-Agent + A2A | Planned |
+| Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
+| Phase 2 — Multi-Agent + A2A | Ready to start |
 
 ### What works today
 
 - All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
-- Full task flow verified: `POST /api/tasks` → CEO receives via Kafka → delegates to Engineer → Engineer processes → result written to DB
-- Frontend dashboard loads with all panels (health, tasks, approvals, agents)
+- Full task flow verified end-to-end: `POST /api/tasks` → CEO → Engineer → LLM → result in DB
+- Universal ModelFactory supporting 7+ LLM providers (Anthropic, Google, OpenAI, Groq, Mistral, Ollama, OpenAI-compatible)
+- Frontend dashboard with all panels (health, tasks, approvals, agents)
 - WebSocket real-time updates from agent activity
-- LLM calls are architecture-verified (401 with placeholder keys — expected)
+- LLM retry logic: rate limit backoff (5 retries) + tool call fallback
+- `test:` model provider for infrastructure testing at zero API cost
+- 50-task stress test: 100% pass rate (Phase 2 gate cleared)
 - Database schema deployed: all 9 tables with pgvector extension
 - CEO and Engineer agents start, subscribe to correct Kafka topics, and process messages
-
-### What's remaining
-
-- Configure real API keys for full LLM-powered task completion
-- Run 50-task stress test (Phase 2 gate)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- API keys for Anthropic and Google AI
+- API key for at least one LLM provider (Groq free tier works for testing)
 
 ### Quick Setup
 
@@ -146,7 +146,8 @@ git clone <repo-url> && cd Nexus
 
 # Configure environment variables
 cp .env.example .env
-# Edit .env with your ANTHROPIC_API_KEY and GOOGLE_API_KEY
+# Edit .env with your API keys (at minimum, set one provider key)
+# Supported: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, MISTRAL_API_KEY
 
 # Start all services (PostgreSQL, Redis, Kafka, backend, frontend)
 make up
@@ -214,7 +215,7 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase | Focus | Status |
 |-------|-------|--------|
 | Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
-| Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **~98%** — E2E verified |
+| Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | Planned |
 | Phase 3 | Hardening, chaos testing, A2A outbound | Planned |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |

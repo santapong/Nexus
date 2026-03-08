@@ -9,14 +9,32 @@ from nexus.settings import settings
 
 logger = structlog.get_logger()
 
-# Cost per 1 million tokens (input, output) in USD
+# Cost per 1 million tokens (input, output) in USD.
+# Models not listed here still work — cost defaults to 0.0 with a logged warning.
+# Add pricing for any model you use to ensure accurate budget tracking.
 _MODEL_PRICING: dict[str, dict[str, float]] = {
+    # Anthropic
     "claude-opus-4-6": {"input": 15.0, "output": 75.0},
     "claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
     "claude-sonnet-4-20250514": {"input": 3.0, "output": 15.0},
     "claude-haiku-4-5-20251001": {"input": 0.25, "output": 1.25},
+    # Google Gemini
     "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
     "gemini-1.5-pro": {"input": 1.25, "output": 5.0},
+    # OpenAI
+    "gpt-4o": {"input": 2.50, "output": 10.0},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "o3-mini": {"input": 1.10, "output": 4.40},
+    # Groq (hosted, pay-per-token)
+    "groq:llama-3.3-70b-versatile": {"input": 0.59, "output": 0.79},
+    "groq:llama-3.1-8b-instant": {"input": 0.05, "output": 0.08},
+    # Mistral
+    "mistral:mistral-large-latest": {"input": 2.0, "output": 6.0},
+    "mistral:mistral-small-latest": {"input": 0.1, "output": 0.3},
+    # Local models (Ollama, vLLM, etc.) — zero cost
+    "ollama:llama3": {"input": 0.0, "output": 0.0},
+    "ollama:codellama": {"input": 0.0, "output": 0.0},
+    "ollama:mistral": {"input": 0.0, "output": 0.0},
 }
 
 

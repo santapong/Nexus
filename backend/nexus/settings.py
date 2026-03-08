@@ -23,9 +23,17 @@ class Settings(BaseSettings):
     # Kafka
     kafka_bootstrap_servers: str = "localhost:9092"
 
-    # LLM API Keys
+    # LLM API Keys — set the ones you need, leave others empty
     anthropic_api_key: str = ""
     google_api_key: str = ""
+    openai_api_key: str = ""
+    groq_api_key: str = ""
+    mistral_api_key: str = ""
+
+    # Local / custom model endpoints
+    ollama_base_url: str = "http://localhost:11434/v1"
+    openai_compat_base_url: str = "http://localhost:8080/v1"
+    openai_compat_api_key: str = ""
 
     # Cost Controls
     daily_spend_limit_usd: Decimal = Decimal("5.00")
