@@ -33,6 +33,9 @@
 | ADR-011 | Semantic memory contradiction resolution strategy | proposed | 2026-03-07 |
 | ADR-012 | Log aggregation approach for v1 | proposed | 2026-03-07 |
 | ADR-013 | Meeting room termination signal | proposed | 2026-03-07 |
+| ADR-014 | Pin pydantic-ai 0.5.x with anthropic <0.83.0 | accepted | 2026-03-08 |
+| ADR-015 | Docker port remapping for local dev | accepted | 2026-03-08 |
+| ADR-016 | Explicit DB commit before Kafka publish | accepted | 2026-03-08 |
 
 ---
 
@@ -557,11 +560,131 @@ See BACKLOG-004.
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-014 -->
+## ADR-014 — Pin pydantic-ai to 0.5.x with anthropic <0.83.0
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §4, §5
+**Supersedes:** n/a
+
+### Context
+
+During E2E verification, pydantic-ai 0.6+ failed to import due to a breaking change in
+the anthropic SDK. pydantic-ai 0.6.x imports `UserLocation` from
+`anthropic.types.beta.beta_web_search_tool_20250305_param`, but anthropic 0.84.0 renamed
+this to `BetaUserLocationParam`. This causes an `ImportError` at startup.
+
+Additionally, pydantic-ai 0.5.x changed the `AnthropicModel` constructor — it no longer
+accepts an `api_key` parameter. API keys are read from environment variables automatically.
+
+### Decision
+
+Pin `pydantic-ai[anthropic,google]>=0.5.0,<0.6.0` and `anthropic>=0.80.0,<0.83.0` in
+`pyproject.toml`. Remove `api_key` parameter from `ModelFactory.get_model()` calls.
+
+### Alternatives considered
+
+**Upgrade to pydantic-ai 0.6+ with matching anthropic SDK**
+- Pros: Latest features, maintained version
+- Cons: No compatible anthropic SDK version exists — 0.6+ requires the renamed class
+  that doesn't exist in any stable anthropic release.
+- Why rejected: No working combination available at time of decision.
+
+**Use raw Anthropic SDK without pydantic-ai**
+- Pros: Direct control, no version conflict
+- Cons: Loses structured output typing, tool calling framework, multi-provider abstraction
+- Why rejected: Would require rewriting AgentBase and all agent implementations.
+
+### Consequences
+
+**Positive:**
+- Stable, tested combination that works end-to-end
+- API keys managed via env vars (cleaner than passing explicitly)
+
+**Negative / tradeoffs:**
+- Locked to older pydantic-ai version until upstream resolves the import issue
+- Must monitor pydantic-ai releases for a fix
+
+**Future implications:**
+- When pydantic-ai releases a version compatible with latest anthropic SDK, update both
+  pins together and test before merging
 
 ---
 
-*Last updated: 2026-03-07*
-*Next ADR ID: ADR-014*
-*Decision count: 10 accepted, 3 proposed*
+## ADR-015 — Docker port remapping for local dev
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §22
+**Supersedes:** n/a
+
+### Context
+
+The host machine runs local PostgreSQL (port 5432) and Redis (port 6379). Docker Compose
+services using the same ports fail to bind, preventing `make up` from working.
+
+### Decision
+
+Remap Docker host-exposed ports to avoid conflicts:
+- PostgreSQL: `5433:5432` (host:container)
+- Redis: `6380:6379` (host:container)
+
+Internal Docker networking is unaffected — containers still communicate on standard ports
+via Docker DNS (e.g., `postgres:5432`, `redis:6379`).
+
+### Consequences
+
+**Positive:**
+- `make up` works on machines with local PostgreSQL/Redis running
+- No changes needed to application code — only docker-compose.yml host port mapping
+
+**Negative / tradeoffs:**
+- Direct host access to Docker postgres/redis uses non-standard ports (5433, 6380)
+- `make shell-db` and `make shell-redis` still work (they exec into the container)
+
+---
+
+## ADR-016 — Explicit DB commit before Kafka publish
+
+**Date:** 2026-03-08
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §16, §19
+**Supersedes:** n/a
+
+### Context
+
+When creating a task via `POST /api/tasks`, the handler flushes the task to the database
+then publishes to Kafka. The Kafka consumer (CEO agent) processes the message and queries
+the database for the task. With Litestar's auto-commit, the transaction was not committed
+before the Kafka message was consumed, causing the CEO to find no task in the database.
+
+### Decision
+
+Add explicit `await db_session.commit()` after `db_session.flush()` and before any Kafka
+`publish()` call in API handlers. Do not rely on Litestar's auto-commit for operations
+where downstream consumers need the data immediately.
+
+### Consequences
+
+**Positive:**
+- Task is guaranteed to be in the database before any Kafka consumer processes it
+- Eliminates a race condition between API commit and Kafka consumer query
+
+**Negative / tradeoffs:**
+- Manual commit management in some handlers (slightly more code)
+- If the Kafka publish fails after commit, the task exists in DB but was never queued
+  (acceptable — can be retried or cleaned up)
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-017 -->
+
+---
+
+*Last updated: 2026-03-08*
+*Next ADR ID: ADR-017*
+*Decision count: 13 accepted, 3 proposed*

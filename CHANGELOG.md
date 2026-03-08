@@ -40,6 +40,69 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-08] — Phase 1 E2E verification and frontend decomposition
+
+### Added
+- `frontend/src/types/index.ts` — TypeScript interfaces (HealthCheck, Task, Approval, AgentInfo, AgentEvent)
+- `frontend/src/api/client.ts` — Typed API client with `apiFetch<T>()` helper and methods for all endpoints
+- `frontend/src/hooks/useHealth.ts` — TanStack Query hook for health endpoint (10s refetch)
+- `frontend/src/hooks/useTasks.ts` — `useTasks()` with 3s refetch, `useCreateTask()` mutation
+- `frontend/src/hooks/useApprovals.ts` — `useApprovals()` with 5s refetch, `useResolveApproval()` mutation
+- `frontend/src/hooks/useAgents.ts` — `useAgents()` with 30s refetch
+- `frontend/src/ws/AgentWebSocketProvider.tsx` — WebSocket context provider with auto-reconnect
+- `frontend/src/components/dashboard/StatusBadge.tsx` — Reusable status color badge
+- `frontend/src/components/dashboard/HealthPanel.tsx` — System health display panel
+- `frontend/src/components/dashboard/Layout.tsx` — Main layout wrapper with header
+- `frontend/src/components/tasks/SubmitTaskPanel.tsx` — Task submission form
+- `frontend/src/components/tasks/TaskListPanel.tsx` — Task list with status display
+- `frontend/src/components/tasks/TaskRow.tsx` — Expandable task row with output/error
+- `frontend/src/components/approvals/ApprovalPanel.tsx` — Approval queue with approve/reject
+- `frontend/src/components/agents/AgentStatusPanel.tsx` — Panel showing registered agents
+- `backend/nexus/tests/unit/test_guards.py` — 6 tests for approval guard workflow
+- `backend/nexus/tests/unit/test_api_tasks.py` — 4 tests for task API models
+- `backend/nexus/tests/unit/test_api_approvals.py` — 4 tests for approval API models
+- `backend/nexus/tests/e2e/stress_test.py` — 50-task stress test script (5 difficulty categories)
+- `backend/.dockerignore` — Excludes .venv, __pycache__, .pytest_cache from Docker builds
+
+### Changed
+- `frontend/src/App.tsx` — Decomposed from 370-line monolith to ~30-line thin shell importing components
+- `frontend/vite.config.ts` — Added `/ws` proxy entry with `ws: true` for WebSocket support
+- `backend/pyproject.toml` — Pinned pydantic-ai to >=0.5.0,<0.6.0 and anthropic to <0.83.0
+- `backend/Dockerfile` — Fixed copy ordering (COPY . . before pip install for editable installs)
+- `docker-compose.yml` — Remapped postgres port to 5433:5432 and redis to 6380:6379 to avoid host conflicts
+- `backend/nexus/llm/factory.py` — Removed `api_key` parameter from AnthropicModel/GeminiModel (pydantic-ai 0.5.x reads from env vars)
+- `backend/nexus/agents/base.py` — Fixed heartbeat: pass dict to producer instead of pre-serialized bytes
+- `backend/nexus/api/tasks.py` — Added explicit `await db_session.commit()` before Kafka publish
+- `backend/nexus/tests/behavior/test_result_consumer.py` — Fixed 3 tests: use AsyncMock for async patches, proper session factory mock
+
+### Fixed
+- `structlog.get_level_from_name()` does not exist — replaced with `getattr(logging, level.upper(), logging.INFO)` in `app.py` and `runner.py`
+- `pydantic-ai` 0.6+ incompatible with `anthropic` 0.84.0 (`UserLocation` renamed to `BetaUserLocationParam`) — pinned to 0.5.x
+- `AnthropicModel.__init__()` no longer accepts `api_key` param in pydantic-ai 0.5.x — removed it from factory
+- All 9 database tables missing `sa_orm_sentinel` column required by Advanced Alchemy `UUIDBase` — added to migration
+- Task creation not persisting to DB — Litestar auto-commit unreliable before Kafka message processed; added explicit commit
+- Heartbeat `Object of type bytes is not JSON serializable` — producer `value_serializer` already serializes; don't double-encode
+- Frontend API paths wrong (`/tasks` instead of `/api/tasks`, `/approvals` instead of `/api/approvals`)
+- Frontend approval endpoint wrong (separate `/approve` and `/reject` instead of single `/resolve`)
+- `seed.py` using `print()` — violated ruff T20 rule; replaced with structlog
+- Docker port conflicts with host postgres (5432) and redis (6379)
+
+### Database
+- Migration: `001_initial_schema.py` — Added `sa_orm_sentinel INTEGER NULL` to all 9 tables
+
+### E2E Verification Results
+- All 5 Docker services start and report healthy
+- `GET /health` returns all green (postgres, 4x redis, kafka)
+- Task flow verified: POST /api/tasks → CEO receives via Kafka → delegates to Engineer → Engineer processes → result written to DB
+- LLM calls fail with 401 (placeholder API keys) — expected; architecture is sound
+- Frontend loads at localhost:5173 with all panels rendering
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-07] — Add full setup and start script
 
 ### Added

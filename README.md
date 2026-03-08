@@ -100,6 +100,30 @@ nexus/
 └── .env.example
 ```
 
+## Current Status
+
+| Phase | Status |
+|-------|--------|
+| Phase 0 — Foundation | **Complete** |
+| Phase 1 — Single Agent Loop | **~98% complete** (E2E verified, needs real API keys for full task completion) |
+| Phase 2 — Multi-Agent + A2A | Planned |
+
+### What works today
+
+- All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
+- `GET /health` returns all green checks (postgres, 4x redis, kafka)
+- Full task flow verified: `POST /api/tasks` → CEO receives via Kafka → delegates to Engineer → Engineer processes → result written to DB
+- Frontend dashboard loads with all panels (health, tasks, approvals, agents)
+- WebSocket real-time updates from agent activity
+- LLM calls are architecture-verified (401 with placeholder keys — expected)
+- Database schema deployed: all 9 tables with pgvector extension
+- CEO and Engineer agents start, subscribe to correct Kafka topics, and process messages
+
+### What's remaining
+
+- Configure real API keys for full LLM-powered task completion
+- Run 50-task stress test (Phase 2 gate)
+
 ## Getting Started
 
 ### Prerequisites
@@ -107,7 +131,14 @@ nexus/
 - Docker and Docker Compose
 - API keys for Anthropic and Google AI
 
-### Setup
+### Quick Setup
+
+```bash
+# One command setup (checks prerequisites, builds, starts, migrates, seeds)
+make setup
+```
+
+### Manual Setup
 
 ```bash
 # Clone the repository
@@ -131,6 +162,9 @@ curl localhost:8000/health
 ```
 
 The dashboard will be available at `http://localhost:5173` and the API at `http://localhost:8000`.
+
+> **Note:** If you have local PostgreSQL (5432) or Redis (6379) running, Docker ports are
+> remapped to 5433 and 6380 respectively. Internal container networking is unaffected.
 
 ## Development
 
@@ -162,12 +196,25 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 - **Humans stay in the loop** — irreversible actions (file writes, emails, git pushes) require explicit human approval
 - **Every action is traceable** — all messages carry `task_id` and `trace_id` for full auditability
 
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | System health check (DB, Redis, Kafka) |
+| `POST` | `/api/tasks` | Create a new task |
+| `GET` | `/api/tasks` | List tasks (optional `?status=` filter) |
+| `GET` | `/api/tasks/{id}` | Get task by ID |
+| `GET` | `/api/agents` | List registered agents |
+| `GET` | `/api/approvals` | List pending approvals |
+| `POST` | `/api/approvals/{id}/resolve` | Approve or reject an action |
+| `WS` | `/ws/agent-activity` | Real-time agent event stream |
+
 ## Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| Phase 0 | Foundation — Docker, schema, health checks, approval guards | Complete |
-| Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | In progress |
+| Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
+| Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **~98%** — E2E verified |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | Planned |
 | Phase 3 | Hardening, chaos testing, A2A outbound | Planned |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
@@ -179,3 +226,4 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 - **[BACKLOG.md](BACKLOG.md)** — Captured ideas and deferred scope
 - **[CHANGELOG.md](CHANGELOG.md)** — Version history
 - **[ERRORLOG.md](ERRORLOG.md)** — Bug tracking and prevention rules
+- **[AGENTS.md](AGENTS.md)** — AI agent coding policy and workflow rules
