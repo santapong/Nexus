@@ -74,6 +74,56 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-013 — CEO decomposition f-string with JSON braces causes parse errors
+
+**Date:** 2026-03-10
+**Severity:** medium
+**Status:** fixed
+**Found by:** claude_code during Phase 2 implementation
+**Affected files:** `backend/nexus/agents/ceo.py`
+
+### What happened
+CEO system prompt used f-string with inline JSON example containing braces:
+`f"Example: [{{"role": "analyst"...}}]"`. IDE and some Python parsers flagged this as
+a syntax error due to nested brace escaping ambiguity.
+
+### Root cause
+f-strings require `{{` and `}}` to produce literal braces. Combined with JSON examples
+containing multiple nested objects, the escaping becomes fragile and hard to read.
+
+### Fix applied
+Changed the JSON example from an f-string to a plain string concatenation. The LLM
+prompt template uses `str.format()` or simple concatenation for dynamic parts, keeping
+the JSON example as a literal string.
+
+### Prevention
+- Pattern: never embed JSON examples in f-strings. Use plain strings for static content.
+- Added to code review checklist for agent prompts.
+
+---
+
+## ERROR-012 — Unused imports/variables in Phase 2 agent files
+
+**Date:** 2026-03-10
+**Severity:** low
+**Status:** fixed
+**Found by:** claude_code during Phase 2 implementation
+**Affected files:** `backend/nexus/agents/ceo.py`, `backend/nexus/tools/adapter.py`, `backend/nexus/kafka/result_consumer.py`
+
+### What happened
+Multiple files had unused imports (`datetime`, `timezone`, `uuid4`) and unused variable
+assignments (`add_result`, `commit_result`, `ceo_id`). Would fail ruff lint checks.
+
+### Root cause
+Code was written with variables for debugging that were not cleaned up before finalization.
+
+### Fix applied
+Removed all unused imports and variable assignments. Verified with `ast.parse()` on all files.
+
+### Prevention
+- Run `ruff check` before finalizing any file
+- CI enforces ruff linting on every commit
+
 ## ERROR-011 — Docker port conflicts with host services
 
 **Date:** 2026-03-08
@@ -442,7 +492,26 @@ messages are silently dropped or go to wrong consumers.
 outside of `kafka/topics.py`.
 **Required pattern:** Always `Topics.AGENT_COMMANDS`, never `"agent.commands"`.
 
+### Pattern H — Subtask forwarding race condition
+
+**Risk:** Subtask completes before CEO finishes writing tracking state to Redis working
+memory. Result consumer forwards aggregation command to CEO, but CEO can't find tracking
+data. Subtask result is lost or task hangs.
+**Watch for:** Any code path where a subtask response is processed before `set_working_memory()`
+completes in the CEO decomposition path.
+**Required pattern:** CEO must `await set_working_memory()` before dispatching any subtask.
+Redis write must be confirmed before Kafka publish.
+
+### Pattern I — JSON parsing from LLM output
+
+**Risk:** LLM returns JSON wrapped in markdown code blocks (`` ```json ... ``` ``),
+or with preamble text before the JSON. Direct `json.loads()` fails.
+**Watch for:** Any agent that expects structured JSON from LLM output (CEO decomposition,
+QA review). Raw `json.loads(output)` will fail on markdown-wrapped responses.
+**Required pattern:** Strip markdown code block markers before parsing. Have a fallback
+for non-JSON responses (CEO: default to single engineer subtask; QA: default to approved).
+
 ---
 
-*Last updated: 2026-03-08*
-*Next error ID: ERROR-012*
+*Last updated: 2026-03-10*
+*Next error ID: ERROR-014*

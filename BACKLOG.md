@@ -23,6 +23,30 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-022 — QA multi-round rework with configurable retry limit
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-10
+**Source:** ADR-022, Phase 2 QA implementation
+**Description:** Current QA pipeline does one rework attempt. If the specialist fails again,
+the task fails. Add configurable max_rework_rounds (default 2) so QA can cycle rejected output
+back to the specialist multiple times. Include the previous QA feedback in each rework instruction
+so the specialist knows exactly what to fix. Guard against unbounded loops via the round counter.
+
+---
+
+### BACKLOG-021 — CEO decomposition prompt optimization via Prompt Creator
+**Suggested phase:** Phase 2 (with Prompt Creator Agent)
+**Added by:** claude_code
+**Date:** 2026-03-10
+**Source:** ADR-020, Phase 2 CEO implementation
+**Description:** The CEO decomposition prompt is critical — bad decomposition wastes all
+downstream agent work. Once Prompt Creator Agent is implemented, it should analyze CEO
+decomposition failures (invalid JSON, wrong role assignments, missing dependencies) and
+propose improved prompts. Track decomposition success rate as a metric in the dashboard.
+
+---
+
 ### BACKLOG-020 — Groq daily token limit monitoring in dashboard
 **Suggested phase:** Phase 2
 **Added by:** claude_code
@@ -255,5 +279,5 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-08*
-*Next item ID: BACKLOG-021*
+*Last updated: 2026-03-10*
+*Next item ID: BACKLOG-023*

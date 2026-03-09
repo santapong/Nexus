@@ -1,7 +1,7 @@
-# RISK_REVIEW.md — Phase 1 Risk Assessment (2026-03-08)
+# RISK_REVIEW.md — Phase 2 Risk Assessment (2026-03-10)
 
 > Review of §23 Prevention Rules against actual implementation status.
-> Updated after Phase 1 audit and universal ModelFactory upgrade.
+> Updated after Phase 2 Priority Groups 1–3 (multi-agent orchestration).
 
 ---
 
@@ -11,7 +11,7 @@
 |------|----------|--------|-------|
 | Risk 1 — Building orchestration before loop works | CRITICAL | RESOLVED | 50-task stress test: 100% pass rate (50/50). |
 | Risk 2 — Cost explosion from unbounded loops | CRITICAL | MITIGATED | Budget enforcement live in Redis. Multi-provider pricing added. |
-| Risk 3 — Vague system prompts | CRITICAL | MITIGATED | Engineer prompt written + seeded. CEO is thin router (no LLM). |
+| Risk 3 — Vague system prompts | CRITICAL | MITIGATED | All 5 agent prompts written + seeded. CEO decomposition prompt tested. |
 | Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. |
 | Risk 5 — Agents fail silently | HIGH | PARTIAL | Heartbeat loop runs. Auto-fail on silence NOT yet implemented (BACKLOG-016). |
 | Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 9 tables deployed. Embeddings tested. |
@@ -19,6 +19,8 @@
 | Risk 8 — Scope creep | MEDIUM | MITIGATED | BACKLOG.md active. Phase gates defined. |
 | **NEW Risk 9** — Multi-provider key sprawl | MEDIUM | NEEDS ATTENTION | See below. |
 | **NEW Risk 10** — Local model tool calling gaps | LOW | NEEDS ATTENTION | See below. |
+| **NEW Risk 11** — Subtask forwarding race condition | MEDIUM | MITIGATED | See below. |
+| **NEW Risk 12** — CEO decomposition quality | HIGH | MITIGATED | See below. |
 
 ---
 
@@ -90,6 +92,33 @@
 
 ---
 
+### NEW Risk 11 — Subtask forwarding race condition
+**Severity:** MEDIUM
+**What happens:** A subtask completes very quickly before CEO finishes writing tracking state to Redis. Result consumer forwards the aggregation command, but CEO can't find the tracking data in working memory. Task hangs or errors.
+
+**Mitigations:**
+- CEO writes working memory (`set_working_memory`) before dispatching any subtask
+- Redis writes are awaited (not fire-and-forget)
+- Error handling in CEO's `_handle_agent_response` logs and fails gracefully if tracking not found
+
+**Recommendation:** Add integration test that races subtask completion against CEO setup. Monitor for "tracking not found" errors in production logs.
+
+---
+
+### NEW Risk 12 — CEO decomposition quality
+**Severity:** HIGH
+**What happens:** CEO LLM produces bad decompositions — wrong roles, missing dependencies, overly granular splits, or invalid JSON. All downstream work is wasted because the task plan was wrong.
+
+**Mitigations:**
+- Fallback to single engineer subtask on invalid JSON
+- Invalid roles normalized to "engineer"
+- Decomposition prompt includes explicit JSON format example
+- 22 unit + behavior tests covering decomposition edge cases
+
+**Recommendation:** Track decomposition success rate. Feed failures to Prompt Creator Agent (BACKLOG-021). Consider adding a decomposition validation step before dispatch.
+
+---
+
 ## Decisions Made This Session
 
 | Decision | Choice | Date | Reason |
@@ -100,6 +129,9 @@
 | Provider resolution strategy | Prefix-based matching (first wins) | 2026-03-08 | Simple, extensible, no magic. `claude-*` → Anthropic, `openai:*` → OpenAI, etc. |
 | Local model support | Ollama via OpenAI-compat endpoint | 2026-03-08 | Ollama exposes OpenAI-compatible API. No custom client needed. |
 | OpenAI-compatible catch-all | `openai-compat:` prefix | 2026-03-08 | Supports vLLM, LocalAI, LiteLLM, any custom endpoint. |
+| CEO task decomposition | LLM-based with dependency tracking | 2026-03-10 | Dynamic task understanding vs static routing. See ADR-020. |
+| Subtask forwarding | Result consumer detects subtasks, forwards to CEO | 2026-03-10 | Clean separation of routing vs orchestration. See ADR-021. |
+| QA pipeline | Approve → task.results; Reject → rework via agent.commands | 2026-03-10 | QA owns the decision point. See ADR-022. |
 
 ---
 
@@ -137,4 +169,4 @@
 
 ---
 
-*Last updated: 2026-03-08*
+*Last updated: 2026-03-10*

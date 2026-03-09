@@ -83,20 +83,30 @@ async def _handle_response(
         )
         return
 
-    # Skip delegation-only responses from CEO (no real task output)
-    if response.output and response.output.get("action") == "delegated_to_engineer":
-        logger.debug("result_consumer_skip_delegation", task_id=task_id)
+    # Skip CEO orchestration responses (decomposition, subtask tracking)
+    if response.output and response.output.get("action") in (
+        "delegated_to_engineer", "decomposed", "subtask_tracked",
+        "aggregated_and_sent_to_qa",
+    ):
+        logger.debug("result_consumer_skip_ceo_action", task_id=task_id, action=response.output.get("action"))
         return
 
-    # Map agent response status to task status
+    # Check if this response is for a subtask (has parent_task_id)
+    async with db_session_factory() as session:
+        is_subtask = await _check_is_subtask(session, task_id)
+
+    if is_subtask:
+        # Forward subtask completion to CEO for aggregation
+        await _forward_to_ceo(response, db_session_factory)
+        return
+
+    # Direct task result — update DB and publish
     task_status = _map_status(response.status)
 
-    # Update task in DB
     async with db_session_factory() as session:
         await _update_task_in_db(session, task_id, task_status, response)
         await session.commit()
 
-    # Publish final result to task.results topic
     task_result = TaskResult(
         task_id=response.task_id,
         trace_id=response.trace_id,
@@ -108,7 +118,6 @@ async def _handle_response(
     )
     await publish(Topics.TASK_RESULTS, task_result, key=task_id)
 
-    # Broadcast to Redis pub/sub for WebSocket dashboard
     event = {
         "event": "task_result",
         "task_id": task_id,
@@ -127,6 +136,86 @@ async def _handle_response(
         status=task_status,
         agent_id=response.agent_id,
         tokens_used=response.tokens_used,
+    )
+
+
+async def _check_is_subtask(session: AsyncSession, task_id: str) -> bool:
+    """Check if a task has a parent_task_id (is a subtask)."""
+    stmt = select(Task.parent_task_id).where(Task.id == task_id)
+    result = await session.execute(stmt)
+    parent_id = result.scalar_one_or_none()
+    return parent_id is not None
+
+
+async def _forward_to_ceo(
+    response: AgentResponse,
+    db_session_factory: Callable[..., Any],
+) -> None:
+    """Forward a subtask response to the CEO for aggregation."""
+    task_id = str(response.task_id)
+
+    # Look up the parent task ID
+    async with db_session_factory() as session:
+        stmt = select(Task).where(Task.id == task_id)
+        result = await session.execute(stmt)
+        task = result.scalar_one_or_none()
+
+        if task is None:
+            logger.warning("forward_to_ceo_task_not_found", task_id=task_id)
+            return
+
+        parent_task_id = task.parent_task_id
+
+        # Update subtask status in DB
+        task_status = _map_status(response.status)
+        task.status = task_status
+        task.output = response.output
+        task.error = response.error
+        task.tokens_used = response.tokens_used
+        from datetime import datetime, timezone
+        task.completed_at = datetime.now(timezone.utc)
+        await session.commit()
+
+    # Extract the result text from the response output
+    subtask_output = ""
+    if response.output:
+        subtask_output = response.output.get("result", str(response.output))
+
+    # Publish to task.queue so CEO picks it up as a response notification
+    from nexus.kafka.schemas import AgentCommand
+    ceo_command = AgentCommand(
+        task_id=response.task_id,
+        trace_id=response.trace_id,
+        agent_id=response.agent_id,
+        payload={
+            "_response_aggregation": True,
+            "subtask_id": task_id,
+            "parent_task_id": parent_task_id,
+            "subtask_output": subtask_output,
+            "subtask_status": response.status,
+        },
+        target_role="ceo",
+        instruction="Subtask completed — aggregate responses",
+    )
+    await publish(Topics.TASK_QUEUE, ceo_command, key=str(parent_task_id))
+
+    # Broadcast subtask completion for dashboard
+    event = {
+        "event": "subtask_completed",
+        "task_id": task_id,
+        "parent_task_id": parent_task_id,
+        "status": response.status,
+        "tokens_used": response.tokens_used,
+    }
+    await redis_pubsub.publish(
+        f"agent_activity:{parent_task_id}", json.dumps(event)
+    )
+
+    logger.info(
+        "subtask_forwarded_to_ceo",
+        subtask_id=task_id,
+        parent_task_id=parent_task_id,
+        status=response.status,
     )
 
 

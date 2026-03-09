@@ -13,6 +13,10 @@ from nexus.tools.adapter import (
     tool_code_execute,
     tool_file_read,
     tool_file_write,
+    tool_git_push,
+    tool_memory_read,
+    tool_send_email,
+    tool_web_fetch,
     tool_web_search,
 )
 
@@ -23,14 +27,21 @@ IRREVERSIBLE_TOOLS: set[str] = {
     "tool_send_email",
 }
 
-# Per-role tool access map
+# Per-role tool access map — matches CLAUDE.md §8
 TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
     AgentRole.CEO: [],
-    AgentRole.ENGINEER: [tool_web_search, tool_file_read, tool_code_execute, tool_file_write],
-    AgentRole.ANALYST: [tool_web_search, tool_file_read],
-    AgentRole.WRITER: [tool_web_search, tool_file_read],
+    AgentRole.ENGINEER: [
+        tool_web_search, tool_file_read, tool_code_execute,
+        tool_file_write, tool_git_push,
+    ],
+    AgentRole.ANALYST: [
+        tool_web_search, tool_web_fetch, tool_file_read, tool_file_write,
+    ],
+    AgentRole.WRITER: [
+        tool_web_search, tool_file_read, tool_file_write, tool_send_email,
+    ],
     AgentRole.QA: [tool_file_read, tool_web_search],
-    AgentRole.PROMPT_CREATOR: [tool_web_search, tool_file_read],
+    AgentRole.PROMPT_CREATOR: [tool_web_search, tool_file_read, tool_memory_read],
 }
 
 

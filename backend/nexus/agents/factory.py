@@ -57,30 +57,34 @@ def build_agent(
     topics = ROLE_TOPICS.get(role, [Topics.AGENT_COMMANDS])
     group_id = f"nexus-{role.value}"
 
-    # Import the correct subclass
+    kwargs = {
+        "role": role,
+        "agent_id": agent_id,
+        "subscribe_topics": topics,
+        "group_id": group_id,
+        "llm_agent": llm_agent,
+        "db_session_factory": db_session_factory,
+    }
+
     if role == AgentRole.CEO:
         from nexus.agents.ceo import CEOAgent
-
-        return CEOAgent(
-            role=role,
-            agent_id=agent_id,
-            subscribe_topics=topics,
-            group_id=group_id,
-            llm_agent=llm_agent,
-            db_session_factory=db_session_factory,
-        )
+        return CEOAgent(**kwargs)
 
     if role == AgentRole.ENGINEER:
         from nexus.agents.engineer import EngineerAgent
+        return EngineerAgent(**kwargs)
 
-        return EngineerAgent(
-            role=role,
-            agent_id=agent_id,
-            subscribe_topics=topics,
-            group_id=group_id,
-            llm_agent=llm_agent,
-            db_session_factory=db_session_factory,
-        )
+    if role == AgentRole.ANALYST:
+        from nexus.agents.analyst import AnalystAgent
+        return AnalystAgent(**kwargs)
+
+    if role == AgentRole.WRITER:
+        from nexus.agents.writer import WriterAgent
+        return WriterAgent(**kwargs)
+
+    if role == AgentRole.QA:
+        from nexus.agents.qa import QAAgent
+        return QAAgent(**kwargs)
 
     msg = f"No agent implementation for role: {role.value}"
     raise ValueError(msg)

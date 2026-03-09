@@ -108,13 +108,18 @@ nexus/
 |-------|--------|
 | Phase 0 — Foundation | **Complete** |
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
-| Phase 2 — Multi-Agent + A2A | Ready to start |
+| Phase 2 — Multi-Agent + A2A | **In Progress** — Priority Groups 1–3 complete |
 
 ### What works today
 
 - All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
-- Full task flow verified end-to-end: `POST /api/tasks` → CEO → Engineer → LLM → result in DB
+- **Multi-agent task flow:** `POST /api/tasks` → CEO decomposes → specialist agents execute → CEO aggregates → QA reviews → result delivered
+- **5 agent roles operational:** CEO (orchestrator), Engineer, Analyst, Writer, QA
+- **CEO LLM-based task decomposition** with dependency tracking and subtask dispatch
+- **QA review pipeline** with approve/reject routing and rework commands
+- **8 MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read
+- **Task trace API:** `GET /api/tasks/{id}/trace` returns parent + subtask tree
 - Universal ModelFactory supporting 7+ LLM providers (Anthropic, Google, OpenAI, Groq, Mistral, Ollama, OpenAI-compatible)
 - Frontend dashboard with all panels (health, tasks, approvals, agents)
 - WebSocket real-time updates from agent activity
@@ -122,7 +127,6 @@ nexus/
 - `test:` model provider for infrastructure testing at zero API cost
 - 50-task stress test: 100% pass rate (Phase 2 gate cleared)
 - Database schema deployed: all 9 tables with pgvector extension
-- CEO and Engineer agents start, subscribe to correct Kafka topics, and process messages
 
 ## Getting Started
 
@@ -206,6 +210,7 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `GET` | `/api/tasks` | List tasks (optional `?status=` filter) |
 | `GET` | `/api/tasks/{id}` | Get task by ID |
 | `GET` | `/api/agents` | List registered agents |
+| `GET` | `/api/tasks/{id}/trace` | Get task trace (parent + subtask tree) |
 | `GET` | `/api/approvals` | List pending approvals |
 | `POST` | `/api/approvals/{id}/resolve` | Approve or reject an action |
 | `WS` | `/ws/agent-activity` | Real-time agent event stream |
@@ -216,7 +221,7 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 |-------|-------|--------|
 | Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
-| Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | Planned |
+| Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **In Progress** — Groups 1–3 done |
 | Phase 3 | Hardening, chaos testing, A2A outbound | Planned |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
 

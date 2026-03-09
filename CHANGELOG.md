@@ -40,6 +40,45 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-10] — Phase 2 Priority Groups 1–3: Multi-agent orchestration
+
+### Added
+- `backend/nexus/agents/analyst.py` — AnalystAgent for research/data analysis tasks
+- `backend/nexus/agents/writer.py` — WriterAgent for content/email/documentation tasks
+- `backend/nexus/agents/qa.py` — QAAgent for output review with approve/reject pipeline
+- `backend/nexus/tools/adapter.py` — 4 new tools: `tool_web_fetch`, `tool_send_email`,
+  `tool_git_push`, `tool_memory_read`
+- `backend/nexus/api/tasks.py` — `GET /api/tasks/{id}/trace` endpoint for subtask tree view
+- `backend/nexus/tests/unit/test_new_agents.py` — 5 tests for Analyst, Writer, QA agents
+- `backend/nexus/tests/unit/test_ceo_decomposition.py` — 5 tests for CEO decomposition/aggregation
+- `backend/nexus/tests/unit/test_tools_registry_phase2.py` — 8 tests for updated tool registry
+- `backend/nexus/tests/behavior/test_multi_agent_flow.py` — 4 behavior tests for multi-agent pipeline
+- System prompts for Analyst, Writer, QA agents seeded into `prompts` table
+
+### Changed
+- `backend/nexus/agents/ceo.py` — Complete rewrite from thin router to full LLM-based task
+  decomposer with subtask creation, dependency tracking, response aggregation, and QA routing
+- `backend/nexus/agents/factory.py` — Now builds all 5 agent roles (CEO, Engineer, Analyst, Writer, QA)
+- `backend/nexus/tools/registry.py` — Updated tool access map per CLAUDE.md §8:
+  Analyst gets web_fetch+file_write, Writer gets send_email, Prompt Creator gets memory_read
+- `backend/nexus/kafka/result_consumer.py` — Added subtask detection and CEO forwarding:
+  subtask responses route back to CEO for aggregation instead of directly to task.results
+- `backend/nexus/db/seed.py` — Extended with Analyst, Writer, QA agent records and prompts
+
+### Architecture
+- **CEO Decomposition Flow:** Task → LLM analysis → JSON subtask plan → DB subtask creation →
+  dependency-aware dispatch → Redis working memory tracking
+- **CEO Aggregation Flow:** Subtask completes → result_consumer forwards to CEO → CEO updates
+  tracking → dispatches unblocked dependents → when all done, aggregates and routes to QA
+- **QA Review Pipeline:** QA receives aggregated output → LLM review → approved: publish
+  TaskResult to task.results; rejected: publish rework command to agent.commands
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-08] — Phase 1 complete: Universal ModelFactory, stress test 100%, LLM retry logic
 
 ### Added

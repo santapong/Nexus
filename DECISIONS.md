@@ -39,6 +39,9 @@
 | ADR-017 | Universal ModelFactory — multi-provider prefix registry | accepted | 2026-03-08 |
 | ADR-018 | Test model provider for infrastructure testing | accepted | 2026-03-08 |
 | ADR-019 | LLM retry logic with exponential backoff | accepted | 2026-03-08 |
+| ADR-020 | CEO LLM-based task decomposition with dependency tracking | accepted | 2026-03-10 |
+| ADR-021 | Subtask forwarding via result consumer | accepted | 2026-03-10 |
+| ADR-022 | QA approve/reject pipeline with rework routing | accepted | 2026-03-10 |
 
 ---
 
@@ -803,11 +806,171 @@ Other errors are not retried — they propagate immediately as task failures.
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-020 -->
+## ADR-020 — CEO LLM-based task decomposition with dependency tracking
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §7, §10
+**Supersedes:** n/a
+
+### Context
+
+Phase 1 CEO was a thin router that forwarded every task directly to the Engineer agent.
+Phase 2 requires multi-agent collaboration: a task like "Research X and write an email"
+must be split into subtasks for different specialist agents, with dependency ordering
+(writer waits for analyst to finish before starting).
+
+### Decision
+
+CEO uses an LLM call to decompose tasks into a JSON array of subtasks:
+`[{"role": "analyst", "instruction": "...", "depends_on": []}, {"role": "writer", "instruction": "...", "depends_on": [0]}]`.
+Subtasks are created as Task records in PostgreSQL with `parent_task_id` linking them to the
+parent. Tracking state (which subtasks are pending/complete) is stored in Redis working memory.
+CEO dispatches subtasks whose dependencies are all satisfied, passing completed dependency
+outputs as context. When all subtasks complete, CEO aggregates outputs and routes to QA.
+
+If the LLM returns invalid JSON, CEO falls back to a single engineer subtask.
+Invalid role names are normalized to "engineer".
+
+### Alternatives considered
+
+**Static routing table (role → agent mapping)**
+- Pros: Simple, deterministic, no LLM cost for decomposition
+- Cons: Cannot handle novel task compositions. Every new task pattern requires a code change.
+- Why rejected: The whole point of an AI orchestrator is dynamic task understanding.
+
+**LangGraph state machine for decomposition**
+- Pros: Built-in dependency graph support
+- Cons: Conflicts with Kafka orchestration (ADR-010). Would create dual orchestration.
+- Why rejected: Already rejected in ADR-010. Kafka IS the orchestration layer.
+
+### Consequences
+
+**Positive:**
+- CEO can handle arbitrary task compositions without code changes
+- Dependency tracking ensures correct execution order
+- Redis working memory enables stateless CEO restarts mid-task
+
+**Negative / tradeoffs:**
+- One extra LLM call per task for decomposition (adds cost + latency)
+- JSON parsing from LLM is not 100% reliable — fallback logic required
+- Subtask tracking in Redis adds complexity
+
+**Future implications:**
+- Meeting room pattern (Phase 2 later) can build on this decomposition infrastructure
+- Prompt Creator Agent can optimize the CEO decomposition prompt based on failure patterns
 
 ---
 
-*Last updated: 2026-03-08*
-*Next ADR ID: ADR-020*
-*Decision count: 16 accepted, 3 proposed*
+## ADR-021 — Subtask forwarding via result consumer
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §10, ADR-020
+**Supersedes:** n/a
+
+### Context
+
+When a specialist agent completes a subtask, its response goes to `agent.responses` and is
+picked up by the result consumer. For top-level tasks, the result consumer updates the DB
+and publishes to `task.results`. But subtasks must route back to CEO for aggregation —
+not directly to results.
+
+### Decision
+
+The result consumer checks if a completed task has a `parent_task_id` in the database.
+If yes, it's a subtask: update the subtask status in DB, then publish an aggregation
+command to `task.queue` with `_response_aggregation: True` flag in the payload. CEO
+detects this flag and enters its aggregation path (update tracking, dispatch unblocked
+dependents, or aggregate-and-route-to-QA if all done).
+
+CEO orchestration actions (`decomposed`, `subtask_tracked`, `aggregated_and_sent_to_qa`)
+are skipped by the result consumer — they are internal state transitions, not final results.
+
+### Alternatives considered
+
+**Direct CEO-to-CEO Kafka topic**
+- Pros: Dedicated channel, no result consumer modification needed
+- Cons: New topic just for internal routing. Result consumer still needs to know about subtasks.
+- Why rejected: Adds a topic without solving the core problem. Result consumer must still
+  distinguish subtasks from top-level tasks.
+
+**Agent responses go directly to CEO**
+- Pros: Simpler routing — CEO consumes all agent.responses
+- Cons: CEO would process ALL agent responses, even those not related to its tasks.
+  High noise. No separation of concerns.
+- Why rejected: CEO should only see responses to its own subtasks, not all agent traffic.
+
+### Consequences
+
+**Positive:**
+- Clean separation: result consumer handles routing, CEO handles orchestration
+- Existing result consumer infrastructure is reused
+- `_response_aggregation` flag makes the routing explicit and debuggable
+
+**Negative / tradeoffs:**
+- Result consumer now has DB queries (to check parent_task_id) — slightly heavier
+- Potential race condition if subtask completes before CEO finishes writing tracking state
+
+---
+
+## ADR-022 — QA approve/reject pipeline with rework routing
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §7, §10
+**Supersedes:** n/a
+
+### Context
+
+Per CLAUDE.md §7, QA reviews all outputs before delivery. The QA agent needs a structured
+way to approve good output (send to user) or reject bad output (send back for rework).
+
+### Decision
+
+QA receives aggregated output on `task.review_queue`. It uses an LLM call to evaluate
+the output and returns a JSON response: `{"approved": bool, "score": float, "feedback": str, "issues": []}`.
+
+- **Approved:** QA publishes a TaskResult to `task.results` with the aggregated output.
+- **Rejected:** QA publishes a rework command to `agent.commands` targeting the original
+  specialist role, with the QA feedback included in the instruction.
+
+If the LLM returns non-JSON, QA defaults to approved (fail-open for v1 — revisit in Phase 3).
+
+### Alternatives considered
+
+**QA as a scoring-only agent (no routing)**
+- Pros: Simpler — QA just scores, someone else routes
+- Cons: Requires another component to read QA scores and decide routing. More moving parts.
+- Why rejected: QA is the natural decision point — it already has the evaluation context.
+
+**Automatic multi-round rework loop**
+- Pros: Rejected work automatically cycles back and forth until QA approves
+- Cons: Unbounded loop risk. Could cycle indefinitely with cost explosion.
+- Why rejected: v1 does one rework attempt. If still rejected, task fails. Multi-round
+  rework with configurable limits is a Phase 3 feature.
+
+### Consequences
+
+**Positive:**
+- Clean approve/reject flow with structured feedback
+- Rework routing reuses existing `agent.commands` infrastructure
+- QA feedback is included in rework instructions, improving specialist output
+
+**Negative / tradeoffs:**
+- Fail-open default (non-JSON → approved) could pass bad output in edge cases
+- Single rework attempt may not be enough for complex tasks
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-023 -->
+
+---
+
+*Last updated: 2026-03-10*
+*Next ADR ID: ADR-023*
+*Decision count: 19 accepted, 3 proposed*

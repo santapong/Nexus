@@ -136,3 +136,50 @@ class TaskController(Controller):
             started_at=str(task.started_at) if task.started_at else None,
             completed_at=str(task.completed_at) if task.completed_at else None,
         )
+
+    @get("/{task_id:str}/trace")
+    async def get_task_trace(
+        self,
+        task_id: str,
+        db_session: AsyncSession,
+    ) -> dict[str, Any]:
+        """Get a task with its full subtask tree for multi-agent tracing."""
+        stmt = select(Task).where(Task.id == task_id)
+        result = await db_session.execute(stmt)
+        parent = result.scalar_one_or_none()
+
+        if parent is None:
+            return {"error": "Task not found"}
+
+        subtask_stmt = (
+            select(Task)
+            .where(Task.parent_task_id == task_id)
+            .order_by(Task.created_at)
+        )
+        subtask_result = await db_session.execute(subtask_stmt)
+        subtasks = subtask_result.scalars().all()
+
+        def _to_dict(t: Task) -> dict[str, Any]:
+            return {
+                "id": str(t.id),
+                "trace_id": t.trace_id,
+                "parent_task_id": t.parent_task_id,
+                "instruction": t.instruction,
+                "status": t.status,
+                "source": t.source,
+                "tokens_used": t.tokens_used,
+                "output": t.output,
+                "error": t.error,
+                "created_at": str(t.created_at),
+                "started_at": str(t.started_at) if t.started_at else None,
+                "completed_at": str(t.completed_at) if t.completed_at else None,
+            }
+
+        return {
+            "parent": _to_dict(parent),
+            "subtasks": [_to_dict(st) for st in subtasks],
+            "total_subtasks": len(subtasks),
+            "completed_subtasks": sum(
+                1 for st in subtasks if st.status == TaskStatus.COMPLETED.value
+            ),
+        }
