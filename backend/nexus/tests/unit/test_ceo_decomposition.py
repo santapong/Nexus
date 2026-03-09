@@ -16,6 +16,12 @@ from nexus.kafka.schemas import AgentCommand, AgentResponse
 
 
 def _make_session_factory() -> MagicMock:
+    mock_session = _make_mock_session()
+    return MagicMock(return_value=mock_session)
+
+
+def _make_mock_session() -> AsyncMock:
+    """Create a properly mocked async DB session that assigns UUIDs on add()."""
     mock_session = AsyncMock()
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
@@ -28,7 +34,7 @@ def _make_session_factory() -> MagicMock:
             obj.id = uuid4()
 
     mock_session.add = MagicMock(side_effect=add_side_effect)
-    return MagicMock(return_value=mock_session)
+    return mock_session
 
 
 def _make_llm_agent(decomposition: list[dict] | str = "") -> MagicMock:
@@ -92,10 +98,7 @@ async def test_ceo_decomposes_multi_agent_task(
     ]
     ceo = _make_ceo(decomposition)
     command = _make_command("Research competitors and draft email")
-    session = AsyncMock()
-    session.add = MagicMock()
-    session.flush = AsyncMock()
-    session.commit = AsyncMock()
+    session = _make_mock_session()
 
     response = await ceo.handle_task(command, session)
 
@@ -122,10 +125,7 @@ async def test_ceo_single_agent_task(
     ]
     ceo = _make_ceo(decomposition)
     command = _make_command("Write a hello world function")
-    session = AsyncMock()
-    session.add = MagicMock()
-    session.flush = AsyncMock()
-    session.commit = AsyncMock()
+    session = _make_mock_session()
 
     response = await ceo.handle_task(command, session)
 
@@ -145,10 +145,7 @@ async def test_ceo_fallback_on_invalid_decomposition(
     """CEO should fall back to engineer when LLM returns invalid JSON."""
     ceo = _make_ceo("This is not valid JSON")
     command = _make_command("Do something")
-    session = AsyncMock()
-    session.add = MagicMock()
-    session.flush = AsyncMock()
-    session.commit = AsyncMock()
+    session = _make_mock_session()
 
     response = await ceo.handle_task(command, session)
 
@@ -172,10 +169,7 @@ async def test_ceo_validates_roles(
     ]
     ceo = _make_ceo(decomposition)
     command = _make_command()
-    session = AsyncMock()
-    session.add = MagicMock()
-    session.flush = AsyncMock()
-    session.commit = AsyncMock()
+    session = _make_mock_session()
 
     response = await ceo.handle_task(command, session)
 

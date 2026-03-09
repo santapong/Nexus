@@ -8,7 +8,7 @@ from advanced_alchemy.extensions.litestar import SQLAlchemyPlugin
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 
-from nexus.api.router import api_router, health_router
+from nexus.api.router import a2a_router, api_router, health_router
 from nexus.db.session import sqlalchemy_config
 from nexus.kafka.producer import close_producer
 from nexus.settings import settings
@@ -65,7 +65,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[api_router, health_router],
+        route_handlers=[api_router, health_router, a2a_router],
         plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
         cors_config=cors_config,
         on_startup=[_on_startup],

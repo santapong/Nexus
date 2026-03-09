@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from nexus.agents.factory import build_agent
+from nexus.agents.health_monitor import run_health_monitor
 from nexus.db.models import Agent, AgentRole
 from nexus.kafka.result_consumer import run_result_consumer
 from nexus.settings import settings
@@ -29,7 +30,7 @@ async def start_all_agents(
         db_session_factory: Optional session factory. If None, creates a new one.
 
     Returns:
-        List of running asyncio tasks (agents + result consumer).
+        List of running asyncio tasks (agents + result consumer + health monitor).
     """
     if db_session_factory is None:
         engine = create_async_engine(settings.database_url)
@@ -82,6 +83,14 @@ async def start_all_agents(
     )
     tasks.append(result_task)
     logger.info("result_consumer_task_created")
+
+    # Start the health monitor — auto-fails tasks on agent silence
+    health_task = asyncio.create_task(
+        run_health_monitor(db_session_factory),
+        name="health-monitor",
+    )
+    tasks.append(health_task)
+    logger.info("health_monitor_task_created")
 
     logger.info("all_agents_running", count=len(tasks))
     return tasks

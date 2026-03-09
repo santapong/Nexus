@@ -74,29 +74,41 @@ Models are configured per-role via environment variables (e.g., `MODEL_ENGINEER=
 
 ```
 nexus/
+├── CLAUDE.md                      # Master project document
+├── AGENTS.md                      # AI agent coding policy
+├── docs/
+│   ├── ARCHITECTURE.md            # System architecture & fundamentals
+│   ├── DECISIONS.md               # Architecture decision records
+│   ├── RISK_REVIEW.md             # Risk assessment & phase gates
+│   ├── BACKLOG.md                 # Deferred scope capture
+│   ├── CHANGELOG.md               # Version history
+│   ├── ERRORLOG.md                # Bug tracking & prevention
+│   └── archive/                   # Old planning documents
 ├── backend/
 │   ├── pyproject.toml
 │   ├── Dockerfile
-│   ├── alembic/                    # DB migrations
+│   ├── alembic/                   # DB migrations
 │   └── nexus/
-│       ├── api/                    # Litestar REST + WebSocket endpoints
-│       ├── agents/                 # Agent implementations (base, ceo, engineer, ...)
-│       ├── tools/                  # MCP adapter, per-role registry, approval guards
-│       ├── gateway/                # A2A protocol gateway
-│       ├── kafka/                  # Topics, schemas, producer, consumer
-│       ├── memory/                 # Episodic, semantic, working memory + embeddings
-│       ├── llm/                    # ModelFactory + token/cost tracking
-│       ├── db/                     # SQLAlchemy models, session, seed data
-│       ├── redis/                  # 4-role client abstraction
-│       └── tests/                  # Unit, behavior, e2e
+│       ├── api/                   # Litestar REST + WebSocket endpoints
+│       ├── agents/                # Agent implementations (base, ceo, engineer, ...)
+│       ├── tools/                 # MCP adapter, per-role registry, approval guards
+│       ├── gateway/               # A2A protocol gateway
+│       ├── kafka/                 # Topics, schemas, producer, consumer, meeting
+│       ├── memory/                # Episodic, semantic, working memory + embeddings
+│       ├── llm/                   # ModelFactory + token/cost tracking
+│       ├── db/                    # SQLAlchemy models, session, seed data
+│       ├── redis/                 # 4-role client abstraction
+│       └── tests/                 # Unit, behavior, integration, e2e
 ├── frontend/
 │   ├── package.json
 │   └── src/
-│       ├── api/                    # Generated from OpenAPI
-│       ├── components/             # Dashboard, agents, tasks, approvals
-│       ├── hooks/                  # TanStack Query hooks
-│       ├── store/                  # Zustand (UI state only)
-│       └── ws/                     # WebSocket context provider
+│       ├── api/                   # Typed API client
+│       ├── components/            # Dashboard, agents, tasks, approvals, prompts
+│       ├── hooks/                 # TanStack Query hooks
+│       ├── types/                 # TypeScript interfaces
+│       └── ws/                    # WebSocket context provider
+├── scripts/
+│   └── setup.sh                   # One-command project setup
 ├── docker-compose.yml
 ├── Makefile
 └── .env.example
@@ -108,24 +120,30 @@ nexus/
 |-------|--------|
 | Phase 0 — Foundation | **Complete** |
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
-| Phase 2 — Multi-Agent + A2A | **In Progress** — Priority Groups 1–3 complete |
+| Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 
 ### What works today
 
 - All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
 - **Multi-agent task flow:** `POST /api/tasks` → CEO decomposes → specialist agents execute → CEO aggregates → QA reviews → result delivered
-- **5 agent roles operational:** CEO (orchestrator), Engineer, Analyst, Writer, QA
+- **6 agent roles operational:** CEO (orchestrator), Engineer, Analyst, Writer, QA, Prompt Creator
 - **CEO LLM-based task decomposition** with dependency tracking and subtask dispatch
 - **QA review pipeline** with approve/reject routing and rework commands
+- **Meeting room pattern** — Kafka-based multi-agent debates with timeout/round guards
+- **Prompt Creator Agent** — meta-agent that analyzes failures and proposes improved prompts
+- **Health monitor** — auto-fails tasks for agents silent >5 minutes
+- **A2A Gateway (inbound)** — external agents can submit tasks via `POST /a2a/tasks`
 - **8 MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read
 - **Task trace API:** `GET /api/tasks/{id}/trace` returns parent + subtask tree
+- **Prompt management API:** list, diff, activate, and trigger improvement
 - Universal ModelFactory supporting 7+ LLM providers (Anthropic, Google, OpenAI, Groq, Mistral, Ollama, OpenAI-compatible)
-- Frontend dashboard with all panels (health, tasks, approvals, agents)
+- Frontend dashboard with all panels (health, tasks, approvals, agents, prompts)
+- Frontend task trace view for debugging multi-agent execution
 - WebSocket real-time updates from agent activity
 - LLM retry logic: rate limit backoff (5 retries) + tool call fallback
 - `test:` model provider for infrastructure testing at zero API cost
-- 50-task stress test: 100% pass rate (Phase 2 gate cleared)
+- 10-task E2E test suite + 50-task stress test (100% pass rate)
 - Database schema deployed: all 9 tables with pgvector extension
 
 ## Getting Started
@@ -213,6 +231,13 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `GET` | `/api/tasks/{id}/trace` | Get task trace (parent + subtask tree) |
 | `GET` | `/api/approvals` | List pending approvals |
 | `POST` | `/api/approvals/{id}/resolve` | Approve or reject an action |
+| `GET` | `/api/prompts` | List prompts (filter by role, active) |
+| `GET` | `/api/prompts/{id}/diff` | Diff proposed vs active prompt |
+| `POST` | `/api/prompts/{id}/activate` | Approve and activate a proposed prompt |
+| `POST` | `/api/prompts/improve` | Trigger prompt improvement for a role |
+| `GET` | `/.well-known/agent.json` | A2A Agent Card (public capabilities) |
+| `POST` | `/a2a/tasks` | A2A inbound — submit task (bearer auth) |
+| `GET` | `/a2a/tasks/{id}/status` | A2A task status polling |
 | `WS` | `/ws/agent-activity` | Real-time agent event stream |
 
 ## Roadmap
@@ -221,15 +246,17 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 |-------|-------|--------|
 | Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
-| Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **In Progress** — Groups 1–3 done |
+| Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
 | Phase 3 | Hardening, chaos testing, A2A outbound | Planned |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
 
 ## Documentation
 
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System architecture, data flows, and design fundamentals
 - **[CLAUDE.md](CLAUDE.md)** — Master project document with full architecture, schemas, and policies
-- **[DECISIONS.md](DECISIONS.md)** — Architecture Decision Records
-- **[BACKLOG.md](BACKLOG.md)** — Captured ideas and deferred scope
-- **[CHANGELOG.md](CHANGELOG.md)** — Version history
-- **[ERRORLOG.md](ERRORLOG.md)** — Bug tracking and prevention rules
+- **[DECISIONS.md](docs/DECISIONS.md)** — Architecture Decision Records (26 ADRs)
+- **[RISK_REVIEW.md](docs/RISK_REVIEW.md)** — Risk assessment and phase gate checklist
+- **[BACKLOG.md](docs/BACKLOG.md)** — Captured ideas and deferred scope
+- **[CHANGELOG.md](docs/CHANGELOG.md)** — Version history
+- **[ERRORLOG.md](docs/ERRORLOG.md)** — Bug tracking and prevention rules (15 entries)
 - **[AGENTS.md](AGENTS.md)** — AI agent coding policy and workflow rules

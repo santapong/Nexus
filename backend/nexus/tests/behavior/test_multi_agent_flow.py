@@ -26,7 +26,12 @@ def _mock_session() -> AsyncMock:
     session.__aexit__ = AsyncMock(return_value=None)
     session.commit = AsyncMock()
     session.flush = AsyncMock()
-    session.add = MagicMock()
+
+    def add_side_effect(obj: object) -> None:
+        if hasattr(obj, "id") and obj.id is None:
+            obj.id = uuid4()
+
+    session.add = MagicMock(side_effect=add_side_effect)
     return session
 
 

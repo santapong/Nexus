@@ -45,7 +45,7 @@ Minimum: §3 Architecture, §16–19 Coding Policies, §20 Agent Operational Pol
 ### Step 2 — Read DECISIONS.md
 
 ```
-Location: /nexus/DECISIONS.md
+Location: /nexus/docs/DECISIONS.md
 Read: All entries. Understand every architectural decision already made.
 Purpose: Do not re-open closed decisions. Do not implement something
          that contradicts a recorded decision.
@@ -54,7 +54,7 @@ Purpose: Do not re-open closed decisions. Do not implement something
 ### Step 3 — Read ERRORLOG.md
 
 ```
-Location: /nexus/ERRORLOG.md
+Location: /nexus/docs/ERRORLOG.md
 Read: Last 10 entries minimum.
 Purpose: Do not repeat a mistake that has already been made and logged.
          Check if the area you're about to touch has known issues.
@@ -106,7 +106,7 @@ If you cannot complete Step 5, the task scope is unclear. Stop and ask for clari
 If you find something worth improving that is outside your current task:
 
 ```markdown
-<!-- Add to /nexus/BACKLOG.md, do not act on it -->
+<!-- Add to /nexus/docs/BACKLOG.md, do not act on it -->
 ## [DATE] Discovered during [task description]
 - **Observation:** {what you noticed}
 - **Suggested action:** {what could be done}

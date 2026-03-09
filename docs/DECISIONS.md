@@ -42,6 +42,10 @@
 | ADR-020 | CEO LLM-based task decomposition with dependency tracking | accepted | 2026-03-10 |
 | ADR-021 | Subtask forwarding via result consumer | accepted | 2026-03-10 |
 | ADR-022 | QA approve/reject pipeline with rework routing | accepted | 2026-03-10 |
+| ADR-023 | Meeting room — in-memory state with Kafka transport | accepted | 2026-03-10 |
+| ADR-024 | Prompt Creator — never auto-activate proposed prompts | accepted | 2026-03-10 |
+| ADR-025 | A2A Gateway — inbound only for Phase 2 | accepted | 2026-03-10 |
+| ADR-026 | Health monitor auto-fail for silent agents | accepted | 2026-03-10 |
 
 ---
 
@@ -966,11 +970,155 @@ If the LLM returns non-JSON, QA defaults to approved (fail-open for v1 — revis
 
 ---
 
+## ADR-023 — Meeting room — in-memory state with Kafka transport
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §10 (Kafka Design), §7 (Agent Roster)
+**Supersedes:** ADR-013 (meeting room termination — resolved)
+
+### Context
+
+The meeting room pattern enables multi-agent debates. CEO poses a question, invited agents
+respond, and CEO terminates when satisfied. We needed to decide: (a) where meeting state lives,
+and (b) how messages flow.
+
+### Decision
+
+Meeting state lives **in-memory** in the Python process (module-level `_meeting_registry` dict).
+Meeting messages are published to the `meeting.room` Kafka topic, partitioned by meeting_id
+for ordering guarantees. Guard rails: 300s timeout, 10 max rounds.
+
+This is a Phase 2 simplification. Phase 3 will migrate meeting state to Redis for cluster safety
+(see ERROR-015 in ERRORLOG.md).
+
+### Alternatives considered
+
+**Redis-backed meeting state from the start**
+- Pros: Cluster-safe, survives process restarts
+- Cons: More complexity for v1, serialization of MeetingRoom objects
+- Why deferred: Only one backend worker in Phase 2. Redis migration is a clean Phase 3 task.
+
+### Consequences
+
+**Positive:** Simple, fast, no extra Redis round-trips per message
+**Negative:** Single-worker only. Meeting state lost on process restart. Documented in ERROR-015.
+
+---
+
+## ADR-024 — Prompt Creator — never auto-activate proposed prompts
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §7 (Prompt Creator Agent)
+**Supersedes:** n/a
+
+### Context
+
+The Prompt Creator Agent analyzes failure patterns and drafts improved system prompts.
+The question: should it auto-deploy prompts that score well on benchmarks, or always
+require human approval?
+
+### Decision
+
+**Always require human approval.** Proposed prompts are stored with `is_active=false`.
+Activation requires an explicit `POST /api/prompts/{id}/activate` call from the dashboard.
+The PromptDiffView shows a side-by-side diff with benchmark scores for informed decisions.
+
+### Alternatives considered
+
+**Auto-activate prompts above a score threshold (e.g., 0.8)**
+- Pros: Faster improvement loop, less human intervention
+- Cons: LLM self-evaluation is unreliable. A bad prompt could silently degrade all tasks
+  for a role. Recovery requires reverting to a previous version.
+- Why rejected: The cost of a bad auto-deployed prompt is too high. Human review takes
+  minutes but prevents potential hours of wasted compute.
+
+### Consequences
+
+**Positive:** Humans maintain control over agent behavior. No risk of cascading prompt failures.
+**Negative:** Slower improvement cycle. Prompts wait for human review.
+
+---
+
+## ADR-025 — A2A Gateway — inbound only for Phase 2
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §9 (A2A Gateway)
+**Supersedes:** n/a
+
+### Context
+
+The A2A protocol supports both inbound (external agents hiring NEXUS) and outbound
+(NEXUS hiring external agents). Which should be implemented first?
+
+### Decision
+
+**Inbound only in Phase 2.** Outbound placeholder exists (`gateway/outbound.py`) but raises
+`NotImplementedError`. Inbound flow: `/.well-known/agent.json` → bearer token auth →
+`POST /a2a/tasks` → validates skill access → publishes to `a2a.inbound` Kafka topic →
+CEO picks up → normal multi-agent flow.
+
+### Alternatives considered
+
+**Full A2A (inbound + outbound) in Phase 2**
+- Pros: Complete A2A capability
+- Cons: Outbound requires discovering external agents, managing external auth, handling
+  external failures, result aggregation from untrusted sources. Significantly more complexity.
+- Why rejected: No current external A2A agents to call. Inbound provides immediate value
+  (others can call NEXUS). Outbound is Phase 3 work.
+
+### Consequences
+
+**Positive:** Focused scope. NEXUS is callable by external agents today.
+**Negative:** NEXUS cannot delegate to external agents yet.
+
+---
+
+## ADR-026 — Health monitor auto-fail for silent agents
+
+**Date:** 2026-03-10
+**Status:** accepted
+**Decided by:** claude_code
+**Relates to:** CLAUDE.md §23 Prevention Rule (Risk 5), RISK_REVIEW.md
+**Supersedes:** n/a
+
+### Context
+
+Risk 5 ("Agents fail silently") was partially mitigated — heartbeat loop existed but no
+auto-fail mechanism. A hung agent's task would stay "running" indefinitely.
+
+### Decision
+
+Implement a `HealthMonitor` as a background asyncio task. It:
+1. Consumes `agent.heartbeat` Kafka messages, tracks last-seen in Redis
+2. Every 60 seconds, scans all tracked agents for staleness (>5 minutes)
+3. For stale agents: auto-fails their active tasks (DB update to `failed`),
+   publishes audit log entry, logs warning
+
+### Alternatives considered
+
+**Cron job instead of background task**
+- Pros: Decoupled from the main process
+- Cons: Requires additional deployment configuration. Adds latency (cron granularity).
+- Why rejected: Background task is simpler and responds within 60 seconds.
+
+### Consequences
+
+**Positive:** Tasks no longer hang indefinitely. Silent agents are detected and their tasks fail cleanly.
+**Negative:** 5-minute window before detection. Longer-running tasks need heartbeat extensions (Phase 3).
+
+---
+
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-023 -->
+<!-- Next ID: ADR-027 -->
 
 ---
 
 *Last updated: 2026-03-10*
-*Next ADR ID: ADR-023*
-*Decision count: 19 accepted, 3 proposed*
+*Next ADR ID: ADR-027*
+*Decision count: 23 accepted, 3 proposed*

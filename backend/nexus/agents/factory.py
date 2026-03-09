@@ -86,5 +86,9 @@ def build_agent(
         from nexus.agents.qa import QAAgent
         return QAAgent(**kwargs)
 
+    if role == AgentRole.PROMPT_CREATOR:
+        from nexus.agents.prompt_creator import PromptCreatorAgent
+        return PromptCreatorAgent(**kwargs)
+
     msg = f"No agent implementation for role: {role.value}"
     raise ValueError(msg)

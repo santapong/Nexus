@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { Task } from '../../types'
 import { StatusBadge } from '../dashboard/StatusBadge'
+import { TaskTraceView } from './TaskTraceView'
 
 export function TaskRow({ task }: { task: Task }) {
   const [expanded, setExpanded] = useState(false)
+  const [showTrace, setShowTrace] = useState(false)
 
   return (
     <div className="border border-gray-700 rounded-lg overflow-hidden">
@@ -24,7 +26,25 @@ export function TaskRow({ task }: { task: Task }) {
 
       {expanded && (
         <div className="border-t border-gray-700 p-4 space-y-3">
-          <div className="text-xs text-gray-500">Task ID: {task.id}</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-gray-500">Task ID: {task.id}</div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowTrace((v) => !v)
+              }}
+              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded transition-colors"
+            >
+              {showTrace ? 'Hide Trace' : 'View Trace'}
+            </button>
+          </div>
+
+          {showTrace && (
+            <TaskTraceView
+              taskId={task.id}
+              onClose={() => setShowTrace(false)}
+            />
+          )}
 
           {task.output && (
             <div>

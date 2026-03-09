@@ -1,7 +1,7 @@
 # RISK_REVIEW.md — Phase 2 Risk Assessment (2026-03-10)
 
 > Review of §23 Prevention Rules against actual implementation status.
-> Updated after Phase 2 Priority Groups 1–3 (multi-agent orchestration).
+> Updated after Phase 2 Priority Groups 1–7 (full Phase 2 complete).
 
 ---
 
@@ -13,7 +13,7 @@
 | Risk 2 — Cost explosion from unbounded loops | CRITICAL | MITIGATED | Budget enforcement live in Redis. Multi-provider pricing added. |
 | Risk 3 — Vague system prompts | CRITICAL | MITIGATED | All 5 agent prompts written + seeded. CEO decomposition prompt tested. |
 | Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. |
-| Risk 5 — Agents fail silently | HIGH | PARTIAL | Heartbeat loop runs. Auto-fail on silence NOT yet implemented (BACKLOG-016). |
+| Risk 5 — Agents fail silently | HIGH | **RESOLVED** | Health monitor auto-fail implemented (ADR-026). |
 | Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 9 tables deployed. Embeddings tested. |
 | Risk 7 — Kafka instability | HIGH | RESOLVED | KRaft stable. `make kafka-test` passes. |
 | Risk 8 — Scope creep | MEDIUM | MITIGATED | BACKLOG.md active. Phase gates defined. |
@@ -21,6 +21,8 @@
 | **NEW Risk 10** — Local model tool calling gaps | LOW | NEEDS ATTENTION | See below. |
 | **NEW Risk 11** — Subtask forwarding race condition | MEDIUM | MITIGATED | See below. |
 | **NEW Risk 12** — CEO decomposition quality | HIGH | MITIGATED | See below. |
+| **NEW Risk 13** — Meeting room state not cluster-safe | MEDIUM | MITIGATED | See below. |
+| **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | MITIGATED | See below. |
 
 ---
 
@@ -56,13 +58,12 @@
 
 ---
 
-### Risk 5 — Silent failures (partially mitigated)
+### Risk 5 — Silent failures (**RESOLVED**)
 **Implemented:** Heartbeat loop (30s), structured logging, Redis pub/sub broadcasting.
-**Missing:** Auto-fail consumer that kills tasks with no heartbeat for 5 minutes (BACKLOG-016).
+**Now also implemented:** `HealthMonitor` background task (ADR-026). Consumes agent heartbeats,
+tracks in Redis, auto-fails tasks for agents silent >5 minutes. Audit log entries written.
 
-**Impact:** A hung task stays "running" until manually noticed. No data loss (PostgreSQL is source of truth), but poor UX.
-
-**Recommendation:** Implement auto-fail consumer early in Phase 2.
+**Status: RESOLVED** — No more indefinitely-hung tasks.
 
 ---
 
@@ -132,6 +133,10 @@
 | CEO task decomposition | LLM-based with dependency tracking | 2026-03-10 | Dynamic task understanding vs static routing. See ADR-020. |
 | Subtask forwarding | Result consumer detects subtasks, forwards to CEO | 2026-03-10 | Clean separation of routing vs orchestration. See ADR-021. |
 | QA pipeline | Approve → task.results; Reject → rework via agent.commands | 2026-03-10 | QA owns the decision point. See ADR-022. |
+| Meeting room state | In-memory dict + Kafka transport | 2026-03-10 | Simple for Phase 2 single-worker. See ADR-023. |
+| Prompt Creator activation | Never auto-activate; always human approval | 2026-03-10 | Prevents cascading prompt failures. See ADR-024. |
+| A2A scope | Inbound only for Phase 2 | 2026-03-10 | No external agents to call yet. See ADR-025. |
+| Health monitor strategy | Background asyncio task (60s scan) | 2026-03-10 | Detects silent agents within 5min. See ADR-026. |
 
 ---
 
@@ -146,6 +151,46 @@
 - [x] Approval flow working
 - [x] Dashboard functional
 - [x] Universal ModelFactory deployed
+
+### Phase 2 → Phase 3 Gate
+- [x] Multi-agent orchestration working (CEO → specialists → QA)
+- [x] E2E tests passing (10-task stress test)
+- [x] Health monitor auto-fail implemented
+- [x] Meeting room pattern implemented
+- [x] Prompt Creator Agent deployed (with human approval gate)
+- [x] A2A inbound gateway operationally
+- [x] 6 agent roles operational (CEO, Engineer, Analyst, Writer, QA, Prompt Creator)
+- [ ] Chaos testing (Phase 3 scope)
+- [ ] Multi-worker deployment (Phase 3 scope)
+
+---
+
+## NEW Risk 13 — Meeting room state not cluster-safe
+**Severity:** MEDIUM
+**What happens:** Meeting registry uses an in-memory dict. Process restart loses all active
+meeting state. Multiple backend workers can't share meeting sessions.
+
+**Mitigations:**
+- Single-worker deployment in Phase 2 (process restarts are infrequent)
+- Timeout (300s) and max-round (10) guards prevent zombie meetings
+- `close_all_meetings()` called during graceful shutdown
+
+**Recommendation:** Migrate meeting state to Redis in Phase 3. See ADR-023 and ERROR-015.
+
+---
+
+## NEW Risk 14 — A2A bearer tokens stored in memory
+**Severity:** MEDIUM
+**What happens:** A2A tokens are stored in a module-level dict with SHA-256 hashes.
+Process restart loses all registered tokens. No persistence, no rotation, no rate limit tracking.
+
+**Mitigations:**
+- Dev token re-seeded on startup (`seed_dev_token()` in startup hook)
+- Tokens are hashed (SHA-256), not stored in plaintext
+- Skill-level access control limits damage from a compromised token
+
+**Recommendation:** Migrate token storage to a DB table (`a2a_tokens`) in Phase 3.
+Add rate limit enforcement via Redis counter. Add token rotation support.
 
 ---
 

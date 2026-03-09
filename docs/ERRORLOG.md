@@ -74,6 +74,65 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-015 — In-memory meeting registry not cluster-safe
+
+**Date:** 2026-03-10
+**Severity:** medium
+**Status:** mitigated
+**Found by:** claude_code during Phase 2 PG 5 (meeting room) implementation
+**Affected files:** `backend/nexus/kafka/meeting.py`
+
+### What happened
+The `MeetingRoom` class uses an in-memory dict `_meeting_registry` to track active meetings.
+This works in single-process mode but will lose all meeting state if the process restarts,
+and cannot be shared across multiple backend workers.
+
+### Root cause
+Phase 2 design choice for simplicity. The meeting registry stores active `MeetingRoom` objects
+in a module-level dictionary. Designed for single-worker mode used in current deployment.
+
+### Fix applied
+Documented as a known limitation. The registry includes proper cleanup (`close()` method on
+MeetingRoom, `close_all_meetings()` on registry). For Phase 3, meetings should use Redis-backed
+state to survive restarts and enable multi-worker deployments.
+
+### Prevention
+- BACKLOG item for Redis-backed meeting registry (Phase 3)
+- MeetingRoom includes timeout guards (300s) and max-round guards (10) to prevent zombie meetings
+- `close_all_meetings()` is called during graceful shutdown
+
+---
+
+## ERROR-014 — Unused imports cascade in newly created Phase 2 files
+
+**Date:** 2026-03-10
+**Severity:** low
+**Status:** fixed
+**Found by:** claude_code (IDE linter feedback) during Phase 2 PG 4-7 implementation
+**Affected files:** `backend/nexus/kafka/meeting.py`, `backend/nexus/agents/prompt_creator.py`,
+`backend/nexus/api/prompts.py`, `backend/nexus/gateway/schemas.py`, `backend/nexus/gateway/auth.py`,
+`backend/nexus/gateway/routes.py`, `backend/nexus/tests/integration/test_a2a_gateway.py`
+
+### What happened
+Multiple newly created files contained unused imports (`asyncio`, `Any`, `UUID`, `uuid4`,
+`AgentRole`, `TaskStatus`, `patch`, `AsyncMock`, `pytest`, `_hash_token`, `Task`,
+`A2ACompletionEvent`, `A2AEventStatus`). Ruff linter would flag these.
+
+### Root cause
+Files were created with imports that were anticipated to be needed but were not used in
+the final implementation. Common pattern when writing code that evolves during development.
+
+### Fix applied
+Removed all unused imports across all 7 affected files in multiple cleanup passes.
+Verified by IDE lint feedback — all unused import warnings resolved.
+
+### Prevention
+- Always verify imports after completing a file
+- Run `ruff check --select F401` (unused imports) before committing
+- IDE feedback loop catches these incrementally
+
+---
+
 ## ERROR-013 — CEO decomposition f-string with JSON braces causes parse errors
 
 **Date:** 2026-03-10
@@ -514,4 +573,4 @@ for non-JSON responses (CEO: default to single engineer subtask; QA: default to 
 ---
 
 *Last updated: 2026-03-10*
-*Next error ID: ERROR-014*
+*Next error ID: ERROR-016*

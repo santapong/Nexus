@@ -40,6 +40,65 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-10] — Phase 2 Priority Groups 4–7: Verification, meeting room, prompt creator, A2A gateway
+
+### Added
+- `backend/nexus/tests/e2e/test_e2e_multi_agent.py` — 4 E2E tests for full multi-agent pipeline
+  (API → CEO → specialists → QA → result), single-agent tasks, trace endpoint, task list filtering
+- `backend/nexus/agents/health_monitor.py` — Heartbeat auto-fail scanner. Tracks agent heartbeats in
+  Redis, auto-fails tasks when agents are silent >5 minutes, writes audit log entries
+- `frontend/src/hooks/useTaskTrace.ts` — TanStack Query hook for task trace (5s polling while running)
+- `frontend/src/components/tasks/TaskTraceView.tsx` — Expandable subtask tree with progress bar
+- `backend/nexus/kafka/meeting.py` — `MeetingRoom` class with full CEO-moderated debate lifecycle:
+  `pose_question()` → `submit_response()` → `terminate()`. Includes transcript generation,
+  timeout guards (default 300s), max-round guards (default 10), in-memory meeting registry
+- `backend/nexus/tests/behavior/test_meeting_room.py` — 8 tests for meeting room lifecycle & guards
+- `backend/nexus/agents/prompt_creator.py` — Prompt Creator Agent: analyzes episodic memory failures,
+  LLM-drafts improved prompts, benchmarks against test cases, proposes for human approval.
+  **Never auto-activates prompts** — activation requires explicit human review via API
+- `backend/nexus/api/prompts.py` — 4 endpoints: list prompts, diff view, activate (approval),
+  trigger improvement
+- `frontend/src/hooks/usePrompts.ts` — 4 hooks (list, diff, activate, trigger improvement)
+- `frontend/src/components/prompts/PromptDiffView.tsx` — Prompt management UI with active/proposed
+  lists, side-by-side diff view, approve buttons, and improvement trigger
+- `backend/nexus/tests/unit/test_prompt_creator.py` — 3 tests: threshold, payload validation,
+  auto-activation contract
+- `backend/nexus/gateway/schemas.py` — A2A Pydantic schemas: AgentCard (served at
+  `/.well-known/agent.json`), A2ATaskRequest/Response, SSE event types
+- `backend/nexus/gateway/auth.py` — SHA-256 token hashing, skill-level access control,
+  expiration checking, dev token seeder
+- `backend/nexus/gateway/routes.py` — AgentCard endpoint, authenticated task submission
+  (publishes to `a2a.inbound` Kafka topic), task status polling
+- `backend/nexus/gateway/outbound.py` — Phase 3 placeholder (raises NotImplementedError)
+- `backend/nexus/tests/integration/test_a2a_gateway.py` — 12 tests: auth (valid, invalid,
+  expired, skill-restricted, wildcard, dev seed), Agent Card schema, task request models
+
+### Changed
+- `backend/nexus/tests/e2e/stress_test.py` — Reduced from 50 to 10 tasks (2 per category)
+  for token efficiency while maintaining coverage
+- `backend/nexus/agents/runner.py` — Health monitor now starts as a background task alongside agents
+- `frontend/src/components/tasks/TaskRow.tsx` — Added "View Trace" button for multi-agent tasks
+- `backend/nexus/agents/factory.py` — Added `PROMPT_CREATOR` role case (6-agent roster complete)
+- `backend/nexus/api/router.py` — Registered `PromptController` + `A2AGatewayController` +
+  `AgentCardController`. Added `a2a_router` export
+- `backend/nexus/app.py` — Registered `a2a_router` in Litestar route_handlers
+
+### Architecture
+- **Health Monitor:** Consumes `agent.heartbeat`, tracks last-seen in Redis, scans every 60s
+  for silent agents, auto-fails their tasks with status `failed` and error audit entry
+- **Meeting Room Pattern:** Kafka-based multi-agent debate on `meeting.room` topic. CEO poses
+  questions, invited agents respond, CEO terminates when satisfied. Timeout + max-round guards.
+- **Prompt Creator Flow:** Manual/auto trigger → analyze failures → LLM drafts improved prompt →
+  benchmark against test cases → store proposed (is_active=false) → human reviews diff → activates
+- **A2A Gateway (Inbound):** `/.well-known/agent.json` → bearer token auth → `POST /a2a/tasks` →
+  validates skill access → publishes to `a2a.inbound` Kafka topic → CEO picks up → normal flow
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-10] — Phase 2 Priority Groups 1–3: Multi-agent orchestration
 
 ### Added

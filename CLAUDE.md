@@ -890,7 +890,14 @@ Phase 1 Engineer Agent. Pass rate must be ≥ 90%. Log all failures. Fix all fai
 ```
 nexus/
 ├── CLAUDE.md
-├── BACKLOG.md                           ← scope creep capture — create on Day 1
+├── docs/
+│   ├── ARCHITECTURE.md                  ← system architecture & design fundamentals
+│   ├── DECISIONS.md                     ← architecture decision records
+│   ├── RISK_REVIEW.md                   ← risk assessment & phase gates
+│   ├── BACKLOG.md                       ← scope creep capture
+│   ├── CHANGELOG.md                     ← version history
+│   ├── ERRORLOG.md                      ← bug tracking & prevention
+│   └── archive/                         ← old planning documents
 ├── docker-compose.yml
 ├── docker-compose.test.yml
 ├── Makefile

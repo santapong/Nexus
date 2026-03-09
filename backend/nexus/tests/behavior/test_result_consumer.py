@@ -85,6 +85,8 @@ async def test_handle_response_updates_task_to_completed() -> None:
     """Successful response should update task status to 'completed' in DB."""
     raw = _make_response_raw(status="success", tokens_used=700)
     mock_task = MagicMock()
+    mock_task.parent_task_id = str(uuid4())
+    mock_task.assigned_agent_id = "test-engineer"
     mock_session_factory = _make_session_factory(mock_task)
 
     with (
@@ -104,6 +106,8 @@ async def test_handle_response_updates_task_to_failed() -> None:
     """Failed response should update task status to 'failed' in DB."""
     raw = _make_response_raw(status="failed", error="Tool execution timed out")
     mock_task = MagicMock()
+    mock_task.parent_task_id = str(uuid4())
+    mock_task.assigned_agent_id = "test-engineer"
     mock_session_factory = _make_session_factory(mock_task)
 
     with (
@@ -157,6 +161,8 @@ async def test_handle_response_publishes_task_result() -> None:
 
     raw = _make_response_raw(status="success")
     mock_task = MagicMock()
+    mock_task.parent_task_id = str(uuid4())
+    mock_task.assigned_agent_id = "test-engineer"
     mock_session_factory = _make_session_factory(mock_task)
     published: list[tuple[str, object]] = []
 
@@ -172,7 +178,8 @@ async def test_handle_response_publishes_task_result() -> None:
 
     assert len(published) == 1
     topic, _ = published[0]
-    assert topic == Topics.TASK_RESULTS
+    # Subtask responses are forwarded to CEO via task.queue (ADR-021)
+    assert topic == Topics.TASK_QUEUE
 
 
 @pytest.mark.asyncio
