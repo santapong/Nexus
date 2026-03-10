@@ -369,3 +369,58 @@ All E2E tests passing via `make test-e2e`.
 5. **Weeks 7–8:** Steps 23–29 (A2A Gateway inbound)
 
 This order ensures each layer builds on verified foundations — new agents before multi-agent coordination, multi-agent before Prompt Creator (needs failure data), and A2A last (most independent).
+
+---
+
+## Phase 2 Enhancements (Added 2026-03-11)
+
+After the core 29 steps were completed, 6 additional enhancements were implemented to upgrade observability, cost visibility, and UX:
+
+### Enhancement 1: Agent Analytics Dashboard
+- **Backend:** `GET /api/analytics/performance` — per-agent metrics (task count, success/fail rate, avg tokens, avg duration, cost)
+- **Backend:** `GET /api/analytics/costs` — cost breakdown by LLM model and agent role, with period filtering (7d/30d/90d/all)
+- **Frontend:** `AnalyticsDashboard.tsx` — summary cards, agent performance table, cost-by-model table, period selector
+
+### Enhancement 2: Cost Estimation
+- **Backend:** `cost_estimator.py` — pre-execution cost estimate using model pricing + historical averages
+- **Models:** `CostEstimate` and `SubtaskEstimate` Pydantic models for per-subtask and total estimates
+
+### Enhancement 3: Task Replay (Debug Mode)
+- **Backend:** `GET /api/tasks/{id}/replay` — returns episodic memory + LLM usage + subtask data for complete replay
+- **Frontend:** `TaskReplayView.tsx` — tabbed view (Episodes, LLM Calls, Subtasks) with timeline visualization
+
+### Enhancement 4: Dead Letter Queue Monitor
+- **Backend:** `GET /api/analytics/dead-letters` — infrastructure hook for dead letter topic stats
+- **Frontend:** Alert panel in AnalyticsDashboard when dead letters are detected
+
+### Enhancement 5: Dark/Light Mode
+- **Frontend:** Theme toggle in `Layout.tsx` header, persisted to `localStorage`
+- **CSS:** Light mode overrides in `index.css` for all gray-scale Tailwind classes
+
+### Enhancement 6: Agent Organization Chart
+- **Frontend:** `AgentOrgChart.tsx` — visual org chart with CEO at top, specialists below
+- **Features:** Role emojis, model info, tool access badges, active/inactive status indicators
+
+### Files Added
+| File | Purpose |
+|------|---------|
+| `backend/nexus/api/analytics.py` | AnalyticsController (3 endpoints) |
+| `backend/nexus/llm/cost_estimator.py` | Pre-execution cost estimation |
+| `frontend/src/hooks/useAnalytics.ts` | TanStack Query hooks (4 hooks) |
+| `frontend/src/components/analytics/AnalyticsDashboard.tsx` | Analytics UI |
+| `frontend/src/components/agents/AgentOrgChart.tsx` | Org chart UI |
+| `frontend/src/components/tasks/TaskReplayView.tsx` | Task replay UI |
+| `backend/nexus/tests/unit/test_analytics.py` | 11 tests |
+| `backend/nexus/tests/unit/test_cost_estimator.py` | 10 tests |
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `backend/nexus/api/router.py` | Registered AnalyticsController |
+| `backend/nexus/api/tasks.py` | Added `/replay` endpoint |
+| `frontend/src/api/client.ts` | Added 4 API methods |
+| `frontend/src/types/index.ts` | Added 10 interfaces |
+| `frontend/src/App.tsx` | Added OrgChart + Analytics components |
+| `frontend/src/components/tasks/TaskRow.tsx` | Added Replay button |
+| `frontend/src/components/dashboard/Layout.tsx` | Added theme toggle, widened layout |
+| `frontend/src/index.css` | Added light mode CSS overrides |

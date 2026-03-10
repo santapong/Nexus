@@ -40,6 +40,48 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-11] — Phase 2 Enhancements: Analytics Dashboard, Cost Estimation, Task Replay, Dark Mode, Org Chart
+
+### Added
+- `backend/nexus/api/analytics.py` — AnalyticsController with 3 endpoints:
+  `GET /api/analytics/performance` (per-agent metrics), `GET /api/analytics/costs` (cost breakdown
+  by model and role), `GET /api/analytics/dead-letters` (dead letter queue stats placeholder)
+- `backend/nexus/llm/cost_estimator.py` — Pre-execution cost estimator using model pricing
+  and historical averages, produces `CostEstimate` with per-subtask breakdown
+- `GET /api/tasks/{id}/replay` endpoint — returns episodic memory + LLM usage timeline for
+  full agent behavior replay including subtask data
+- `frontend/src/components/analytics/AnalyticsDashboard.tsx` — Performance cards, agent metrics
+  table, cost-by-model breakdown, dead letter queue alerts, period selector (7d/30d/90d/all)
+- `frontend/src/components/agents/AgentOrgChart.tsx` — Visual org chart showing CEO at top with
+  specialist agents below, including model info, tool access, and active status
+- `frontend/src/components/tasks/TaskReplayView.tsx` — Tabbed replay view showing episodic
+  memory timeline, LLM calls, and subtask data for debugging agent behavior
+- `frontend/src/hooks/useAnalytics.ts` — TanStack Query hooks for performance, costs,
+  dead letters, and task replay
+- Dark/light mode toggle in `Layout.tsx` with `localStorage` persistence
+- Light mode CSS overrides in `index.css`
+- `backend/nexus/tests/unit/test_analytics.py` — 11 tests for response models and period parsing
+- `backend/nexus/tests/unit/test_cost_estimator.py` — 10 tests for model mapping, cost
+  calculation, and task plan estimation
+
+### Changed
+- `backend/nexus/api/router.py` — registered AnalyticsController in api_router
+- `frontend/src/api/client.ts` — added 4 new API methods (getPerformance, getCosts,
+  getDeadLetters, getTaskReplay)
+- `frontend/src/types/index.ts` — added 10 new TypeScript interfaces for analytics,
+  costs, replay, and dead letter types
+- `frontend/src/App.tsx` — added AgentOrgChart and AnalyticsDashboard components, widened
+  max-w from 4xl to 6xl
+- `frontend/src/components/tasks/TaskRow.tsx` — added purple "🔄 Replay" button alongside
+  existing "View Trace" button
+- `frontend/src/components/dashboard/Layout.tsx` — added dark/light mode toggle button in header
+
+**Authored by:** engineer_agent
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-10] — Phase 2 Priority Groups 4–7: Verification, meeting room, prompt creator, A2A gateway
 
 ### Added

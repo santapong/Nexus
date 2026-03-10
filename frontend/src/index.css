@@ -5,3 +5,45 @@
 body {
   @apply bg-gray-950 text-gray-100;
 }
+
+/* Light mode overrides */
+.light-mode body,
+.light-mode {
+  --tw-bg-opacity: 1;
+}
+
+.light-mode .bg-gray-950 {
+  background-color: #f8fafc;
+}
+.light-mode .bg-gray-900 {
+  background-color: #ffffff;
+}
+.light-mode .bg-gray-800 {
+  background-color: #f1f5f9;
+}
+.light-mode .bg-gray-800\/50 {
+  background-color: rgba(241, 245, 249, 0.5);
+}
+.light-mode .text-gray-100,
+.light-mode .text-white {
+  color: #1e293b;
+}
+.light-mode .text-gray-200 {
+  color: #334155;
+}
+.light-mode .text-gray-300 {
+  color: #475569;
+}
+.light-mode .text-gray-400 {
+  color: #64748b;
+}
+.light-mode .text-gray-500 {
+  color: #94a3b8;
+}
+.light-mode .border-gray-700,
+.light-mode .border-gray-800 {
+  border-color: #e2e8f0;
+}
+.light-mode .hover\:bg-gray-800:hover {
+  background-color: #f1f5f9;
+}

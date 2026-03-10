@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.db.models import AgentRole, Task, TaskSource, TaskStatus
+from nexus.db.models import AgentRole, EpisodicMemory, LLMUsage, Task, TaskSource, TaskStatus
 from nexus.kafka.producer import publish
 from nexus.kafka.schemas import AgentCommand
 from nexus.kafka.topics import Topics
@@ -182,4 +182,135 @@ class TaskController(Controller):
             "completed_subtasks": sum(
                 1 for st in subtasks if st.status == TaskStatus.COMPLETED.value
             ),
+        }
+
+    @get("/{task_id:str}/replay")
+    async def get_task_replay(
+        self,
+        task_id: str,
+        db_session: AsyncSession,
+    ) -> dict[str, Any]:
+        """Get a task replay — episodic memory + LLM usage timeline.
+
+        Returns the full agent execution timeline including conversation
+        turns, tool calls, memory lookups, and LLM usage for debugging
+        and understanding agent behavior.
+
+        Args:
+            task_id: The task UUID to replay.
+            db_session: Async database session.
+
+        Returns:
+            Dict with task info, episodic memories, and LLM usage entries.
+        """
+        # Get the task
+        task_stmt = select(Task).where(Task.id == task_id)
+        task_result = await db_session.execute(task_stmt)
+        task = task_result.scalar_one_or_none()
+
+        if task is None:
+            return {"error": "Task not found"}
+
+        # Get episodic memories for this task
+        mem_stmt = (
+            select(EpisodicMemory)
+            .where(EpisodicMemory.task_id == task_id)
+            .order_by(EpisodicMemory.created_at)
+        )
+        mem_result = await db_session.execute(mem_stmt)
+        memories = mem_result.scalars().all()
+
+        # Get LLM usage for this task
+        usage_stmt = (
+            select(LLMUsage)
+            .where(LLMUsage.task_id == task_id)
+            .order_by(LLMUsage.created_at)
+        )
+        usage_result = await db_session.execute(usage_stmt)
+        usages = usage_result.scalars().all()
+
+        # Also check subtasks
+        subtask_stmt = (
+            select(Task.id).where(Task.parent_task_id == task_id)
+        )
+        subtask_result = await db_session.execute(subtask_stmt)
+        subtask_ids = [str(row[0]) for row in subtask_result.all()]
+
+        # Get memories and usage for subtasks too
+        subtask_memories: list[dict[str, Any]] = []
+        subtask_usages: list[dict[str, Any]] = []
+        for sid in subtask_ids:
+            sub_mem_stmt = (
+                select(EpisodicMemory)
+                .where(EpisodicMemory.task_id == sid)
+                .order_by(EpisodicMemory.created_at)
+            )
+            sub_mem_result = await db_session.execute(sub_mem_stmt)
+            for m in sub_mem_result.scalars().all():
+                subtask_memories.append({
+                    "subtask_id": sid,
+                    "agent_id": m.agent_id,
+                    "summary": m.summary,
+                    "outcome": m.outcome,
+                    "tools_used": m.tools_used,
+                    "tokens_used": m.tokens_used,
+                    "duration_seconds": m.duration_seconds,
+                    "created_at": str(m.created_at),
+                })
+
+            sub_usage_stmt = (
+                select(LLMUsage)
+                .where(LLMUsage.task_id == sid)
+                .order_by(LLMUsage.created_at)
+            )
+            sub_usage_result = await db_session.execute(sub_usage_stmt)
+            for u in sub_usage_result.scalars().all():
+                subtask_usages.append({
+                    "subtask_id": sid,
+                    "agent_id": u.agent_id,
+                    "model_name": u.model_name,
+                    "input_tokens": u.input_tokens,
+                    "output_tokens": u.output_tokens,
+                    "cost_usd": u.cost_usd,
+                    "created_at": str(u.created_at),
+                })
+
+        return {
+            "task": {
+                "id": str(task.id),
+                "instruction": task.instruction,
+                "status": task.status,
+                "tokens_used": task.tokens_used,
+                "created_at": str(task.created_at),
+                "completed_at": str(task.completed_at) if task.completed_at else None,
+            },
+            "episodes": [
+                {
+                    "agent_id": m.agent_id,
+                    "summary": m.summary,
+                    "full_context": m.full_context,
+                    "outcome": m.outcome,
+                    "tools_used": m.tools_used,
+                    "tokens_used": m.tokens_used,
+                    "duration_seconds": m.duration_seconds,
+                    "importance_score": m.importance_score,
+                    "created_at": str(m.created_at),
+                }
+                for m in memories
+            ],
+            "llm_calls": [
+                {
+                    "agent_id": u.agent_id,
+                    "model_name": u.model_name,
+                    "input_tokens": u.input_tokens,
+                    "output_tokens": u.output_tokens,
+                    "cost_usd": u.cost_usd,
+                    "created_at": str(u.created_at),
+                }
+                for u in usages
+            ],
+            "subtask_episodes": subtask_memories,
+            "subtask_llm_calls": subtask_usages,
+            "total_episodes": len(memories) + len(subtask_memories),
+            "total_llm_calls": len(usages) + len(subtask_usages),
         }

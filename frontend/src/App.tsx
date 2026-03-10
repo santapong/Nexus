@@ -1,4 +1,6 @@
+import { AgentOrgChart } from './components/agents/AgentOrgChart'
 import { AgentStatusPanel } from './components/agents/AgentStatusPanel'
+import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard'
 import { ApprovalPanel } from './components/approvals/ApprovalPanel'
 import { HealthPanel } from './components/dashboard/HealthPanel'
 import { Layout } from './components/dashboard/Layout'
@@ -22,6 +24,8 @@ function App() {
         </div>
 
         <TaskListPanel />
+        <AgentOrgChart />
+        <AnalyticsDashboard />
         <AgentStatusPanel />
       </Layout>
     </AgentWebSocketProvider>

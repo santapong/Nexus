@@ -58,3 +58,95 @@ export interface AgentEvent {
   status?: string
   error?: string
 }
+
+// ─── Analytics Types ────────────────────────────────────────────────────────
+
+export interface AgentPerformance {
+  role: string
+  name: string
+  total_tasks: number
+  completed: number
+  failed: number
+  success_rate: number
+  avg_tokens: number
+  avg_duration_seconds: number | null
+  total_cost_usd: number
+}
+
+export interface PerformanceData {
+  period: string
+  agents: AgentPerformance[]
+  total_tasks: number
+  overall_success_rate: number
+  total_cost_usd: number
+}
+
+export interface CostByModel {
+  model_name: string
+  total_calls: number
+  total_input_tokens: number
+  total_output_tokens: number
+  total_cost_usd: number
+}
+
+export interface CostByRole {
+  role: string
+  total_calls: number
+  total_cost_usd: number
+}
+
+export interface CostBreakdown {
+  period: string
+  by_model: CostByModel[]
+  by_role: CostByRole[]
+  total_cost_usd: number
+  daily_average_usd: number
+}
+
+export interface ReplayEpisode {
+  agent_id: string
+  summary: string
+  full_context: Record<string, unknown>
+  outcome: string
+  tools_used: string[] | null
+  tokens_used: number | null
+  duration_seconds: number | null
+  importance_score: number
+  created_at: string
+}
+
+export interface ReplayLLMCall {
+  agent_id: string
+  model_name: string
+  input_tokens: number
+  output_tokens: number
+  cost_usd: number
+  created_at: string
+}
+
+export interface TaskReplay {
+  task: {
+    id: string
+    instruction: string
+    status: string
+    tokens_used: number
+    created_at: string
+    completed_at: string | null
+  }
+  episodes: ReplayEpisode[]
+  llm_calls: ReplayLLMCall[]
+  subtask_episodes: Array<ReplayEpisode & { subtask_id: string }>
+  subtask_llm_calls: Array<ReplayLLMCall & { subtask_id: string }>
+  total_episodes: number
+  total_llm_calls: number
+}
+
+export interface DeadLetterStats {
+  topic: string
+  count: number
+}
+
+export interface DeadLetterData {
+  total_dead_letters: number
+  by_topic: DeadLetterStats[]
+}

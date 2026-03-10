@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import type { Task } from '../../types'
 import { StatusBadge } from '../dashboard/StatusBadge'
+import { TaskReplayView } from './TaskReplayView'
 import { TaskTraceView } from './TaskTraceView'
 
 export function TaskRow({ task }: { task: Task }) {
   const [expanded, setExpanded] = useState(false)
   const [showTrace, setShowTrace] = useState(false)
+  const [showReplay, setShowReplay] = useState(false)
 
   return (
     <div className="border border-gray-700 rounded-lg overflow-hidden">
@@ -28,21 +30,41 @@ export function TaskRow({ task }: { task: Task }) {
         <div className="border-t border-gray-700 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-500">Task ID: {task.id}</div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowTrace((v) => !v)
-              }}
-              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded transition-colors"
-            >
-              {showTrace ? 'Hide Trace' : 'View Trace'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowTrace((v) => !v)
+                  if (!showTrace) setShowReplay(false)
+                }}
+                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded transition-colors"
+              >
+                {showTrace ? 'Hide Trace' : 'View Trace'}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowReplay((v) => !v)
+                  if (!showReplay) setShowTrace(false)
+                }}
+                className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded transition-colors"
+              >
+                {showReplay ? 'Hide Replay' : '🔄 Replay'}
+              </button>
+            </div>
           </div>
 
           {showTrace && (
             <TaskTraceView
               taskId={task.id}
               onClose={() => setShowTrace(false)}
+            />
+          )}
+
+          {showReplay && (
+            <TaskReplayView
+              taskId={task.id}
+              onClose={() => setShowReplay(false)}
             />
           )}
 
