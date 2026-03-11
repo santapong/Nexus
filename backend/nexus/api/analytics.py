@@ -8,13 +8,14 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import structlog
-from litestar import Controller, get
+from litestar import Controller, get, post
 from litestar.params import Parameter
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import Agent, LLMUsage, Task, TaskStatus
+from nexus.settings import settings
 
 logger = structlog.get_logger()
 
@@ -86,6 +87,44 @@ class DeadLetterResponse(BaseModel):
 
     total_dead_letters: int
     by_topic: list[DeadLetterStats]
+
+
+# ── BACKLOG-020: Quota monitoring ────────────────────────────────────────────
+
+
+class ProviderQuota(BaseModel):
+    """Daily token quota status for a single LLM provider."""
+
+    provider: str
+    tokens_used_today: int
+    daily_limit: int
+    utilization_pct: float
+    status: str  # 'ok' | 'warning' | 'critical'
+
+
+class QuotaResponse(BaseModel):
+    """Quota status for all tracked providers."""
+
+    date: str
+    providers: list[ProviderQuota]
+
+
+# ── BACKLOG-021: Prompt review trigger ───────────────────────────────────────
+
+
+class TriggerPromptReviewRequest(BaseModel):
+    """Request body for triggering a prompt review."""
+
+    agent_role: str
+    reason: str = "manual_trigger"
+
+
+class TriggerPromptReviewResponse(BaseModel):
+    """Response for a prompt review trigger request."""
+
+    triggered: bool
+    agent_role: str
+    message: str
 
 
 # ─── Helper ──────────────────────────────────────────────────────────────────
@@ -330,3 +369,170 @@ class AnalyticsController(Controller):
             total_dead_letters=0,
             by_topic=stats,
         )
+
+    @get("/quota")
+    async def get_quota(self, db_session: AsyncSession) -> QuotaResponse:
+        """Get today's token usage vs. daily quota per LLM provider.
+
+        Reads from llm_usage for today's window, detects provider by model
+        name prefix, and compares against limits from settings.
+
+        Args:
+            db_session: Async database session.
+
+        Returns:
+            QuotaResponse with per-provider quota status.
+        """
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        usage_rows = await db_session.execute(
+            select(
+                LLMUsage.model_name,
+                func.sum(LLMUsage.input_tokens + LLMUsage.output_tokens).label("tokens"),
+            ).where(
+                LLMUsage.created_at >= today_start
+            ).group_by(LLMUsage.model_name)
+        )
+
+        # Aggregate by provider prefix
+        provider_tokens: dict[str, int] = {}
+        for row in usage_rows.all():
+            name: str = row.model_name or ""
+            if name.startswith("claude") or "anthropic" in name:
+                provider = "anthropic"
+            elif name.startswith("gemini") or "google" in name:
+                provider = "google"
+            elif name.startswith("groq:") or "groq" in name:
+                provider = "groq"
+            elif name.startswith("mistral:") or "mistral" in name:
+                provider = "mistral"
+            elif name.startswith("gpt") or name.startswith("openai:") or name.startswith("o1") or name.startswith("o3"):
+                provider = "openai"
+            else:
+                provider = "other"
+            provider_tokens[provider] = provider_tokens.get(provider, 0) + int(row.tokens or 0)
+
+        # Provider limits (daily tokens). Groq free tier: ~500k/day.
+        limits: dict[str, int] = {
+            "groq": getattr(settings, "groq_daily_token_limit", 500_000),
+            "anthropic": getattr(settings, "anthropic_daily_token_limit", 1_000_000),
+            "google": getattr(settings, "google_daily_token_limit", 1_000_000),
+            "openai": getattr(settings, "openai_daily_token_limit", 1_000_000),
+            "mistral": getattr(settings, "mistral_daily_token_limit", 1_000_000),
+        }
+
+        quotas: list[ProviderQuota] = []
+        # Always include groq in the list (even at 0).
+        for provider, limit in limits.items():
+            used = provider_tokens.get(provider, 0)
+            pct = round(used / limit * 100, 1) if limit > 0 else 0.0
+            if pct >= 90:
+                status = "critical"
+            elif pct >= 70:
+                status = "warning"
+            else:
+                status = "ok"
+            quotas.append(ProviderQuota(
+                provider=provider,
+                tokens_used_today=used,
+                daily_limit=limit,
+                utilization_pct=pct,
+                status=status,
+            ))
+
+        return QuotaResponse(
+            date=today_start.strftime("%Y-%m-%d"),
+            providers=quotas,
+        )
+
+    @post("/trigger-prompt-review")
+    async def trigger_prompt_review(
+        self,
+        data: TriggerPromptReviewRequest,
+        db_session: AsyncSession,
+    ) -> TriggerPromptReviewResponse:
+        """Trigger a Prompt Creator review for a specific agent role.
+
+        Finds the most recent failed task for the given role and publishes
+        an analysis command to the Prompt Creator agent via Kafka.
+
+        Args:
+            data: Contains the agent_role to review and optional reason.
+            db_session: Async database session.
+
+        Returns:
+            TriggerPromptReviewResponse indicating whether a task was found.
+        """
+        # Find the most recent failed task involving this role's agent
+        failed_task_query = (
+            select(Task)
+            .join(Agent, Agent.id == Task.assigned_agent_id, isouter=True)
+            .where(
+                Task.status == TaskStatus.FAILED.value,
+                Agent.role == data.agent_role,
+            )
+            .order_by(Task.created_at.desc())
+            .limit(1)
+        )
+        result = await db_session.execute(failed_task_query)
+        failed_task = result.scalar_one_or_none()
+
+        if not failed_task:
+            return TriggerPromptReviewResponse(
+                triggered=False,
+                agent_role=data.agent_role,
+                message=f"No recent failed tasks found for role '{data.agent_role}'",
+            )
+
+        try:
+            from nexus.kafka.producer import publish
+            from nexus.kafka.schemas import AgentCommand
+            from nexus.kafka.topics import Topics
+            import uuid
+
+            command = AgentCommand(
+                task_id=uuid.uuid4(),
+                trace_id=uuid.uuid4(),
+                agent_id="analytics-api",
+                payload={
+                    "source_task_id": str(failed_task.id),
+                    "agent_role": data.agent_role,
+                    "trigger_reason": data.reason,
+                },
+                target_role="prompt_creator",
+                instruction=(
+                    f"Analyze recent failures for the '{data.agent_role}' agent role "
+                    f"and propose an improved system prompt. "
+                    f"Reference failed task ID: {failed_task.id}. "
+                    f"Trigger reason: {data.reason}."
+                ),
+            )
+            await publish(Topics.AGENT_COMMANDS, command, key=str(command.task_id))
+
+            logger.info(
+                "prompt_review_triggered",
+                agent_role=data.agent_role,
+                source_task_id=str(failed_task.id),
+                reason=data.reason,
+            )
+
+            return TriggerPromptReviewResponse(
+                triggered=True,
+                agent_role=data.agent_role,
+                message=(
+                    f"Prompt Creator triggered for role '{data.agent_role}' "
+                    f"based on task {failed_task.id}."
+                ),
+            )
+
+        except Exception as exc:
+            logger.error(
+                "prompt_review_trigger_failed",
+                agent_role=data.agent_role,
+                error=str(exc),
+            )
+            return TriggerPromptReviewResponse(
+                triggered=False,
+                agent_role=data.agent_role,
+                message=f"Failed to trigger prompt review: {exc}",
+            )

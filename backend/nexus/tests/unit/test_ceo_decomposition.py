@@ -233,3 +233,78 @@ async def test_ceo_aggregates_when_all_complete(
     assert response.output["action"] == "aggregated_and_sent_to_qa"
     # Should publish to task.review_queue
     mock_publish.assert_called()
+
+
+# ─── BACKLOG-021: Decomposition Tracking Tests ───────────────────────────────
+
+
+@pytest.mark.asyncio
+@patch("nexus.agents.ceo.publish", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.set_working_memory", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.record_usage", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.write_episode", new_callable=AsyncMock)
+async def test_ceo_decomposition_failure_writes_episodic_memory(
+    mock_write_episode: AsyncMock,
+    mock_usage: AsyncMock,
+    mock_wm: AsyncMock,
+    mock_publish: AsyncMock,
+) -> None:
+    """When LLM returns invalid JSON, write_episode is called with outcome=failed.
+
+    This verifies BACKLOG-021: CEO decomposition failures are recorded in
+    episodic memory so the Prompt Creator can analyze failure patterns.
+    """
+    ceo = _make_ceo("NOT_VALID_JSON")
+    command = _make_command("Analyze sales data")
+    session = _make_mock_session()
+
+    response = await ceo.handle_task(command, session)
+
+    # Should still succeed (falls back to engineer)
+    assert response.status == "success"
+    # write_episode MUST have been called to record the failure
+    mock_write_episode.assert_called_once()
+    call_kwargs = mock_write_episode.call_args.kwargs
+    assert call_kwargs["outcome"] == "failed"
+    assert "decomposition_empty" in str(call_kwargs["full_context"])
+    assert call_kwargs["agent_id"] == "ceo-1"
+
+
+@pytest.mark.asyncio
+@patch("nexus.agents.ceo.publish", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.set_working_memory", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.record_usage", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.write_episode", new_callable=AsyncMock)
+async def test_ceo_successful_decomposition_does_not_write_failure_episode(
+    mock_write_episode: AsyncMock,
+    mock_usage: AsyncMock,
+    mock_wm: AsyncMock,
+    mock_publish: AsyncMock,
+) -> None:
+    """On successful decomposition, write_episode is NOT called from the tracking path.
+
+    The normal episodic write happens in AgentBase._write_memory(), not in handle_task().
+    This verifies we don't double-write episodes on success.
+    """
+    decomposition = [
+        {"role": "engineer", "instruction": "Build feature X", "depends_on": []},
+    ]
+    ceo = _make_ceo(decomposition)
+    command = _make_command("Build feature X")
+    session = _make_mock_session()
+
+    await ceo.handle_task(command, session)
+
+    # The failure-tracking write_episode should NOT be called on success
+    mock_write_episode.assert_not_called()
+
+
+def test_ceo_source_has_both_event_tags() -> None:
+    """CEO source code includes structured event tags for analytics queries."""
+    import inspect
+
+    import nexus.agents.ceo as ceo_module
+
+    source = inspect.getsource(ceo_module)
+    assert "decomposition_success" in source, "Missing success event tag"
+    assert "decomposition_failure" in source, "Missing failure event tag"

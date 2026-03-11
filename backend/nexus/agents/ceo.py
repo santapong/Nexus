@@ -25,6 +25,7 @@ from nexus.kafka.producer import publish
 from nexus.kafka.schemas import AgentCommand, AgentResponse
 from nexus.kafka.topics import Topics
 from nexus.llm.usage import calculate_cost, record_usage
+from nexus.memory.episodic import write_episode
 from nexus.memory.working import get_working_memory, set_working_memory
 
 logger = structlog.get_logger()
@@ -61,8 +62,46 @@ class CEOAgent(AgentBase):
         subtasks = await self._decompose_task(message, session)
 
         if not subtasks:
+            # BACKLOG-021: Track decomposition failure in episodic memory
+            # so Prompt Creator can analyze patterns in CEO failures.
+            logger.warning(
+                "ceo_decomposition_empty",
+                task_id=task_id,
+                trace_id=trace_id,
+                instruction_preview=message.instruction[:200],
+                event="decomposition_failure",  # structured tag for analytics queries
+            )
+            try:
+                await write_episode(
+                    session=session,
+                    agent_id=self.agent_id,
+                    task_id=task_id,
+                    summary=f"CEO decomposition failed for: {message.instruction[:300]}",
+                    full_context={
+                        "instruction": message.instruction,
+                        "failure_type": "decomposition_empty",
+                        "fallback": "engineer",
+                    },
+                    outcome="failed",
+                    tokens_used=0,
+                    duration_seconds=0,
+                )
+            except Exception as mem_exc:
+                logger.warning(
+                    "ceo_decomposition_failure_write_error",
+                    task_id=task_id,
+                    error=str(mem_exc),
+                )
             # Fallback: delegate everything to engineer
             subtasks = [{"role": "engineer", "instruction": message.instruction, "depends_on": []}]
+        else:
+            logger.info(
+                "ceo_decomposition_success",
+                task_id=task_id,
+                trace_id=trace_id,
+                subtask_count=len(subtasks),
+                event="decomposition_success",  # structured tag for analytics queries
+            )
 
         # Create subtasks in DB and dispatch independent ones
         subtask_ids = await self._create_subtasks(session, message, subtasks)

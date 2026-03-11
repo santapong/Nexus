@@ -51,6 +51,16 @@ class Settings(BaseSettings):
     model_qa: str = "claude-haiku-4-5-20251001"
     model_prompt_creator: str = "claude-sonnet-4-20250514"
 
+    # Fallback model chains per role (comma-separated, tried in order after primary fails)
+    # Defaults to Groq llama — fast, free tier, good general coverage.
+    # Set to "" to disable fallback for a role.
+    model_ceo_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_engineer_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_analyst_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_writer_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_qa_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_prompt_creator_fallbacks: str = "groq:llama-3.3-70b-versatile"
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"

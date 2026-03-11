@@ -30,6 +30,16 @@ _AGENT_MODEL_MAP: dict[AgentRole, str] = {
     AgentRole.PROMPT_CREATOR: settings.model_prompt_creator,
 }
 
+# Role -> fallback chain (comma-separated model names from settings)
+_AGENT_FALLBACK_MAP: dict[AgentRole, str] = {
+    AgentRole.CEO: settings.model_ceo_fallbacks,
+    AgentRole.ENGINEER: settings.model_engineer_fallbacks,
+    AgentRole.ANALYST: settings.model_analyst_fallbacks,
+    AgentRole.WRITER: settings.model_writer_fallbacks,
+    AgentRole.QA: settings.model_qa_fallbacks,
+    AgentRole.PROMPT_CREATOR: settings.model_prompt_creator_fallbacks,
+}
+
 # ─── Provider prefix → resolver ─────────────────────────────────────────────
 #
 # Each entry maps a model name prefix to a callable that creates the Model.
@@ -188,6 +198,19 @@ def resolve_model(model_name: str) -> Model:
     raise ValueError(msg)
 
 
+def _parse_fallback_list(fallbacks_str: str) -> list[str]:
+    """Parse a comma-separated fallback model list from settings.
+
+    Args:
+        fallbacks_str: Comma-separated model names, e.g.
+            "gemini-2.0-flash,groq:llama-3.3-70b-versatile".
+
+    Returns:
+        List of non-empty model name strings, stripped of whitespace.
+    """
+    return [m.strip() for m in fallbacks_str.split(",") if m.strip()]
+
+
 class ModelFactory:
     """Creates Pydantic AI model instances based on agent role.
 
@@ -197,7 +220,10 @@ class ModelFactory:
 
     @staticmethod
     def get_model(role: AgentRole, override: str | None = None) -> Model:
-        """Get the appropriate LLM model for an agent role.
+        """Get the appropriate LLM model for an agent role (no fallback).
+
+        For production use, prefer get_model_with_fallbacks() which
+        wraps the primary model with automatic failover.
 
         Args:
             role: The agent's role determining which model to use.
@@ -216,6 +242,67 @@ class ModelFactory:
         )
 
         return resolve_model(model_name)
+
+    @staticmethod
+    def get_model_with_fallbacks(
+        role: AgentRole,
+        override: str | None = None,
+    ) -> Model:
+        """Get the model for a role, wrapped with automatic fallback chain.
+
+        If the primary model fails (4xx / 5xx), pydantic-ai's FallbackModel
+        automatically tries the next model in the chain. Fallback chains
+        are configured via MODEL_<ROLE>_FALLBACKS in settings (comma-separated).
+
+        If no fallbacks are configured, or the primary is a test model,
+        returns the primary model directly with no wrapping overhead.
+
+        Args:
+            role: The agent's role.
+            override: Optional model name to override the primary only.
+                      Fallback chain from settings is still applied.
+
+        Returns:
+            A Model instance — either the primary model directly, or a
+            FallbackModel that wraps primary + fallbacks in order.
+        """
+        primary_name = override or _AGENT_MODEL_MAP[role]
+        primary = resolve_model(primary_name)
+
+        # Skip fallback wrapping for test models (no API calls, no need to fallback)
+        if primary_name.startswith("test:"):
+            return primary
+
+        fallback_names = _parse_fallback_list(_AGENT_FALLBACK_MAP.get(role, ""))
+        if not fallback_names:
+            return primary
+
+        # Resolve fallbacks, skipping any that fail (e.g. missing API key)
+        fallback_models: list[Model] = []
+        for name in fallback_names:
+            try:
+                fallback_models.append(resolve_model(name))
+            except (ValueError, ImportError) as exc:
+                logger.warning(
+                    "fallback_model_skipped",
+                    role=role.value,
+                    model_name=name,
+                    reason=str(exc),
+                )
+
+        if not fallback_models:
+            return primary
+
+        from pydantic_ai.models.fallback import FallbackModel
+
+        logger.debug(
+            "fallback_chain_built",
+            role=role.value,
+            primary=primary_name,
+            fallbacks=fallback_names,
+        )
+
+        return FallbackModel(primary, *fallback_models)
 
     @staticmethod
     def get_model_by_name(model_name: str) -> Model:
