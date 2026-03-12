@@ -69,7 +69,7 @@ class CEOAgent(AgentBase):
                 task_id=task_id,
                 trace_id=trace_id,
                 instruction_preview=message.instruction[:200],
-                event="decomposition_failure",  # structured tag for analytics queries
+                event_tag="decomposition_failure",  # structured tag for analytics queries
             )
             try:
                 await write_episode(
@@ -100,7 +100,7 @@ class CEOAgent(AgentBase):
                 task_id=task_id,
                 trace_id=trace_id,
                 subtask_count=len(subtasks),
-                event="decomposition_success",  # structured tag for analytics queries
+                event_tag="decomposition_success",  # structured tag for analytics queries
             )
 
         # Create subtasks in DB and dispatch independent ones

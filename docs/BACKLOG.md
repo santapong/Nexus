@@ -39,11 +39,16 @@ so the specialist knows exactly what to fix. Guard against unbounded loops via t
 **Suggested phase:** Phase 2 (with Prompt Creator Agent)
 **Added by:** claude_code
 **Date:** 2026-03-10
+**Status:** ✅ RESOLVED — 2026-03-12
 **Source:** ADR-020, Phase 2 CEO implementation
 **Description:** The CEO decomposition prompt is critical — bad decomposition wastes all
 downstream agent work. Once Prompt Creator Agent is implemented, it should analyze CEO
 decomposition failures (invalid JSON, wrong role assignments, missing dependencies) and
 propose improved prompts. Track decomposition success rate as a metric in the dashboard.
+**Implementation:** `ceo.py` now writes an episodic memory entry with `outcome=failed` and
+`full_context.failure_type=decomposition_empty` whenever decomposition returns nothing.
+`POST /api/analytics/trigger-prompt-review` finds the most recent failed task for a role
+and dispatches a Prompt Creator command via Kafka.
 
 ---
 
@@ -51,11 +56,15 @@ propose improved prompts. Track decomposition success rate as a metric in the da
 **Suggested phase:** Phase 2
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Status:** ✅ RESOLVED — 2026-03-12
 **Source:** Phase 1 stress test — Groq 100K TPD limit discovered
 **Description:** Groq free tier has a hard 100,000 tokens-per-day limit. When running many
 tasks, this limit is hit silently and all subsequent tasks fail with 429. Add provider-level
 rate limit tracking to the dashboard so users can see remaining daily quota before submitting
 tasks. Also show a warning when approaching the limit.
+**Implementation:** `GET /api/analytics/quota` queries `llm_usage` for today's total tokens,
+detects provider by model name prefix, and compares against configurable limits from settings.
+Status is `ok` / `warning` (≥70%) / `critical` (≥90%).
 
 ---
 
@@ -63,10 +72,15 @@ tasks. Also show a warning when approaching the limit.
 **Suggested phase:** Phase 2
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Status:** ✅ RESOLVED — 2026-03-12
 **Source:** §6 LLM Provider Strategy, universal ModelFactory upgrade
 **Description:** Implement automatic model fallback when primary model fails (rate limit,
 timeout, API down). Use pydantic-ai's FallbackModel to chain primary → fallback per role.
 E.g., claude-sonnet → gemini-pro → groq:llama-3.3-70b. Reduces single-provider dependency.
+**Implementation:** `ModelFactory.get_model_with_fallbacks(role)` wraps the primary model
+with `FallbackModel` using per-role fallback chains configured via `MODEL_<ROLE>_FALLBACKS`
+environment variables in `settings.py`. `agents/factory.py` now calls this method instead
+of `get_model()` so all agents automatically get fallback coverage.
 
 ---
 

@@ -15,23 +15,41 @@ from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand
 
 
+def _make_mock_llm() -> MagicMock:
+    """Create an LLM mock that returns a parseable empty subtask list.
+
+    The behavior tests only care about CEO routing, not LLM quality.
+    Return empty JSON so CEO falls back to delegating to engineer.
+    """
+    mock_result = MagicMock()
+    mock_result.output = "[]"  # Empty → CEO falls back to engineer
+    mock_usage = MagicMock()
+    mock_usage.request_tokens = 0
+    mock_usage.response_tokens = 0
+    mock_result.usage.return_value = mock_usage
+
+    mock_llm = MagicMock()
+    mock_llm.run = AsyncMock(return_value=mock_result)
+    mock_llm.model = MagicMock()
+    mock_llm.model.model_name = "test-model"
+    return mock_llm
+
+
 def _make_ceo() -> CEOAgent:
     """Build a CEOAgent with all dependencies mocked."""
     mock_session = AsyncMock()
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
     mock_session.commit = AsyncMock()
-
-    # CEO does not use LLM in Phase 1 — but it still receives one from factory
-    mock_llm = MagicMock()
-    mock_llm.run = AsyncMock()
+    mock_session.flush = AsyncMock()
+    mock_session.add = MagicMock()
 
     return CEOAgent(
         role=AgentRole.CEO,
         agent_id="test-ceo",
         subscribe_topics=["task.queue"],
         group_id="test-ceo-group",
-        llm_agent=mock_llm,
+        llm_agent=_make_mock_llm(),
         db_session_factory=MagicMock(return_value=mock_session),
     )
 
@@ -48,11 +66,20 @@ def _make_task_command(instruction: str = "Build a web scraper in Python") -> Ag
 
 
 @pytest.mark.asyncio
-async def test_ceo_delegates_to_engineer() -> None:
+@patch("nexus.agents.ceo.write_episode", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.set_working_memory", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.record_usage", new_callable=AsyncMock)
+async def test_ceo_delegates_to_engineer(
+    mock_usage: AsyncMock,
+    mock_wm: AsyncMock,
+    mock_write_episode: AsyncMock,
+) -> None:
     """CEO should publish an AgentCommand to agent.commands targeting engineer."""
     agent = _make_ceo()
     command = _make_task_command()
     mock_session = AsyncMock()
+    mock_session.flush = AsyncMock()
+    mock_session.add = MagicMock()
 
     published_messages: list[tuple[str, object]] = []
 
@@ -75,23 +102,38 @@ async def test_ceo_delegates_to_engineer() -> None:
 
 
 @pytest.mark.asyncio
-async def test_ceo_returns_delegation_response() -> None:
+@patch("nexus.agents.ceo.write_episode", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.set_working_memory", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.record_usage", new_callable=AsyncMock)
+async def test_ceo_returns_delegation_response(
+    mock_usage: AsyncMock,
+    mock_wm: AsyncMock,
+    mock_write_episode: AsyncMock,
+) -> None:
     """CEO should return a success response indicating delegation."""
     agent = _make_ceo()
     command = _make_task_command()
     mock_session = AsyncMock()
+    mock_session.flush = AsyncMock()
+    mock_session.add = MagicMock()
 
     with patch("nexus.agents.ceo.publish", new_callable=AsyncMock):
         response = await agent.handle_task(command, mock_session)
 
     assert response.status == "success"
     assert response.output is not None
-    assert response.output.get("action") == "delegated_to_engineer"
-    assert response.tokens_used == 0  # CEO uses no LLM tokens in Phase 1
+    assert response.output.get("action") == "decomposed"
 
 
 @pytest.mark.asyncio
-async def test_ceo_preserves_task_and_trace_ids() -> None:
+@patch("nexus.agents.ceo.write_episode", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.set_working_memory", new_callable=AsyncMock)
+@patch("nexus.agents.ceo.record_usage", new_callable=AsyncMock)
+async def test_ceo_preserves_task_and_trace_ids(
+    mock_usage: AsyncMock,
+    mock_wm: AsyncMock,
+    mock_write_episode: AsyncMock,
+) -> None:
     """CEO should propagate task_id and trace_id to the delegated command."""
     agent = _make_ceo()
     task_id = uuid4()
@@ -105,6 +147,8 @@ async def test_ceo_preserves_task_and_trace_ids() -> None:
         instruction="Investigate performance issue",
     )
     mock_session = AsyncMock()
+    mock_session.flush = AsyncMock()
+    mock_session.add = MagicMock()
 
     captured: list[AgentCommand] = []
 

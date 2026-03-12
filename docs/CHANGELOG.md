@@ -40,7 +40,46 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-12] — Phase 2 Backlog Closeout: Model Fallback, Quota Monitoring, CEO Tracking
+
+### Added
+- `nexus/llm/factory.py` — `ModelFactory.get_model_with_fallbacks(role)`: wraps the primary
+  model with `pydantic_ai.models.fallback.FallbackModel`. Fallback chains are configured via
+  `MODEL_<ROLE>_FALLBACKS` env vars (comma-separated model names). Invalid or missing fallback
+  models are skipped with a warning log rather than crashing startup.
+- `nexus/api/analytics.py` — `GET /api/analytics/quota`: reads today's token totals from
+  `llm_usage`, detects provider by model name prefix, and returns utilization % vs. configurable
+  daily limits. Statuses: `ok` / `warning` (≥70 %) / `critical` (≥90 %).
+- `nexus/api/analytics.py` — `POST /api/analytics/trigger-prompt-review`: finds the most recent
+  failed task for a given role and publishes an `AgentCommand` targeting `prompt_creator` via
+  Kafka, triggering automated prompt optimization.
+- `nexus/tests/unit/test_fallback.py` — Unit tests for `_parse_fallback_list` and
+  `ModelFactory.get_model_with_fallbacks()` (parsing, wrapping, skip-on-error behaviour).
+- `nexus/tests/unit/test_ceo_decomposition.py` — Three new BACKLOG-021 tests: failure
+  writes episodic memory, success does NOT write failure episode, event tags present in source.
+
+### Changed
+- `nexus/settings.py` — Added `model_ceo_fallbacks`, `model_engineer_fallbacks`,
+  `model_analyst_fallbacks`, `model_writer_fallbacks`, `model_qa_fallbacks`,
+  `model_prompt_creator_fallbacks` fields (default: `groq:llama-3.3-70b-versatile`).
+- `nexus/agents/factory.py` — `build_agent()` now calls `get_model_with_fallbacks(role)`
+  instead of `get_model(role)` — all six agent roles get automatic fallback coverage.
+- `nexus/agents/ceo.py` — Decomposition failure path now calls `write_episode()` with
+  `outcome=failed` and `failure_type=decomposition_empty` before falling back to engineer.
+  Success path emits structured `event=decomposition_success` log for analytics queries.
+
+### Resolved
+- `BACKLOG-019` — Model fallback chain with automatic retry
+- `BACKLOG-020` — Groq daily token limit monitoring (backend endpoint)
+- `BACKLOG-021` — CEO decomposition tracking + Prompt Creator trigger
+
+**Authored by:** antigravity_agent
+**PR:** #phase2-backlog-019-020-021
+
+---
+
 ## [2026-03-11] — Phase 2 Enhancements: Analytics Dashboard, Cost Estimation, Task Replay, Dark Mode, Org Chart
+
 
 ### Added
 - `backend/nexus/api/analytics.py` — AnalyticsController with 3 endpoints:

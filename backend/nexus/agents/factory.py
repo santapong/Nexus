@@ -45,7 +45,7 @@ def build_agent(
     Returns:
         A configured AgentBase subclass instance ready to run().
     """
-    model = ModelFactory.get_model(role)
+    model = ModelFactory.get_model_with_fallbacks(role)
     tools = get_tools_for_role(role)
 
     llm_agent = PydanticAgent(
