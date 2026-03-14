@@ -47,6 +47,12 @@ def _make_agent(
     mock_session.__aexit__ = AsyncMock(return_value=None)
     mock_session.commit = AsyncMock()
     mock_session.flush = AsyncMock()
+    mock_session.add = MagicMock()
+
+    # Mock execute for prompt reload check (returns None = no agent record)
+    mock_execute_result = MagicMock()
+    mock_execute_result.scalar_one_or_none.return_value = None
+    mock_session.execute = AsyncMock(return_value=mock_execute_result)
 
     agent = FakeAgent(
         role=AgentRole.ENGINEER,

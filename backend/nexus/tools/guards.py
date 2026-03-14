@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.audit.service import AuditEventType, log_event
 from nexus.db.models import ApprovalStatus, HumanApproval
 
 logger = structlog.get_logger()
@@ -67,6 +68,20 @@ async def require_approval(
     session.add(approval)
     await session.flush()
     approval_id = approval.id
+
+    # Audit: approval_requested
+    await log_event(
+        session=session,
+        task_id=action.task_id,
+        trace_id=action.task_id,
+        agent_id=agent_id,
+        event_type=AuditEventType.APPROVAL_REQUESTED,
+        event_data={
+            "approval_id": str(approval_id),
+            "tool_name": action.action,
+            "description": action.description,
+        },
+    )
 
     logger.info(
         "approval_requested",
@@ -148,5 +163,20 @@ async def resolve_approval(
     record.resolved_at = datetime.now(timezone.utc)
     record.resolved_by = resolved_by
     await session.flush()
+
+    # Audit: approval_resolved
+    await log_event(
+        session=session,
+        task_id=str(record.task_id),
+        trace_id=str(record.task_id),
+        agent_id=str(record.agent_id),
+        event_type=AuditEventType.APPROVAL_RESOLVED,
+        event_data={
+            "approval_id": approval_id,
+            "approved": approved,
+            "resolved_by": resolved_by,
+            "tool_name": record.tool_name,
+        },
+    )
 
     return record

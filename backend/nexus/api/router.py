@@ -5,6 +5,7 @@ from litestar import Router
 from nexus.api.agents import AgentController
 from nexus.api.analytics import AnalyticsController
 from nexus.api.approvals import ApprovalController
+from nexus.api.audit import AuditController
 from nexus.api.health import HealthController
 from nexus.api.prompts import PromptController
 from nexus.api.tasks import TaskController
@@ -19,6 +20,7 @@ api_router = Router(
         ApprovalController,
         PromptController,
         AnalyticsController,
+        AuditController,
     ],
 )
 

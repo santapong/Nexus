@@ -7,3 +7,9 @@ __pycache__
 *.egg-info
 dist
 build
+.git
+*.md
+.env
+.env.*
+.coverage
+htmlcov

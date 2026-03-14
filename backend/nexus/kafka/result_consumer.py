@@ -164,7 +164,7 @@ async def _forward_to_ceo(
             logger.warning("forward_to_ceo_task_not_found", task_id=task_id)
             return
 
-        parent_task_id = task.parent_task_id
+        parent_task_id = str(task.parent_task_id)
 
         # Update subtask status in DB
         task_status = _map_status(response.status)

@@ -40,6 +40,64 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-14] — Phase 2 Guardrails, Prompt Versioning, Audit Logging, Cost Tracking, CI/CD
+
+### Added
+- `backend/nexus/audit/service.py` — Centralized audit logging service with `AuditEventType`
+  enum (13 event types) and `log_event()` function. All agent actions, prompt changes, budget
+  events, and approval flows now write structured audit records.
+- `backend/nexus/api/audit.py` — `AuditController` at `/audit` with two endpoints:
+  `GET /audit` (list events with filters) and `GET /audit/{task_id}/timeline` (full task timeline).
+- `backend/nexus/api/prompts.py` — Three new endpoints: `POST /prompts/create` (auto-versioned),
+  `POST /prompts/{id}/rollback` (deactivate current, activate target, sync agents table),
+  `GET /prompts/history/{role}` (activation history from audit log).
+- `backend/nexus/api/analytics.py` — `GET /analytics/costs/{agent_id}` per-agent cost detail
+  with by-model breakdown, cost-per-task average, and recent LLM calls.
+- `backend/nexus/agents/base.py` — Output validation guardrail: empty output detection,
+  9 secret patterns redacted (`sk-`, `AKIA`, `Bearer`, `ghp_`, etc.), 100KB size limit.
+- `backend/nexus/agents/base.py` — Prompt hot-reload: agents check DB for system_prompt changes
+  before each task and reconstruct PydanticAgent if changed.
+- `backend/nexus/agents/factory.py` — Tool call counting wrapper enforcing 20-call limit per
+  task via `_wrap_tools_with_counter()`. Raises `ToolCallLimitExceeded` → escalates to human.
+- `frontend/.dockerignore` — Excludes node_modules, dist, .git from Docker context.
+- `docker-compose.prod.yml` — Production override using multi-stage `prod` targets.
+- `.github/workflows/ci.yml` — CI pipeline: ruff lint, mypy type check, unit tests,
+  behavior tests, frontend TypeScript check and build verification.
+- `.github/workflows/docker-publish.yml` — DockerHub push on main/tags with layer caching.
+- `.github/workflows/security.yml` — pip-audit, npm audit, TruffleHog secret detection,
+  Trivy container scanning, CodeQL static analysis (Python + TypeScript). Weekly schedule.
+- 5 new test files: `test_audit_service.py` (4 tests), `test_tool_call_limit.py` (7 tests),
+  `test_prompt_sync.py` (4 tests), `test_output_validation.py` (12 tests),
+  `test_prompt_lifecycle.py` (11 tests). Total: 38 new tests.
+
+### Changed
+- `backend/Dockerfile` — Multi-stage build: `dev` target for local development (with reload),
+  `prod` target for production (non-root user, no dev deps, 2 workers).
+- `frontend/Dockerfile` — Multi-stage build: `dev` target for hot-reload, `build` stage for
+  compilation, `prod` target serving static files via nginx with API proxy.
+- `docker-compose.yml` — Added `target: dev` for backend and frontend builds. Changed frontend
+  node_modules from anonymous volume to named `frontend_node_modules` volume.
+- `Makefile` — Added `build-prod` and `up-prod` targets for production builds.
+- `backend/nexus/agents/base.py` — Guard chain now includes: tool counter reset, prompt
+  hot-reload check, audit events (task_received, task_completed, task_failed, budget_exceeded,
+  tool_call_limit_reached), and output validation between handle_task and memory write.
+- `backend/nexus/llm/usage.py` — `record_usage()` now emits `llm_call` audit event.
+- `backend/nexus/tools/guards.py` — `require_approval()` and `resolve_approval()` now emit
+  `approval_requested` and `approval_resolved` audit events.
+- `backend/nexus/api/prompts.py` — `activate_prompt()` now syncs `agents.system_prompt` and
+  emits `prompt_activated` audit event with previous_version tracking.
+
+### Test Results
+- **153 unit+behavior tests** — all passing (38 new + 115 existing, zero regressions)
+- **14 E2E tests** — all passing
+- **20-task stress test** — 100% pass rate, Phase 2 gate cleared
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-12] — Phase 2 Backlog Closeout: Model Fallback, Quota Monitoring, CEO Tracking
 
 ### Added

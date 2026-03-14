@@ -79,7 +79,7 @@ async def test_ceo_delegates_to_engineer(
     command = _make_task_command()
     mock_session = AsyncMock()
     mock_session.flush = AsyncMock()
-    mock_session.add = MagicMock()
+    mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
     published_messages: list[tuple[str, object]] = []
 
@@ -97,7 +97,8 @@ async def test_ceo_delegates_to_engineer(
     assert isinstance(msg, AgentCommand)
     assert msg.target_role == AgentRole.ENGINEER.value
     assert msg.instruction == command.instruction
-    assert msg.task_id == command.task_id
+    # CEO creates subtasks with new task_ids; parent id goes in payload
+    assert msg.payload.get("parent_task_id") == str(command.task_id)
     assert msg.trace_id == command.trace_id
 
 
@@ -115,7 +116,7 @@ async def test_ceo_returns_delegation_response(
     command = _make_task_command()
     mock_session = AsyncMock()
     mock_session.flush = AsyncMock()
-    mock_session.add = MagicMock()
+    mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
     with patch("nexus.agents.ceo.publish", new_callable=AsyncMock):
         response = await agent.handle_task(command, mock_session)
@@ -134,7 +135,7 @@ async def test_ceo_preserves_task_and_trace_ids(
     mock_wm: AsyncMock,
     mock_write_episode: AsyncMock,
 ) -> None:
-    """CEO should propagate task_id and trace_id to the delegated command."""
+    """CEO should propagate parent task_id (in payload) and trace_id to the delegated command."""
     agent = _make_ceo()
     task_id = uuid4()
     trace_id = uuid4()
@@ -148,7 +149,7 @@ async def test_ceo_preserves_task_and_trace_ids(
     )
     mock_session = AsyncMock()
     mock_session.flush = AsyncMock()
-    mock_session.add = MagicMock()
+    mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
     captured: list[AgentCommand] = []
 
@@ -160,5 +161,6 @@ async def test_ceo_preserves_task_and_trace_ids(
         await agent.handle_task(command, mock_session)
 
     assert len(captured) == 1
-    assert captured[0].task_id == task_id
+    # CEO creates subtasks with new task_ids; parent id goes in payload
+    assert captured[0].payload.get("parent_task_id") == str(task_id)
     assert captured[0].trace_id == trace_id

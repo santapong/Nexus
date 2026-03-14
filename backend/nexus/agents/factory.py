@@ -5,12 +5,13 @@ tools, topics, and database session factory.
 """
 from __future__ import annotations
 
+import functools
 from collections.abc import Callable
 from typing import Any
 
 from pydantic_ai import Agent as PydanticAgent
 
-from nexus.agents.base import AgentBase
+from nexus.agents.base import AgentBase, ToolCallLimitExceeded
 from nexus.db.models import AgentRole
 from nexus.kafka.topics import Topics
 from nexus.llm.factory import ModelFactory
@@ -25,6 +26,33 @@ ROLE_TOPICS: dict[AgentRole, list[str]] = {
     AgentRole.QA: [Topics.TASK_REVIEW_QUEUE],
     AgentRole.PROMPT_CREATOR: [Topics.PROMPT_IMPROVEMENT, Topics.PROMPT_BENCHMARK],
 }
+
+
+def _wrap_tools_with_counter(
+    tools: list[Any],
+    counter: dict[str, int],
+) -> list[Any]:
+    """Wrap each tool function with a call counter that enforces MAX_TOOL_CALLS.
+
+    Args:
+        tools: List of Pydantic AI tool functions.
+        counter: Mutable dict with 'count' and 'limit' keys.
+
+    Returns:
+        List of wrapped tool functions.
+    """
+    wrapped: list[Any] = []
+    for tool_fn in tools:
+        @functools.wraps(tool_fn)
+        async def counted_tool(*args: Any, _original: Any = tool_fn, **kwargs: Any) -> Any:
+            counter["count"] += 1
+            if counter["count"] > counter["limit"]:
+                raise ToolCallLimitExceeded(
+                    f"Tool call limit ({counter['limit']}) exceeded"
+                )
+            return await _original(*args, **kwargs)
+        wrapped.append(counted_tool)
+    return wrapped
 
 
 def build_agent(
@@ -48,10 +76,14 @@ def build_agent(
     model = ModelFactory.get_model_with_fallbacks(role)
     tools = get_tools_for_role(role)
 
+    # Wrap tools with call counter for limit enforcement
+    tool_counter: dict[str, int] = {"count": 0, "limit": AgentBase.MAX_TOOL_CALLS}
+    counted_tools = _wrap_tools_with_counter(tools, tool_counter) if tools else []
+
     llm_agent = PydanticAgent(
         model=model,
         system_prompt=system_prompt,
-        tools=tools,
+        tools=counted_tools,
     )
 
     topics = ROLE_TOPICS.get(role, [Topics.AGENT_COMMANDS])
@@ -66,29 +98,32 @@ def build_agent(
         "db_session_factory": db_session_factory,
     }
 
+    agent: AgentBase
+
     if role == AgentRole.CEO:
         from nexus.agents.ceo import CEOAgent
-        return CEOAgent(**kwargs)
-
-    if role == AgentRole.ENGINEER:
+        agent = CEOAgent(**kwargs)
+    elif role == AgentRole.ENGINEER:
         from nexus.agents.engineer import EngineerAgent
-        return EngineerAgent(**kwargs)
-
-    if role == AgentRole.ANALYST:
+        agent = EngineerAgent(**kwargs)
+    elif role == AgentRole.ANALYST:
         from nexus.agents.analyst import AnalystAgent
-        return AnalystAgent(**kwargs)
-
-    if role == AgentRole.WRITER:
+        agent = AnalystAgent(**kwargs)
+    elif role == AgentRole.WRITER:
         from nexus.agents.writer import WriterAgent
-        return WriterAgent(**kwargs)
-
-    if role == AgentRole.QA:
+        agent = WriterAgent(**kwargs)
+    elif role == AgentRole.QA:
         from nexus.agents.qa import QAAgent
-        return QAAgent(**kwargs)
-
-    if role == AgentRole.PROMPT_CREATOR:
+        agent = QAAgent(**kwargs)
+    elif role == AgentRole.PROMPT_CREATOR:
         from nexus.agents.prompt_creator import PromptCreatorAgent
-        return PromptCreatorAgent(**kwargs)
+        agent = PromptCreatorAgent(**kwargs)
+    else:
+        msg = f"No agent implementation for role: {role.value}"
+        raise ValueError(msg)
 
-    msg = f"No agent implementation for role: {role.value}"
-    raise ValueError(msg)
+    # Attach tool call counter so base.py can reset it per task
+    agent._tool_call_counter = tool_counter
+    # Store system prompt text for hot-reload detection
+    agent._current_system_prompt = system_prompt
+    return agent

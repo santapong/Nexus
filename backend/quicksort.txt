@@ -1,0 +1,1 @@
+Quicksort is a divide-and-conquer algorithm with an average time complexity of O(n log n) but can degrade to O(n^2) in certain scenarios. The algorithm selects a pivot element, partitions the array based on this pivot, and recursively sorts the subarrays. The choice of pivot significantly affects the algorithm's performance.

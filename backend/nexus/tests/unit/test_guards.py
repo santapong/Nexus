@@ -51,9 +51,10 @@ async def test_require_approval_creates_record() -> None:
         mp.setattr("nexus.tools.guards._APPROVAL_POLL_SECONDS", 0.01)
         await require_approval(session=session, agent_id="test-agent", action=action)
 
-    # Verify a record was added to the session
-    session.add.assert_called_once()
-    added_record = session.add.call_args[0][0]
+    # Verify records were added (HumanApproval + AuditLog)
+    assert session.add.call_count >= 1
+    # First call is the HumanApproval record
+    added_record = session.add.call_args_list[0][0][0]
     assert added_record.tool_name == "file_write"
     assert added_record.status == ApprovalStatus.PENDING.value
 

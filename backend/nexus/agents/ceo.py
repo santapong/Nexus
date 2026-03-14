@@ -329,20 +329,25 @@ class CEOAgent(AgentBase):
         tracking = await get_working_memory(self.agent_id, parent_task_id)
         if not tracking:
             logger.warning("ceo_tracking_not_found", parent_task_id=parent_task_id)
+            # Use orchestration action to prevent infinite forwarding loop:
+            # without this, the "failed" response goes to agent.responses →
+            # result consumer sees it's a subtask → forwards back → repeat.
             return AgentResponse(
                 task_id=message.task_id,
                 trace_id=message.trace_id,
                 agent_id=self.agent_id,
                 payload={},
                 status="failed",
+                output={"action": "subtask_tracked"},
                 error="No tracking state found",
             )
 
-        # Update subtask status
+        # Update subtask status — count any terminal status (including failed)
+        # so the workflow doesn't get stuck when a subtask fails
         if subtask_id in tracking["subtasks"]:
             tracking["subtasks"][subtask_id]["status"] = subtask_status
             tracking["subtasks"][subtask_id]["output"] = subtask_output
-            if subtask_status in ("success", "completed"):
+            if subtask_status in ("success", "completed", "failed", "partial", "escalated"):
                 tracking["completed"] = tracking.get("completed", 0) + 1
 
         await set_working_memory(self.agent_id, parent_task_id, tracking)
@@ -381,10 +386,10 @@ class CEOAgent(AgentBase):
     async def _dispatch_unblocked(
         self, parent_task_id: str, tracking: dict[str, Any], trace_id: str
     ) -> None:
-        """Dispatch subtasks whose dependencies are now all completed."""
+        """Dispatch subtasks whose dependencies are now all resolved (done or failed)."""
         completed_ids = {
             sid for sid, st in tracking["subtasks"].items()
-            if st["status"] in ("success", "completed")
+            if st["status"] in ("success", "completed", "failed", "partial", "escalated")
         }
 
         for sid, st in tracking["subtasks"].items():

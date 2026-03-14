@@ -3,6 +3,7 @@ from __future__ import annotations
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.audit.service import AuditEventType, log_event
 from nexus.db.models import LLMUsage
 from nexus.redis.clients import redis_cache
 from nexus.settings import settings
@@ -115,6 +116,21 @@ async def record_usage(
     await redis_cache.incrbyfloat("daily_spend_usd", cost_usd)
     # Set TTL to expire at midnight (simplified: 24h rolling)
     await redis_cache.expire("daily_spend_usd", 86400)
+
+    # Audit: llm_call
+    await log_event(
+        session=session,
+        task_id=task_id,
+        trace_id=task_id,  # trace_id not available here; task_id as fallback
+        agent_id=agent_id,
+        event_type=AuditEventType.LLM_CALL,
+        event_data={
+            "model_name": model_name,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost_usd": cost_usd,
+        },
+    )
 
     logger.info(
         "llm_usage_recorded",

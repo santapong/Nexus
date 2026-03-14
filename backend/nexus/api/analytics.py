@@ -109,6 +109,36 @@ class QuotaResponse(BaseModel):
     providers: list[ProviderQuota]
 
 
+# ── Per-agent cost detail ────────────────────────────────────────────────────
+
+
+class RecentLLMCall(BaseModel):
+    """A single recent LLM call for an agent."""
+
+    task_id: str
+    model_name: str
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    created_at: str
+
+
+class AgentCostDetailResponse(BaseModel):
+    """Detailed cost breakdown for a single agent."""
+
+    agent_id: str
+    agent_role: str
+    agent_name: str
+    period: str
+    total_cost_usd: float
+    total_calls: int
+    total_input_tokens: int
+    total_output_tokens: int
+    cost_per_task_avg: float
+    by_model: list[CostByModel]
+    recent_calls: list[RecentLLMCall]
+
+
 # ── BACKLOG-021: Prompt review trigger ───────────────────────────────────────
 
 
@@ -342,6 +372,110 @@ class AnalyticsController(Controller):
             by_role=by_role,
             total_cost_usd=round(total_cost, 6),
             daily_average_usd=round(daily_avg, 6),
+        )
+
+    @get("/costs/{agent_id:str}")
+    async def get_agent_cost_detail(
+        self,
+        agent_id: str,
+        db_session: AsyncSession,
+        period: str = Parameter(query="period", default="30d"),
+    ) -> AgentCostDetailResponse | dict[str, str]:
+        """Get detailed cost breakdown for a specific agent.
+
+        Args:
+            agent_id: Agent UUID string.
+            db_session: Async database session.
+            period: Time period filter ('7d', '30d', '90d', 'all').
+
+        Returns:
+            Detailed cost breakdown with per-model and recent calls.
+        """
+        cutoff = _parse_period(period)
+
+        # Get agent info
+        agent_result = await db_session.execute(
+            select(Agent).where(Agent.id == agent_id)
+        )
+        agent = agent_result.scalar_one_or_none()
+        if agent is None:
+            return {"error": f"Agent {agent_id} not found"}
+
+        # Aggregate costs by model
+        model_query = select(
+            LLMUsage.model_name,
+            func.count(LLMUsage.id).label("calls"),
+            func.sum(LLMUsage.input_tokens).label("input_tok"),
+            func.sum(LLMUsage.output_tokens).label("output_tok"),
+            func.sum(LLMUsage.cost_usd).label("cost"),
+        ).where(
+            LLMUsage.agent_id == agent_id
+        ).group_by(LLMUsage.model_name).order_by(func.sum(LLMUsage.cost_usd).desc())
+
+        if cutoff:
+            model_query = model_query.where(LLMUsage.created_at >= cutoff)
+
+        model_rows = (await db_session.execute(model_query)).all()
+
+        by_model = [
+            CostByModel(
+                model_name=row.model_name,
+                total_calls=row.calls,
+                total_input_tokens=int(row.input_tok or 0),
+                total_output_tokens=int(row.output_tok or 0),
+                total_cost_usd=round(float(row.cost or 0), 6),
+            )
+            for row in model_rows
+        ]
+
+        total_cost = sum(m.total_cost_usd for m in by_model)
+        total_calls = sum(m.total_calls for m in by_model)
+        total_input = sum(m.total_input_tokens for m in by_model)
+        total_output = sum(m.total_output_tokens for m in by_model)
+
+        # Count tasks for average
+        task_count_query = select(func.count(Task.id)).where(
+            Task.assigned_agent_id == agent_id
+        )
+        if cutoff:
+            task_count_query = task_count_query.where(Task.created_at >= cutoff)
+        task_count = (await db_session.execute(task_count_query)).scalar() or 0
+        cost_per_task = total_cost / task_count if task_count > 0 else 0.0
+
+        # Recent LLM calls (last 20)
+        recent_query = (
+            select(LLMUsage)
+            .where(LLMUsage.agent_id == agent_id)
+            .order_by(LLMUsage.created_at.desc())
+            .limit(20)
+        )
+        recent_result = await db_session.execute(recent_query)
+        recent_rows = recent_result.scalars().all()
+
+        recent_calls = [
+            RecentLLMCall(
+                task_id=str(r.task_id),
+                model_name=r.model_name,
+                input_tokens=r.input_tokens,
+                output_tokens=r.output_tokens,
+                cost_usd=round(r.cost_usd, 6),
+                created_at=str(r.created_at),
+            )
+            for r in recent_rows
+        ]
+
+        return AgentCostDetailResponse(
+            agent_id=agent_id,
+            agent_role=agent.role,
+            agent_name=agent.name,
+            period=period,
+            total_cost_usd=round(total_cost, 6),
+            total_calls=total_calls,
+            total_input_tokens=total_input,
+            total_output_tokens=total_output,
+            cost_per_task_avg=round(cost_per_task, 6),
+            by_model=by_model,
+            recent_calls=recent_calls,
         )
 
     @get("/dead-letters")
