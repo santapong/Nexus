@@ -23,6 +23,42 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-025 — Generate package-lock.json for reproducible frontend builds
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-14
+**Source:** CI/CD implementation — npm ci requires lockfile
+**Description:** Frontend uses `npm install` instead of `npm ci` because no `package-lock.json`
+exists in the repo. This means builds are not fully reproducible (dependency versions can drift).
+Run `npm install` locally and commit the generated `package-lock.json`. Then update Dockerfile
+and CI to use `npm ci` for deterministic installs.
+
+---
+
+### BACKLOG-024 — Per-agent cost alerts and budget allocation
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-14
+**Source:** Per-agent cost tracking implementation (ADR-027)
+**Description:** Now that per-agent cost tracking exists (`GET /analytics/costs/{agent_id}`),
+add configurable per-agent budget limits (not just per-task). Alert when an agent's cumulative
+daily cost exceeds a threshold. Enable different budget tiers per role (e.g., CEO gets higher
+budget than QA). Dashboard should show cost trends per agent over time.
+
+---
+
+### BACKLOG-023 — Audit log retention and archival policy
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-14
+**Source:** Audit logging service implementation (ADR-027)
+**Description:** The `audit_log` table grows unboundedly. Define a retention policy (e.g., keep
+30 days in hot storage, archive to cold storage). Add a periodic cleanup job. Consider
+partitioning the table by date for efficient deletion. The API already supports `since` filter
+but no upper bound on table size exists.
+
+---
+
 ### BACKLOG-022 — QA multi-round rework with configurable retry limit
 **Suggested phase:** Phase 3
 **Added by:** claude_code
@@ -293,5 +329,5 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-10*
-*Next item ID: BACKLOG-023*
+*Last updated: 2026-03-14*
+*Next item ID: BACKLOG-026*

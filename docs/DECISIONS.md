@@ -46,6 +46,12 @@
 | ADR-024 | Prompt Creator — never auto-activate proposed prompts | accepted | 2026-03-10 |
 | ADR-025 | A2A Gateway — inbound only for Phase 2 | accepted | 2026-03-10 |
 | ADR-026 | Health monitor auto-fail for silent agents | accepted | 2026-03-10 |
+| ADR-027 | Centralized audit logging service | accepted | 2026-03-14 |
+| ADR-028 | Tool call limit (20/task) with counting wrapper | accepted | 2026-03-14 |
+| ADR-029 | Prompt versioning with DB sync and hot-reload | accepted | 2026-03-14 |
+| ADR-030 | Output validation guardrail (secrets, size, empty) | accepted | 2026-03-14 |
+| ADR-031 | Multi-stage Docker builds (dev/prod targets) | accepted | 2026-03-14 |
+| ADR-032 | GitHub Actions CI/CD with security scanning | accepted | 2026-03-14 |
 
 ---
 
@@ -1114,11 +1120,146 @@ Implement a `HealthMonitor` as a background asyncio task. It:
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-027 -->
+## ADR-027 — Centralized audit logging service
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** Agent actions, prompt changes, budget events, and approval flows need a unified
+audit trail for risk management and debugging.
+
+### Decision
+
+Create `audit/service.py` with `AuditEventType` enum (13 event types) and `log_event()` function.
+All audit events write to the existing `audit_log` table via the active DB session. Events are
+wired into: AgentBase guard chain, `llm/usage.py`, `tools/guards.py`, and `api/prompts.py`.
+
+API endpoints: `GET /audit` (filterable list) and `GET /audit/{task_id}/timeline` (chronological).
+
+### Consequences
+
+**Positive:** Complete action trail for every agent. Prompt history, cost events, and approval
+decisions are all queryable. Enables compliance auditing and debugging.
+**Negative:** Additional DB writes per task (2-3 audit events). Acceptable for v1 volume.
 
 ---
 
-*Last updated: 2026-03-10*
-*Next ADR ID: ADR-027*
-*Decision count: 23 accepted, 3 proposed*
+## ADR-028 — Tool call limit (20/task) with counting wrapper
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** CLAUDE.md §20 Rule 4 requires a maximum of 20 tool calls per task to prevent
+infinite reasoning loops. Needs enforcement at runtime.
+
+### Decision
+
+Wrap all Pydantic AI tools with a counting decorator in `agents/factory.py`. Each wrapper
+increments a shared counter dict. When count > limit, `ToolCallLimitExceeded` is raised.
+Counter resets to 0 at the start of each task in `_execute_with_guards()`. The exception
+handler publishes to `human.input_needed` (same as budget exceeded).
+
+### Consequences
+
+**Positive:** Prevents infinite tool loops. Agents fail safely with human escalation.
+**Negative:** Adds one dict lookup per tool call. Negligible overhead.
+
+---
+
+## ADR-029 — Prompt versioning with DB sync and hot-reload
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** Prompts were versioned in the `prompts` table but activating a prompt did not
+update the agent's runtime behavior. The `agents.system_prompt` column was disconnected.
+
+### Decision
+
+Three changes: (1) `activate_prompt()` and `rollback_prompt()` now sync the prompt content
+to `agents.system_prompt` via `_sync_agent_prompt()`. (2) AgentBase checks the DB for
+system_prompt changes before each task (`_check_prompt_reload()`). If changed, it reconstructs
+the PydanticAgent. (3) All prompt changes emit audit events for history tracking.
+
+### Consequences
+
+**Positive:** Prompt changes take effect on next task without restart. Full rollback support.
+**Negative:** One extra DB query per task for reload check. Acceptable for v1.
+
+---
+
+## ADR-030 — Output validation guardrail (secrets, size, empty)
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** Agent outputs could contain leaked secrets, be empty on success, or exceed
+reasonable size limits without detection.
+
+### Decision
+
+Add `_validate_output()` to AgentBase, called after `handle_task()` and before memory write.
+Three checks: (1) Empty output on success → downgrade to "partial". (2) Secret patterns
+(9 patterns including API keys, tokens, private keys) → redact with `[REDACTED]`.
+(3) Output > 100KB → add `_truncated` flag.
+
+### Consequences
+
+**Positive:** Prevents accidental secret leakage. Catches empty/oversized outputs.
+**Negative:** String scanning adds minimal latency. False positives on legitimate
+content containing pattern prefixes (e.g., "Bearer" in documentation) — acceptable
+for security-first approach.
+
+---
+
+## ADR-031 — Multi-stage Docker builds (dev/prod targets)
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** Frontend Docker image was 451MB because it included full Node.js runtime and
+node_modules for production. No separation between dev and prod builds.
+
+### Decision
+
+Both backend and frontend Dockerfiles use multi-stage builds with named targets:
+- `dev` — full development dependencies, hot-reload, used by docker-compose.yml
+- `prod` — minimal runtime, no dev deps (backend: non-root user, 2 workers;
+  frontend: nginx serving static files from Vite build output)
+
+Frontend prod image: 62MB (vs 451MB dev). `docker-compose.prod.yml` overrides targets.
+
+### Consequences
+
+**Positive:** 86% smaller production images. Secure (non-root). Fast deploys.
+**Negative:** Two compose files to manage. Mitigated by `make build-prod` / `make up-prod`.
+
+---
+
+## ADR-032 — GitHub Actions CI/CD with security scanning
+
+**Status:** accepted
+**Date:** 2026-03-14
+**Context:** No automated CI/CD pipeline existed. Code quality, security, and Docker image
+publishing were manual processes.
+
+### Decision
+
+Three GitHub Actions workflows:
+1. **ci.yml** — Ruff lint, mypy type check, unit tests, behavior tests, frontend TS check + build
+2. **docker-publish.yml** — Build prod images, push to DockerHub with SHA/branch/semver tags
+3. **security.yml** — pip-audit, npm audit, TruffleHog secret detection, Trivy container
+   scanning, CodeQL static analysis (Python + TypeScript). Runs on push/PR + weekly schedule.
+
+### Consequences
+
+**Positive:** Automated quality gates. Security scanning catches vulnerabilities early.
+Docker images automatically published on merge to main.
+**Negative:** CI run time (~5-10 min). DockerHub requires `DOCKERHUB_USERNAME` and
+`DOCKERHUB_TOKEN` secrets configured in GitHub repo settings.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-033 -->
+
+---
+
+*Last updated: 2026-03-14*
+*Next ADR ID: ADR-033*
+*Decision count: 29 accepted, 3 proposed*

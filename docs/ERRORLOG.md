@@ -74,6 +74,66 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-017 — Frontend prod Docker build fails (import.meta.env TypeScript error)
+
+**Date:** 2026-03-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** claude_code during Docker multi-stage build implementation
+**Affected files:** `frontend/tsconfig.json`, `frontend/src/vite-env.d.ts`
+
+### What happened
+`npm run build` in the Docker prod stage failed with:
+```
+src/api/client.ts(14,29): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/ws/AgentWebSocketProvider.tsx(4,29): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+```
+TypeScript didn't know about Vite's `import.meta.env` extension.
+
+### Root cause
+Missing `vite-env.d.ts` type declaration file and no Vite client types referenced in
+`tsconfig.json`. The dev server worked because Vite injects these types at runtime,
+but `tsc` (used by `npm run build`) requires explicit type declarations.
+
+### Fix applied
+1. Created `frontend/src/vite-env.d.ts` with `/// <reference types="vite/client" />`
+2. Added `"src/vite-env.d.ts"` to `tsconfig.json` `include` array
+
+### Prevention
+- Frontend CI job now runs `npx tsc --noEmit` and `npm run build` to catch type errors
+- Standard Vite project setup always includes `vite-env.d.ts` — verify on project init
+
+---
+
+## ERROR-016 — Frontend node_modules packaged into Docker image
+
+**Date:** 2026-03-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** user report — Docker build was slow and images were bloated
+**Affected files:** `frontend/Dockerfile`, `frontend/.dockerignore`, `docker-compose.yml`
+
+### What happened
+Frontend Docker image was 451MB because: (1) No `.dockerignore` existed for the frontend
+directory, so host `node_modules/` was sent as part of the Docker build context.
+(2) `COPY . .` in the Dockerfile copied the host node_modules into the image alongside
+the container's own `npm install` output. (3) Anonymous volume `- /app/node_modules` in
+docker-compose.yml was fragile.
+
+### Root cause
+Missing `.dockerignore` for the frontend. Single-stage Dockerfile with no dev/prod separation.
+
+### Fix applied
+1. Created `frontend/.dockerignore` excluding `node_modules`, `dist`, `.git`
+2. Multi-stage Dockerfile: `dev` → `build` → `prod` (nginx, 62MB)
+3. Changed anonymous volume to named volume `frontend_node_modules:/app/node_modules`
+4. Added `target: dev` to docker-compose.yml
+
+### Prevention
+- `.dockerignore` now exists for both backend and frontend
+- Multi-stage builds ensure prod images never include dev dependencies
+- Named volumes are more predictable than anonymous volumes
+
 ## ERROR-015 — In-memory meeting registry not cluster-safe
 
 **Date:** 2026-03-10
@@ -572,5 +632,5 @@ for non-JSON responses (CEO: default to single engineer subtask; QA: default to 
 
 ---
 
-*Last updated: 2026-03-10*
-*Next error ID: ERROR-016*
+*Last updated: 2026-03-14*
+*Next error ID: ERROR-018*

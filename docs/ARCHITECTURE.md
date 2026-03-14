@@ -129,7 +129,13 @@ Message arrives from Kafka
     ▼
 ┌─ Idempotency check (Redis db:3) ──→ Skip if duplicate
 │
+├─ Reset tool call counter ──→ 0/20 for this task
+│
+├─ Hot-reload prompt from DB ──→ Check if system_prompt changed
+│
 ├─ Budget check (Redis db:1) ──→ Pause if over budget
+│
+├─ Audit: task_received ──→ Write to audit_log table
 │
 ├─ Load episodic memory (pgvector) ──→ Similar past tasks
 │
@@ -137,13 +143,17 @@ Message arrives from Kafka
 │
 ├─ *** handle_task() *** ←── Subclass implements this
 │
+├─ Validate output ──→ Secret detection, size limit, empty check
+│
 ├─ Write episodic memory ──→ Store what happened
 │
-├─ Record LLM usage ──→ Token/cost tracking
+├─ Audit: task_completed ──→ Write duration, tokens, status
 │
 ├─ Publish response to Kafka ──→ agent.responses topic
 │
-└─ Broadcast via WebSocket ──→ Dashboard real-time view
+├─ Broadcast via WebSocket ──→ Dashboard real-time view
+│
+└─ Clear working memory ──→ Redis db:0 cleanup
 ```
 
 ### Agent Roster
@@ -442,6 +452,38 @@ POST /api/prompts/{id}/activate
 - **Guard:** `_check_budget()` called before every LLM call
 - **At 90%:** Task pauses, publishes to `human.input_needed`
 
+### Tool Call Limits
+
+- **Per-task limit:** 20 tool calls (configurable via `AgentBase.MAX_TOOL_CALLS`)
+- Tool counting wrapper in `agents/factory.py` decorates every tool function
+- Counter resets to 0 at the start of each task
+- Exceeding limit raises `ToolCallLimitExceeded` → escalates to `human.input_needed`
+
+### Output Validation
+
+Applied after `handle_task()`, before memory write or publishing:
+
+- **Empty output detection:** Success with no output downgraded to "partial"
+- **Secret pattern redaction:** Scans for 9 patterns (`sk-`, `AKIA`, `Bearer`, `ghp_`, `gho_`,
+  `github_pat_`, `xoxb-`, `xoxp-`, `-----BEGIN PRIVATE KEY`) and replaces with `[REDACTED]`
+- **Size limit:** Outputs > 100KB get `_truncated: true` flag
+
+### Audit Logging
+
+Centralized audit trail via `audit/service.py`:
+
+- **13 event types:** task_received, task_completed, task_failed, llm_call, tool_call,
+  tool_call_limit_reached, approval_requested, approval_resolved, budget_exceeded,
+  prompt_activated, prompt_rollback, prompt_created, heartbeat_silence
+- All events written to `audit_log` table with task_id, trace_id, agent_id
+- API endpoints: `GET /audit` (filterable list), `GET /audit/{task_id}/timeline`
+
+### Prompt Hot-Reload
+
+- Agents check `agents.system_prompt` in DB before each task
+- If changed (via prompt versioning API), the PydanticAgent is reconstructed
+- No restart required — prompt changes take effect on next task
+
 ### Health Monitor
 
 - Background asyncio task consuming `agent.heartbeat`
@@ -500,31 +542,56 @@ POST /api/prompts/{id}/activate
 ### Docker Compose (Local Development)
 
 ```
-docker-compose.yml
-├── backend    (Python 3.12, Litestar, port 8000)
-├── frontend   (Node 20, Vite, port 5173)
+docker-compose.yml (target: dev)
+├── backend    (Python 3.12, Litestar, port 8000, hot-reload)
+├── frontend   (Node 20, Vite, port 5173, hot-reload)
 ├── postgres   (PostgreSQL 16 + pgvector, port 5433:5432)
 ├── redis      (Redis 7, port 6380:6379)
 └── kafka      (Apache Kafka KRaft, port 9092)
+```
+
+### Multi-Stage Docker Builds
+
+Both backend and frontend use multi-stage Dockerfiles:
+
+| Stage | Backend | Frontend |
+|-------|---------|----------|
+| **dev** | Full deps + dev deps, `--reload`, volume mounts | `npm install`, Vite dev server |
+| **prod** | No dev deps, non-root user, 2 uvicorn workers | nginx serving static files (62MB) |
+
+```bash
+make up          # Dev mode (default)
+make build-prod  # Build prod images
+make up-prod     # Run prod stack
 ```
 
 ### Port Mapping
 
 Host ports are remapped to avoid conflicts with local services:
 
-| Service | Container Port | Host Port |
-|---------|---------------|-----------|
-| Backend | 8000 | 8000 |
-| Frontend | 5173 | 5173 |
-| PostgreSQL | 5432 | 5433 |
-| Redis | 6379 | 6380 |
-| Kafka | 9092 | 9092 |
+| Service | Container Port | Host Port (dev) | Host Port (prod) |
+|---------|---------------|-----------------|-------------------|
+| Backend | 8000 | 8000 | 8000 |
+| Frontend | 5173 / 80 | 5173 | 80 |
+| PostgreSQL | 5432 | 5433 | 5433 |
+| Redis | 6379 | 6380 | 6380 |
+| Kafka | 9092 | 9092 | 9092 |
+
+### CI/CD Pipeline
+
+GitHub Actions workflows in `.github/workflows/`:
+
+| Workflow | Trigger | Jobs |
+|----------|---------|------|
+| `ci.yml` | Push/PR to main | Ruff lint, mypy, unit tests, behavior tests, frontend TS check + build |
+| `docker-publish.yml` | Push to main + tags | Build prod images → push to DockerHub (SHA/branch/semver tags) |
+| `security.yml` | Push/PR + weekly | pip-audit, npm audit, TruffleHog secrets, Trivy container scan, CodeQL |
 
 ### Startup Sequence
 
 ```
 1. make setup  →  scripts/setup.sh
-2. Docker builds all 5 containers
+2. Docker builds all 5 containers (dev target)
 3. PostgreSQL, Redis, Kafka start (health checks)
 4. Backend starts → runs Alembic migrations → seeds DB → starts agents
 5. Frontend starts → connects to backend API + WebSocket
@@ -533,5 +600,5 @@ Host ports are remapped to avoid conflicts with local services:
 
 ---
 
-*Last updated: 2026-03-10*
-*Phase: 2 Complete — Ready for Phase 3*
+*Last updated: 2026-03-14*
+*Phase: 2 Complete (with guardrails) — Ready for Phase 3*

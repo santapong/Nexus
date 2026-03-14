@@ -1,7 +1,7 @@
-# RISK_REVIEW.md — Phase 2 Risk Assessment (2026-03-10)
+# RISK_REVIEW.md — Phase 2 Risk Assessment (2026-03-14)
 
 > Review of §23 Prevention Rules against actual implementation status.
-> Updated after Phase 2 Priority Groups 1–7 (full Phase 2 complete).
+> Updated after Phase 2 guardrails, prompt versioning, audit logging, CI/CD.
 
 ---
 
@@ -10,8 +10,8 @@
 | Risk | Severity | Status | Notes |
 |------|----------|--------|-------|
 | Risk 1 — Building orchestration before loop works | CRITICAL | RESOLVED | 50-task stress test: 100% pass rate (50/50). |
-| Risk 2 — Cost explosion from unbounded loops | CRITICAL | MITIGATED | Budget enforcement live in Redis. Multi-provider pricing added. |
-| Risk 3 — Vague system prompts | CRITICAL | MITIGATED | All 5 agent prompts written + seeded. CEO decomposition prompt tested. |
+| Risk 2 — Cost explosion from unbounded loops | CRITICAL | **RESOLVED** | Budget + tool call limit (20/task) + per-agent cost tracking + audit trail. |
+| Risk 3 — Vague system prompts | CRITICAL | **RESOLVED** | Prompt versioning + rollback + hot-reload + activation history. |
 | Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. |
 | Risk 5 — Agents fail silently | HIGH | **RESOLVED** | Health monitor auto-fail implemented (ADR-026). |
 | Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 9 tables deployed. Embeddings tested. |
@@ -42,19 +42,20 @@
 
 ---
 
-### Risk 2 — Cost explosion (updated for multi-provider)
+### Risk 2 — Cost explosion (**RESOLVED**)
 **Original concern:** One task burns $50 before you notice.
-**Multi-provider update:** With OpenAI, Groq, Mistral now supported alongside Anthropic/Gemini, the attack surface for cost explosion is wider. Each provider has different pricing.
 
-**Mitigations in place:**
+**All mitigations now live (2026-03-14):**
 - Hard $5/day cap via Redis (enforced before every LLM call)
-- Per-task 50k token budget
+- Per-task 50k token budget with 90% pause threshold
+- **Tool call limit: 20 calls per task** (ADR-028) — prevents infinite tool loops
 - `_MODEL_PRICING` table in `usage.py` covers all supported models
-- Unknown models log a warning and default to $0 cost (safe for local models, risky for paid unknowns)
+- **Per-agent cost tracking:** `GET /analytics/costs/{agent_id}` with by-model breakdown
+- **Audit trail:** Every LLM call logged to `audit_log` with model, tokens, cost
+- Unknown models log a warning and default to $0 cost
 
-**Residual risk:** If someone configures a model not in the pricing table (e.g. a new GPT model), costs won't be tracked. The daily cap still applies via Redis, but cost reporting will undercount.
-
-**Recommendation:** Add a setting `REQUIRE_KNOWN_PRICING=true` that blocks models without pricing entries. Implement in Phase 2.
+**Status: RESOLVED** — Multiple layers of protection. Budget, tool limits, audit trail, and
+per-agent cost visibility all operational.
 
 ---
 
@@ -160,6 +161,12 @@ tracks in Redis, auto-fails tasks for agents silent >5 minutes. Audit log entrie
 - [x] Prompt Creator Agent deployed (with human approval gate)
 - [x] A2A inbound gateway operationally
 - [x] 6 agent roles operational (CEO, Engineer, Analyst, Writer, QA, Prompt Creator)
+- [x] **Guardrails complete:** tool call limit, output validation, audit logging (ADR-027–030)
+- [x] **Prompt versioning:** create, activate, rollback with DB sync + hot-reload (ADR-029)
+- [x] **CI/CD pipeline:** lint, tests, security scanning, DockerHub publish (ADR-032)
+- [x] **Docker optimized:** multi-stage builds, prod images (62MB frontend) (ADR-031)
+- [x] **20-task Phase 2 stress test:** 100% pass rate
+- [x] **153 unit+behavior tests + 14 E2E tests:** all passing
 - [ ] Chaos testing (Phase 3 scope)
 - [ ] Multi-worker deployment (Phase 3 scope)
 
@@ -191,6 +198,21 @@ Process restart loses all registered tokens. No persistence, no rotation, no rat
 
 **Recommendation:** Migrate token storage to a DB table (`a2a_tokens`) in Phase 3.
 Add rate limit enforcement via Redis counter. Add token rotation support.
+
+---
+
+## NEW Risk 15 — No automated security scanning before 2026-03-14
+**Severity:** MEDIUM
+**Status:** **RESOLVED**
+**What happened:** No CI/CD pipeline existed. Code was not automatically scanned for
+vulnerabilities, leaked secrets, or outdated dependencies.
+
+**Fix applied (2026-03-14):**
+- `security.yml` workflow: pip-audit, npm audit, TruffleHog, Trivy, CodeQL
+- Runs on every push/PR + weekly schedule
+- `ci.yml` workflow: ruff lint, mypy, unit tests, behavior tests, frontend build
+
+See ADR-032.
 
 ---
 
