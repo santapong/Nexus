@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from litestar import Router
 
+from nexus.api.a2a_tokens import A2ATokenController
 from nexus.api.agents import AgentController
 from nexus.api.analytics import AnalyticsController
 from nexus.api.approvals import ApprovalController
 from nexus.api.audit import AuditController
+from nexus.api.eval import EvalController
 from nexus.api.health import HealthController
 from nexus.api.prompts import PromptController
 from nexus.api.tasks import TaskController
@@ -21,6 +23,8 @@ api_router = Router(
         PromptController,
         AnalyticsController,
         AuditController,
+        A2ATokenController,
+        EvalController,
     ],
 )
 

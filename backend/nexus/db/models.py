@@ -239,3 +239,73 @@ class PromptBenchmark(UUIDBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+
+# ─── Table 10: dead_letters ───────────────────────────────────────────────
+
+
+class DeadLetter(UUIDBase):
+    __tablename__ = "dead_letters"
+
+    source_topic: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    message_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    task_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    error: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_message: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+# ─── Table 11: a2a_tokens ─────────────────────────────────────────────────
+
+
+class A2ATokenRecord(UUIDBase):
+    __tablename__ = "a2a_tokens"
+
+    token_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    allowed_skills: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, default=lambda: ["*"]
+    )
+    rate_limit_rpm: Mapped[int] = mapped_column(Integer, default=60)
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+# ─── Table 12: eval_results ───────────────────────────────────────────────
+
+
+class EvalResult(UUIDBase):
+    __tablename__ = "eval_results"
+
+    task_id: Mapped[str] = mapped_column(
+        ForeignKey("tasks.id"), nullable=False, index=True
+    )
+    overall_score: Mapped[float] = mapped_column(Float, nullable=False)
+    relevance: Mapped[float | None] = mapped_column(Float, nullable=True)
+    completeness: Mapped[float | None] = mapped_column(Float, nullable=True)
+    accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    formatting: Mapped[float | None] = mapped_column(Float, nullable=True)
+    judge_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
+    judge_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

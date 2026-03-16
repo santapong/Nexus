@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import Task, TaskStatus
 from nexus.kafka.consumer import check_idempotency, create_consumer
+from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
 from nexus.kafka.producer import publish
 from nexus.kafka.schemas import AgentResponse, TaskResult
 from nexus.kafka.topics import Topics
@@ -46,11 +47,34 @@ async def run_result_consumer(db_session_factory: Callable[..., Any]) -> None:
             try:
                 await _handle_response(msg.value, db_session_factory)
             except Exception as exc:
-                logger.error(
-                    "result_consumer_message_error",
-                    error=str(exc),
-                    exc_info=True,
-                )
+                raw = msg.value if isinstance(msg.value, dict) else {}
+                message_id = raw.get("message_id", "unknown")
+                task_id = raw.get("task_id")
+                retry_count = await increment_retry(str(message_id))
+
+                if retry_count >= MAX_RETRIES:
+                    logger.error(
+                        "result_consumer_max_retries",
+                        message_id=message_id,
+                        task_id=task_id,
+                        retry_count=retry_count,
+                        error=str(exc),
+                    )
+                    await publish_dead_letter(
+                        source_topic=Topics.AGENT_RESPONSES,
+                        raw_message=raw,
+                        error=str(exc),
+                        task_id=str(task_id) if task_id else None,
+                        db_session_factory=db_session_factory,
+                    )
+                else:
+                    logger.warning(
+                        "result_consumer_retry",
+                        message_id=message_id,
+                        task_id=task_id,
+                        retry_count=retry_count,
+                        error=str(exc),
+                    )
     finally:
         await consumer.stop()
         logger.info("result_consumer_stopped")

@@ -273,6 +273,50 @@ async def tool_send_email(to: str, subject: str, body: str) -> str:
     return f"Email sent to {to} with subject '{subject}' ({len(body)} chars)"
 
 
+async def tool_hire_external_agent(
+    agent_url: str,
+    instruction: str,
+    skill_id: str = "general",
+    bearer_token: str = "",
+) -> str:
+    """Hire an external A2A agent to perform a task. Requires human approval.
+
+    Discovers the external agent, submits a task, and waits for the result.
+    Use this when a task requires capabilities NEXUS agents don't have.
+
+    Args:
+        agent_url: Base URL of the external agent (e.g. https://agent.example.com).
+        instruction: What to ask the external agent to do.
+        skill_id: Which skill to request (default: general).
+        bearer_token: Authentication token for the external agent.
+
+    Returns:
+        The external agent's result as formatted text.
+    """
+    from nexus.gateway.outbound import hire_external_agent
+
+    try:
+        result = await hire_external_agent(
+            agent_url=agent_url,
+            instruction=instruction,
+            skill_id=skill_id,
+            bearer_token=bearer_token,
+        )
+        if result.error:
+            return f"External agent error: {result.error}"
+        if result.output:
+            output_text = result.output.get("result", str(result.output))
+            return f"External agent result ({result.status}):\n{output_text}"
+        return f"External agent completed with status: {result.status}"
+    except Exception as exc:
+        logger.error(
+            "hire_external_agent_failed",
+            agent_url=agent_url,
+            error=str(exc),
+        )
+        return f"Failed to hire external agent: {exc}"
+
+
 async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
     """Push code changes to a git repository. This action requires human approval.
 

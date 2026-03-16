@@ -1,7 +1,9 @@
 """Behavior tests for the Meeting Room pattern.
 
-Tests meeting lifecycle: create → question → response → terminate,
+Tests meeting lifecycle: create -> question -> response -> terminate,
 timeout fallback, max rounds guard, and transcript generation.
+
+Meeting state is stored in Redis db:0 (working memory).
 """
 from __future__ import annotations
 
@@ -17,7 +19,6 @@ from nexus.kafka.meeting import (
     MeetingRoom,
     close_meeting,
     create_meeting,
-    get_meeting,
 )
 
 
@@ -35,32 +36,46 @@ def meeting_config() -> MeetingConfig:
 
 
 class TestMeetingLifecycle:
-    """Tests for the meeting room create → debate → terminate lifecycle."""
+    """Tests for the meeting room create -> debate -> terminate lifecycle."""
 
-    def test_create_meeting(self, meeting_config: MeetingConfig) -> None:
-        """Meeting is created with correct config and registered."""
-        room = create_meeting(meeting_config)
+    @pytest.mark.asyncio
+    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    async def test_create_meeting(
+        self,
+        mock_redis: AsyncMock,
+        meeting_config: MeetingConfig,
+    ) -> None:
+        """Meeting is created with correct config and stored in Redis."""
+        mock_redis.set = AsyncMock()
+        mock_redis.get = AsyncMock(return_value=None)
+        mock_redis.delete = AsyncMock()
+
+        room = await create_meeting(meeting_config)
         assert room.meeting_id == meeting_config.meeting_id
         assert room.current_round == 0
         assert len(room.messages) == 0
         assert not room.is_timed_out
         assert not room.is_max_rounds
 
-        # Should be retrievable from registry
-        found = get_meeting(meeting_config.meeting_id)
-        assert found is room
+        # Verify Redis set was called
+        mock_redis.set.assert_called_once()
 
         # Cleanup
-        close_meeting(meeting_config.meeting_id)
-        assert get_meeting(meeting_config.meeting_id) is None
+        await close_meeting(meeting_config.meeting_id)
+        mock_redis.delete.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_pose_question_increments_round(
-        self, mock_publish: AsyncMock, meeting_config: MeetingConfig
+        self,
+        mock_redis: AsyncMock,
+        mock_publish: AsyncMock,
+        meeting_config: MeetingConfig,
     ) -> None:
         """Posing a question increments the round counter."""
-        room = create_meeting(meeting_config)
+        mock_redis.set = AsyncMock()
+        room = await create_meeting(meeting_config)
 
         await room.pose_question(
             "What are the pros of microservices?",
@@ -73,15 +88,21 @@ class TestMeetingLifecycle:
         assert room.messages[0].sender_role == "ceo"
         mock_publish.assert_called_once()
 
-        close_meeting(meeting_config.meeting_id)
+        mock_redis.delete = AsyncMock()
+        await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_submit_response(
-        self, mock_publish: AsyncMock, meeting_config: MeetingConfig
+        self,
+        mock_redis: AsyncMock,
+        mock_publish: AsyncMock,
+        meeting_config: MeetingConfig,
     ) -> None:
         """Agent response is recorded and published."""
-        room = create_meeting(meeting_config)
+        mock_redis.set = AsyncMock()
+        room = await create_meeting(meeting_config)
         room.current_round = 1
 
         await room.submit_response(
@@ -95,15 +116,21 @@ class TestMeetingLifecycle:
         assert room.messages[0].sender_role == "analyst"
         assert room.messages[0].round_number == 1
 
-        close_meeting(meeting_config.meeting_id)
+        mock_redis.delete = AsyncMock()
+        await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_terminate_returns_result(
-        self, mock_publish: AsyncMock, meeting_config: MeetingConfig
+        self,
+        mock_redis: AsyncMock,
+        mock_publish: AsyncMock,
+        meeting_config: MeetingConfig,
     ) -> None:
         """Termination returns MeetingResult with all messages."""
-        room = create_meeting(meeting_config)
+        mock_redis.set = AsyncMock()
+        room = await create_meeting(meeting_config)
         room.current_round = 1
 
         await room.submit_response(
@@ -122,15 +149,21 @@ class TestMeetingLifecycle:
         assert result.rounds_completed == 1
         assert len(result.messages) == 2  # response + terminate
 
-        close_meeting(meeting_config.meeting_id)
+        mock_redis.delete = AsyncMock()
+        await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_full_debate_round(
-        self, mock_publish: AsyncMock, meeting_config: MeetingConfig
+        self,
+        mock_redis: AsyncMock,
+        mock_publish: AsyncMock,
+        meeting_config: MeetingConfig,
     ) -> None:
-        """Full cycle: CEO question → agent responses → CEO concludes."""
-        room = create_meeting(meeting_config)
+        """Full cycle: CEO question -> agent responses -> CEO concludes."""
+        mock_redis.set = AsyncMock()
+        room = await create_meeting(meeting_config)
 
         # Round 1: CEO asks
         await room.pose_question("Pros and cons?", sender_id="ceo-001")
@@ -163,7 +196,8 @@ class TestMeetingLifecycle:
         assert "ENGINEER" in transcript
         assert "CONCLUSION" in transcript
 
-        close_meeting(meeting_config.meeting_id)
+        mock_redis.delete = AsyncMock()
+        await close_meeting(meeting_config.meeting_id)
 
 
 class TestMeetingGuards:

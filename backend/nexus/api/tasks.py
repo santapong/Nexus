@@ -73,9 +73,30 @@ class TaskController(Controller):
             target_role=AgentRole.CEO.value,
             instruction=data.instruction,
         )
-        await publish(Topics.TASK_QUEUE, kafka_msg, key=str(task.id))
+        try:
+            await publish(Topics.TASK_QUEUE, kafka_msg, key=str(task.id))
+        except Exception as exc:
+            # Mark task as failed since it won't reach the agent queue
+            task.status = TaskStatus.FAILED.value
+            task.error = f"Failed to publish to Kafka: {exc}"
+            await db_session.commit()
+            logger.error(
+                "task_kafka_publish_failed",
+                task_id=str(task.id),
+                error=str(exc),
+            )
+            return {
+                "task_id": str(task.id),
+                "trace_id": trace_id,
+                "status": "failed",
+                "error": "Task created but could not be queued. Try again.",
+            }
 
-        return {"task_id": str(task.id), "trace_id": trace_id, "status": "queued"}
+        return {
+            "task_id": str(task.id),
+            "trace_id": trace_id,
+            "status": "queued",
+        }
 
     @get()
     async def list_tasks(

@@ -9,6 +9,7 @@ scheme: all messages for one meeting share the same key (meeting_id).
 """
 from __future__ import annotations
 
+import json
 import time
 from uuid import UUID, uuid4
 
@@ -18,6 +19,7 @@ from pydantic import BaseModel, Field
 from nexus.kafka.producer import publish
 from nexus.kafka.schemas import KafkaMessage
 from nexus.kafka.topics import Topics
+from nexus.redis.clients import redis_working
 
 logger = structlog.get_logger()
 
@@ -238,14 +240,38 @@ class MeetingRoom:
         ]
 
 
-# ─── Meeting registry (in-memory, per-process) ─────────────────────────────
+# ─── Meeting registry — Redis db:0 backed ───────────────────────────────────
+
+_MEETING_KEY_PREFIX = "meeting:"
 
 
-_active_meetings: dict[str, MeetingRoom] = {}
+def _redis_key(meeting_id: str) -> str:
+    return f"{_MEETING_KEY_PREFIX}{meeting_id}"
 
 
-def create_meeting(config: MeetingConfig) -> MeetingRoom:
-    """Create and register a new meeting room.
+def _serialize_room(room: MeetingRoom) -> str:
+    """Serialize a MeetingRoom to JSON for Redis storage."""
+    return json.dumps({
+        "config": room.config.model_dump(),
+        "messages": [m.model_dump() for m in room.messages],
+        "current_round": room.current_round,
+        "start_time": room._start_time,
+    })
+
+
+def _deserialize_room(data: str) -> MeetingRoom:
+    """Deserialize a MeetingRoom from Redis JSON."""
+    parsed = json.loads(data)
+    config = MeetingConfig(**parsed["config"])
+    room = MeetingRoom(config)
+    room.messages = [MeetingMessage(**m) for m in parsed["messages"]]
+    room.current_round = parsed["current_round"]
+    room._start_time = parsed["start_time"]
+    return room
+
+
+async def create_meeting(config: MeetingConfig) -> MeetingRoom:
+    """Create and register a new meeting room in Redis.
 
     Args:
         config: The meeting configuration.
@@ -254,7 +280,12 @@ def create_meeting(config: MeetingConfig) -> MeetingRoom:
         A new MeetingRoom instance.
     """
     room = MeetingRoom(config)
-    _active_meetings[config.meeting_id] = room
+    ttl = config.timeout_seconds + 60
+    await redis_working.set(
+        _redis_key(config.meeting_id),
+        _serialize_room(room),
+        ex=ttl,
+    )
 
     logger.info(
         "meeting_created",
@@ -268,8 +299,8 @@ def create_meeting(config: MeetingConfig) -> MeetingRoom:
     return room
 
 
-def get_meeting(meeting_id: str) -> MeetingRoom | None:
-    """Get an active meeting room by ID.
+async def get_meeting(meeting_id: str) -> MeetingRoom | None:
+    """Get an active meeting room by ID from Redis.
 
     Args:
         meeting_id: The meeting ID to look up.
@@ -277,14 +308,38 @@ def get_meeting(meeting_id: str) -> MeetingRoom | None:
     Returns:
         MeetingRoom if found, None otherwise.
     """
-    return _active_meetings.get(meeting_id)
+    data = await redis_working.get(_redis_key(meeting_id))
+    if data is None:
+        return None
+    return _deserialize_room(
+        data if isinstance(data, str) else data.decode("utf-8")
+    )
 
 
-def close_meeting(meeting_id: str) -> None:
-    """Remove a meeting room from the registry.
+async def save_meeting(room: MeetingRoom) -> None:
+    """Persist updated meeting state to Redis.
+
+    Call after modifying a MeetingRoom (e.g., after publish_message).
+
+    Args:
+        room: The meeting room to save.
+    """
+    remaining_ttl = await redis_working.ttl(
+        _redis_key(room.meeting_id)
+    )
+    ttl = max(remaining_ttl, 60) if remaining_ttl > 0 else 360
+    await redis_working.set(
+        _redis_key(room.meeting_id),
+        _serialize_room(room),
+        ex=ttl,
+    )
+
+
+async def close_meeting(meeting_id: str) -> None:
+    """Remove a meeting room from Redis.
 
     Args:
         meeting_id: The meeting ID to close.
     """
-    _active_meetings.pop(meeting_id, None)
+    await redis_working.delete(_redis_key(meeting_id))
     logger.info("meeting_closed", meeting_id=meeting_id)

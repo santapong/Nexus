@@ -1,10 +1,10 @@
 """A2A Gateway routes — inbound task submission.
 
 Implements the A2A protocol endpoints:
-- GET  /.well-known/agent.json       → Agent Card
-- POST /a2a/tasks                    → Submit a task
-- GET  /a2a/tasks/{task_id}/status   → Poll task status
-- GET  /a2a/tasks/{task_id}/events   → SSE stream
+- GET  /.well-known/agent.json       -> Agent Card
+- POST /a2a/tasks                    -> Submit a task
+- GET  /a2a/tasks/{task_id}/status   -> Poll task status
+- GET  /a2a/tasks/{task_id}/events   -> SSE stream
 
 Authenticated via bearer token (see auth.py).
 """
@@ -17,12 +17,14 @@ from uuid import uuid4
 
 import structlog
 from litestar import Controller, Request, get, post
+from litestar.exceptions import NotAuthorizedException, TooManyRequestsException
 from litestar.response import Stream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import Task, TaskSource, TaskStatus
 from nexus.gateway.auth import validate_token
+from nexus.gateway.rate_limiter import check_rate_limit
 from nexus.gateway.schemas import (
     A2ATaskRequest,
     A2ATaskResponse,
@@ -73,8 +75,11 @@ class A2AGatewayController(Controller):
 
     @post("/tasks")
     async def submit_task(
-        self, request: Request, data: A2ATaskRequest, db_session: AsyncSession
-    ) -> A2ATaskResponse | dict[str, str]:
+        self,
+        request: Request,
+        data: A2ATaskRequest,
+        db_session: AsyncSession,
+    ) -> A2ATaskResponse:
         """Accept a task from an external agent.
 
         Validates the bearer token, persists a Task record to PostgreSQL,
@@ -87,12 +92,27 @@ class A2AGatewayController(Controller):
 
         Returns:
             A2ATaskResponse with the assigned task ID.
+
+        Raises:
+            NotAuthorizedException: If the bearer token is invalid.
         """
-        # Authenticate
         token = _extract_token(request)
-        is_valid, error = validate_token(token, skill_id=data.skill_id)
+        is_valid, error, rpm = await validate_token(
+            token, skill_id=data.skill_id, db_session=db_session
+        )
         if not is_valid:
-            return {"error": error}
+            raise NotAuthorizedException(detail=error)
+
+        # Rate limiting
+        from nexus.gateway.auth import _hash_token
+
+        allowed, _remaining = await check_rate_limit(
+            _hash_token(token), rpm
+        )
+        if not allowed:
+            raise TooManyRequestsException(
+                detail="Rate limit exceeded. Try again later."
+            )
 
         trace_id = uuid4()
 
@@ -175,8 +195,11 @@ class A2AGatewayController(Controller):
 
     @get("/tasks/{task_id:str}/events")
     async def stream_task_events(
-        self, request: Request, task_id: str
-    ) -> Stream | dict[str, str]:
+        self,
+        request: Request,
+        task_id: str,
+        db_session: AsyncSession,
+    ) -> Stream:
         """Stream real-time task events via Server-Sent Events (SSE).
 
         Subscribes to Redis pub/sub channel ``agent_activity:{task_id}``
@@ -186,14 +209,20 @@ class A2AGatewayController(Controller):
         Args:
             request: The HTTP request (for auth header extraction).
             task_id: The task ID to stream events for.
+            db_session: Async database session (injected by Litestar).
 
         Returns:
             Stream response with ``text/event-stream`` media type.
+
+        Raises:
+            NotAuthorizedException: If the bearer token is invalid.
         """
         token = _extract_token(request)
-        is_valid, error = validate_token(token)
+        is_valid, error, _rpm = await validate_token(
+            token, db_session=db_session
+        )
         if not is_valid:
-            return {"error": error}
+            raise NotAuthorizedException(detail=error)
 
         async def _event_generator() -> Any:
             pubsub = redis_pubsub.pubsub()
@@ -201,13 +230,16 @@ class A2AGatewayController(Controller):
             await pubsub.subscribe(channel)
 
             # Send initial connected event
-            yield f"data: {json.dumps({'event_type': 'connected', 'task_id': task_id})}\n\n"
+            connected = {"event_type": "connected", "task_id": task_id}
+            yield f"data: {json.dumps(connected)}\n\n"
 
             timeout_seconds = 600  # 10-minute max SSE session
             start = asyncio.get_event_loop().time()
 
             try:
-                while (asyncio.get_event_loop().time() - start) < timeout_seconds:
+                while (
+                    asyncio.get_event_loop().time() - start
+                ) < timeout_seconds:
                     message = await pubsub.get_message(
                         ignore_subscribe_messages=True, timeout=1.0
                     )
@@ -224,7 +256,10 @@ class A2AGatewayController(Controller):
                                 "task_result",
                                 "task_failed",
                             ):
-                                done = {"event_type": "done", "task_id": task_id}
+                                done = {
+                                    "event_type": "done",
+                                    "task_id": task_id,
+                                }
                                 yield f"data: {json.dumps(done)}\n\n"
                                 break
                         except (json.JSONDecodeError, TypeError):
@@ -234,7 +269,9 @@ class A2AGatewayController(Controller):
                         await asyncio.sleep(1)
             except Exception as exc:
                 logger.warning(
-                    "sse_stream_error", task_id=task_id, error=str(exc)
+                    "sse_stream_error",
+                    task_id=task_id,
+                    error=str(exc),
                 )
             finally:
                 await pubsub.unsubscribe(channel)

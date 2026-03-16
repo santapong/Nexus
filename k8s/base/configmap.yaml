@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexus-config
+  namespace: nexus
+data:
+  # Database
+  DATABASE_URL: "postgresql+asyncpg://nexus:$(POSTGRES_PASSWORD)@postgres:5432/nexus"
+  # Redis
+  REDIS_URL: "redis://redis:6379"
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  # Application
+  APP_ENV: "production"
+  LOG_LEVEL: "INFO"
+  # Cost controls
+  DAILY_SPEND_LIMIT_USD: "5.00"
+  DEFAULT_TOKEN_BUDGET_PER_TASK: "50000"
+  # Agent models (override via Secret or per-env overlay)
+  MODEL_CEO: "claude-sonnet-4-20250514"
+  MODEL_ENGINEER: "claude-sonnet-4-20250514"
+  MODEL_ANALYST: "gemini-2.0-flash"
+  MODEL_WRITER: "claude-haiku-4-5-20251001"
+  MODEL_QA: "claude-haiku-4-5-20251001"
+  MODEL_PROMPT_CREATOR: "claude-sonnet-4-20250514"
+  # Fallbacks
+  MODEL_CEO_FALLBACKS: "groq:llama-3.3-70b-versatile"
+  MODEL_ENGINEER_FALLBACKS: "groq:llama-3.3-70b-versatile"
+  MODEL_ANALYST_FALLBACKS: "groq:llama-3.3-70b-versatile"
+  MODEL_WRITER_FALLBACKS: "groq:llama-3.3-70b-versatile"
+  MODEL_QA_FALLBACKS: "groq:llama-3.3-70b-versatile"
+  MODEL_PROMPT_CREATOR_FALLBACKS: "groq:llama-3.3-70b-versatile"

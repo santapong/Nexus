@@ -2,6 +2,7 @@ import { AgentOrgChart } from './components/agents/AgentOrgChart'
 import { AgentStatusPanel } from './components/agents/AgentStatusPanel'
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard'
 import { ApprovalPanel } from './components/approvals/ApprovalPanel'
+import { AuditDashboard } from './components/audit/AuditDashboard'
 import { HealthPanel } from './components/dashboard/HealthPanel'
 import { Layout } from './components/dashboard/Layout'
 import { SubmitTaskPanel } from './components/tasks/SubmitTaskPanel'
@@ -26,6 +27,7 @@ function App() {
         <TaskListPanel />
         <AgentOrgChart />
         <AnalyticsDashboard />
+        <AuditDashboard />
         <AgentStatusPanel />
       </Layout>
     </AgentWebSocketProvider>

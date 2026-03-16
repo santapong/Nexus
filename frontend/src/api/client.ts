@@ -1,6 +1,8 @@
 import type {
   AgentInfo,
   Approval,
+  AuditEvent,
+  AuditTimelineEntry,
   CostBreakdown,
   CreateTaskResponse,
   DeadLetterData,
@@ -58,4 +60,30 @@ export const api = {
   // Task replay
   getTaskReplay: (taskId: string) =>
     apiFetch<TaskReplay>(`/api/tasks/${taskId}/replay`),
+
+  // Audit
+  getAuditEvents: (params?: {
+    event_type?: string
+    agent_id?: string
+    limit?: number
+    offset?: number
+  }) => {
+    const query = new URLSearchParams()
+    if (params?.event_type) query.set('event_type', params.event_type)
+    if (params?.agent_id) query.set('agent_id', params.agent_id)
+    if (params?.limit) query.set('limit', String(params.limit))
+    if (params?.offset) query.set('offset', String(params.offset))
+    const qs = query.toString()
+    return apiFetch<AuditEvent[]>(`/api/audit${qs ? `?${qs}` : ''}`)
+  },
+
+  getTaskTimeline: (taskId: string) =>
+    apiFetch<AuditTimelineEntry[]>(`/api/audit/${taskId}/timeline`),
+
+  // Dead letter resolve
+  resolveDeadLetter: (id: string) =>
+    apiFetch<{ id: string; resolved: boolean }>(
+      `/api/analytics/dead-letters/${id}/resolve`,
+      { method: 'POST' }
+    ),
 }

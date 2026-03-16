@@ -27,6 +27,7 @@ from sqlalchemy import select
 
 from nexus.db.models import Agent as AgentModel, AgentRole, TaskStatus
 from nexus.kafka.consumer import check_idempotency, create_consumer
+from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
 from nexus.kafka.producer import get_producer, publish
 from nexus.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
 from nexus.kafka.topics import Topics
@@ -123,10 +124,8 @@ class AgentBase(ABC):
                 try:
                     await self._process_message(msg.value)
                 except Exception as exc:
-                    logger.error(
-                        "message_processing_error",
-                        agent_id=self.agent_id,
-                        error=str(exc),
+                    await self._handle_consumer_error(
+                        msg.value, msg.topic, exc
                     )
         finally:
             self._running = False
@@ -543,9 +542,20 @@ class AgentBase(ABC):
     # ─── Broadcasting ────────────────────────────────────────────────────────
 
     async def _broadcast(self, event: dict[str, Any]) -> None:
-        """Publish event to Redis pub/sub for dashboard WebSocket."""
-        channel = f"agent_activity:{self.agent_id}"
-        await redis_pubsub.publish(channel, json.dumps(event))
+        """Publish event to Redis pub/sub for dashboard WebSocket.
+
+        Best-effort — if Redis is down, log and continue.
+        Dashboard streaming is non-critical.
+        """
+        try:
+            channel = f"agent_activity:{self.agent_id}"
+            await redis_pubsub.publish(channel, json.dumps(event))
+        except Exception as exc:
+            logger.warning(
+                "broadcast_failed",
+                agent_id=self.agent_id,
+                error=str(exc),
+            )
 
     # ─── Heartbeat ───────────────────────────────────────────────────────────
 
@@ -598,3 +608,50 @@ class AgentBase(ABC):
             task_id=str(command.task_id),
             reason=reason,
         )
+
+    # ─── Dead letter handling ─────────────────────────────────────────────
+
+    async def _handle_consumer_error(
+        self,
+        raw_message: dict[str, Any],
+        topic: str,
+        exc: Exception,
+    ) -> None:
+        """Handle message processing failure with retry tracking.
+
+        After MAX_RETRIES failures, routes the message to the dead letter
+        queue. Otherwise logs the error for the next retry attempt.
+        """
+        message_id = raw_message.get("message_id", "unknown")
+        task_id = raw_message.get("task_id")
+
+        retry_count = await increment_retry(str(message_id))
+
+        if retry_count >= MAX_RETRIES:
+            logger.error(
+                "message_max_retries_exceeded",
+                agent_id=self.agent_id,
+                message_id=message_id,
+                task_id=task_id,
+                topic=topic,
+                retry_count=retry_count,
+                error=str(exc),
+            )
+            await publish_dead_letter(
+                source_topic=topic,
+                raw_message=raw_message,
+                error=str(exc),
+                task_id=str(task_id) if task_id else None,
+                db_session_factory=self.db_session_factory,
+            )
+        else:
+            logger.warning(
+                "message_processing_retry",
+                agent_id=self.agent_id,
+                message_id=message_id,
+                task_id=task_id,
+                topic=topic,
+                retry_count=retry_count,
+                max_retries=MAX_RETRIES,
+                error=str(exc),
+            )

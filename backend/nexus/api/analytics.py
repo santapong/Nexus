@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.db.models import Agent, LLMUsage, Task, TaskStatus
+from nexus.db.models import Agent, DeadLetter, LLMUsage, Task, TaskStatus
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -76,17 +76,27 @@ class CostBreakdownResponse(BaseModel):
 
 
 class DeadLetterStats(BaseModel):
-    """Dead letter queue statistics placeholder."""
+    """Dead letter queue statistics per topic."""
 
     topic: str
     count: int
+    oldest: str | None = None
+    newest: str | None = None
 
 
 class DeadLetterResponse(BaseModel):
     """Dead letter queue overview."""
 
     total_dead_letters: int
+    unresolved: int
     by_topic: list[DeadLetterStats]
+
+
+class DeadLetterResolveResponse(BaseModel):
+    """Response after resolving a dead letter."""
+
+    id: str
+    resolved: bool
 
 
 # ── BACKLOG-020: Quota monitoring ────────────────────────────────────────────
@@ -479,30 +489,89 @@ class AnalyticsController(Controller):
         )
 
     @get("/dead-letters")
-    async def get_dead_letters(self) -> DeadLetterResponse:
-        """Get dead letter queue statistics.
+    async def get_dead_letters(
+        self,
+        db_session: AsyncSession,
+        resolved: bool | None = Parameter(query="resolved", default=None, required=False),
+    ) -> DeadLetterResponse:
+        """Get dead letter queue statistics from the dead_letters table.
 
-        Placeholder endpoint — returns topic-level counts for messages
-        that failed processing after max retries. In production this
-        would query Kafka admin API or a dedicated tracking table.
+        Args:
+            db_session: Async database session.
+            resolved: Filter by resolution status (True/False/None for all).
 
         Returns:
             DeadLetterResponse with per-topic dead letter counts.
         """
-        # Placeholder: in a real deployment, this would query Kafka or a
-        # dead_letter_log table. For now, return empty stats as the
-        # infrastructure hook for the frontend.
-        topics = [
-            "task.queue.dead_letter",
-            "agent.commands.dead_letter",
-            "agent.responses.dead_letter",
-            "task.results.dead_letter",
+        base_filter = []
+        if resolved is True:
+            base_filter.append(DeadLetter.resolved_at.isnot(None))
+        elif resolved is False:
+            base_filter.append(DeadLetter.resolved_at.is_(None))
+
+        # Aggregate by source_topic
+        stats_query = select(
+            DeadLetter.source_topic,
+            func.count(DeadLetter.id).label("count"),
+            func.min(DeadLetter.created_at).label("oldest"),
+            func.max(DeadLetter.created_at).label("newest"),
+        ).where(*base_filter).group_by(DeadLetter.source_topic)
+
+        rows = (await db_session.execute(stats_query)).all()
+
+        by_topic = [
+            DeadLetterStats(
+                topic=row.source_topic,
+                count=row.count,
+                oldest=str(row.oldest) if row.oldest else None,
+                newest=str(row.newest) if row.newest else None,
+            )
+            for row in rows
         ]
-        stats = [DeadLetterStats(topic=t, count=0) for t in topics]
-        return DeadLetterResponse(
-            total_dead_letters=0,
-            by_topic=stats,
+
+        total = sum(s.count for s in by_topic)
+
+        # Count unresolved
+        unresolved_query = select(func.count(DeadLetter.id)).where(
+            DeadLetter.resolved_at.is_(None)
         )
+        unresolved = (await db_session.execute(unresolved_query)).scalar() or 0
+
+        return DeadLetterResponse(
+            total_dead_letters=total,
+            unresolved=unresolved,
+            by_topic=by_topic,
+        )
+
+    @post("/dead-letters/{dead_letter_id:str}/resolve")
+    async def resolve_dead_letter(
+        self,
+        dead_letter_id: str,
+        db_session: AsyncSession,
+    ) -> DeadLetterResolveResponse:
+        """Mark a dead letter as resolved.
+
+        Args:
+            dead_letter_id: UUID of the dead letter record.
+            db_session: Async database session.
+
+        Returns:
+            Confirmation of resolution.
+        """
+        from datetime import UTC, datetime
+
+        stmt = select(DeadLetter).where(DeadLetter.id == dead_letter_id)
+        result = await db_session.execute(stmt)
+        record = result.scalar_one_or_none()
+
+        if record is None:
+            return DeadLetterResolveResponse(id=dead_letter_id, resolved=False)
+
+        record.resolved_at = datetime.now(UTC)
+        await db_session.commit()
+
+        logger.info("dead_letter_resolved", dead_letter_id=dead_letter_id)
+        return DeadLetterResolveResponse(id=dead_letter_id, resolved=True)
 
     @get("/quota")
     async def get_quota(self, db_session: AsyncSession) -> QuotaResponse:

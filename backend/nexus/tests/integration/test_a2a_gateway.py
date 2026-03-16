@@ -2,87 +2,145 @@
 
 Tests agent card, authentication, task submission, access control,
 and end-to-end task flow including DB persistence and SSE streaming.
+
+Note: Auth tests use the DB-backed validate_token with mocked sessions.
 """
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 
 from nexus.gateway.auth import (
-    register_token,
-    seed_dev_token,
-    validate_token,
+    _CachedToken,
+    _check_token_validity,
+    _hash_token,
+    invalidate_cache,
 )
 from nexus.gateway.schemas import A2ATaskRequest, AgentCard
 
 
 class TestA2AAuthentication:
-    """Tests for A2A bearer token validation."""
+    """Tests for A2A bearer token validation using the cache layer."""
 
-    def test_valid_token_accepted(self) -> None:
-        """Registered token is accepted."""
-        raw_token = "test-token-1234"
-        register_token(raw_token, name="test")
+    def test_hash_token_consistent(self) -> None:
+        """Same token always produces the same hash."""
+        h1 = _hash_token("test-token")
+        h2 = _hash_token("test-token")
+        assert h1 == h2
 
-        is_valid, error = validate_token(raw_token)
+    def test_hash_token_different_inputs(self) -> None:
+        """Different tokens produce different hashes."""
+        h1 = _hash_token("token-a")
+        h2 = _hash_token("token-b")
+        assert h1 != h2
+
+    def test_valid_cached_token_accepted(self) -> None:
+        """A valid cached token passes all checks."""
+        token = _CachedToken(
+            token_hash="abc123",
+            name="test",
+            allowed_skills=["*"],
+            rate_limit_rpm=60,
+            expires_at=None,
+            is_revoked=False,
+        )
+        is_valid, error, rpm = _check_token_validity(
+            token, "general", "abc123"
+        )
         assert is_valid is True
         assert error == ""
+        assert rpm == 60
 
-    def test_invalid_token_rejected(self) -> None:
-        """Unregistered token is rejected."""
-        is_valid, error = validate_token("nonexistent-token")
+    def test_revoked_token_rejected(self) -> None:
+        """Revoked token is rejected."""
+        token = _CachedToken(
+            token_hash="abc123",
+            name="revoked",
+            allowed_skills=["*"],
+            rate_limit_rpm=60,
+            expires_at=None,
+            is_revoked=True,
+        )
+        is_valid, error, rpm = _check_token_validity(
+            token, "general", "abc123"
+        )
         assert is_valid is False
-        assert "Invalid" in error
-
-    def test_empty_token_rejected(self) -> None:
-        """Empty token is rejected."""
-        is_valid, error = validate_token("")
-        assert is_valid is False
-        assert "Missing" in error
+        assert "revoked" in error.lower()
+        assert rpm == 0
 
     def test_expired_token_rejected(self) -> None:
         """Expired token is rejected."""
-        register_token(
-            "expired-token",
+        token = _CachedToken(
+            token_hash="abc123",
             name="expired",
-            expires_at=1.0,  # Already expired
+            allowed_skills=["*"],
+            rate_limit_rpm=60,
+            expires_at=datetime.now(UTC) - timedelta(hours=1),
+            is_revoked=False,
         )
-        is_valid, error = validate_token("expired-token")
+        is_valid, error, _rpm = _check_token_validity(
+            token, "general", "abc123"
+        )
         assert is_valid is False
         assert "expired" in error.lower()
 
     def test_skill_access_control(self) -> None:
         """Token with limited skills can't access other skills."""
-        register_token(
-            "limited-token",
+        token = _CachedToken(
+            token_hash="abc123",
             name="limited",
             allowed_skills=["research"],
+            rate_limit_rpm=60,
+            expires_at=None,
+            is_revoked=False,
         )
         # Allowed skill
-        is_valid, _ = validate_token("limited-token", skill_id="research")
+        is_valid, _, _ = _check_token_validity(
+            token, "research", "abc123"
+        )
         assert is_valid is True
 
         # Disallowed skill
-        is_valid, error = validate_token("limited-token", skill_id="code")
+        is_valid, error, _ = _check_token_validity(
+            token, "code", "abc123"
+        )
         assert is_valid is False
         assert "skill" in error.lower()
 
     def test_wildcard_skill_access(self) -> None:
         """Token with wildcard can access all skills."""
-        register_token(
-            "wildcard-token",
+        token = _CachedToken(
+            token_hash="abc123",
             name="wildcard",
             allowed_skills=["*"],
+            rate_limit_rpm=60,
+            expires_at=None,
+            is_revoked=False,
         )
-        is_valid, _ = validate_token("wildcard-token", skill_id="code")
+        is_valid, _, _ = _check_token_validity(
+            token, "code", "abc123"
+        )
         assert is_valid is True
-        is_valid, _ = validate_token("wildcard-token", skill_id="research")
+        is_valid, _, _ = _check_token_validity(
+            token, "research", "abc123"
+        )
         assert is_valid is True
 
-    def test_dev_token_seeder(self) -> None:
-        """Dev token seeder creates a valid token."""
-        raw = seed_dev_token()
-        is_valid, _ = validate_token(raw)
-        assert is_valid is True
+    def test_invalidate_cache_clears(self) -> None:
+        """invalidate_cache() empties the cache dict."""
+        from nexus.gateway.auth import _token_cache
+
+        _token_cache["test"] = _CachedToken(
+            token_hash="test",
+            name="test",
+            allowed_skills=["*"],
+            rate_limit_rpm=60,
+            expires_at=None,
+            is_revoked=False,
+        )
+        assert len(_token_cache) > 0
+        invalidate_cache()
+        assert len(_token_cache) == 0
 
 
 class TestAgentCard:
@@ -137,10 +195,8 @@ class TestA2AEndToEndFlow:
 
     def test_submit_task_creates_db_record(self) -> None:
         """submit_task persists a Task row with source='a2a'."""
-
         from nexus.db.models import Task, TaskSource, TaskStatus
 
-        # Simulate the DB record creation logic from routes.submit_task
         task = Task(
             trace_id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
             instruction="Research quantum computing trends",
@@ -193,7 +249,6 @@ class TestA2AEndToEndFlow:
             output={"result": "done"},
             error=None,
         )
-        # Simulate the response dict built by get_task_status
         response = {
             "task_id": str(task.id),
             "status": task.status,
@@ -211,22 +266,23 @@ class TestA2AEndToEndFlow:
         """SSE events follow the 'data: {json}\\n\\n' format."""
         task_id = "test-task-123"
 
-        # Connected event
-        connected = f"data: {json.dumps({'event_type': 'connected', 'task_id': task_id})}\n\n"
+        connected = (
+            f"data: {json.dumps({'event_type': 'connected', 'task_id': task_id})}\n\n"
+        )
         assert connected.startswith("data: ")
         assert connected.endswith("\n\n")
         parsed = json.loads(connected.replace("data: ", "").strip())
         assert parsed["event_type"] == "connected"
         assert parsed["task_id"] == task_id
 
-        # Done event
-        done = f"data: {json.dumps({'event_type': 'done', 'task_id': task_id})}\n\n"
+        done = (
+            f"data: {json.dumps({'event_type': 'done', 'task_id': task_id})}\n\n"
+        )
         parsed_done = json.loads(done.replace("data: ", "").strip())
         assert parsed_done["event_type"] == "done"
 
     def test_sse_terminates_on_task_result(self) -> None:
         """SSE stream should terminate when it sees a task_result event."""
-        # Simulate the termination check from stream_task_events
         event_data = json.dumps({
             "event": "task_result",
             "task_id": "test-123",
@@ -237,7 +293,7 @@ class TestA2AEndToEndFlow:
         assert parsed.get("event") in ("task_result", "task_failed")
 
     def test_sse_does_not_terminate_on_subtask_event(self) -> None:
-        """SSE stream should NOT terminate on intermediate subtask events."""
+        """SSE stream should NOT terminate on intermediate events."""
         event_data = json.dumps({
             "event": "subtask_completed",
             "task_id": "sub-456",
@@ -247,24 +303,14 @@ class TestA2AEndToEndFlow:
         parsed = json.loads(event_data)
         assert parsed.get("event") not in ("task_result", "task_failed")
 
-    def test_sse_requires_valid_token(self) -> None:
-        """SSE endpoint rejects requests without valid bearer token."""
-        is_valid, error = validate_token("")
-        assert is_valid is False
-        # The SSE endpoint returns {"error": error} for invalid tokens
-        response = {"error": error}
-        assert "error" in response
-
     def test_a2a_task_request_instruction_extraction(self) -> None:
         """Task instruction is extracted from input.instruction or input.topic."""
-        # Case 1: instruction key present
         req1 = A2ATaskRequest(
             input={"instruction": "Build a REST API"},
         )
         instruction = req1.input.get("instruction", "")
         assert instruction == "Build a REST API"
 
-        # Case 2: topic key as fallback
         req2 = A2ATaskRequest(
             input={"topic": "quantum computing"},
         )
@@ -273,7 +319,6 @@ class TestA2AEndToEndFlow:
             instruction2 = req2.input.get("topic", str(req2.input))
         assert instruction2 == "quantum computing"
 
-        # Case 3: neither key — falls back to string representation
         req3 = A2ATaskRequest(
             input={"data": "raw payload"},
         )

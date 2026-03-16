@@ -40,6 +40,75 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-17] — Phase 3: Hardening, fault tolerance, A2A outbound, K8s, chaos tests, eval scoring
+
+### Added
+- **Dead letter queue infrastructure** — `kafka/dead_letter.py`: retry counter in Redis, after 3
+  failures messages route to `{topic}.dead_letter` Kafka topic and `dead_letters` DB table. New
+  topic constants (`TASK_QUEUE_DL`, `AGENT_COMMANDS_DL`, `AGENT_RESPONSES_DL`, `A2A_INBOUND_DL`).
+- **A2A token DB migration** — Bearer tokens moved from in-memory dict to `a2a_tokens` table with
+  SHA-256 hash, skills, RPM limit, expiration, revocation. DB-backed async `validate_token()` with
+  5-minute in-memory cache. CRUD API: `POST /api/a2a-tokens`, `GET /api/a2a-tokens`,
+  `DELETE /api/a2a-tokens/{id}`, `POST /api/a2a-tokens/{id}/rotate`.
+- **Per-token rate limiting** — `gateway/rate_limiter.py`: sliding window counter in Redis db:1
+  with per-minute granularity. Returns HTTP 429 with `Retry-After` when exceeded.
+- **A2A outbound client** — `gateway/outbound.py`: full implementation of `discover_agent()`,
+  `submit_task()`, `poll_status()`, `stream_results()`, and `hire_external_agent()` flow.
+- **`tool_hire_external_agent`** — New irreversible tool in `tools/adapter.py` (requires approval).
+  Registered for all agent roles except Prompt Creator in `tools/registry.py`.
+- **Chaos test suite** — `tests/chaos/test_chaos_scenarios.py`: 20+ test cases covering 8 scenarios
+  (Kafka unavailable, Redis wiped, LLM timeout, budget exceeded, duplicate messages, invalid A2A
+  token, DB pool exhausted, agent silence). `make test-chaos` target added.
+- **Audit log dashboard** — `frontend/src/components/audit/AuditDashboard.tsx`: filterable event
+  list with color-coded event types, expandable JSON detail, pagination. TanStack Query hook in
+  `hooks/useAudit.ts`.
+- **LLM eval scoring** — `eval/` module with `scorer.py` (LLM-as-judge using Claude Haiku),
+  `runner.py` (batch evaluation), `schemas.py` (dimension scores). API: `GET /api/eval/scores`,
+  `POST /api/eval/run`. `eval_results` DB table + Alembic migration.
+- **Meeting room Redis migration** — `kafka/meeting.py`: state moved from in-memory dict to
+  Redis db:0 with TTL. Survives process restarts.
+- **Kubernetes manifests** — `k8s/` directory with Kustomize base + overlays:
+  - PostgreSQL StatefulSet with PVC (pgvector:pg16)
+  - Redis Deployment with connection pooling
+  - Kafka StatefulSet with KRaft mode
+  - Backend Deployment with init container (migrations) and health probes
+  - Frontend Deployment with nginx
+  - Ingress with WebSocket/SSE support
+  - ConfigMap, Secrets, Namespace
+  - Dev overlay (single replicas, small PVCs)
+  - Prod overlay (HA, 50Gi PG, 100Gi Kafka, higher resource limits)
+
+### Changed
+- **DB connection pooling** — `db/session.py`: `pool_pre_ping=True`, `pool_size=10`,
+  `max_overflow=20`, `pool_recycle=3600`. Prevents stale/exhausted connections.
+- **Kafka producer reconnection** — `kafka/producer.py`: periodic health check (60s), auto-reconnect
+  with 3 attempts and exponential delay. Publish retries on failure.
+- **Redis client resilience** — `redis/clients.py`: `ConnectionPool` with `max_connections=10`,
+  exponential backoff retry (3 attempts), `health_check_interval=30`, socket timeouts (5s).
+- **Redis failure recovery for budget** — `llm/usage.py`: `check_daily_spend()` and
+  `check_task_budget()` catch Redis errors and return True (safe degradation). `record_usage()`
+  makes Redis updates best-effort, DB write mandatory.
+- **Task/Kafka publish consistency** — `api/tasks.py`: if Kafka publish fails after DB commit,
+  task is marked `failed` in DB with error message returned to user.
+- **Redis pub/sub broadcast resilience** — `agents/base.py`: `_broadcast()` wrapped in try/except.
+  Dashboard streaming is non-critical; agent continues on Redis failure.
+- **A2A gateway auth** — `gateway/routes.py`: returns proper HTTP 401 (NotAuthorizedException)
+  and 429 (TooManyRequestsException) instead of 200 with error body.
+- **Dead letter analytics** — `api/analytics.py`: `GET /api/analytics/dead-letters` now queries
+  real `dead_letters` table. Added `POST /api/analytics/dead-letters/{id}/resolve`.
+- **CI pipeline** — `.github/workflows/ci.yml`: added chaos test and integration test jobs.
+- **Makefile** — added `test-chaos` and `eval` targets. `test-all` now includes chaos tests.
+
+### Database
+- Migration: `002_dead_letters_and_a2a_tokens.py` — `dead_letters` + `a2a_tokens` tables
+- Migration: `003_eval_results.py` — `eval_results` table
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-16] — Phase 2 Complete: A2A SSE streaming, benchmark seed, documentation update
 
 ### Added

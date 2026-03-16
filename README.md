@@ -53,7 +53,7 @@ A platform where every department of a digital company is staffed by an AI agent
 
 **Frontend:** TypeScript · React 18 · Vite · TanStack Query v5 · Zustand · Tailwind CSS · Shadcn/ui
 
-**Infrastructure:** PostgreSQL 16 + pgvector · Redis 7 · Apache Kafka (KRaft) · Docker Compose
+**Infrastructure:** PostgreSQL 16 + pgvector · Redis 7 · Apache Kafka (KRaft) · Docker Compose · Kubernetes (Kustomize)
 
 **LLM Providers:** Anthropic Claude · Google Gemini · OpenAI · Groq · Mistral · Ollama · any OpenAI-compatible endpoint (abstracted via universal ModelFactory)
 
@@ -97,8 +97,9 @@ nexus/
 │       ├── memory/                # Episodic, semantic, working memory + embeddings
 │       ├── llm/                   # ModelFactory + token/cost tracking
 │       ├── db/                    # SQLAlchemy models, session, seed data
+│       ├── eval/                  # LLM-as-judge eval scoring
 │       ├── redis/                 # 4-role client abstraction
-│       └── tests/                 # Unit, behavior, integration, e2e
+│       └── tests/                 # Unit, behavior, integration, e2e, chaos
 ├── frontend/
 │   ├── package.json
 │   └── src/
@@ -109,6 +110,9 @@ nexus/
 │       └── ws/                    # WebSocket context provider
 ├── scripts/
 │   └── setup.sh                   # One-command project setup
+├── k8s/
+│   ├── base/                     # K8s manifests (postgres, redis, kafka, backend, frontend)
+│   └── overlays/                 # Kustomize overlays (dev, prod)
 ├── docker-compose.yml
 ├── Makefile
 └── .env.example
@@ -121,30 +125,33 @@ nexus/
 | Phase 0 — Foundation | **Complete** |
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
+| Phase 3 — Hardening + A2A Outbound | **In Progress** — Fault tolerance, K8s, chaos tests done |
 
 ### What works today
 
 - All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
-- **Multi-agent task flow:** `POST /api/tasks` → CEO decomposes → specialist agents execute → CEO aggregates → QA reviews → result delivered
+- **Multi-agent task flow:** `POST /api/tasks` -> CEO decomposes -> specialist agents execute -> CEO aggregates -> QA reviews -> result delivered
 - **6 agent roles operational:** CEO (orchestrator), Engineer, Analyst, Writer, QA, Prompt Creator
 - **CEO LLM-based task decomposition** with dependency tracking and subtask dispatch
 - **QA review pipeline** with approve/reject routing and rework commands
-- **Meeting room pattern** — Kafka-based multi-agent debates with timeout/round guards
+- **Meeting room pattern** — Kafka-based multi-agent debates with Redis-backed state
 - **Prompt Creator Agent** — meta-agent that analyzes failures and proposes improved prompts
 - **Health monitor** — auto-fails tasks for agents silent >5 minutes
-- **A2A Gateway (inbound)** — external agents can submit tasks via `POST /a2a/tasks`
-- **8 MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read
-- **Task trace API:** `GET /api/tasks/{id}/trace` returns parent + subtask tree
-- **Prompt management API:** list, diff, activate, and trigger improvement
+- **A2A Gateway (inbound + outbound)** — external agents can hire NEXUS and vice versa
+- **9 MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read, hire_external_agent
+- **A2A token management:** DB-backed with CRUD API, per-token rate limiting, rotation
+- **Dead letter queue:** failed messages tracked in DB with retry counters and dashboard monitoring
+- **Chaos tested:** 8 failure scenarios verified (Kafka down, Redis wiped, LLM timeout, budget exceeded, duplicates, invalid auth, DB exhaustion, agent silence)
+- **LLM eval scoring:** LLM-as-judge framework with dimension scores and batch runner
+- **Audit log dashboard:** filterable, paginated, color-coded event viewer
+- **Fault tolerance:** DB connection pooling, Kafka producer reconnection, Redis retry with backoff, budget tracking fallback
+- **Kubernetes ready:** Kustomize manifests with dev/prod overlays
 - Universal ModelFactory supporting 7+ LLM providers (Anthropic, Google, OpenAI, Groq, Mistral, Ollama, OpenAI-compatible)
-- Frontend dashboard with all panels (health, tasks, approvals, agents, prompts)
-- Frontend task trace view for debugging multi-agent execution
-- WebSocket real-time updates from agent activity
-- LLM retry logic: rate limit backoff (5 retries) + tool call fallback
+- Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit)
+- LLM retry logic: rate limit backoff (5 retries) + tool call fallback + model fallback chains
 - `test:` model provider for infrastructure testing at zero API cost
-- 10-task E2E test suite + 50-task stress test (100% pass rate)
-- Database schema deployed: all 9 tables with pgvector extension
+- Database schema deployed: 12 tables with pgvector extension
 
 ## Getting Started
 
@@ -203,7 +210,9 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `make test-unit` | Run unit tests |
 | `make test-behavior` | Run behavior tests |
 | `make test-e2e` | Run end-to-end tests |
-| `make test-all` | Run all test suites |
+| `make test-chaos` | Run chaos/fault tolerance tests |
+| `make test-all` | Run all test suites (unit + behavior + e2e + chaos) |
+| `make eval` | Run LLM eval scoring on recent tasks |
 | `make kafka-test` | Kafka connectivity health check |
 | `make kafka-topics` | List Kafka topics |
 | `make lint` | Run Ruff linter |
@@ -235,9 +244,18 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `GET` | `/api/prompts/{id}/diff` | Diff proposed vs active prompt |
 | `POST` | `/api/prompts/{id}/activate` | Approve and activate a proposed prompt |
 | `POST` | `/api/prompts/improve` | Trigger prompt improvement for a role |
+| `GET` | `/api/analytics/performance` | Agent performance metrics |
+| `GET` | `/api/analytics/costs` | Cost breakdown by model/role |
+| `GET` | `/api/analytics/dead-letters` | Dead letter queue stats |
+| `GET` | `/api/audit` | Audit event log (filterable) |
+| `POST` | `/api/a2a-tokens` | Create A2A bearer token |
+| `GET` | `/api/a2a-tokens` | List A2A tokens |
+| `DELETE` | `/api/a2a-tokens/{id}` | Revoke A2A token |
+| `GET` | `/api/eval/scores` | Eval scoring aggregates |
+| `POST` | `/api/eval/run` | Trigger manual eval run |
 | `GET` | `/.well-known/agent.json` | A2A Agent Card (public capabilities) |
 | `POST` | `/a2a/tasks` | A2A inbound — submit task (bearer auth) |
-| `GET` | `/a2a/tasks/{id}/status` | A2A task status polling |
+| `GET` | `/a2a/tasks/{id}/events` | A2A SSE event stream |
 | `WS` | `/ws/agent-activity` | Real-time agent event stream |
 
 ## Roadmap
@@ -247,8 +265,22 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
-| Phase 3 | Hardening, chaos testing, A2A outbound | Planned |
+| Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **In Progress** |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
+
+## Kubernetes Deployment
+
+Kustomize manifests are provided in `k8s/` for cluster deployment.
+
+```bash
+# Dev (single replicas, small PVCs)
+kubectl apply -k k8s/overlays/dev
+
+# Production (HA, larger resources)
+kubectl apply -k k8s/overlays/prod
+```
+
+Services: PostgreSQL (StatefulSet + PVC), Redis, Kafka (StatefulSet + PVC), Backend (with init container for migrations), Frontend (nginx), Ingress (WebSocket + SSE support).
 
 ## Documentation
 

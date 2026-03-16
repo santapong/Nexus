@@ -144,9 +144,37 @@ export interface TaskReplay {
 export interface DeadLetterStats {
   topic: string
   count: number
+  oldest: string | null
+  newest: string | null
 }
 
 export interface DeadLetterData {
   total_dead_letters: number
+  unresolved: number
   by_topic: DeadLetterStats[]
+}
+
+// --- Audit Types ---
+
+export interface AuditEvent {
+  id: string
+  task_id: string
+  trace_id: string
+  agent_id: string
+  event_type: string
+  event_data: Record<string, unknown>
+  created_at: string
+}
+
+export interface AuditListData {
+  events: AuditEvent[]
+  total: number
+}
+
+export interface AuditTimelineEntry {
+  id: string
+  event_type: string
+  agent_id: string
+  event_data: Record<string, unknown>
+  created_at: string
 }

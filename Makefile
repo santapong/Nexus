@@ -1,4 +1,4 @@
-.PHONY: setup up down logs migrate seed test-unit test-behavior test-e2e test-e2e-phase2 stress-test-phase2 test-all kafka-test kafka-topics shell-db shell-redis lint typecheck build-prod up-prod
+.PHONY: setup up down logs migrate seed test-unit test-behavior test-e2e test-e2e-phase2 stress-test-phase2 test-chaos test-all kafka-test kafka-topics shell-db shell-redis lint typecheck eval build-prod up-prod
 
 setup:
 	bash scripts/setup.sh
@@ -33,7 +33,10 @@ test-e2e-phase2:
 stress-test-phase2:
 	docker compose exec backend python -m nexus.tests.e2e.stress_test_phase2
 
-test-all: test-unit test-behavior test-e2e
+test-chaos:
+	docker compose exec backend pytest nexus/tests/chaos/ -v
+
+test-all: test-unit test-behavior test-e2e test-chaos
 
 kafka-test:
 	docker compose exec backend python -m nexus.kafka.health_check
@@ -52,6 +55,9 @@ lint:
 
 typecheck:
 	docker compose exec backend mypy nexus/
+
+eval:
+	docker compose exec backend python -c "import asyncio; from nexus.eval.runner import run_eval_suite; from nexus.db.session import get_session_factory; asyncio.run(run_eval_suite(db_session_factory=get_session_factory()))"
 
 build-prod:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml build
