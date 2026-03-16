@@ -23,6 +23,42 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-028 — A2A SSE keep-alive heartbeat for proxy/LB compatibility
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Source:** A2A SSE streaming implementation (ADR-033)
+**Description:** The SSE endpoint `GET /a2a/tasks/{id}/events` currently sleeps 1s between
+poll cycles but doesn't send keep-alive comments. Reverse proxies (nginx, Cloudflare) and
+load balancers may timeout idle SSE connections after 60-120s. Add periodic `:keep-alive\n\n`
+SSE comments every 15s to prevent proxy disconnects during long-running tasks.
+
+---
+
+### BACKLOG-027 — Migrate A2A token storage from memory to database
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Source:** RISK_REVIEW Risk 14, gateway/auth.py
+**Description:** A2A bearer tokens are stored in a module-level dict with SHA-256 hashes.
+Process restart loses all registered tokens. Create an `a2a_tokens` DB table with columns:
+token_hash, name, allowed_skills, expires_at, created_at. Add Alembic migration. Add
+token rotation and rate limit enforcement via Redis counter. Required before multi-worker.
+
+---
+
+### BACKLOG-026 — Migrate meeting room state from memory to Redis
+**Suggested phase:** Phase 3
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Source:** ERROR-015, RISK_REVIEW Risk 13, ADR-023
+**Description:** Meeting room registry uses an in-memory dict (`_meeting_registry`). Process
+restart loses all active meeting state. Cannot share across multiple workers. Migrate to
+Redis-backed state using `meeting:{meeting_id}` keys in Redis db:0. Serialize MeetingRoom
+state as JSON. Required before multi-worker deployment.
+
+---
+
 ### BACKLOG-025 — Generate package-lock.json for reproducible frontend builds
 **Suggested phase:** Phase 3
 **Added by:** claude_code
@@ -142,25 +178,32 @@ function calling, requiring a prompt-based fallback. Zero cost for development t
 
 ---
 
-### BACKLOG-016 — Task auto-fail on 5-minute heartbeat silence
-**Suggested phase:** Phase 2
+### BACKLOG-016 — ~~Task auto-fail on 5-minute heartbeat silence~~ RESOLVED
+**Suggested phase:** ~~Phase 2~~ RESOLVED
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Resolved:** 2026-03-10
 **Source:** §23 Risk 5, Phase 1 audit gap
-**Description:** Heartbeat loop is implemented (30s publish to agent.heartbeat). Missing:
+**Description:** ~~Heartbeat loop is implemented (30s publish to agent.heartbeat). Missing:
 a health check consumer that monitors heartbeats and auto-fails tasks if no heartbeat
-received within 5 minutes of task assignment. Implement as a lightweight background service.
+received within 5 minutes of task assignment.~~
+**Resolution:** `agents/health_monitor.py` implemented. Background asyncio task (60s scan)
+checks Redis for last heartbeat per agent. Auto-fails tasks when agents are silent >5 min.
+Writes audit log entries. See ADR-026.
 
 ---
 
-### BACKLOG-015 — Multi-provider cost dashboard
-**Suggested phase:** Phase 2
+### BACKLOG-015 — ~~Multi-provider cost dashboard~~ RESOLVED
+**Suggested phase:** ~~Phase 2~~ RESOLVED
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Resolved:** 2026-03-11
 **Source:** universal ModelFactory upgrade, §6 cost controls
-**Description:** Dashboard view showing cost breakdown by provider, model, agent, and
-time period. With multi-provider support, users need visibility into which models are
-costing what. Aggregate from `llm_usage` table. Show daily/weekly/monthly trends.
+**Description:** ~~Dashboard view showing cost breakdown by provider, model, agent, and
+time period.~~
+**Resolution:** `AnalyticsDashboard.tsx` + `GET /api/analytics/costs` + `GET /api/analytics/performance`
+implemented. Shows cost by model/role/agent with 7d/30d/90d period selector. Per-agent
+cost detail at `GET /analytics/costs/{agent_id}`. See CHANGELOG 2026-03-11.
 
 ---
 
@@ -278,27 +321,29 @@ agent performance in practice.
 
 ---
 
-### BACKLOG-004 — Meeting room termination signal design
-**Suggested phase:** Phase 2
+### BACKLOG-004 — ~~Meeting room termination signal design~~ RESOLVED
+**Suggested phase:** ~~Phase 2~~ RESOLVED
 **Added by:** claude_code
 **Date:** 2026-03-07
+**Resolved:** 2026-03-10
 **Source:** CLAUDE.md §25 Needs Further Design
-**Description:** Define what signals the end of a meeting room session. Options: CEO-initiated
-timeout, explicit consensus vote by participating agents, or unanimous agreement signal.
-Needed before implementing the meeting room pattern in Phase 2 Week 4-5. See also ADR-013
-(proposed).
+**Description:** ~~Define what signals the end of a meeting room session.~~
+**Resolution:** CEO-initiated `terminate()` with timeout (300s) and max-round (10) guards.
+Implemented in `kafka/meeting.py`. See ADR-023. ADR-013 superseded.
 
 ---
 
-### BACKLOG-003 — Semantic memory contradiction handling strategy
-**Suggested phase:** Phase 1-2
+### BACKLOG-003 — ~~Semantic memory contradiction handling strategy~~ RESOLVED
+**Suggested phase:** ~~Phase 1-2~~ RESOLVED
 **Added by:** claude_code
 **Date:** 2026-03-07
+**Resolved:** 2026-03-10
 **Source:** CLAUDE.md §25 Needs Further Design
-**Description:** When two tasks produce conflicting facts for the same semantic memory key,
-determine which value wins. Options: newest-wins (simple), highest-confidence-wins (nuanced),
-or human-resolves (safest). Affects the upsert logic in `semantic_memory` table. See also
-ADR-011 (proposed).
+**Description:** ~~When two tasks produce conflicting facts for the same semantic memory key,
+determine which value wins.~~
+**Resolution:** Implemented as newest-wins via SQL upsert on `UNIQUE(agent_id, namespace, key)`.
+The `semantic_memory` table's unique constraint enables natural upsert behavior — newer writes
+overwrite older values. Simple, predictable, sufficient for Phase 2. ADR-011 superseded.
 
 ---
 
@@ -329,5 +374,5 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-14*
-*Next item ID: BACKLOG-026*
+*Last updated: 2026-03-16*
+*Next item ID: BACKLOG-029*

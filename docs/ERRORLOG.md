@@ -74,6 +74,43 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-018 — A2A gateway did not persist Task to database
+
+**Date:** 2026-03-16
+**Severity:** critical
+**Status:** fixed
+**Found by:** claude_code during Phase 2 completion review
+**Affected files:** `backend/nexus/gateway/routes.py`
+
+### What happened
+The A2A gateway `submit_task` endpoint generated a `task_id`, published an `AgentCommand`
+to Kafka `a2a.inbound` topic, but **never created a Task row in PostgreSQL**. This caused:
+1. `result_consumer._update_task_in_db()` couldn't find the task — logged a warning and skipped.
+2. CEO's `_create_subtasks()` set `parent_task_id` pointing to a non-existent row — FK violation.
+3. `GET /a2a/tasks/{id}/status` returned a hardcoded placeholder instead of real state.
+
+The regular task API (`api/tasks.py:44-59`) correctly created the Task before Kafka publish —
+the A2A gateway missed this step.
+
+### Root cause
+The gateway was built during Phase 2 Priority Group 7 as a "publish to Kafka and let CEO
+handle it" design. The assumption was that CEO would create the task record. But CEO receives
+tasks from Kafka and expects the Task row to already exist (same as the regular task API flow).
+
+### Fix applied
+1. Added `db_session: AsyncSession` parameter to `submit_task` (Litestar DI injection).
+2. Create `Task` record with `source=TaskSource.A2A.value` and `source_agent` from metadata.
+3. `flush()` + `commit()` before Kafka publish (same pattern as `api/tasks.py`).
+4. Replaced hardcoded `get_task_status` placeholder with real DB query.
+5. Added SSE streaming endpoint `GET /a2a/tasks/{task_id}/events`.
+
+### Prevention
+- Pattern J (see below) added to Known Patterns
+- Integration tests in `test_a2a_gateway.py` now validate DB record creation
+- The commit-then-publish pattern is enforced: always persist to DB before Kafka
+
+---
+
 ## ERROR-017 — Frontend prod Docker build fails (import.meta.env TypeScript error)
 
 **Date:** 2026-03-14
@@ -630,7 +667,17 @@ QA review). Raw `json.loads(output)` will fail on markdown-wrapped responses.
 **Required pattern:** Strip markdown code block markers before parsing. Have a fallback
 for non-JSON responses (CEO: default to single engineer subtask; QA: default to approved).
 
+### Pattern J — External gateway must persist to DB before Kafka publish
+
+**Risk:** An external-facing gateway (A2A, webhook, etc.) publishes a task to Kafka
+without first creating a Task record in PostgreSQL. Downstream consumers (CEO, result
+consumer) expect the Task row to exist. FK violations, lost results, and orphaned tasks.
+**Watch for:** Any new gateway or inbound endpoint that publishes to Kafka. Must follow
+the same commit-then-publish pattern as `api/tasks.py`.
+**Required pattern:** `db_session.add(task)` → `flush()` → `commit()` → THEN `kafka.publish()`.
+See ERROR-018 for the original incident.
+
 ---
 
-*Last updated: 2026-03-14*
-*Next error ID: ERROR-018*
+*Last updated: 2026-03-16*
+*Next error ID: ERROR-019*

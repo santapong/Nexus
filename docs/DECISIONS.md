@@ -30,9 +30,9 @@
 | ADR-008 | Kafka fallback: Redis Streams if Kafka unstable in Phase 1 | accepted | 2026-03 |
 | ADR-009 | PostgreSQL as sole source of truth — Redis is volatile | accepted | 2026-03 |
 | ADR-010 | Reject LangGraph — conflicts with Kafka orchestration | accepted | 2026-03 |
-| ADR-011 | Semantic memory contradiction resolution strategy | proposed | 2026-03-07 |
-| ADR-012 | Log aggregation approach for v1 | proposed | 2026-03-07 |
-| ADR-013 | Meeting room termination signal | proposed | 2026-03-07 |
+| ADR-011 | Semantic memory contradiction resolution strategy | **superseded** | 2026-03-07 |
+| ADR-012 | Log aggregation approach for v1 | **superseded** | 2026-03-07 |
+| ADR-013 | Meeting room termination signal | **superseded** | 2026-03-07 |
 | ADR-014 | Pin pydantic-ai 0.5.x with anthropic <0.83.0 | accepted | 2026-03-08 |
 | ADR-015 | Docker port remapping for local dev | accepted | 2026-03-08 |
 | ADR-016 | Explicit DB commit before Kafka publish | accepted | 2026-03-08 |
@@ -52,6 +52,9 @@
 | ADR-030 | Output validation guardrail (secrets, size, empty) | accepted | 2026-03-14 |
 | ADR-031 | Multi-stage Docker builds (dev/prod targets) | accepted | 2026-03-14 |
 | ADR-032 | GitHub Actions CI/CD with security scanning | accepted | 2026-03-14 |
+| ADR-033 | A2A SSE streaming via Redis pub/sub | accepted | 2026-03-16 |
+| ADR-034 | Prompt benchmark seeding strategy | accepted | 2026-03-16 |
+| ADR-035 | A2A gateway Task DB persistence before Kafka publish | accepted | 2026-03-16 |
 
 ---
 
@@ -448,7 +451,7 @@ superseding ADR with clear justification of how it avoids the dual-orchestration
 ## ADR-011 — Semantic memory contradiction resolution strategy
 
 **Date:** 2026-03-07
-**Status:** proposed
+**Status:** **superseded** — implemented as newest-wins upsert on `UNIQUE(agent_id, namespace, key)`. See BACKLOG-003 resolution.
 **Decided by:** claude_code
 **Relates to:** CLAUDE.md §12, §25
 **Supersedes:** n/a
@@ -496,7 +499,7 @@ Awaiting human review before accepting.
 ## ADR-012 — Log aggregation approach for v1
 
 **Date:** 2026-03-07
-**Status:** proposed
+**Status:** **superseded** — implemented as file-based structured JSON via structlog to stdout. Docker captures logs. See BACKLOG-006 for Phase 3 aggregation decision.
 **Decided by:** claude_code
 **Relates to:** CLAUDE.md §25, §23 Prevention Rule 5
 **Supersedes:** n/a
@@ -536,7 +539,7 @@ Phase 3 when observability hardening begins. See BACKLOG-006.
 ## ADR-013 — Meeting room termination signal
 
 **Date:** 2026-03-07
-**Status:** proposed
+**Status:** **superseded** by ADR-023. Implemented as CEO-initiated `terminate()` with timeout (300s) and max-round (10) guards.
 **Decided by:** claude_code
 **Relates to:** CLAUDE.md §10, §25
 **Supersedes:** n/a
@@ -1255,11 +1258,100 @@ Docker images automatically published on merge to main.
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-033 -->
+## ADR-033 — A2A SSE streaming via Redis pub/sub
+
+**Status:** accepted
+**Date:** 2026-03-16
+**Context:** External agents need real-time task progress updates. The A2A protocol
+supports Server-Sent Events (SSE) for streaming. We needed to choose between WebSocket,
+SSE, or polling for the A2A event stream.
+
+### Decision
+
+SSE endpoint at `GET /a2a/tasks/{task_id}/events` using Litestar's `Stream` response
+with `media_type="text/event-stream"`. Subscribes to Redis pub/sub channel
+`agent_activity:{task_id}` — the same channel the `result_consumer.py` already publishes
+to (line 130). Events streamed in standard SSE format (`data: {json}\n\n`). Stream
+terminates on `task_result` or `task_failed` events, or after 10-minute timeout.
+
+### Alternatives considered
+
+1. **WebSocket** — More complex, requires connection upgrade, stateful. Overkill for
+   unidirectional event streaming. Already used for dashboard (different use case).
+2. **Long polling** — Simple but higher latency. Misses intermediate events. Poor UX.
+3. **Dedicated event bus** — Separate from Redis. Unnecessary — Redis pub/sub already
+   carries the exact events we need.
+
+### Consequences
+
+**Positive:** Reuses existing Redis pub/sub infrastructure. Standard SSE format compatible
+with all A2A clients. Lightweight — no connection state to manage.
+**Negative:** Redis pub/sub is fire-and-forget — if client connects after events are
+published, they're missed. Proxies may timeout idle connections (see BACKLOG-028).
 
 ---
 
-*Last updated: 2026-03-14*
-*Next ADR ID: ADR-033*
-*Decision count: 29 accepted, 3 proposed*
+## ADR-034 — Prompt benchmark seeding strategy
+
+**Status:** accepted
+**Date:** 2026-03-16
+**Context:** The Prompt Creator Agent needs benchmark test cases to evaluate prompt quality.
+CLAUDE.md §24 requires "Write 10 benchmark test cases per agent role."
+
+### Decision
+
+60 fixed test cases seeded via `db/seed.py` (10 per role: CEO, Engineer, Analyst, Writer,
+QA, Prompt Creator). Each benchmark has:
+- `input`: A realistic test instruction the agent would receive
+- `expected_criteria`: JSON with `must_contain`, `must_not_contain`, `output_format`,
+  and `quality_markers` fields
+
+Seeded idempotently using `(agent_role, input)` as the uniqueness check. Benchmarks are
+evaluation scaffolding — they define what good output looks like without hardcoding exact
+expected output (which would be too brittle for LLM evaluation).
+
+### Consequences
+
+**Positive:** Prompt Creator can now score prompt versions against fixed test cases.
+Reproducible evaluation. Human-readable criteria.
+**Negative:** 60 seed records is a starting point — will need expansion as agent
+capabilities grow. `expected_criteria` format is flexible but not formally validated.
+
+---
+
+## ADR-035 — A2A gateway Task DB persistence before Kafka publish
+
+**Status:** accepted
+**Date:** 2026-03-16
+**Context:** A2A gateway `submit_task` published to Kafka without creating a Task record
+in PostgreSQL. This caused FK violations when CEO created subtasks and prevented
+`result_consumer` from updating task status. See ERROR-018.
+
+### Decision
+
+All external-facing gateways (A2A, future webhooks) must follow the same
+commit-then-publish pattern as the regular task API (`api/tasks.py`):
+
+1. Create `Task` record with appropriate `source` and `source_agent`
+2. `db_session.flush()` → `db_session.commit()`
+3. THEN publish to Kafka
+
+This is now documented as Pattern J in ERRORLOG.md.
+
+### Consequences
+
+**Positive:** Task records always exist when downstream consumers process them. FK
+constraints satisfied. Status polling works immediately after submission.
+**Negative:** Slightly more latency (DB write before Kafka). If DB write fails, task
+is never published — but this is the correct behavior (fail early, fail visibly).
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-036 -->
+
+---
+
+*Last updated: 2026-03-16*
+*Next ADR ID: ADR-036*
+*Decision count: 32 accepted, 3 superseded*

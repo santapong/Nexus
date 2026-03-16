@@ -181,6 +181,8 @@ MODEL_WRITER=ollama:llama3.2                  →  Ollama (local)
 
 Supported providers: Anthropic, Google Gemini, OpenAI, Groq, Mistral, Ollama, any OpenAI-compatible endpoint, and `test:` (zero-cost testing).
 
+**Fallback chains:** Each agent role has configurable fallback models via `MODEL_{ROLE}_FALLBACKS` env vars. `ModelFactory.get_model_with_fallbacks(role)` wraps the primary model with Pydantic AI's `FallbackModel`. If the primary fails (rate limit, timeout, API down), the next model in the chain is tried automatically. See ADR-019.
+
 ---
 
 ## 4. Task Lifecycle
@@ -283,7 +285,7 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 |----|---------|-------------|-----|
 | db:0 | Agent working memory | `wm:{task_id}:{agent_id}` | Task lifetime |
 | db:1 | Token budgets | `token_budget:{task_id}`, `daily_spend:{date}` | 24h |
-| db:2 | Pub/Sub channel | `nexus:agent_events` | N/A |
+| db:2 | Pub/Sub channels | `agent_activity:{agent_id}`, `agent_activity:{task_id}` | N/A |
 | db:3 | Idempotency keys | `idempotency:{message_id}` | 24h |
 
 ### Key Principle
@@ -367,10 +369,15 @@ External agents discover NEXUS via the Agent Card, then submit tasks:
 ```
 1. GET /.well-known/agent.json  →  Returns AgentCard with skills & auth info
 2. POST /a2a/tasks (Bearer token)  →  Validates auth + skill access
-3. Task published to a2a.inbound Kafka topic
+3. Task persisted to PostgreSQL (source=a2a) + published to a2a.inbound Kafka topic
 4. CEO picks up → normal multi-agent flow
 5. GET /a2a/tasks/{id}/status  →  Poll for results
+6. GET /a2a/tasks/{id}/events  →  SSE stream (real-time via Redis pub/sub)
 ```
+
+**SSE Streaming (ADR-033):** The events endpoint subscribes to Redis pub/sub channel
+`agent_activity:{task_id}` and streams events in SSE format. Terminates on `task_result`
+or `task_failed`. Same channel the dashboard WebSocket uses — one publisher, two consumers.
 
 ### Agent Card
 
@@ -600,5 +607,5 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ---
 
-*Last updated: 2026-03-14*
+*Last updated: 2026-03-16*
 *Phase: 2 Complete (with guardrails) — Ready for Phase 3*

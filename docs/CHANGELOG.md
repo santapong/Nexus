@@ -40,6 +40,42 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-16] — Phase 2 Complete: A2A SSE streaming, benchmark seed, documentation update
+
+### Added
+- `backend/nexus/gateway/routes.py` — SSE streaming endpoint `GET /a2a/tasks/{task_id}/events`
+  subscribing to Redis pub/sub `agent_activity:{task_id}` channel. Streams events in SSE
+  format, terminates on `task_result`/`task_failed`, 10-minute timeout. Bearer token required.
+- `backend/nexus/db/seed.py` — 60 prompt benchmark seed records (10 per agent role: CEO,
+  Engineer, Analyst, Writer, QA, Prompt Creator). Each benchmark includes test instruction
+  and `expected_criteria` JSON with `must_contain`, `must_not_contain`, `output_format`,
+  and `quality_markers` fields.
+- `backend/nexus/db/seed.py` — Prompt Creator agent added to `AGENTS_SEED` (was missing —
+  only 5 of 6 agents were seeded). Includes system prompt, tool access, and Kafka topics.
+- `backend/nexus/db/seed.py` — Prompt Creator prompt added to `PROMPTS_SEED` (version 1).
+- `backend/nexus/tests/integration/test_a2a_gateway.py` — 8 new end-to-end tests:
+  DB record creation, Kafka command shape, status response, SSE format, termination logic,
+  token validation, and instruction extraction from multiple input formats.
+
+### Fixed
+- **A2A gateway not persisting Task to DB** — `submit_task` now creates a `Task` record in
+  PostgreSQL (with `source=a2a`, `source_agent` from metadata) before publishing to Kafka.
+  Previously, the task was only published to Kafka without a DB record, causing
+  `result_consumer._update_task_in_db()` to find nothing and CEO subtask FK violations.
+- **A2A status endpoint was hardcoded placeholder** — `get_task_status` now reads real task
+  state from PostgreSQL instead of returning a static "accepted" response.
+
+### Documentation
+- `CLAUDE.md` §2 — Updated status table: Phase 0/1/2 all complete, current phase is
+  "Phase 2 COMPLETE — Ready for Phase 3 hardening"
+- `CLAUDE.md` §24 — All Phase 2 checklist items marked as done (`[x]`)
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-14] — Phase 2 Guardrails, Prompt Versioning, Audit Logging, Cost Tracking, CI/CD
 
 ### Added

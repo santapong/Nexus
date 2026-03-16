@@ -67,6 +67,9 @@ select = [
     "RUF", # ruff-specific rules
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"nexus/db/seed.py" = ["E501"]  # Seed data has long string literals
+
 [tool.ruff.lint.isort]
 known-first-party = ["nexus"]
 

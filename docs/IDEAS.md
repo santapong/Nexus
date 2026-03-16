@@ -218,5 +218,103 @@ payment, form submission).
 
 ---
 
-*Last updated: 2026-03-14*
-*Next item ID: IDEA-011*
+### IDEA-011 — Agent Self-Reflection & Chain-of-Thought
+**Category:** Self-Improvement
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Status:** OPEN
+**Description:** Add a self-reflection step to the agent guard chain where agents review
+their own output before submitting it to QA. The agent would critique its own work against
+the task requirements, catch obvious errors (wrong format, missing sections, hallucinated
+data), and self-correct before the result enters the QA pipeline. This could significantly
+reduce QA rejection rates and rework loops, saving tokens and time. Could be implemented
+as a second LLM call with a "critic" system prompt, or by appending a "review your own
+output" instruction to the existing prompt.
+**Key questions:**
+- Cost: does a second LLM call per task negate the savings from fewer QA rejections?
+- Should self-reflection be optional/configurable per agent role?
+- How to measure improvement: compare QA rejection rates before and after?
+- Risk of infinite self-correction loops — need a max-revision counter?
+
+---
+
+### IDEA-012 — Scheduled / Recurring Tasks (Cron-style)
+**Category:** Platform
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Status:** OPEN
+**Description:** Add a cron-like task scheduling system where users can configure tasks
+to run on a schedule (e.g., "research competitor pricing every Monday at 9am", "generate
+weekly status report every Friday"). A scheduler service reads schedules from a DB table
+and publishes to `task.queue` at the appropriate time. Results accumulate in a time-series
+view. Useful for recurring business intelligence, monitoring, and reporting workflows.
+**Key questions:**
+- Scheduler implementation: Taskiq periodic tasks, APScheduler, or custom cron parser?
+- How to handle missed schedules (server was down during scheduled time)?
+- Should recurring tasks share a trace_id or get new ones each run?
+- Cost control: recurring tasks could silently burn budget — need per-schedule budget caps?
+
+---
+
+### IDEA-013 — Agent Skill Specialization via Fine-Tuning Data
+**Category:** Self-Improvement / Platform
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Status:** OPEN
+**Description:** Use NEXUS's episodic memory and human feedback as fine-tuning datasets.
+For each agent role, export successful task executions (input instruction + tool calls +
+final approved output) as training examples. Fine-tune smaller, cheaper models (e.g., Llama
+or Mistral) on role-specific data. A fine-tuned "NEXUS Engineer" model could outperform a
+generic model at lower cost because it's seen hundreds of successful engineering tasks. The
+Prompt Creator Agent could manage the fine-tuning pipeline: select training data, trigger
+fine-tuning jobs, benchmark fine-tuned models, and propose model swaps.
+**Key questions:**
+- Minimum dataset size for useful fine-tuning? (likely 500+ examples per role)
+- Fine-tuning infrastructure: local (Ollama + LoRA) vs cloud (OpenAI, Together AI)?
+- How to handle distribution shift as the agent's task mix evolves?
+- Legal/IP considerations for training on user-submitted task data?
+
+---
+
+### IDEA-014 — Multi-Company A2A Marketplace
+**Category:** Platform / Distribution
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Status:** OPEN
+**Description:** Build a discovery layer on top of A2A where NEXUS instances can find and
+hire each other's specialist agents. Each NEXUS company publishes its Agent Card with skills
+and pricing. A marketplace index aggregates Agent Cards from registered companies. When a
+NEXUS instance encounters a task outside its agents' capabilities, it searches the marketplace,
+finds a specialist from another company, and hires via A2A outbound. Creates a distributed
+agent economy where companies specialize and trade services.
+**Key questions:**
+- Discovery: centralized registry vs distributed (DNS-like) agent discovery?
+- Trust: how to verify that an external agent's claimed capabilities are real?
+- Billing: per-task pricing, subscription tiers, or token-based credits?
+- SLA enforcement: what happens if an external agent fails or takes too long?
+- Already partially planned in Phase 4 — this idea extends it into a public marketplace.
+
+---
+
+### IDEA-015 — Observability with OpenTelemetry + Grafana
+**Category:** DevOps
+**Added by:** claude_code
+**Date:** 2026-03-16
+**Status:** OPEN
+**Description:** Instrument the entire NEXUS stack with OpenTelemetry spans: LLM calls
+(model, tokens, latency), Kafka message lifecycle (publish → consume → process), DB queries
+(duration, table), Redis operations, and HTTP endpoints. Export traces to Jaeger for
+distributed tracing and metrics to Prometheus/Grafana for dashboards. This would enable:
+trace a single task from API → CEO → Engineer → tools → QA → response as one distributed
+trace; visualize agent "thinking time" vs "tool time" vs "waiting time"; alert on latency
+regressions. Critical for Phase 3 chaos testing and production readiness.
+**Key questions:**
+- Instrumentation overhead: acceptable latency increase for tracing?
+- Which OTel exporters: OTLP to Jaeger + Prometheus, or all-in-one (Grafana Tempo)?
+- How to correlate task_id/trace_id with OTel trace IDs?
+- Self-hosted vs managed observability (Grafana Cloud, Datadog)?
+
+---
+
+*Last updated: 2026-03-16*
+*Next item ID: IDEA-016*

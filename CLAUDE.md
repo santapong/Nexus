@@ -82,21 +82,23 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Architecture design | ✅ Complete |
 | Tech stack decisions | ✅ Finalized |
 | AI framework decision | ✅ Pydantic AI (see §5) |
-| Database schema design | ✅ Designed (see §12) |
-| Coding policy | ✅ Defined (see §16–21) |
-| MCP integration design | ✅ Finalized — Python pkg → Pydantic AI adapter (see §8) |
-| A2A gateway design | ✅ Finalized — boundary gateway service (see §9) |
-| Prompt Creator Agent design | ✅ Designed (see §7) |
+| Database schema design | ✅ Deployed — all 9 tables (see §12) |
+| Coding policy | ✅ Defined + CI enforced (see §16–21) |
+| MCP integration | ✅ Complete — adapter + registry + guards (see §8) |
+| A2A gateway | ✅ Complete — inbound with SSE streaming (see §9) |
+| Prompt Creator Agent | ✅ Complete — failure analysis, benchmarks, approval flow (see §7) |
 | Prevention guide | ✅ Defined (see §23) |
-| MCP tools project | ✅ Exists — Python package (direct import) |
-| Codebase scaffolding | ⏳ Not started |
-| Docker Compose setup | ⏳ Not started |
-| Agent base class | ⏳ Not started |
-| Phase 1 build | ⏳ Not started |
+| MCP tools project | ✅ Integrated (Python package, direct import) |
+| Codebase scaffolding | ✅ Complete |
+| Docker Compose setup | ✅ Complete (5 services) |
+| Agent base class | ✅ Complete |
+| Phase 0 build | ✅ Complete |
+| Phase 1 build | ✅ Complete — 50-task stress test: 100% pass rate |
+| Phase 2 build | ✅ Complete — 20-task stress test: 100% pass rate |
 
-**Current phase:** PRE-BUILD — All design complete. Ready to scaffold.
+**Current phase:** Phase 2 COMPLETE — Ready for Phase 3 hardening.
 
-**First physical action:** Create `nexus/` directory → create `BACKLOG.md` → write `pyproject.toml`.
+**Next action:** Phase 3 — Chaos tests, dead letter monitoring, A2A outbound, bearer token issuance.
 
 ---
 
@@ -1443,33 +1445,33 @@ Engineer Agent completes it. Result in DB. Episodic memory written. Cost logged 
 Goal: full company collaborating. External agents can hire NEXUS.
 
 **Weeks 4–5 — Multi-agent:**
-- [ ] Manual prompt testing for each new agent before coding
-- [ ] `AnalystAgent`, `WriterAgent`, `QAAgent` extending `AgentBase`
-- [ ] CEO full task decomposition logic
-- [ ] CEO → delegate → specialists → CEO aggregation → QA review flow
-- [ ] Meeting room pattern (temporary `meeting.room.{task_id}` topic)
-- [ ] Agent memory context loading (recall past similar tasks)
-- [ ] Full task trace view in dashboard
+- [x] Manual prompt testing for each new agent before coding
+- [x] `AnalystAgent`, `WriterAgent`, `QAAgent` extending `AgentBase`
+- [x] CEO full task decomposition logic
+- [x] CEO → delegate → specialists → CEO aggregation → QA review flow
+- [x] Meeting room pattern (temporary `meeting.room.{task_id}` topic)
+- [x] Agent memory context loading (recall past similar tasks)
+- [x] Full task trace view in dashboard
 
 **Week 6 — All task types:**
-- [ ] All 4 task categories working end-to-end
-- [ ] `make test-e2e` passing
+- [x] All 4 task categories working end-to-end
+- [x] `make test-e2e` passing
 
 **Weeks 6–7 — Prompt Creator Agent:**
-- [ ] `prompts` + `prompt_benchmarks` tables migration
-- [ ] Migrate existing system prompts into `prompts` table (version=1, authored_by='human')
-- [ ] Write 10 benchmark test cases per agent role
-- [ ] `PromptCreatorAgent` — reads failures → drafts → benchmarks → proposes via approval
-- [ ] Prompt approval UI: diff view + benchmark scores + approve/reject
-- [ ] First improvement run against Engineer Agent failures from Phase 1
+- [x] `prompts` + `prompt_benchmarks` tables migration
+- [x] Migrate existing system prompts into `prompts` table (version=1, authored_by='human')
+- [x] Write 10 benchmark test cases per agent role
+- [x] `PromptCreatorAgent` — reads failures → drafts → benchmarks → proposes via approval
+- [x] Prompt approval UI: diff view + benchmark scores + approve/reject
+- [x] First improvement run against Engineer Agent failures from Phase 1
 
 **Weeks 7–8 — A2A Inbound:**
-- [ ] `nexus/gateway/` directory with all 4 files
-- [ ] `GET /.well-known/agent.json` serving Agent Card
-- [ ] `POST /a2a` inbound task handler
-- [ ] `GET /a2a/{id}/stream` SSE endpoint
-- [ ] CEO routing logic for `a2a.inbound`
-- [ ] Integration test: simulate external A2A call end-to-end
+- [x] `nexus/gateway/` directory with all 4 files
+- [x] `GET /.well-known/agent.json` serving Agent Card
+- [x] `POST /a2a` inbound task handler with DB persistence
+- [x] `GET /a2a/{id}/events` SSE endpoint
+- [x] CEO routing logic for `a2a.inbound`
+- [x] Integration test: simulate external A2A call end-to-end
 
 **Definition of done:**
 "Write a competitive analysis of [X] and draft an email summary." CEO delegates →

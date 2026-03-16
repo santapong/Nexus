@@ -23,6 +23,8 @@
 | **NEW Risk 12** — CEO decomposition quality | HIGH | MITIGATED | See below. |
 | **NEW Risk 13** — Meeting room state not cluster-safe | MEDIUM | MITIGATED | See below. |
 | **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | MITIGATED | See below. |
+| **NEW Risk 15** — No automated security scanning | MEDIUM | **RESOLVED** | CI/CD pipeline deployed (ADR-032). |
+| **NEW Risk 16** — A2A gateway Task not persisted to DB | CRITICAL | **RESOLVED** | Fixed 2026-03-16. See ERROR-018. |
 
 ---
 
@@ -166,7 +168,10 @@ tracks in Redis, auto-fails tasks for agents silent >5 minutes. Audit log entrie
 - [x] **CI/CD pipeline:** lint, tests, security scanning, DockerHub publish (ADR-032)
 - [x] **Docker optimized:** multi-stage builds, prod images (62MB frontend) (ADR-031)
 - [x] **20-task Phase 2 stress test:** 100% pass rate
-- [x] **153 unit+behavior tests + 14 E2E tests:** all passing
+- [x] **173 tests (117 unit + 36 behavior + 20 integration):** all passing
+- [x] **A2A SSE streaming endpoint:** `GET /a2a/tasks/{id}/events` operational
+- [x] **60 prompt benchmarks seeded:** 10 per agent role
+- [x] **A2A Task DB persistence bug fixed:** ERROR-018, ADR-035
 - [ ] Chaos testing (Phase 3 scope)
 - [ ] Multi-worker deployment (Phase 3 scope)
 
@@ -216,6 +221,43 @@ See ADR-032.
 
 ---
 
+## NEW Risk 16 — A2A gateway Task not persisted to DB
+**Severity:** CRITICAL
+**Status:** **RESOLVED** (2026-03-16)
+**What happened:** A2A gateway `submit_task` published to Kafka without creating a Task
+record in PostgreSQL. Result consumer couldn't update the task. CEO subtask creation caused
+FK constraint violations.
+
+**Fix applied:** Gateway now creates Task record (source=a2a, source_agent from metadata)
+with flush+commit before Kafka publish. Same pattern as `api/tasks.py`.
+
+See ERROR-018 for full details. See ADR-035 for the architectural rule.
+
+---
+
+## Phase 3 Gate Checklist
+
+Items required before Phase 3 can be marked complete (from CLAUDE.md §24):
+
+- [ ] Chaos tests passing for all scenarios in §14:
+  - [ ] Kafka unavailable → task fails cleanly
+  - [ ] Redis wiped mid-task → agent recovers from PostgreSQL
+  - [ ] LLM timeout → task fails with error, not infinite wait
+  - [ ] Token budget exceeded → task paused, human.input_needed published
+  - [ ] Duplicate Kafka message → idempotency prevents double-execution
+  - [ ] A2A invalid bearer token → 401, nothing published
+- [ ] Dead letter queue monitoring in dashboard with alerts
+- [ ] `tool_hire_external_agent` in MCP adapter (outbound A2A, requires approval)
+- [ ] Bearer token issuance for external A2A callers (DB-backed)
+- [ ] Per-token rate limiting via Redis db:1
+- [ ] LLM eval scoring baseline established
+- [ ] Full audit log dashboard view
+- [ ] All CI layers passing
+- [ ] `make migrate` runs cleanly from scratch on fresh DB
+- [ ] README for the project
+
+---
+
 ## Cost Baseline — Phase 1
 
 | Metric | Value |
@@ -236,4 +278,4 @@ See ADR-032.
 
 ---
 
-*Last updated: 2026-03-10*
+*Last updated: 2026-03-16*
