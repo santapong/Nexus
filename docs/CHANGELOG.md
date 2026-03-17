@@ -40,6 +40,26 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-17] — Documentation cleanup: risk review, error log, idea.md
+
+### Added
+- `docs/idea.md` — 15 future ideas and moonshots for Phase 4+ (agent personalities,
+  RLHF-lite learning, visual workflow builder, fine-tuning, marketplace, multi-modal,
+  knowledge graph, scheduled tasks, skill leveling, self-healing infra, and more).
+
+### Changed
+- `RISK_REVIEW.md` — Updated title to "Phase 3 Complete". Table count corrected to 12.
+  Phase 2→3 gate items marked done (chaos testing, K8s). Added Phase 4 risk preview
+  (multi-tenant isolation, Temporal migration, marketplace trust, horizontal scaling).
+- `ERRORLOG.md` — All 3 pre-build warnings (ERROR-001 through ERROR-003) upgraded from
+  `mitigated` to `fixed` with detailed resolution notes. Footer updated.
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-17] — Phase 3 COMPLETE: Frontend UI additions, documentation update, Phase 4 roadmap
 
 ### Added
