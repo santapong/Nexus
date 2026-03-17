@@ -79,7 +79,7 @@ tools via MCP, and are callable by external systems via the A2A protocol.
               │
 ┌─────────────▼────────────────────────────────────────────────────────────┐
 │  PERSISTENCE                                                             │
-│  PostgreSQL 16 + pgvector  ← Source of truth (9 tables)                  │
+│  PostgreSQL 16 + pgvector  ← Source of truth (12 tables)                 │
 │  Redis 7 (4 databases)     ← Speed layer / working memory               │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -265,7 +265,7 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 
 ### PostgreSQL (Source of Truth)
 
-9 tables with pgvector extension for embedding search:
+12 tables with pgvector extension for embedding search:
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
@@ -278,6 +278,9 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 | `audit_log` | All system events | task_id, actor, action, details |
 | `prompts` | Versioned agent prompts | agent_role, version, content, is_active, benchmark_score |
 | `prompt_benchmarks` | Test cases for prompts | agent_role, input, expected_criteria |
+| `dead_letters` | Failed Kafka messages after 3 retries | topic, message_id, payload, error, retry_count |
+| `a2a_tokens` | Bearer tokens for external A2A callers | token_hash, name, allowed_skills, rate_limit_rpm |
+| `eval_results` | LLM-as-judge quality scores | task_id, overall_score, dimension scores, judge_model |
 
 ### Redis (Speed Layer — 4 Databases)
 
@@ -398,14 +401,21 @@ or `task_failed`. Same channel the dashboard WebSocket uses — one publisher, t
 
 ### Authentication
 
-- Tokens are SHA-256 hashed and stored in memory (Phase 2) / DB (Phase 3)
-- Each token has: allowed_skills list, rate_limit_rpm, expiration
+- Tokens are SHA-256 hashed and stored in the `a2a_tokens` DB table
+- Each token has: allowed_skills list, rate_limit_rpm, expiration, revocation status
 - Skill-level access control: a token for "research" can't submit "code" tasks
+- Per-token rate limiting via Redis db:1 sliding window counter
+- CRUD API: create, list, revoke, rotate tokens
 - Dev token seeded on startup for testing
 
-### Outbound (Phase 3 — Not Yet Implemented)
+### Outbound (Complete)
 
-NEXUS calling external agents is planned for Phase 3. The `gateway/outbound.py` placeholder exists but raises `NotImplementedError`.
+NEXUS agents can hire external agents via `tool_hire_external_agent` (irreversible tool,
+requires human approval). The `gateway/outbound.py` implements:
+- Agent discovery via `/.well-known/agent.json`
+- Task submission with bearer token auth
+- Status polling and SSE streaming for results
+- Full error handling and structured logging
 
 ---
 
@@ -504,6 +514,24 @@ Centralized audit trail via `audit/service.py`:
 - **Max rounds:** 10 default (configurable per meeting)
 - **Transcript:** Generated on termination for auditability
 
+### Dead Letter Handling
+
+- Failed Kafka consumer after 3 retries → message routed to `{topic}.dead_letter`
+- Dead letters persisted to `dead_letters` DB table with retry count, error, payload
+- Dashboard shows dead letter count per topic with resolve actions
+- Dead letter topics: `task.queue.dead_letter`, `agent.commands.dead_letter`,
+  `agent.responses.dead_letter`, `a2a.inbound.dead_letter`
+- Never silently drop a failed message
+
+### LLM Eval Scoring
+
+- LLM-as-judge framework in `eval/scorer.py` using configurable judge model
+- 4 dimensions scored (0–1): relevance, completeness, accuracy, formatting
+- Batch runner in `eval/runner.py` evaluates recent completed tasks
+- Results stored in `eval_results` table with judge reasoning
+- API: `GET /api/eval/scores` (aggregates by role/period), `POST /api/eval/run` (trigger)
+- Dashboard: EvalScoreDashboard with period selector, role breakdown, recent scores
+
 ### Idempotency
 
 - Every Kafka message has a unique message_id
@@ -590,7 +618,7 @@ GitHub Actions workflows in `.github/workflows/`:
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `ci.yml` | Push/PR to main | Ruff lint, mypy, unit tests, behavior tests, frontend TS check + build |
+| `ci.yml` | Push/PR to main | Ruff lint, mypy, unit tests, behavior tests, chaos tests, integration tests, frontend TS check + build |
 | `docker-publish.yml` | Push to main + tags | Build prod images → push to DockerHub (SHA/branch/semver tags) |
 | `security.yml` | Push/PR + weekly | pip-audit, npm audit, TruffleHog secrets, Trivy container scan, CodeQL |
 
@@ -607,5 +635,5 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ---
 
-*Last updated: 2026-03-16*
-*Phase: 2 Complete (with guardrails) — Ready for Phase 3*
+*Last updated: 2026-03-17*
+*Phase: 3 Complete — Ready for Phase 4 scaling*

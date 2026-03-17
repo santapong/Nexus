@@ -40,6 +40,37 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-17] — Phase 3 COMPLETE: Frontend UI additions, documentation update, Phase 4 roadmap
+
+### Added
+- `frontend/src/components/eval/EvalScoreDashboard.tsx` — Eval scoring dashboard with period
+  selector (7d/30d/all), mean score summary, by-role breakdown table, recent evaluations list,
+  and "Run Eval" button triggering `POST /api/eval/run`.
+- `frontend/src/hooks/useEval.ts` — TanStack Query hooks for eval scores and eval run trigger.
+- `frontend/src/components/a2a/A2ATokenPanel.tsx` — A2A bearer token management UI: create
+  tokens (name + allowed skills), view token list with hash prefix and RPM, rotate and revoke
+  actions. New token value shown once on creation with copy-to-clipboard.
+- `frontend/src/hooks/useA2ATokens.ts` — TanStack Query hooks for CRUD A2A token operations.
+- Dead letter resolution actions in `AnalyticsDashboard.tsx` — individual topic entries now
+  show resolve buttons calling `POST /api/analytics/dead-letters/{id}/resolve`.
+- TypeScript types for eval scores, A2A tokens, and dead letter items in `types/index.ts`.
+- API client functions for eval and A2A token endpoints in `api/client.ts`.
+
+### Changed
+- `frontend/src/App.tsx` — Added `EvalScoreDashboard` and `A2ATokenPanel` components.
+- `CLAUDE.md` §2 — Status updated to "Phase 3 COMPLETE — Ready for Phase 4 scaling".
+- `CLAUDE.md` §24 — All Phase 3 checklist items marked as done (`[x]`).
+- `ARCHITECTURE.md` — Updated to 12 tables, A2A outbound marked complete, added dead letter
+  handling and eval scoring sections to §11 Resilience, CI pipeline includes chaos tests.
+- `README.md` — Phase 3 status updated to **Complete** in both status table and roadmap.
+- `BACKLOG.md` — Resolved Phase 3 items (025–028), added 9 new Phase 4 ideas (029–037).
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-17] — Phase 3: Hardening, fault tolerance, A2A outbound, K8s, chaos tests, eval scoring
 
 ### Added

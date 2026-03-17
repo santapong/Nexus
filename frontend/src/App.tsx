@@ -1,3 +1,4 @@
+import { A2ATokenPanel } from './components/a2a/A2ATokenPanel'
 import { AgentOrgChart } from './components/agents/AgentOrgChart'
 import { AgentStatusPanel } from './components/agents/AgentStatusPanel'
 import { AnalyticsDashboard } from './components/analytics/AnalyticsDashboard'
@@ -5,6 +6,7 @@ import { ApprovalPanel } from './components/approvals/ApprovalPanel'
 import { AuditDashboard } from './components/audit/AuditDashboard'
 import { HealthPanel } from './components/dashboard/HealthPanel'
 import { Layout } from './components/dashboard/Layout'
+import { EvalScoreDashboard } from './components/eval/EvalScoreDashboard'
 import { SubmitTaskPanel } from './components/tasks/SubmitTaskPanel'
 import { TaskListPanel } from './components/tasks/TaskListPanel'
 import { AgentWebSocketProvider } from './ws/AgentWebSocketProvider'
@@ -27,6 +29,8 @@ function App() {
         <TaskListPanel />
         <AgentOrgChart />
         <AnalyticsDashboard />
+        <EvalScoreDashboard />
+        <A2ATokenPanel />
         <AuditDashboard />
         <AgentStatusPanel />
       </Layout>
