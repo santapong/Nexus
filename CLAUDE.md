@@ -82,10 +82,10 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Architecture design | ✅ Complete |
 | Tech stack decisions | ✅ Finalized |
 | AI framework decision | ✅ Pydantic AI (see §5) |
-| Database schema design | ✅ Deployed — all 9 tables (see §12) |
+| Database schema design | ✅ Deployed — all 12 tables (see §12) |
 | Coding policy | ✅ Defined + CI enforced (see §16–21) |
 | MCP integration | ✅ Complete — adapter + registry + guards (see §8) |
-| A2A gateway | ✅ Complete — inbound with SSE streaming (see §9) |
+| A2A gateway | ✅ Complete — inbound + outbound with SSE streaming (see §9) |
 | Prompt Creator Agent | ✅ Complete — failure analysis, benchmarks, approval flow (see §7) |
 | Prevention guide | ✅ Defined (see §23) |
 | MCP tools project | ✅ Integrated (Python package, direct import) |
@@ -95,10 +95,11 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 0 build | ✅ Complete |
 | Phase 1 build | ✅ Complete — 50-task stress test: 100% pass rate |
 | Phase 2 build | ✅ Complete — 20-task stress test: 100% pass rate |
+| Phase 3 build | ✅ Complete — chaos tests, A2A outbound, eval scoring, K8s |
 
-**Current phase:** Phase 2 COMPLETE — Ready for Phase 3 hardening.
+**Current phase:** Phase 3 COMPLETE — Ready for Phase 4 scaling.
 
-**Next action:** Phase 3 — Chaos tests, dead letter monitoring, A2A outbound, bearer token issuance.
+**Next action:** Phase 4 — Multi-tenant support, Temporal workflows, agent marketplace.
 
 ---
 
@@ -1483,16 +1484,16 @@ prompt for at least one agent.
 
 ### Phase 3 — Hardening + A2A Outbound (Weeks 9–12)
 
-- [ ] Chaos tests passing for all scenarios in §14
-- [ ] Dead letter queue monitoring in dashboard with alerts
-- [ ] `tool_hire_external_agent` in MCP adapter (outbound A2A, requires approval)
-- [ ] Bearer token issuance for external A2A callers
-- [ ] Per-token rate limiting via Redis db:1
-- [ ] LLM eval scoring baseline established
-- [ ] Full audit log dashboard view
-- [ ] All CI layers passing
-- [ ] `make migrate` runs cleanly from scratch on fresh DB
-- [ ] README for the project
+- [x] Chaos tests passing for all scenarios in §14
+- [x] Dead letter queue monitoring in dashboard with alerts
+- [x] `tool_hire_external_agent` in MCP adapter (outbound A2A, requires approval)
+- [x] Bearer token issuance for external A2A callers
+- [x] Per-token rate limiting via Redis db:1
+- [x] LLM eval scoring baseline established
+- [x] Full audit log dashboard view
+- [x] All CI layers passing
+- [x] `make migrate` runs cleanly from scratch on fresh DB
+- [x] README for the project
 
 **Definition of done:**
 System survives infrastructure failures gracefully. NEXUS can hire an external test

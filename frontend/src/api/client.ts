@@ -1,14 +1,19 @@
 import type {
+  A2AToken,
   AgentInfo,
   Approval,
   AuditEvent,
   AuditTimelineEntry,
   CostBreakdown,
+  CreateA2ATokenResponse,
   CreateTaskResponse,
   DeadLetterData,
+  EvalRunResponse,
+  EvalScoresResponse,
   HealthCheck,
   PerformanceData,
   ResolveApprovalResponse,
+  RotateA2ATokenResponse,
   Task,
   TaskReplay,
 } from '../types'
@@ -86,4 +91,30 @@ export const api = {
       `/api/analytics/dead-letters/${id}/resolve`,
       { method: 'POST' }
     ),
+
+  // Eval scoring
+  getEvalScores: (period = '7d') =>
+    apiFetch<EvalScoresResponse>(`/api/eval/scores?period=${period}`),
+
+  triggerEvalRun: () =>
+    apiFetch<EvalRunResponse>('/api/eval/run', { method: 'POST' }),
+
+  // A2A tokens
+  listA2ATokens: () => apiFetch<A2AToken[]>('/api/a2a-tokens'),
+
+  createA2AToken: (name: string, allowedSkills: string[] = ['*']) =>
+    apiFetch<CreateA2ATokenResponse>('/api/a2a-tokens', {
+      method: 'POST',
+      body: JSON.stringify({ name, allowed_skills: allowedSkills }),
+    }),
+
+  revokeA2AToken: (id: string) =>
+    apiFetch<{ id: string; revoked: boolean }>(`/api/a2a-tokens/${id}`, {
+      method: 'DELETE',
+    }),
+
+  rotateA2AToken: (id: string) =>
+    apiFetch<RotateA2ATokenResponse>(`/api/a2a-tokens/${id}/rotate`, {
+      method: 'POST',
+    }),
 }

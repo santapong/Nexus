@@ -178,3 +178,77 @@ export interface AuditTimelineEntry {
   event_data: Record<string, unknown>
   created_at: string
 }
+
+// --- Eval Types ---
+
+export interface EvalScoreEntry {
+  task_id: string
+  overall_score: number
+  relevance: number | null
+  completeness: number | null
+  accuracy: number | null
+  formatting: number | null
+  judge_model: string | null
+  created_at: string
+}
+
+export interface EvalAggregateByRole {
+  role: string
+  count: number
+  mean_score: number
+}
+
+export interface EvalScoresResponse {
+  period: string
+  total_evaluated: number
+  mean_score: number
+  by_role: EvalAggregateByRole[]
+  recent: EvalScoreEntry[]
+}
+
+export interface EvalRunResponse {
+  triggered: boolean
+  total_evaluated: number
+  mean_score: number
+  message: string
+}
+
+// --- A2A Token Types ---
+
+export interface A2AToken {
+  id: string
+  name: string
+  token_hash_prefix: string
+  allowed_skills: string[]
+  rate_limit_rpm: number
+  is_revoked: boolean
+  expires_at: string | null
+  created_at: string
+  last_used_at: string | null
+}
+
+export interface CreateA2ATokenResponse {
+  id: string
+  token: string
+  name: string
+  message: string
+}
+
+export interface RotateA2ATokenResponse {
+  id: string
+  token: string
+  message: string
+}
+
+// --- Dead Letter Detail Types ---
+
+export interface DeadLetterItem {
+  id: string
+  topic: string
+  message_id: string
+  payload: Record<string, unknown>
+  error: string
+  retry_count: number
+  created_at: string
+  resolved: boolean
+}

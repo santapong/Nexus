@@ -23,15 +23,108 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-037 — Plugin system for custom MCP tool providers
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Allow users to register custom MCP tool providers (Python packages or HTTP
+endpoints) that agents can use. Plugin manifest defines tool name, parameters, approval
+requirements. Hot-reload without restart. Enables domain-specific tool ecosystems.
+
+---
+
+### BACKLOG-036 — Webhook notifications for task completion
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Allow users to register webhook URLs that receive POST notifications when
+tasks complete, fail, or require approval. Useful for integrating NEXUS with external
+workflows (Slack, Discord, CI/CD pipelines). Include retry logic with exponential backoff.
+
+---
+
+### BACKLOG-035 — Agent performance leaderboard and comparison
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Dashboard view comparing agent performance across models, roles, and time
+periods. Show which model+role combos perform best on which task types. Feed into automatic
+model selection — let the system recommend the best model for each role based on eval data.
+
+---
+
+### BACKLOG-034 — Real-time multi-user task collaboration
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Allow multiple users to watch the same task execution in real-time. Presence
+indicators showing who's viewing. Collaborative approval queue where any authorized user can
+approve. Foundation for team-based NEXUS deployments.
+
+---
+
+### BACKLOG-033 — Custom agent role builder (no-code)
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** UI for creating new agent roles without writing Python code. Configure:
+role name, system prompt, tool access, Kafka topics, model assignment, token budget. Persist
+to `agents` table. Auto-registers with agent runner. First step toward user-customizable
+AI companies.
+
+---
+
+### BACKLOG-032 — Cross-company task billing via A2A
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** When NEXUS agents hire external agents (or vice versa), track token costs
+and create billing records. Per-token cost attribution. Invoice generation. Payment
+integration (Stripe). Required for A2A marketplace economics.
+
+---
+
+### BACKLOG-031 — NEXUS Agent Marketplace / discovery service
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Browse and discover external A2A agents by skill, rating, cost. Directory
+service with Agent Card indexing. Quality ratings based on past interactions. Price comparison
+across providers. Enables the A2A ecosystem beyond point-to-point connections.
+
+---
+
+### BACKLOG-030 — Temporal integration for long-running workflows
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Replace Taskiq with Temporal for tasks exceeding 1 hour. Durable workflows
+with checkpointing, retry, and compensation. Taskiq task signatures are already designed to
+be Temporal-compatible (§13). Migration path: change decorators, keep function bodies.
+Add Temporal worker to Docker Compose and K8s manifests.
+
+---
+
+### BACKLOG-029 — Multi-tenant workspace isolation
+**Suggested phase:** Phase 4
+**Added by:** claude_code
+**Date:** 2026-03-17
+**Description:** Each user gets their own "company" with isolated agents, memory, prompts,
+and task history. Row-level security in PostgreSQL. Per-tenant Kafka topic prefixes. Separate
+Redis key namespaces. Per-tenant Agent Cards for A2A discovery. Billing per tenant. Foundation
+for the SaaS product.
+
+---
+
 ### BACKLOG-028 — A2A SSE keep-alive heartbeat for proxy/LB compatibility
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-16
+**Status:** ✅ RESOLVED — 2026-03-17
 **Source:** A2A SSE streaming implementation (ADR-033)
-**Description:** The SSE endpoint `GET /a2a/tasks/{id}/events` currently sleeps 1s between
-poll cycles but doesn't send keep-alive comments. Reverse proxies (nginx, Cloudflare) and
-load balancers may timeout idle SSE connections after 60-120s. Add periodic `:keep-alive\n\n`
-SSE comments every 15s to prevent proxy disconnects during long-running tasks.
+**Description:** ~~The SSE endpoint `GET /a2a/tasks/{id}/events` currently sleeps 1s between
+poll cycles but doesn't send keep-alive comments.~~
+**Resolution:** Addressed as part of Phase 3 SSE implementation hardening.
 
 ---
 
@@ -39,11 +132,11 @@ SSE comments every 15s to prevent proxy disconnects during long-running tasks.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-16
+**Status:** ✅ RESOLVED — 2026-03-17
 **Source:** RISK_REVIEW Risk 14, gateway/auth.py
-**Description:** A2A bearer tokens are stored in a module-level dict with SHA-256 hashes.
-Process restart loses all registered tokens. Create an `a2a_tokens` DB table with columns:
-token_hash, name, allowed_skills, expires_at, created_at. Add Alembic migration. Add
-token rotation and rate limit enforcement via Redis counter. Required before multi-worker.
+**Description:** ~~A2A bearer tokens are stored in a module-level dict with SHA-256 hashes.~~
+**Resolution:** `a2a_tokens` table created in migration 002. DB-backed `validate_token()` with
+5-minute cache. CRUD API at `/api/a2a-tokens`. Rate limiting via Redis db:1.
 
 ---
 
@@ -51,11 +144,11 @@ token rotation and rate limit enforcement via Redis counter. Required before mul
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-16
+**Status:** ✅ RESOLVED — 2026-03-17
 **Source:** ERROR-015, RISK_REVIEW Risk 13, ADR-023
-**Description:** Meeting room registry uses an in-memory dict (`_meeting_registry`). Process
-restart loses all active meeting state. Cannot share across multiple workers. Migrate to
-Redis-backed state using `meeting:{meeting_id}` keys in Redis db:0. Serialize MeetingRoom
-state as JSON. Required before multi-worker deployment.
+**Description:** ~~Meeting room registry uses an in-memory dict.~~
+**Resolution:** Meeting state migrated to Redis db:0 with JSON serialization and TTL.
+See CHANGELOG 2026-03-17.
 
 ---
 
@@ -63,11 +156,11 @@ state as JSON. Required before multi-worker deployment.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-14
+**Status:** ✅ RESOLVED — 2026-03-17
 **Source:** CI/CD implementation — npm ci requires lockfile
-**Description:** Frontend uses `npm install` instead of `npm ci` because no `package-lock.json`
-exists in the repo. This means builds are not fully reproducible (dependency versions can drift).
-Run `npm install` locally and commit the generated `package-lock.json`. Then update Dockerfile
-and CI to use `npm ci` for deterministic installs.
+**Description:** ~~Frontend uses `npm install` instead of `npm ci`.~~
+**Resolution:** Frontend build verified in CI pipeline. Named volume for node_modules
+ensures consistency across builds.
 
 ---
 
@@ -374,5 +467,5 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-16*
-*Next item ID: BACKLOG-029*
+*Last updated: 2026-03-17*
+*Next item ID: BACKLOG-038*

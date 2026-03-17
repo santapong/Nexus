@@ -125,7 +125,7 @@ nexus/
 | Phase 0 — Foundation | **Complete** |
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
-| Phase 3 — Hardening + A2A Outbound | **In Progress** — Fault tolerance, K8s, chaos tests done |
+| Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
 
 ### What works today
 
@@ -148,7 +148,9 @@ nexus/
 - **Fault tolerance:** DB connection pooling, Kafka producer reconnection, Redis retry with backoff, budget tracking fallback
 - **Kubernetes ready:** Kustomize manifests with dev/prod overlays
 - Universal ModelFactory supporting 7+ LLM providers (Anthropic, Google, OpenAI, Groq, Mistral, Ollama, OpenAI-compatible)
-- Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit)
+- **Eval scoring dashboard** — LLM-as-judge scores by role with period selector and manual eval trigger
+- **A2A token management** — create, revoke, rotate bearer tokens for external callers
+- Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit, eval, A2A tokens)
 - LLM retry logic: rate limit backoff (5 retries) + tool call fallback + model fallback chains
 - `test:` model provider for infrastructure testing at zero API cost
 - Database schema deployed: 12 tables with pgvector extension
@@ -265,7 +267,7 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 0 | Foundation — Docker, schema, health checks, approval guards | **Complete** |
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
-| Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **In Progress** |
+| Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **Complete** |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
 
 ## Kubernetes Deployment

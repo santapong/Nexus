@@ -501,7 +501,7 @@ Python's standard `logging` module to convert level name strings to integers.
 
 **Date:** 2026-03-07
 **Severity:** critical
-**Status:** mitigated
+**Status:** fixed
 **Found by:** claude_code during pre-build documentation review
 **Affected files:** `nexus/tools/adapter.py`, `nexus/tools/guards.py`, `nexus/db/models.py`
 
@@ -515,16 +515,16 @@ could execute without human consent.
 The approval flow is infrastructure, not a feature. If treated as a Phase 2 feature,
 agents in Phase 1 testing could trigger irreversible actions with no safety gate.
 
-### Fix needed
-Build `require_approval()` guard in `tools/guards.py` and `human_approvals` table
-migration during Phase 0 (Day 2-3), before any agent code runs. All irreversible tools
-must be disabled by default in Phase 1 testing until the approval UI is functional.
+### Fix applied
+`require_approval()` guard built in Phase 0. `human_approvals` table deployed in
+`001_initial_schema.py`. Approval UI with approve/reject buttons operational since Phase 1.
+All 3 irreversible tools (`file_write`, `git_push`, `send_email`) guarded. 6 unit tests
+in `test_guards.py`. `tool_hire_external_agent` added in Phase 3 with same guard.
 
 ### Prevention
-- Phase 0 gate: `human_approvals` table must exist before any agent runs
-- Phase 1 gate: `require_approval()` guard must be unit tested before wiring to adapter.py
-- CI: adapter.py must not import any irreversible tool function without a corresponding
-  `require_approval()` call (enforce via behavior test)
+- Phase 0 gate: `human_approvals` table exists before any agent runs — PASSED
+- Phase 1 gate: `require_approval()` guard unit tested — PASSED
+- CI: ruff + mypy + pytest enforce guard chain on every commit
 
 ---
 
@@ -532,7 +532,7 @@ must be disabled by default in Phase 1 testing until the approval UI is function
 
 **Date:** 2026-03-07
 **Severity:** critical
-**Status:** mitigated
+**Status:** fixed
 **Found by:** claude_code during pre-build documentation review
 **Affected files:** `nexus/agents/base.py`, `nexus/llm/usage.py`, `nexus/redis/clients.py`
 
@@ -546,18 +546,20 @@ tool call) can iterate indefinitely if not bounded.
 LLM API calls have real cost. Without a hard cap checked before every call, there is no
 upper bound on spending per task or per day.
 
-### Fix needed
-Implement before any real LLM call runs:
-1. Redis db:1 token tracker: `token_budget:{task_id}` with per-task limit (default 50,000)
-2. Daily spending cap: `daily_spend:{date}` with $5/day hard limit
-3. `AgentBase._check_budget()` called before every `self.llm.run()` call
-4. At 90% budget: pause task, publish to `human.input_needed`
-5. 20-tool-call limit per task (CLAUDE.md §20 Rule 4)
+### Fix applied
+All 5 mitigations implemented:
+1. Redis db:1 token tracker: `token_budget:{task_id}` with 50k default — Phase 1
+2. Daily spending cap: `daily_spend:{date}` with $5/day hard limit — Phase 1
+3. `AgentBase._check_budget()` in guard chain before every LLM call — Phase 1
+4. At 90% budget: task pauses, publishes to `human.input_needed` — Phase 1
+5. 20-tool-call limit per task via `_wrap_tools_with_counter()` — Phase 2 (ADR-028)
+6. Redis failure safe degradation added in Phase 3 — budget checks return True on Redis error
+7. Per-agent cost tracking: `GET /analytics/costs/{agent_id}` — Phase 2
 
 ### Prevention
-- Phase 0 gate: Redis token tracker keys must be writable before agent code runs
-- Phase 1 gate: `_check_budget()` must be unit tested with boundary cases (89%, 90%, 100%)
-- Behavior test: agent with budget=100 tokens must pause and publish to human.input_needed
+- Phase 0 gate: Redis token tracker writable — PASSED
+- Phase 1 gate: `_check_budget()` unit tested — PASSED
+- Chaos test: budget exceeded scenario verified — PASSED (Phase 3)
 
 ---
 
@@ -565,7 +567,7 @@ Implement before any real LLM call runs:
 
 **Date:** 2026-03-07
 **Severity:** high
-**Status:** mitigated
+**Status:** fixed
 **Found by:** claude_code during pre-build documentation review
 **Affected files:** `nexus/agents/base.py`
 
@@ -580,15 +582,15 @@ AgentBase is the most critical class in the system. Every agent inherits from it
 Its guard chain (idempotency -> budget -> load memory -> handle_task -> write memory ->
 publish -> broadcast) must work flawlessly before any multi-agent interaction is attempted.
 
-### Fix needed
-Phase 1 must produce exactly ONE working agent (Engineer) with a proven guard chain.
-The 50-task stress test (pass rate >= 90%) is the hard gate before Phase 2 starts.
-Do not build CEO delegation, meeting rooms, or QA review pipeline until this gate passes.
+### Fix applied
+Phase 1 produced one working Engineer Agent with proven guard chain. 50-task stress test
+passed at 100% (50/50) on 2026-03-08. Multi-agent orchestration built in Phase 2 only
+after gate cleared. Phase 2 20-task stress test also passed at 100%.
 
 ### Prevention
-- Phase 1 DoD: 50-task stress test at >= 90% pass rate
-- Phase 2 is BLOCKED until this gate clears
-- Behavior tests for every step in the guard chain must pass before stress test
+- Phase 1 DoD: 50-task stress test at >= 90% pass rate — PASSED (100%)
+- Phase 2 gate: 20-task stress test — PASSED (100%)
+- Phase 3 gate: chaos tests across 8 failure scenarios — PASSED
 
 ---
 
@@ -679,5 +681,6 @@ See ERROR-018 for the original incident.
 
 ---
 
-*Last updated: 2026-03-16*
+*Last updated: 2026-03-17*
 *Next error ID: ERROR-019*
+*All pre-build warnings (ERROR-001 through ERROR-003) now FIXED.*

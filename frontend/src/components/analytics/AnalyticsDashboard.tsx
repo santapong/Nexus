@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { usePerformance, useCosts, useDeadLetters } from '../../hooks/useAnalytics'
+import { api } from '../../api/client'
 
 const PERIODS = ['7d', '30d', '90d', 'all'] as const
 
@@ -154,21 +156,7 @@ export function AnalyticsDashboard() {
 
       {/* Dead Letter Queue */}
       {deadLetters && deadLetters.total_dead_letters > 0 && (
-        <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-red-400 mb-2">
-            ⚠️ Dead Letter Queue — {deadLetters.total_dead_letters} failed messages
-          </h3>
-          <div className="space-y-1">
-            {deadLetters.by_topic
-              .filter((t) => t.count > 0)
-              .map((t) => (
-                <div key={t.topic} className="flex justify-between text-xs">
-                  <span className="text-red-300 font-mono">{t.topic}</span>
-                  <span className="text-red-400">{t.count}</span>
-                </div>
-              ))}
-          </div>
-        </div>
+        <DeadLetterSection deadLetters={deadLetters} />
       )}
     </div>
   )
@@ -192,6 +180,55 @@ function SummaryCard({
         <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
       </div>
       <div className={`text-xl font-bold ${color}`}>{value}</div>
+    </div>
+  )
+}
+
+function DeadLetterSection({ deadLetters }: { deadLetters: { total_dead_letters: number; unresolved: number; by_topic: Array<{ topic: string; count: number; oldest: string | null; newest: string | null }> } }) {
+  const queryClient = useQueryClient()
+  const resolveMutation = useMutation({
+    mutationFn: (id: string) => api.resolveDeadLetter(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['analytics', 'dead-letters'] })
+    },
+  })
+
+  return (
+    <div className="bg-red-950/30 border border-red-800/50 rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-red-400">
+          Dead Letter Queue — {deadLetters.total_dead_letters} failed
+          {deadLetters.unresolved > 0 && (
+            <span className="text-red-300 font-normal ml-2">
+              ({deadLetters.unresolved} unresolved)
+            </span>
+          )}
+        </h3>
+      </div>
+      <div className="space-y-2">
+        {deadLetters.by_topic
+          .filter((t) => t.count > 0)
+          .map((t) => (
+            <div key={t.topic} className="flex items-center justify-between bg-red-950/50 rounded-lg px-3 py-2">
+              <div>
+                <span className="text-red-300 font-mono text-xs">{t.topic}</span>
+                <span className="text-red-400 text-xs ml-2">({t.count})</span>
+                {t.newest && (
+                  <span className="text-red-500/70 text-xs ml-2">
+                    latest: {new Date(t.newest).toLocaleString()}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => resolveMutation.mutate(t.topic)}
+                disabled={resolveMutation.isPending}
+                className="px-2 py-1 text-xs bg-red-800/50 text-red-300 rounded hover:bg-red-700/50 disabled:opacity-50 transition-all"
+              >
+                {resolveMutation.isPending ? '...' : 'Resolve'}
+              </button>
+            </div>
+          ))}
+      </div>
     </div>
   )
 }
