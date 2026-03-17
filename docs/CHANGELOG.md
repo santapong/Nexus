@@ -40,6 +40,54 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-17] — Phase 4 COMPLETE: Multi-tenant, Temporal, Marketplace, Billing, Agent Builder, LangFuse
+
+### Added
+- **Multi-tenant foundation** — `users`, `workspaces`, `workspace_members` tables with JWT auth.
+  `api/auth.py` (password hashing, token creation/validation), `api/workspaces.py` (register,
+  login, workspace CRUD). workspace_id FK added to agents, tasks, a2a_tokens.
+- **Per-tenant Agent Cards** — `/.well-known/agent.json?workspace={slug}` returns workspace-scoped
+  Agent Card for A2A discovery. Default card returned without parameter.
+- **Temporal workflows** — `nexus/workflows/` module: schemas, activities, task_workflow, worker.
+  `temporal` + `temporal-ui` services added to docker-compose.yml. Coexists with Taskiq.
+- **Agent Marketplace** — `agent_listings` + `marketplace_reviews` tables. `api/marketplace.py`
+  with browse, create, update, publish, review endpoints. `MarketplacePanel.tsx` frontend with
+  skill filter, rating display, and listing creation.
+- **Cross-company billing** — `billing_records` table. `api/billing.py` with summary, records
+  list, and invoice generation endpoints. `BillingPanel.tsx` frontend.
+- **Custom agent builder** — `api/agent_builder.py` with CRUD for agent configs + activate/deactivate.
+  `AgentBuilderPanel.tsx` frontend with model selector, tool checkboxes, system prompt editor.
+- **LangFuse eval tracking** — `eval/langfuse_client.py` (lazy client, non-blocking traces),
+  `eval/traces.py` (hooks for LLM calls, task completion, eval scores). Falls back gracefully
+  when LangFuse is not configured.
+- **Frontend components** — `LoginPanel.tsx`, `MarketplacePanel.tsx`, `BillingPanel.tsx`,
+  `AgentBuilderPanel.tsx`. TanStack Query hooks for all new endpoints. TypeScript types for
+  auth, workspaces, marketplace, billing, agent builder.
+- **Migration 004** — 6 new tables + 3 workspace_id columns. 18 total tables.
+
+### Changed
+- `settings.py` — Added JWT, Temporal, and LangFuse settings.
+- `docker-compose.yml` — Added temporal + temporal-ui services, JWT/LangFuse env vars.
+- `api/router.py` — Registered AuthController, WorkspaceController, MarketplaceController,
+  BillingController, AgentBuilderController.
+- `gateway/routes.py` — AgentCardController now supports per-workspace Agent Cards.
+- `db/models.py` — 6 new model classes + workspace_id on Agent, Task, A2ATokenRecord.
+- `CLAUDE.md` — Phase 4 checkboxes marked done, status updated to Phase 4 COMPLETE.
+- `README.md` — Phase 4 status, new endpoints, feature descriptions.
+- `RISK_REVIEW.md` — Phase 4 risks resolved, gate checklist added.
+- `BACKLOG.md` — Items 029-033 marked resolved.
+- `idea.md` — Added Phase 5 ideas section.
+
+### Database
+- Migration: `004_phase4_multi_tenant.py` — users, workspaces, workspace_members, billing_records,
+  agent_listings, marketplace_reviews + workspace_id columns
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-17] — Documentation cleanup: risk review, error log, idea.md
 
 ### Added

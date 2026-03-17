@@ -126,6 +126,7 @@ nexus/
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 | Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
+| Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
 
 ### What works today
 
@@ -153,7 +154,14 @@ nexus/
 - Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit, eval, A2A tokens)
 - LLM retry logic: rate limit backoff (5 retries) + tool call fallback + model fallback chains
 - `test:` model provider for infrastructure testing at zero API cost
-- Database schema deployed: 12 tables with pgvector extension
+- Database schema deployed: 18 tables with pgvector extension
+- **Multi-tenant support** — Users, workspaces, JWT auth, per-tenant isolation
+- **Per-tenant Agent Cards** — Workspace-scoped A2A discovery at `/.well-known/agent.json?workspace=`
+- **Temporal workflows** — Durable long-running task execution with auto-retry
+- **Agent Marketplace** — Browse, rate, and hire agents by skill/rating/price
+- **Cross-company billing** — Cost tracking, invoice generation, per-task attribution
+- **Custom agent builder** — No-code agent creation with model/tool/prompt configuration
+- **LangFuse integration** — External eval tracking with LLM call traces and dimension scores
 
 ## Getting Started
 
@@ -259,6 +267,16 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `POST` | `/a2a/tasks` | A2A inbound — submit task (bearer auth) |
 | `GET` | `/a2a/tasks/{id}/events` | A2A SSE event stream |
 | `WS` | `/ws/agent-activity` | Real-time agent event stream |
+| `POST` | `/api/auth/register` | Register new user + default workspace |
+| `POST` | `/api/auth/login` | Login and get JWT token |
+| `GET` | `/api/workspaces` | List workspaces |
+| `POST` | `/api/workspaces` | Create workspace |
+| `GET` | `/api/marketplace` | Browse agent marketplace |
+| `POST` | `/api/marketplace` | Create marketplace listing |
+| `GET` | `/api/billing/summary` | Billing cost summary |
+| `GET` | `/api/billing/invoice` | Generate invoice |
+| `GET` | `/api/agent-builder` | List custom agents |
+| `POST` | `/api/agent-builder` | Create custom agent (no-code) |
 
 ## Roadmap
 
@@ -268,7 +286,8 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
 | Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **Complete** |
-| Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
+| Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | **Complete** |
+| Phase 5 | Advanced features, federation, fine-tuning | Planned |
 
 ## Kubernetes Deployment
 

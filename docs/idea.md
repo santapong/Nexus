@@ -8,7 +8,34 @@
 
 ---
 
-## Phase 4 Core Ideas
+## Phase 5 Core Ideas (Post Phase 4)
+
+### IDEA-016 — Row-Level Security Enforcement in PostgreSQL
+Full PostgreSQL RLS policies per workspace. Every SELECT automatically filtered by
+workspace_id via `SET LOCAL nexus.workspace_id`. Zero-trust data isolation at the database
+layer. Required before production multi-tenant deployment.
+
+---
+
+### IDEA-017 — Stripe Payment Integration for Marketplace
+Real payment processing for cross-company A2A task billing. Stripe Connect for marketplace
+payouts to listing owners. Automatic invoice settlement. Escrow for disputed tasks.
+
+---
+
+### IDEA-018 — OAuth2 / SSO Integration
+Replace JWT-only auth with OAuth2 providers (Google, GitHub, Microsoft). SAML for enterprise.
+Per-workspace SSO configuration. Required for enterprise adoption.
+
+---
+
+### IDEA-019 — Horizontal Auto-Scaling with Pod Autoscaler
+Kubernetes HPA for backend pods based on Kafka consumer lag metrics. Scale agents independently
+based on queue depth per topic. Zero-downtime deployment with rolling updates.
+
+---
+
+## Phase 4 Core Ideas (Completed)
 
 ### IDEA-001 — Agent Personality & Voice Profiles
 

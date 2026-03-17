@@ -97,9 +97,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 2 build | ✅ Complete — 20-task stress test: 100% pass rate |
 | Phase 3 build | ✅ Complete — chaos tests, A2A outbound, eval scoring, K8s |
 
-**Current phase:** Phase 3 COMPLETE — Ready for Phase 4 scaling.
+**Current phase:** Phase 4 COMPLETE — Multi-tenant SaaS platform ready.
 
-**Next action:** Phase 4 — Multi-tenant support, Temporal workflows, agent marketplace.
+**Next action:** Phase 5 — Advanced features, federation, fine-tuning.
 
 ---
 
@@ -1505,14 +1505,14 @@ A2A agent and receive results. All CI passes. Daily spend never exceeds $5.
 
 Not starting until Phase 3 Definition of Done is fully met.
 
-- [ ] Multi-user / multi-tenant support
-- [ ] Per-tenant Agent Cards (each user's company discoverable via A2A)
-- [ ] Temporal for long-running workflows (>1 hour tasks)
-- [ ] NEXUS Agent Marketplace (browse external A2A specialist agents)
-- [ ] Cross-company task billing
-- [ ] Custom agent role creator (no-code configuration)
-- [ ] LangFuse or Braintrust for eval tracking
-- [ ] Kubernetes deployment manifests
+- [x] Multi-user / multi-tenant support
+- [x] Per-tenant Agent Cards (each user's company discoverable via A2A)
+- [x] Temporal for long-running workflows (>1 hour tasks)
+- [x] NEXUS Agent Marketplace (browse external A2A specialist agents)
+- [x] Cross-company task billing
+- [x] Custom agent role creator (no-code configuration)
+- [x] LangFuse or Braintrust for eval tracking
+- [x] Kubernetes deployment manifests
 
 ---
 

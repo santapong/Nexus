@@ -54,17 +54,42 @@ def _extract_token(request: Request) -> str:
 
 
 class AgentCardController(Controller):
-    """Serves the Agent Card at /.well-known/agent.json."""
+    """Serves the Agent Card at /.well-known/agent.json.
+
+    Supports per-tenant Agent Cards via ?workspace= query parameter.
+    Without a workspace parameter, returns the default NEXUS Agent Card.
+    """
 
     path = "/.well-known"
 
     @get("/agent.json")
-    async def get_agent_card(self) -> AgentCard:
-        """Return the NEXUS public Agent Card.
+    async def get_agent_card(
+        self,
+        db_session: AsyncSession,
+        workspace: str | None = None,
+    ) -> AgentCard:
+        """Return the NEXUS Agent Card, optionally scoped to a workspace.
+
+        Args:
+            db_session: Async database session.
+            workspace: Optional workspace slug for per-tenant cards.
 
         Returns:
             AgentCard with skills and authentication info.
         """
+        if workspace:
+            from nexus.db.models import Workspace
+            stmt = select(Workspace).where(Workspace.slug == workspace)
+            result = await db_session.execute(stmt)
+            ws = result.scalar_one_or_none()
+            if ws:
+                return AgentCard(
+                    name=f"NEXUS — {ws.name}",
+                    description=(
+                        f"Tenant workspace '{ws.name}' on NEXUS. "
+                        "Accepts research, writing, engineering, and analysis tasks."
+                    ),
+                )
         return AgentCard()
 
 

@@ -79,8 +79,9 @@ tools via MCP, and are callable by external systems via the A2A protocol.
               │
 ┌─────────────▼────────────────────────────────────────────────────────────┐
 │  PERSISTENCE                                                             │
-│  PostgreSQL 16 + pgvector  ← Source of truth (12 tables)                 │
+│  PostgreSQL 16 + pgvector  ← Source of truth (18 tables)                 │
 │  Redis 7 (4 databases)     ← Speed layer / working memory               │
+│  Temporal Server           ← Durable workflows (long-running tasks)      │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 

@@ -71,6 +71,9 @@ class Agent(UUIDAuditBase):
     llm_model: Mapped[str] = mapped_column(String(100), nullable=False)
     token_budget_per_task: Mapped[int] = mapped_column(Integer, default=50_000)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
 
     # Relationships
     tasks: Mapped[list[Task]] = relationship(back_populates="assigned_agent", lazy="selectin")
@@ -104,6 +107,9 @@ class Task(UUIDAuditBase):
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
 
     # Relationships
     assigned_agent: Mapped[Agent | None] = relationship(back_populates="tasks", lazy="selectin")
@@ -288,6 +294,9 @@ class A2ATokenRecord(UUIDBase):
     last_used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
 
 
 # ─── Table 12: eval_results ───────────────────────────────────────────────
@@ -309,3 +318,109 @@ class EvalResult(UUIDBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+
+# ─── Table 13: users ─────────────────────────────────────────────────────────
+
+
+class User(UUIDAuditBase):
+    __tablename__ = "users"
+
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Relationships
+    workspaces: Mapped[list[Workspace]] = relationship(
+        back_populates="owner", lazy="selectin"
+    )
+
+
+# ─── Table 14: workspaces ───────────────────────────────────────────────────
+
+
+class Workspace(UUIDAuditBase):
+    __tablename__ = "workspaces"
+
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    settings: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    daily_spend_limit_usd: Mapped[float] = mapped_column(Float, default=5.0)
+
+    # Relationships
+    owner: Mapped[User] = relationship(back_populates="workspaces", lazy="selectin")
+
+
+# ─── Table 15: workspace_members ─────────────────────────────────────────────
+
+
+class WorkspaceMember(UUIDBase):
+    __tablename__ = "workspace_members"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "user_id", name="uq_workspace_member"),
+    )
+
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
+# ─── Table 16: agent_listings (Marketplace) ─────────────────────────────
+
+
+class AgentListing(UUIDAuditBase):
+    __tablename__ = "agent_listings"
+
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    skills: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), nullable=False, default=list
+    )
+    price_per_task_usd: Mapped[float] = mapped_column(Float, default=0.0)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    rating: Mapped[float] = mapped_column(Float, default=0.0)
+    total_reviews: Mapped[int] = mapped_column(Integer, default=0)
+    total_tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
+
+
+# ─── Table 14: marketplace_reviews ───────────────────────────────────────
+
+
+class MarketplaceReview(UUIDAuditBase):
+    __tablename__ = "marketplace_reviews"
+
+    listing_id: Mapped[str] = mapped_column(
+        ForeignKey("agent_listings.id"), nullable=False, index=True
+    )
+    reviewer_workspace_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    rating: Mapped[float] = mapped_column(Float, nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    task_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+
+# ─── Table 15: billing_records ───────────────────────────────────────────
+
+
+class BillingRecord(UUIDAuditBase):
+    __tablename__ = "billing_records"
+
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
+    task_id: Mapped[str] = mapped_column(
+        ForeignKey("tasks.id"), nullable=False, index=True
+    )
+    amount_usd: Mapped[float] = mapped_column(Float, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    billing_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # llm_usage | tool_usage | a2a_hire

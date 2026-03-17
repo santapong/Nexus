@@ -39,6 +39,22 @@ class Settings(BaseSettings):
     daily_spend_limit_usd: Decimal = Decimal("5.00")
     default_token_budget_per_task: int = 50_000
 
+    # Multi-tenant / Auth
+    jwt_secret_key: str = "nexus-dev-secret-change-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 1440  # 24 hours
+
+    # Temporal
+    temporal_host: str = "localhost:7233"
+    temporal_namespace: str = "nexus"
+    temporal_task_queue: str = "nexus-tasks"
+    temporal_long_task_threshold_minutes: int = 30
+
+    # LangFuse (eval tracking)
+    langfuse_host: str = ""
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
