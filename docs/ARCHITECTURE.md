@@ -21,6 +21,7 @@
 11. [Resilience & Health](#11-resilience--health)
 12. [Security Model](#12-security-model)
 13. [Deployment Architecture](#13-deployment-architecture)
+14. [KeepSave Integration](#14-keepsave-integration)
 
 ---
 
@@ -636,5 +637,78 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ---
 
-*Last updated: 2026-03-17*
-*Phase: 3 Complete — Ready for Phase 4 scaling*
+## 14. KeepSave Integration
+
+NEXUS integrates with [KeepSave](https://github.com/santapong/KeepSave) for centralized secret management, OAuth 2.0 identity, and MCP gateway access. This replaces hardcoded credentials and resolves critical security audit findings.
+
+### Integration Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  NEXUS Startup                                                   │
+│                                                                 │
+│  settings.py                                                    │
+│    │                                                            │
+│    ├─ Read KEEPSAVE_URL, KEEPSAVE_API_KEY from env              │
+│    │                                                            │
+│    ├─ KeepSave Python SDK → GET /api/v1/projects/{id}/secrets   │
+│    │                                                            │
+│    ├─ Inject decrypted secrets into os.environ                  │
+│    │                                                            │
+│    └─ Pydantic Settings reads from env as normal                │
+│                                                                 │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ HTTPS
+┌───────────────────────────▼─────────────────────────────────────┐
+│  KeepSave (Go + Gin)                                            │
+│                                                                 │
+│  API Key Auth → Decrypt (AES-256-GCM) → Return secrets         │
+│                                                                 │
+│  Secrets stored:                                                │
+│  ├─ ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY          │
+│  ├─ DATABASE_URL, REDIS_URL, KAFKA_BOOTSTRAP_SERVERS           │
+│  ├─ JWT_SECRET_KEY, A2A_INBOUND_TOKEN                          │
+│  └─ DAILY_SPEND_LIMIT_USD, DEFAULT_TOKEN_BUDGET_PER_TASK       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### What KeepSave Provides
+
+| Capability | How NEXUS Uses It |
+|-----------|-------------------|
+| **Encrypted Vault** | All LLM API keys, DB URLs, JWT secrets stored with AES-256-GCM encryption |
+| **Environment Promotion** | Dev ($5/day limit) → Staging ($10/day) → Prod ($50/day) with diff preview |
+| **OAuth 2.0 Provider** | SSO for dashboard users + client credentials for A2A external agents |
+| **MCP Gateway** | NEXUS tools registered in marketplace; other MCP servers callable with auto-secret injection |
+| **Scoped API Keys** | Read-only, environment-locked keys for runtime secret fetching |
+| **Audit Trail** | Complete log of secret access — required for multi-tenant compliance |
+
+### Security Improvements
+
+| Before (Insecure) | After (KeepSave) |
+|-------------------|-------------------|
+| All secrets in `.env` plaintext | Only `KEEPSAVE_URL` + `KEEPSAVE_API_KEY` in `.env` |
+| Hardcoded JWT secret in `settings.py` | JWT secret in encrypted vault, no default |
+| Hardcoded A2A token in `gateway/auth.py` | A2A tokens as encrypted secrets with rotation |
+| Manual secret rotation | Promotion pipeline with approval workflow |
+| No secret access auditing | Full audit trail per secret per access |
+
+### Graceful Fallback
+
+If KeepSave is unavailable, NEXUS falls back to standard environment variables:
+
+```python
+# settings.py — KeepSave bootstrap is conditional
+if _keepsave_url and _keepsave_key and _keepsave_project:
+    # Fetch from KeepSave
+    ...
+# Else: Pydantic Settings reads from env/defaults as normal
+```
+
+For the full integration guide, see [KEEPSAVE_INTEGRATION.md](KEEPSAVE_INTEGRATION.md).
+
+---
+
+*Last updated: 2026-03-18*
+*Phase: 4 Complete — Multi-tenant SaaS platform with KeepSave integration*
