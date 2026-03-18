@@ -55,6 +55,12 @@ class Settings(BaseSettings):
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
 
+    # KeepSave Integration
+    keepsave_url: str = ""
+    keepsave_api_key: str = ""
+    keepsave_project_id: str = ""
+    nexus_env: str = "alpha"
+
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
