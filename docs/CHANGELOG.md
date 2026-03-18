@@ -40,6 +40,44 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-18] — Security audit, README update, ERRORLOG update
+
+### Added
+- **Security audit** — Full codebase security review covering OWASP top 10 categories.
+  15 findings documented: 2 critical, 4 high, 3 medium, 6 low/info.
+- `ERRORLOG.md` — 7 new error entries (ERROR-019 through ERROR-025) documenting all
+  critical and high severity security vulnerabilities found during audit.
+- `README.md` — Added Security section with audit summary table and immediate action items.
+
+### Security findings (critical + high)
+- **CRITICAL: Hardcoded JWT secret** in `settings.py:43` — default dev secret could be
+  deployed to production. Needs env-var-only with no default.
+- **CRITICAL: Hardcoded A2A dev token** in `gateway/auth.py:254` — auto-seeded into any
+  environment including production.
+- **HIGH: Missing workspace isolation** in `api/workspaces.py` — `list_workspaces()` returns
+  all workspaces without filtering by authenticated user.
+- **HIGH: Missing tenant isolation on tasks** in `api/tasks.py` — tasks created without
+  `workspace_id`, no per-tenant filtering.
+- **HIGH: Unsafe workspace slug generation** in `api/workspaces.py:120` — no validation,
+  no uniqueness constraint.
+- **HIGH: Missing auth on approval resolution** in `api/approvals.py:66-95` — `resolved_by`
+  is user-controlled input, no JWT validation.
+
+### Positive security findings noted
+- PBKDF2-HMAC-SHA256 with 600k iterations (OWASP 2023 compliant)
+- `hmac.compare_digest()` for timing-safe JWT comparison
+- A2A tokens stored as SHA-256 hashes
+- Pydantic validation at all API boundaries
+- No raw SQL queries (SQLAlchemy ORM throughout)
+- Secret pattern detection in agent output
+- Safe subprocess execution (list args, no shell=True)
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-17] — Phase 4 COMPLETE: Multi-tenant, Temporal, Marketplace, Billing, Agent Builder, LangFuse
 
 ### Added

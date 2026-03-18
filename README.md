@@ -127,6 +127,7 @@ nexus/
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 | Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
 | Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
+| Security Audit | **Complete** — 15 findings documented, 7 open (2 critical, 4 high, 1 medium) |
 
 ### What works today
 
@@ -311,5 +312,42 @@ Services: PostgreSQL (StatefulSet + PVC), Redis, Kafka (StatefulSet + PVC), Back
 - **[RISK_REVIEW.md](docs/RISK_REVIEW.md)** — Risk assessment and phase gate checklist
 - **[BACKLOG.md](docs/BACKLOG.md)** — Captured ideas and deferred scope
 - **[CHANGELOG.md](docs/CHANGELOG.md)** — Version history
-- **[ERRORLOG.md](docs/ERRORLOG.md)** — Bug tracking and prevention rules (15 entries)
+- **[ERRORLOG.md](docs/ERRORLOG.md)** — Bug tracking and prevention rules (25 entries)
 - **[AGENTS.md](AGENTS.md)** — AI agent coding policy and workflow rules
+
+## Security
+
+A full security audit was performed on 2026-03-18. See [ERRORLOG.md](docs/ERRORLOG.md) entries ERROR-019 through ERROR-025 for details.
+
+### Audit Summary
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| Critical | 2 | Open — must fix before production |
+| High | 4 | Open — must fix before production |
+| Medium | 3 | Open — recommended fix |
+| Low/Info | 6 | Tracked — enhancement |
+
+### Critical Issues (fix before deploying)
+
+1. **Hardcoded JWT secret** (`settings.py`) — Default dev secret must be removed; make env-var required
+2. **Hardcoded A2A dev token** (`gateway/auth.py`) — Auto-seeded token discoverable in source code
+
+### High Issues (fix before multi-tenant use)
+
+3. **Missing workspace isolation** (`api/workspaces.py`) — All workspaces visible to any user
+4. **Missing task tenant isolation** (`api/tasks.py`) — Tasks not scoped to workspace
+5. **Unsafe slug generation** (`api/workspaces.py`) — No validation or uniqueness constraint
+6. **Missing auth on approvals** (`api/approvals.py`) — `resolved_by` is user-controlled, no JWT check
+
+### What's Already Secure
+
+- Password hashing: PBKDF2-HMAC-SHA256, 600k iterations (OWASP 2023)
+- Timing-safe JWT comparison via `hmac.compare_digest()`
+- A2A tokens stored as SHA-256 hashes (not plaintext)
+- Pydantic validation at all API boundaries (no raw dict crossing modules)
+- No raw SQL — SQLAlchemy ORM throughout
+- Secret pattern detection in agent output (redacts `sk-`, `AKIA`, `Bearer`, `ghp_`, etc.)
+- Safe subprocess execution (list args, no `shell=True`)
+- 24-hour JWT token expiration
+- Sliding window rate limiting on A2A endpoints
