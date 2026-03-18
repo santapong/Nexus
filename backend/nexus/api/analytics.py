@@ -223,6 +223,46 @@ class AnalyticsController(Controller):
             select(Agent).where(Agent.is_active.is_(True)).order_by(Agent.role)
         )
         agents = agent_result.scalars().all()
+        agent_map = {str(a.id): a for a in agents}
+
+        # Batch task stats for all agents (fixes N+1: was 3 queries per agent)
+        task_query = select(
+            Task.assigned_agent_id,
+            func.count(Task.id).label("total"),
+            func.count(Task.id)
+            .filter(Task.status == TaskStatus.COMPLETED.value)
+            .label("completed"),
+            func.count(Task.id).filter(Task.status == TaskStatus.FAILED.value).label("failed"),
+            func.avg(Task.tokens_used).label("avg_tokens"),
+            func.avg(
+                func.extract("epoch", Task.completed_at - Task.started_at)
+            )
+            .filter(Task.completed_at.isnot(None), Task.started_at.isnot(None))
+            .label("avg_dur"),
+        ).where(
+            Task.assigned_agent_id.in_(list(agent_map.keys()))
+        ).group_by(Task.assigned_agent_id)
+
+        if cutoff:
+            task_query = task_query.where(Task.created_at >= cutoff)
+
+        task_rows = (await db_session.execute(task_query)).all()
+        task_stats = {row.assigned_agent_id: row for row in task_rows}
+
+        # Batch cost stats for all agents
+        cost_query = (
+            select(
+                LLMUsage.agent_id,
+                func.coalesce(func.sum(LLMUsage.cost_usd), 0.0).label("cost"),
+            )
+            .where(LLMUsage.agent_id.in_(list(agent_map.keys())))
+            .group_by(LLMUsage.agent_id)
+        )
+        if cutoff:
+            cost_query = cost_query.where(LLMUsage.created_at >= cutoff)
+
+        cost_rows = (await db_session.execute(cost_query)).all()
+        cost_map = {row.agent_id: float(row.cost) for row in cost_rows}
 
         metrics: list[AgentPerformanceMetric] = []
         grand_total = 0
@@ -230,48 +270,14 @@ class AnalyticsController(Controller):
         grand_cost = 0.0
 
         for agent in agents:
-            # Task stats
-            task_query = select(
-                func.count(Task.id).label("total"),
-                func.count(Task.id)
-                .filter(Task.status == TaskStatus.COMPLETED.value)
-                .label("completed"),
-                func.count(Task.id).filter(Task.status == TaskStatus.FAILED.value).label("failed"),
-                func.avg(Task.tokens_used).label("avg_tokens"),
-            ).where(Task.assigned_agent_id == str(agent.id))
-
-            if cutoff:
-                task_query = task_query.where(Task.created_at >= cutoff)
-
-            task_row = (await db_session.execute(task_query)).one()
-            total = task_row.total or 0
-            completed = task_row.completed or 0
-            failed = task_row.failed or 0
-            avg_tokens = float(task_row.avg_tokens or 0)
-
-            # Average duration
-            dur_query = select(
-                func.avg(func.extract("epoch", Task.completed_at - Task.started_at)).label(
-                    "avg_dur"
-                )
-            ).where(
-                Task.assigned_agent_id == str(agent.id),
-                Task.completed_at.isnot(None),
-                Task.started_at.isnot(None),
-            )
-            if cutoff:
-                dur_query = dur_query.where(Task.created_at >= cutoff)
-            dur_row = (await db_session.execute(dur_query)).one()
-            avg_dur = float(dur_row.avg_dur) if dur_row.avg_dur else None
-
-            # Cost
-            cost_query = select(
-                func.coalesce(func.sum(LLMUsage.cost_usd), 0.0).label("cost")
-            ).where(LLMUsage.agent_id == str(agent.id))
-            if cutoff:
-                cost_query = cost_query.where(LLMUsage.created_at >= cutoff)
-            cost_row = (await db_session.execute(cost_query)).one()
-            agent_cost = float(cost_row.cost)
+            aid = str(agent.id)
+            stats = task_stats.get(aid)
+            total = stats.total if stats else 0
+            completed = stats.completed if stats else 0
+            failed = stats.failed if stats else 0
+            avg_tokens = float(stats.avg_tokens or 0) if stats else 0.0
+            avg_dur = float(stats.avg_dur) if stats and stats.avg_dur else None
+            agent_cost = cost_map.get(aid, 0.0)
 
             success_rate = (completed / total * 100) if total > 0 else 0.0
 
