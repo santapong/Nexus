@@ -23,6 +23,47 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-041 — Agent federation protocol (multi-NEXUS interop)
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-18
+**Description:** Enable multiple NEXUS instances to discover and hire each other's agents.
+Extends A2A with trust registry, shared billing, and cross-instance task routing. Foundation
+for a decentralized agent marketplace.
+
+---
+
+### BACKLOG-040 — Stripe integration for production billing
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-18
+**Description:** Replace internal billing_records with Stripe-backed payment processing.
+Usage-based pricing per task, per-model token metering, invoice generation, and payment
+webhooks. Required before any paid multi-tenant offering.
+
+---
+
+### BACKLOG-039 — OAuth2/OIDC authentication (replace JWT-only auth)
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-18
+**Description:** Add OAuth2/OIDC support (Google, GitHub, Microsoft) alongside existing
+JWT auth. SSO for enterprise tenants. Token refresh flow. Session management. Required
+for production multi-tenant deployment with external identity providers.
+
+---
+
+### BACKLOG-038 — Row-level security (RLS) for multi-tenant isolation
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-18
+**Description:** Implement PostgreSQL row-level security policies to enforce tenant isolation
+at the database level. Currently tenant filtering is application-level only (workspace_id
+WHERE clauses). RLS provides defense-in-depth: even SQL injection or ORM bugs cannot leak
+cross-tenant data.
+
+---
+
 ### BACKLOG-037 — Plugin system for custom MCP tool providers
 **Suggested phase:** Phase 4
 **Added by:** claude_code
@@ -477,6 +518,6 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-17*
-*Next item ID: BACKLOG-038*
+*Last updated: 2026-03-18*
+*Next item ID: BACKLOG-042*
 *Phase 4 items (029-033) all resolved.*

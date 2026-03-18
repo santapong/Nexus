@@ -14,7 +14,7 @@
 | Risk 3 — Vague system prompts | CRITICAL | **RESOLVED** | Prompt versioning + rollback + hot-reload + activation history. |
 | Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. |
 | Risk 5 — Agents fail silently | HIGH | **RESOLVED** | Health monitor auto-fail implemented (ADR-026). |
-| Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 12 tables deployed. Embeddings tested. |
+| Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 18 tables deployed. Embeddings tested. |
 | Risk 7 — Kafka instability | HIGH | RESOLVED | KRaft stable. `make kafka-test` passes. |
 | Risk 8 — Scope creep | MEDIUM | MITIGATED | BACKLOG.md active. Phase gates defined. |
 | **NEW Risk 9** — Multi-provider key sprawl | MEDIUM | NEEDS ATTENTION | See below. |
@@ -25,6 +25,10 @@
 | **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | **RESOLVED** | Migrated to a2a_tokens DB table. |
 | **NEW Risk 15** — No automated security scanning | MEDIUM | **RESOLVED** | CI/CD pipeline deployed (ADR-032). |
 | **NEW Risk 16** — A2A gateway Task not persisted to DB | CRITICAL | **RESOLVED** | Fixed 2026-03-16. See ERROR-018. |
+| **NEW Risk 17** — Prompt injection via task instructions | HIGH | **MITIGATED** | See below. |
+| **NEW Risk 18** — LLM provider cascade failure | HIGH | **MITIGATED** | See below. |
+| **NEW Risk 19** — N+1 query performance degradation | MEDIUM | **RESOLVED** | See below. |
+| **NEW Risk 20** — Daily spend counter reset on Redis restart | HIGH | **RESOLVED** | See below. |
 
 ---
 
@@ -306,4 +310,53 @@ Items required before Phase 3 can be marked complete (from CLAUDE.md §24):
 
 ---
 
-*Last updated: 2026-03-17*
+---
+
+### Risk 17 — Prompt injection via task instructions (**MITIGATED**)
+**Original concern:** Malicious task instructions could manipulate agent system prompts.
+
+**Mitigations deployed (2026-03-18):**
+- `api/middleware.py` — 5 regex patterns detect common injection techniques (ignore instructions, you are now, reveal system prompt, special tokens, Llama tokens)
+- Instruction sandboxing — user input wrapped with `<user_instruction>` delimiters
+- 10,000 character max instruction length
+- Validation runs before task creation in `api/tasks.py`
+
+**Residual risk:** Novel injection techniques may bypass pattern matching. LLM-based detection (Phase 5) would provide stronger defense.
+
+---
+
+### Risk 18 — LLM provider cascade failure (**MITIGATED**)
+**Original concern:** When an LLM provider goes down, all agents using that provider fail simultaneously, potentially exhausting retry budgets.
+
+**Mitigations deployed (2026-03-18):**
+- `core/llm/circuit_breaker.py` — Per-provider circuit breaker (5 failures → 60s open → half_open test)
+- Circuit state exposed via `/health` endpoint
+- ModelFactory fallback chains (configured per role in settings)
+- Combined: circuit breaker fast-fails, fallback chain switches provider
+
+**Residual risk:** All configured providers down simultaneously. Mitigated by supporting 7+ providers including local Ollama.
+
+---
+
+### Risk 19 — N+1 query performance degradation (**RESOLVED**)
+**Original concern:** Analytics and task replay endpoints had O(N) queries per agent/subtask.
+
+**Resolution (2026-03-18):**
+- `api/analytics.py` — Replaced 3N queries with 2 batch GROUP BY queries
+- `api/tasks.py` — Replaced 2N subtask queries with batch IN clause queries
+- All ORM relationships changed to `lazy="raise"` — accidental eager loading now raises an error
+- Migration 005: 7 composite + partial indexes for hot query paths
+
+---
+
+### Risk 20 — Daily spend counter reset on Redis restart (**RESOLVED**)
+**Original concern:** Redis `daily_spend_usd` key used EXPIRE 86400 with no date boundary. Redis restart mid-day resets counter to 0, allowing spend limit bypass.
+
+**Resolution (2026-03-18):**
+- Changed key from `daily_spend_usd` to `daily_spend_usd:{date}` (date-keyed)
+- Added DB fallback: when Redis unavailable, queries `llm_usage` table for today's total
+- Budget check now runs inside DB session for reliable fallback
+
+---
+
+*Last updated: 2026-03-18*

@@ -245,6 +245,8 @@ configuration. No runtime check to reject the default in production.
 - CI check: scan for hardcoded secret defaults in settings
 - Startup validation: reject known insecure defaults outside development mode
 
+**Partial mitigation (2026-03-18):** Startup security check in `app.py` now blocks production deployment if JWT secret is the default value. Full fix requires removing the default entirely (BACKLOG item).
+
 ---
 
 ## ERROR-019 — Unbounded file read and unsafe code execution in MCP tools
@@ -281,6 +283,8 @@ Multi-tenant deployment requires stronger sandboxing.
 - Add code execution sandbox configuration to settings
 - Integration test: verify file read rejects paths outside allowed directories
 - Integration test: verify code execution cannot make network calls
+
+**Partial mitigation (2026-03-18):** `_sanitize_tool_output()` added to `tools/adapter.py` — truncates all tool responses at 50KB. File path validation still needed.
 
 ---
 
@@ -888,6 +892,12 @@ consumer) expect the Task row to exist. FK violations, lost results, and orphane
 the same commit-then-publish pattern as `api/tasks.py`.
 **Required pattern:** `db_session.add(task)` → `flush()` → `commit()` → THEN `kafka.publish()`.
 See ERROR-018 for the original incident.
+
+### Pattern K — Core vs integration boundary
+
+**Risk:** Core infrastructure (`core/kafka`, `core/redis`, `core/llm`) must always be available. Pluggable integrations (`integrations/keepsave`, `integrations/a2a`, `integrations/temporal`, `integrations/eval`) must degrade gracefully. Never put a pluggable service in `core/`. Never put a system-critical service in `integrations/`.
+**Watch for:** New modules added to `core/` that are not strictly required for the system to function, or new modules added to `integrations/` that the system cannot operate without.
+**Required pattern:** If the system breaks without it, it belongs in `core/`. If the system degrades but continues without it, it belongs in `integrations/`.
 
 ---
 
