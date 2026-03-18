@@ -1,4 +1,5 @@
 """Unit tests for Phase 2 agents: Analyst, Writer, QA."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -7,11 +8,10 @@ from uuid import uuid4
 import pytest
 
 from nexus.agents.analyst import AnalystAgent
-from nexus.agents.writer import WriterAgent
 from nexus.agents.qa import QAAgent
+from nexus.agents.writer import WriterAgent
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand, AgentResponse
-
+from nexus.kafka.schemas import AgentCommand
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -139,9 +139,7 @@ async def test_writer_handle_task_returns_success(mock_usage: AsyncMock) -> None
 @pytest.mark.asyncio
 @patch("nexus.agents.qa.publish", new_callable=AsyncMock)
 @patch("nexus.agents.qa.record_usage", new_callable=AsyncMock)
-async def test_qa_approves_good_output(
-    mock_usage: AsyncMock, mock_publish: AsyncMock
-) -> None:
+async def test_qa_approves_good_output(mock_usage: AsyncMock, mock_publish: AsyncMock) -> None:
     """QA should approve and publish TaskResult when output is approved."""
     qa_response = '{"approved": true, "score": 0.9, "feedback": "Good work", "issues": []}'
     agent = QAAgent(
@@ -168,11 +166,12 @@ async def test_qa_approves_good_output(
 @pytest.mark.asyncio
 @patch("nexus.agents.qa.publish", new_callable=AsyncMock)
 @patch("nexus.agents.qa.record_usage", new_callable=AsyncMock)
-async def test_qa_rejects_bad_output(
-    mock_usage: AsyncMock, mock_publish: AsyncMock
-) -> None:
+async def test_qa_rejects_bad_output(mock_usage: AsyncMock, mock_publish: AsyncMock) -> None:
     """QA should reject and publish rework command when output is rejected."""
-    qa_response = '{"approved": false, "score": 0.3, "feedback": "Missing sources", "issues": ["No citations"]}'
+    qa_response = (
+        '{"approved": false, "score": 0.3, "feedback": "Missing sources",'
+        ' "issues": ["No citations"]}'
+    )
     agent = QAAgent(
         role=AgentRole.QA,
         agent_id="qa-1",
@@ -201,9 +200,7 @@ async def test_qa_rejects_bad_output(
 @pytest.mark.asyncio
 @patch("nexus.agents.qa.publish", new_callable=AsyncMock)
 @patch("nexus.agents.qa.record_usage", new_callable=AsyncMock)
-async def test_qa_handles_non_json_response(
-    mock_usage: AsyncMock, mock_publish: AsyncMock
-) -> None:
+async def test_qa_handles_non_json_response(mock_usage: AsyncMock, mock_publish: AsyncMock) -> None:
     """QA should default to approved when LLM returns non-JSON output."""
     agent = QAAgent(
         role=AgentRole.QA,

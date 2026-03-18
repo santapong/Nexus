@@ -67,10 +67,12 @@ approve. Foundation for team-based NEXUS deployments.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-17
+**Status:** ✅ RESOLVED — 2026-03-17
 **Description:** UI for creating new agent roles without writing Python code. Configure:
 role name, system prompt, tool access, Kafka topics, model assignment, token budget. Persist
 to `agents` table. Auto-registers with agent runner. First step toward user-customizable
 AI companies.
+**Resolution:** `api/agent_builder.py` with CRUD endpoints. `AgentBuilderPanel.tsx` frontend.
 
 ---
 
@@ -78,9 +80,11 @@ AI companies.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-17
+**Status:** ✅ RESOLVED — 2026-03-17
 **Description:** When NEXUS agents hire external agents (or vice versa), track token costs
 and create billing records. Per-token cost attribution. Invoice generation. Payment
 integration (Stripe). Required for A2A marketplace economics.
+**Resolution:** `billing_records` table, `api/billing.py` with summary/records/invoice endpoints.
 
 ---
 
@@ -88,9 +92,11 @@ integration (Stripe). Required for A2A marketplace economics.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-17
+**Status:** ✅ RESOLVED — 2026-03-17
 **Description:** Browse and discover external A2A agents by skill, rating, cost. Directory
 service with Agent Card indexing. Quality ratings based on past interactions. Price comparison
 across providers. Enables the A2A ecosystem beyond point-to-point connections.
+**Resolution:** `agent_listings` + `marketplace_reviews` tables. `api/marketplace.py` with browse/create/publish/review. `MarketplacePanel.tsx` frontend.
 
 ---
 
@@ -98,10 +104,12 @@ across providers. Enables the A2A ecosystem beyond point-to-point connections.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-17
+**Status:** ✅ RESOLVED — 2026-03-17
 **Description:** Replace Taskiq with Temporal for tasks exceeding 1 hour. Durable workflows
 with checkpointing, retry, and compensation. Taskiq task signatures are already designed to
 be Temporal-compatible (§13). Migration path: change decorators, keep function bodies.
 Add Temporal worker to Docker Compose and K8s manifests.
+**Resolution:** `nexus/workflows/` module (schemas, activities, task_workflow, worker). Temporal + temporal-ui added to docker-compose.yml. Coexists with Taskiq.
 
 ---
 
@@ -109,10 +117,12 @@ Add Temporal worker to Docker Compose and K8s manifests.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-17
+**Status:** ✅ RESOLVED — 2026-03-17
 **Description:** Each user gets their own "company" with isolated agents, memory, prompts,
 and task history. Row-level security in PostgreSQL. Per-tenant Kafka topic prefixes. Separate
 Redis key namespaces. Per-tenant Agent Cards for A2A discovery. Billing per tenant. Foundation
 for the SaaS product.
+**Resolution:** users, workspaces, workspace_members tables. JWT auth. workspace_id FK on agents/tasks/a2a_tokens. Per-tenant Agent Cards via `?workspace=` param. Migration 004.
 
 ---
 
@@ -469,3 +479,4 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 *Last updated: 2026-03-17*
 *Next item ID: BACKLOG-038*
+*Phase 4 items (029-033) all resolved.*

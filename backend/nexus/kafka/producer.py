@@ -3,6 +3,7 @@
 Singleton pattern with reconnect-on-failure. If the producer detects
 a stale connection, it recreates the underlying AIOKafkaProducer.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -112,9 +113,7 @@ async def _reconnect() -> None:
     logger.error("kafka_producer_reconnect_exhausted")
 
 
-async def publish(
-    topic: str, message: KafkaMessage, key: str | None = None
-) -> None:
+async def publish(topic: str, message: KafkaMessage, key: str | None = None) -> None:
     """Publish a message to a Kafka topic with automatic reconnection.
 
     Args:

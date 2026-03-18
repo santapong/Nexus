@@ -3,6 +3,7 @@
 Four clients, one per logical database role. Each uses a connection
 pool with health checks and automatic reconnection.
 """
+
 from __future__ import annotations
 
 from redis.asyncio import ConnectionPool, Redis

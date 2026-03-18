@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from pydantic import BaseModel
@@ -123,8 +123,7 @@ async def require_approval(
                 resolved_by=record.resolved_by,
             )
             raise ApprovalDeniedError(
-                f"Action '{action.action}' rejected by {record.resolved_by}: "
-                f"{action.description}"
+                f"Action '{action.action}' rejected by {record.resolved_by}: {action.description}"
             )
 
     raise ApprovalTimeoutError(
@@ -157,10 +156,8 @@ async def resolve_approval(
     if record is None:
         return None
 
-    record.status = (
-        ApprovalStatus.APPROVED.value if approved else ApprovalStatus.REJECTED.value
-    )
-    record.resolved_at = datetime.now(timezone.utc)
+    record.status = ApprovalStatus.APPROVED.value if approved else ApprovalStatus.REJECTED.value
+    record.resolved_at = datetime.now(UTC)
     record.resolved_by = resolved_by
     await session.flush()
 

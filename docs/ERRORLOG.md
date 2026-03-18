@@ -74,6 +74,216 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-025 — Missing authorization on approval resolution endpoint
+
+**Date:** 2026-03-18
+**Severity:** high
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/api/approvals.py`
+
+### What happened
+The `POST /api/approvals/{id}/resolve` endpoint accepts `resolved_by` as a user-controlled
+string in the request body. No JWT validation or authentication check is performed. Any
+caller can approve or reject human approval gates by spoofing the `resolved_by` field.
+
+### Root cause
+The approval endpoint was built in Phase 0 before the auth system existed (Phase 4). When
+JWT auth was added, this endpoint was not updated to extract identity from the token.
+
+### Fix needed
+1. Extract `resolved_by` from JWT token (authenticated user email/id), not from request body
+2. Reject unauthenticated requests with 401
+3. Log the actual authenticated user in audit trail
+
+### Prevention
+- All state-changing endpoints must validate JWT and extract identity from token
+- Add integration test: approval without valid JWT returns 401
+
+---
+
+## ERROR-024 — Unsafe workspace slug generation allows collisions
+
+**Date:** 2026-03-18
+**Severity:** high
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/api/workspaces.py`
+
+### What happened
+Workspace slugs are generated from email prefix: `data.email.split("@")[0].lower().replace(".", "-")`.
+No validation regex, no uniqueness check, no UNIQUE constraint on the slug column.
+Multiple users with the same email prefix (e.g., `john@gmail.com`, `john@company.com`)
+would get the same slug, causing conflicts.
+
+### Root cause
+Slug generation was implemented as a quick v1 approach without considering multi-tenant
+collision scenarios.
+
+### Fix needed
+1. Add slug validation: `^[a-z0-9\-]{3,50}$`
+2. Add UNIQUE constraint on `workspaces.slug` column via Alembic migration
+3. Handle collision: append numeric suffix if slug already exists
+4. Reject invalid slugs at API boundary
+
+### Prevention
+- Alembic migration for UNIQUE constraint
+- Unit test for slug collision handling
+
+---
+
+## ERROR-023 — Missing tenant isolation on task creation and listing
+
+**Date:** 2026-03-18
+**Severity:** high
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/api/tasks.py`
+
+### What happened
+`POST /api/tasks` creates tasks without setting `workspace_id`. `GET /api/tasks` lists
+all tasks without filtering by workspace. In a multi-tenant system, users from one
+workspace can see tasks from all other workspaces.
+
+### Root cause
+Task API was built in Phase 1 (single-tenant). When multi-tenant support was added in
+Phase 4, workspace isolation was added to some endpoints but not to the core task API.
+
+### Fix needed
+1. Extract `workspace_id` from JWT in task creation and listing endpoints
+2. Set `workspace_id` on all new tasks
+3. Filter all task queries by `workspace_id`
+4. Add index on `tasks.workspace_id` for query performance
+
+### Prevention
+- Add middleware or dependency that automatically extracts workspace context from JWT
+- Integration test: user A cannot see user B's tasks
+
+---
+
+## ERROR-022 — Missing workspace isolation in list_workspaces endpoint
+
+**Date:** 2026-03-18
+**Severity:** high
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/api/workspaces.py`
+
+### What happened
+`GET /api/workspaces` returns all active workspaces in the system without filtering by
+the authenticated user. Any authenticated user can see all other workspaces.
+
+### Root cause
+The endpoint queries `SELECT * FROM workspaces WHERE is_active = true` without any user
+filter. JWT contains `workspace_id` but it is not used for authorization.
+
+### Fix needed
+1. Extract user identity from JWT
+2. Filter workspaces by `owner_id == user_id` or `workspace_members` table membership
+3. Return only workspaces the user belongs to
+
+### Prevention
+- All list endpoints must include tenant filter
+- Integration test: user only sees own workspaces
+
+---
+
+## ERROR-021 — Hardcoded A2A development token in source code
+
+**Date:** 2026-03-18
+**Severity:** critical
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/gateway/auth.py`
+
+### What happened
+The string `"nexus-dev-a2a-token-2026"` is hardcoded in `auth.py:254` and auto-seeded
+into the database via `seed_dev_token()`. This token is discoverable in the source code
+and automatically created in any environment that runs migrations, including production.
+
+### Root cause
+Development convenience: a known token was hardcoded for local testing. No gate to
+prevent it from being seeded in production environments.
+
+### Fix needed
+1. Remove hardcoded token from source code
+2. Gate `seed_dev_token()` behind an environment check (`IS_DEVELOPMENT=true`)
+3. Generate dev tokens dynamically with `secrets.token_urlsafe(32)`
+4. Audit production database for this token and revoke if found
+
+### Prevention
+- grep for hardcoded token strings in CI (TruffleHog already configured in security.yml)
+- Seed functions must check environment before creating dev data
+
+---
+
+## ERROR-020 — Hardcoded JWT secret with insecure default value
+
+**Date:** 2026-03-18
+**Severity:** critical
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/settings.py`
+
+### What happened
+`settings.py:43` defines `jwt_secret_key` with a default value of
+`"nexus-dev-secret-change-in-production"`. If the `JWT_SECRET_KEY` environment variable
+is not set, this default is used. Anyone with access to the source code can forge valid
+JWT tokens for any user.
+
+### Root cause
+Development convenience: a default value was provided so the app starts without
+configuration. No runtime check to reject the default in production.
+
+### Fix needed
+1. Remove the default value — make `jwt_secret_key` a required env var (app fails to start without it)
+2. OR: generate a random secret at startup if not provided (but warn loudly)
+3. Add startup check: if `jwt_secret_key == "nexus-dev-secret-change-in-production"` and
+   environment is production, refuse to start
+
+### Prevention
+- CI check: scan for hardcoded secret defaults in settings
+- Startup validation: reject known insecure defaults outside development mode
+
+---
+
+## ERROR-019 — Unbounded file read and unsafe code execution in MCP tools
+
+**Date:** 2026-03-18
+**Severity:** medium
+**Status:** open
+**Found by:** claude_code during security audit
+**Affected files:** `backend/nexus/tools/adapter.py`
+
+### What happened
+Two tool functions have insufficient safety boundaries:
+
+1. `tool_file_read()` (lines 95-112): No file size limit, no path restriction. Agent can
+   read arbitrarily large files (DoS via memory exhaustion) or sensitive system files
+   (`/etc/shadow`, `.env`).
+
+2. `tool_code_execute()` (lines 115-147): Executes code via `subprocess.run` with `bash -c`
+   or `python -c`. Only protection is a 30-second timeout. No network restriction, no
+   resource limits, no filesystem sandboxing.
+
+### Root cause
+Tools were built for Phase 1 single-user local dev where the operator trusts the system.
+Multi-tenant deployment requires stronger sandboxing.
+
+### Fix needed
+1. File read: add 10MB size limit, whitelist allowed directories, use `Path.resolve()`
+   to prevent path traversal
+2. Code execution: deploy behind Docker/nsjail sandbox, add resource limits (CPU, memory),
+   restrict network access, log all executed code to audit log
+
+### Prevention
+- Add path validation utility function used by all file tools
+- Add code execution sandbox configuration to settings
+- Integration test: verify file read rejects paths outside allowed directories
+- Integration test: verify code execution cannot make network calls
+
+---
+
 ## ERROR-018 — A2A gateway did not persist Task to database
 
 **Date:** 2026-03-16
@@ -681,6 +891,7 @@ See ERROR-018 for the original incident.
 
 ---
 
-*Last updated: 2026-03-17*
-*Next error ID: ERROR-019*
-*All pre-build warnings (ERROR-001 through ERROR-003) now FIXED.*
+*Last updated: 2026-03-18*
+*Next error ID: ERROR-026*
+*Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
+*Security audit findings (ERROR-019 through ERROR-025): 7 OPEN — require fixes before production deployment.*

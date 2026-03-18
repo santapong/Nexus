@@ -33,6 +33,8 @@ dependencies = [
     "structlog>=24.4.0,<25.0",
     # HTTP client (for A2A outbound, embeddings)
     "httpx>=0.28.0,<1.0",
+    # JWT authentication
+    "PyJWT>=2.9.0,<3.0",
     # Utilities
     "uvicorn[standard]>=0.34.0,<1.0",
 ]

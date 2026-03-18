@@ -6,6 +6,7 @@ Requires: docker compose up, make migrate, make seed
 Submits 10 tasks (2 per category) via HTTP, polls for completion,
 and reports pass/fail rate. Gate: >= 90% (9/10) pass rate.
 """
+
 from __future__ import annotations
 
 import json
@@ -27,16 +28,42 @@ TASKS: list[dict[str, str]] = [
     {"instruction": "Explain the GIL (Global Interpreter Lock) in Python."},
     # 3-4: Code generation
     {"instruction": "Write a Python function to check if a string is a palindrome."},
-    {"instruction": "Write a Python class that implements a simple stack with push, pop, and peek."},
+    {
+        "instruction": (
+            "Write a Python class that implements a simple stack with push, pop, and peek."
+        )
+    },
     # 5-6: Research + code
-    {"instruction": "Research Python async patterns and write a working asyncio example with gather."},
+    {
+        "instruction": (
+            "Research Python async patterns and write a working asyncio example with gather."
+        )
+    },
     {"instruction": "Explain the Observer design pattern and implement it in Python."},
     # 7-8: Debugging
-    {"instruction": "Fix this code: `def avg(lst): return sum(lst) / len(lst)` — it crashes on empty lists."},
-    {"instruction": "Fix this code: `result = [lambda: i for i in range(5)]` — all lambdas return 4."},
+    {
+        "instruction": (
+            "Fix this code: `def avg(lst): return sum(lst) / len(lst)` - it crashes on empty lists."
+        )
+    },
+    {
+        "instruction": (
+            "Fix this code: `result = [lambda: i for i in range(5)]` - all lambdas return 4."
+        )
+    },
     # 9-10: Complex multi-step
-    {"instruction": "Write a Python REST API client class with retry logic, exponential backoff, and timeout handling."},
-    {"instruction": "Write a simple Python event emitter class that supports on, off, once, and emit methods."},
+    {
+        "instruction": (
+            "Write a Python REST API client class with retry logic,"
+            " exponential backoff, and timeout handling."
+        )
+    },
+    {
+        "instruction": (
+            "Write a simple Python event emitter class that supports"
+            " on, off, once, and emit methods."
+        )
+    },
 ]
 
 
@@ -96,9 +123,7 @@ def run_stress_test() -> StressTestReport:
             health.raise_for_status()
             health_data = health.json()
             if health_data.get("status") != "healthy":
-                sys.stdout.write(
-                    f"WARNING: System health is '{health_data.get('status')}'\n"
-                )
+                sys.stdout.write(f"WARNING: System health is '{health_data.get('status')}'\n")
         except Exception as e:
             sys.stdout.write(f"ERROR: Cannot reach backend at {BASE_URL}: {e}\n")
             sys.stdout.write("Make sure docker compose is up and services are healthy.\n")
@@ -106,7 +131,7 @@ def run_stress_test() -> StressTestReport:
 
     total_tasks = len(TASKS)
     sys.stdout.write(f"\nStarting {total_tasks}-task stress test...\n")
-    sys.stdout.write(f"{'='*70}\n\n")
+    sys.stdout.write(f"{'=' * 70}\n\n")
 
     with httpx.Client(timeout=30) as client:
         for i, task_def in enumerate(TASKS, 1):
@@ -175,9 +200,9 @@ def print_report(report: StressTestReport) -> None:
     """Print the stress test summary."""
     pass_rate = (report.passed / report.total * 100) if report.total > 0 else 0
 
-    sys.stdout.write(f"\n{'='*70}\n")
+    sys.stdout.write(f"\n{'=' * 70}\n")
     sys.stdout.write("STRESS TEST RESULTS\n")
-    sys.stdout.write(f"{'='*70}\n\n")
+    sys.stdout.write(f"{'=' * 70}\n\n")
     sys.stdout.write(f"Total tasks:    {report.total}\n")
     sys.stdout.write(f"Passed:         {report.passed}\n")
     sys.stdout.write(f"Failed:         {report.failed}\n")

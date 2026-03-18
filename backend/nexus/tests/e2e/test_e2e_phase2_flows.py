@@ -6,15 +6,14 @@ Requires: docker compose up, make migrate, make seed
 Tests Phase 2 specific flows: dependency resolution, QA approval,
 parallel subtask dispatch, concurrent tasks, and replay timeline.
 """
+
 from __future__ import annotations
 
 import sys
-import time
 
 import httpx
 
 from nexus.tests.e2e.helpers import (
-    BASE_URL,
     MULTI_AGENT_TIMEOUT_SECONDS,
     get_replay,
     get_task,
@@ -69,7 +68,12 @@ class TestPhase2Flows:
                 elif "write" in instr_lower or "blog" in instr_lower or "summar" in instr_lower:
                     writer_st = st
 
-            if analyst_st and writer_st and analyst_st.get("completed_at") and writer_st.get("started_at"):
+            if (
+                analyst_st
+                and writer_st
+                and analyst_st.get("completed_at")
+                and writer_st.get("started_at")
+            ):
                 sys.stdout.write(
                     f"  Dependency: analyst completed={analyst_st['completed_at']}, "
                     f"writer started={writer_st['started_at']}\n"
@@ -81,8 +85,7 @@ class TestPhase2Flows:
                 )
         else:
             sys.stdout.write(
-                f"  Dependency: single subtask (CEO used fallback), "
-                f"status={outcome.status}\n"
+                f"  Dependency: single subtask (CEO used fallback), status={outcome.status}\n"
             )
 
     def test_qa_approval_completes_parent(self) -> None:
@@ -110,9 +113,7 @@ class TestPhase2Flows:
         )
 
         if task_data["status"] == "completed":
-            assert task_data.get("output") is not None, (
-                "Completed task should have output"
-            )
+            assert task_data.get("output") is not None, "Completed task should have output"
 
         sys.stdout.write(
             f"  QA approval: parent status={task_data['status']}, "
@@ -194,9 +195,7 @@ class TestPhase2Flows:
         assert outcome.status in ("completed", "failed"), (
             f"Expected terminal status, got: {outcome.status}"
         )
-        sys.stdout.write(
-            f"  Regression: {outcome.status} in {outcome.duration:.1f}s\n"
-        )
+        sys.stdout.write(f"  Regression: {outcome.status} in {outcome.duration:.1f}s\n")
 
     def test_multiple_concurrent_tasks(self) -> None:
         """Three tasks submitted rapidly should all complete without deadlock."""
@@ -216,22 +215,19 @@ class TestPhase2Flows:
             # Poll all tasks for completion
             results = []
             for task_id in task_ids:
-                result = poll_until_done(
-                    client, task_id, timeout=MULTI_AGENT_TIMEOUT_SECONDS
-                )
+                result = poll_until_done(client, task_id, timeout=MULTI_AGENT_TIMEOUT_SECONDS)
                 results.append(result)
 
         # All tasks should reach a terminal status
         for i, result in enumerate(results):
             assert result["status"] in ("completed", "failed", "escalated", "timeout"), (
-                f"Task {i+1} has non-terminal status: {result['status']}"
+                f"Task {i + 1} has non-terminal status: {result['status']}"
             )
 
         statuses = [r["status"] for r in results]
         completed = sum(1 for s in statuses if s == "completed")
         sys.stdout.write(
-            f"  Concurrent: {completed}/{len(results)} completed, "
-            f"statuses={statuses}\n"
+            f"  Concurrent: {completed}/{len(results)} completed, statuses={statuses}\n"
         )
 
     def test_token_tracking_across_workflow(self) -> None:

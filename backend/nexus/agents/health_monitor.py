@@ -5,11 +5,12 @@ and auto-fails tasks assigned to agents with no heartbeat in 5 minutes.
 
 Run as part of the agent runner (see runner.py).
 """
+
 from __future__ import annotations
 
 import asyncio
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import select, update
@@ -122,9 +123,7 @@ async def _scan_and_fail_silent(
 
                     # No heartbeat recorded or too old
                     if last_hb is None or (now - last_hb) > SILENCE_THRESHOLD_SECONDS:
-                        silence_duration = (
-                            int(now - last_hb) if last_hb else "never"
-                        )
+                        silence_duration = int(now - last_hb) if last_hb else "never"
 
                         logger.warning(
                             "auto_failing_silent_task",
@@ -143,7 +142,7 @@ async def _scan_and_fail_silent(
                                     f"Agent {agent_id} heartbeat silence "
                                     f"({silence_duration}s). Auto-failed."
                                 ),
-                                completed_at=datetime.now(timezone.utc),
+                                completed_at=datetime.now(UTC),
                             )
                         )
 

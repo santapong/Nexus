@@ -4,6 +4,7 @@ Queries completed tasks from a time period, runs the LLM-as-judge
 scorer on each, stores results in eval_results table, and computes
 aggregate statistics.
 """
+
 from __future__ import annotations
 
 import json
@@ -71,9 +72,7 @@ async def run_eval_suite(
 
     for task in tasks:
         output_str = (
-            json.dumps(task.output)
-            if isinstance(task.output, dict)
-            else str(task.output or "")
+            json.dumps(task.output) if isinstance(task.output, dict) else str(task.output or "")
         )
 
         if not output_str or output_str == "null":
@@ -103,31 +102,19 @@ async def run_eval_suite(
 
         # Aggregate by role
         async with db_session_factory() as session:
-            agent_stmt = select(Agent).where(
-                Agent.id == task.assigned_agent_id
-            )
+            agent_stmt = select(Agent).where(Agent.id == task.assigned_agent_id)
             agent_result = await session.execute(agent_stmt)
             agent = agent_result.scalar_one_or_none()
 
             if agent:
-                role_scores.setdefault(agent.role, []).append(
-                    score.overall_score
-                )
-                model_scores.setdefault(agent.llm_model, []).append(
-                    score.overall_score
-                )
+                role_scores.setdefault(agent.role, []).append(score.overall_score)
+                model_scores.setdefault(agent.llm_model, []).append(score.overall_score)
 
     total = len(scores)
     mean = sum(s.overall_score for s in scores) / total if total > 0 else 0.0
 
-    by_role = {
-        role: round(sum(vals) / len(vals), 3)
-        for role, vals in role_scores.items()
-    }
-    by_model = {
-        model: round(sum(vals) / len(vals), 3)
-        for model, vals in model_scores.items()
-    }
+    by_role = {role: round(sum(vals) / len(vals), 3) for role, vals in role_scores.items()}
+    by_model = {model: round(sum(vals) / len(vals), 3) for model, vals in model_scores.items()}
 
     logger.info(
         "eval_suite_completed",

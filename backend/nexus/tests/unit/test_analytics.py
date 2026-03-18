@@ -1,7 +1,6 @@
 """Unit tests for the Analytics API response models."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from nexus.api.analytics import (
     AgentPerformanceMetric,
@@ -89,9 +88,7 @@ class TestAnalyticsModels:
                     total_cost_usd=0.05,
                 )
             ],
-            by_role=[
-                CostByRole(role="engineer", total_calls=10, total_cost_usd=0.05)
-            ],
+            by_role=[CostByRole(role="engineer", total_calls=10, total_cost_usd=0.05)],
             total_cost_usd=0.05,
             daily_average_usd=0.007143,
         )

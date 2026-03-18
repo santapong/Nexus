@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Coroutine
-from typing import Any
 
 import structlog
 from aiokafka import AIOKafkaConsumer

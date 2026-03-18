@@ -4,6 +4,7 @@ Tokens are stored in the a2a_tokens table with hash, allowed skills,
 rate limit, and expiration. A short-lived in-memory cache avoids
 hitting the DB on every request.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -85,9 +86,7 @@ async def validate_token(
         return _check_token_validity(cached, skill_id, token_hash)
 
     # Query DB
-    stmt = select(A2ATokenRecord).where(
-        A2ATokenRecord.token_hash == token_hash
-    )
+    stmt = select(A2ATokenRecord).where(A2ATokenRecord.token_hash == token_hash)
     result = await db_session.execute(stmt)
     record = result.scalar_one_or_none()
 
@@ -145,10 +144,7 @@ def _check_token_validity(
         )
         return False, "Token expired", 0
 
-    if (
-        "*" not in token.allowed_skills
-        and skill_id not in token.allowed_skills
-    ):
+    if "*" not in token.allowed_skills and skill_id not in token.allowed_skills:
         logger.warning(
             "a2a_token_skill_denied",
             name=token.name,
@@ -259,9 +255,7 @@ async def seed_dev_token(db_session: AsyncSession) -> str:
     token_hash = _hash_token(dev_token)
 
     # Check if already exists
-    stmt = select(A2ATokenRecord).where(
-        A2ATokenRecord.token_hash == token_hash
-    )
+    stmt = select(A2ATokenRecord).where(A2ATokenRecord.token_hash == token_hash)
     result = await db_session.execute(stmt)
     existing = result.scalar_one_or_none()
 

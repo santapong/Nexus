@@ -7,6 +7,7 @@ agents, aggregates responses, and routes to QA for final review.
 Also subscribes to agent.responses to track subtask completion and
 trigger aggregation once all subtasks are done.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -16,7 +17,6 @@ from uuid import UUID
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
@@ -40,9 +40,7 @@ _DELEGATABLE_ROLES = {"engineer", "analyst", "writer"}
 class CEOAgent(AgentBase):
     """CEO agent — decomposes tasks and orchestrates multi-agent workflows."""
 
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Route based on message source: new task or agent response."""
         task_id = str(message.task_id)
         trace_id = str(message.trace_id)
@@ -119,7 +117,7 @@ class CEOAgent(AgentBase):
                     "status": "pending",
                     "output": None,
                 }
-                for sid, st in zip(subtask_ids, subtasks)
+                for sid, st in zip(subtask_ids, subtasks, strict=False)
             },
             "total": len(subtask_ids),
             "completed": 0,
@@ -128,7 +126,7 @@ class CEOAgent(AgentBase):
 
         # Dispatch subtasks that have no dependencies
         dispatched = 0
-        for sid, st in zip(subtask_ids, subtasks):
+        for sid, st in zip(subtask_ids, subtasks, strict=False):
             if not st.get("depends_on"):
                 await self._dispatch_subtask(
                     task_id=str(sid),
@@ -226,11 +224,13 @@ class CEOAgent(AgentBase):
                 role = st.get("role", "engineer")
                 if role not in _DELEGATABLE_ROLES:
                     role = "engineer"
-                validated.append({
-                    "role": role,
-                    "instruction": st.get("instruction", message.instruction),
-                    "depends_on": st.get("depends_on", []),
-                })
+                validated.append(
+                    {
+                        "role": role,
+                        "instruction": st.get("instruction", message.instruction),
+                        "depends_on": st.get("depends_on", []),
+                    }
+                )
             return validated
 
         except (json.JSONDecodeError, KeyError) as exc:
@@ -357,9 +357,7 @@ class CEOAgent(AgentBase):
 
         # Check if all subtasks are complete
         if tracking["completed"] >= tracking["total"]:
-            return await self._aggregate_and_route_to_qa(
-                parent_task_id, tracking, message, session
-            )
+            return await self._aggregate_and_route_to_qa(parent_task_id, tracking, message, session)
 
         logger.info(
             "ceo_subtask_completed",
@@ -388,7 +386,8 @@ class CEOAgent(AgentBase):
     ) -> None:
         """Dispatch subtasks whose dependencies are now all resolved (done or failed)."""
         completed_ids = {
-            sid for sid, st in tracking["subtasks"].items()
+            sid
+            for sid, st in tracking["subtasks"].items()
             if st["status"] in ("success", "completed", "failed", "partial", "escalated")
         }
 
@@ -429,7 +428,7 @@ class CEOAgent(AgentBase):
         """Aggregate all subtask outputs and send to QA for review."""
         # Collect all outputs
         outputs: list[str] = []
-        for sid, st in tracking["subtasks"].items():
+        for _sid, st in tracking["subtasks"].items():
             output = st.get("output", "(no output)")
             outputs.append(f"[{st['role'].upper()}] {output}")
 
@@ -454,8 +453,8 @@ class CEOAgent(AgentBase):
             },
             target_role=AgentRole.QA.value,
             instruction=f"Review the following aggregated output for the task:\n\n"
-                        f"Original request: {tracking.get('original_instruction', '')}\n\n"
-                        f"Aggregated output:\n{aggregated}",
+            f"Original request: {tracking.get('original_instruction', '')}\n\n"
+            f"Aggregated output:\n{aggregated}",
         )
         await publish(Topics.TASK_REVIEW_QUEUE, qa_command, key=parent_task_id)
 

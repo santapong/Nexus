@@ -3,6 +3,7 @@
 Tests the full CEO → Specialist → CEO Aggregation → QA pipeline
 with mocked LLM responses and real Kafka/Redis interactions mocked.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,6 @@ from nexus.agents.ceo import CEOAgent
 from nexus.agents.qa import QAAgent
 from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -63,10 +63,20 @@ async def test_ceo_decomposes_research_and_email_task(
     mock_publish: AsyncMock,
 ) -> None:
     """CEO should decompose 'research + email' into analyst + writer subtasks."""
-    decomposition = json.dumps([
-        {"role": "analyst", "instruction": "Research the market for AI tools", "depends_on": []},
-        {"role": "writer", "instruction": "Draft an email summarizing the research", "depends_on": [0]},
-    ])
+    decomposition = json.dumps(
+        [
+            {
+                "role": "analyst",
+                "instruction": "Research the market for AI tools",
+                "depends_on": [],
+            },
+            {
+                "role": "writer",
+                "instruction": "Draft an email summarizing the research",
+                "depends_on": [0],
+            },
+        ]
+    )
 
     ceo = CEOAgent(
         role=AgentRole.CEO,
@@ -111,12 +121,14 @@ async def test_qa_approves_and_publishes_final_result(
     mock_publish: AsyncMock,
 ) -> None:
     """QA should approve good output and publish to task.results."""
-    qa_review = json.dumps({
-        "approved": True,
-        "score": 0.85,
-        "feedback": "Well-researched and clearly written",
-        "issues": [],
-    })
+    qa_review = json.dumps(
+        {
+            "approved": True,
+            "score": 0.85,
+            "feedback": "Well-researched and clearly written",
+            "issues": [],
+        }
+    )
 
     qa = QAAgent(
         role=AgentRole.QA,
@@ -159,12 +171,14 @@ async def test_qa_rejects_and_requests_rework(
     mock_publish: AsyncMock,
 ) -> None:
     """QA should reject bad output and route back for rework."""
-    qa_review = json.dumps({
-        "approved": False,
-        "score": 0.4,
-        "feedback": "Missing citations and incomplete analysis",
-        "issues": ["No sources cited", "Only covers 2 of 5 competitors"],
-    })
+    qa_review = json.dumps(
+        {
+            "approved": False,
+            "score": 0.4,
+            "feedback": "Missing citations and incomplete analysis",
+            "issues": ["No sources cited", "Only covers 2 of 5 competitors"],
+        }
+    )
 
     qa = QAAgent(
         role=AgentRole.QA,

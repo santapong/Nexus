@@ -1,4 +1,5 @@
 """Unit tests for AgentBase._validate_output guardrail."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -80,17 +81,20 @@ def test_nonempty_output_on_success_stays_success() -> None:
 # ─── Secret detection tests ──────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("pattern", [
-    "sk-proj-abc123",
-    "AKIAIOSFODNN7EXAMPLE",
-    "Bearer eyJhbGciOiJ...",
-    "ghp_xxxxxxxxxxxx",
-    "gho_yyyyyyyyyyyy",
-    "github_pat_zzzz",
-    "xoxb-token-here",
-    "xoxp-another-token",
-    "-----BEGIN PRIVATE KEY",
-])
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        "sk-proj-abc123",
+        "AKIAIOSFODNN7EXAMPLE",
+        "Bearer eyJhbGciOiJ...",
+        "ghp_xxxxxxxxxxxx",
+        "gho_yyyyyyyyyyyy",
+        "github_pat_zzzz",
+        "xoxb-token-here",
+        "xoxp-another-token",
+        "-----BEGIN PRIVATE KEY",
+    ],
+)
 def test_secret_pattern_detected(pattern: str) -> None:
     """Each secret pattern should trigger redaction."""
     agent = _make_agent()

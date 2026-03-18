@@ -3,6 +3,7 @@
 Provides read-only access to the audit_log table for observability
 and action tracking across all agents.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -117,9 +118,7 @@ class AuditController(Controller):
             Chronologically ordered list of all audit events for the task.
         """
         stmt = (
-            select(AuditLog)
-            .where(AuditLog.task_id == task_id)
-            .order_by(AuditLog.created_at.asc())
+            select(AuditLog).where(AuditLog.task_id == task_id).order_by(AuditLog.created_at.asc())
         )
         result = await db_session.execute(stmt)
         events = result.scalars().all()

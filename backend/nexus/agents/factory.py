@@ -3,6 +3,7 @@
 Builds fully configured agent instances with the correct model,
 tools, topics, and database session factory.
 """
+
 from __future__ import annotations
 
 import functools
@@ -11,7 +12,7 @@ from typing import Any
 
 from pydantic_ai import Agent as PydanticAgent
 
-from nexus.agents.base import AgentBase, ToolCallLimitExceeded
+from nexus.agents.base import AgentBase, ToolCallLimitExceededError
 from nexus.db.models import AgentRole
 from nexus.kafka.topics import Topics
 from nexus.llm.factory import ModelFactory
@@ -43,14 +44,14 @@ def _wrap_tools_with_counter(
     """
     wrapped: list[Any] = []
     for tool_fn in tools:
+
         @functools.wraps(tool_fn)
         async def counted_tool(*args: Any, _original: Any = tool_fn, **kwargs: Any) -> Any:
             counter["count"] += 1
             if counter["count"] > counter["limit"]:
-                raise ToolCallLimitExceeded(
-                    f"Tool call limit ({counter['limit']}) exceeded"
-                )
+                raise ToolCallLimitExceededError(f"Tool call limit ({counter['limit']}) exceeded")
             return await _original(*args, **kwargs)
+
         wrapped.append(counted_tool)
     return wrapped
 
@@ -102,21 +103,27 @@ def build_agent(
 
     if role == AgentRole.CEO:
         from nexus.agents.ceo import CEOAgent
+
         agent = CEOAgent(**kwargs)
     elif role == AgentRole.ENGINEER:
         from nexus.agents.engineer import EngineerAgent
+
         agent = EngineerAgent(**kwargs)
     elif role == AgentRole.ANALYST:
         from nexus.agents.analyst import AnalystAgent
+
         agent = AnalystAgent(**kwargs)
     elif role == AgentRole.WRITER:
         from nexus.agents.writer import WriterAgent
+
         agent = WriterAgent(**kwargs)
     elif role == AgentRole.QA:
         from nexus.agents.qa import QAAgent
+
         agent = QAAgent(**kwargs)
     elif role == AgentRole.PROMPT_CREATOR:
         from nexus.agents.prompt_creator import PromptCreatorAgent
+
         agent = PromptCreatorAgent(**kwargs)
     else:
         msg = f"No agent implementation for role: {role.value}"

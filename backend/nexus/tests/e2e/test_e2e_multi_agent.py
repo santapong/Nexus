@@ -6,6 +6,7 @@ Requires: docker compose up, make migrate, make seed
 Tests the full multi-agent pipeline: API -> Kafka -> CEO -> specialists -> QA -> result.
 Uses test: model for zero-cost runs.
 """
+
 from __future__ import annotations
 
 import sys
@@ -76,9 +77,7 @@ class TestMultiAgentE2E:
             return
 
         with httpx.Client(timeout=30) as client:
-            task_id = submit_task(
-                client, "Explain what Python decorators are."
-            )
+            task_id = submit_task(client, "Explain what Python decorators are.")
             poll_until_done(client, task_id)
             trace = get_trace(client, task_id)
 
@@ -86,8 +85,7 @@ class TestMultiAgentE2E:
         assert "subtasks" in trace, "Trace must contain 'subtasks'"
         assert "total_subtasks" in trace, "Trace must contain 'total_subtasks'"
         sys.stdout.write(
-            f"  Trace: parent={trace['parent']['id']}, "
-            f"subtasks={trace['total_subtasks']}\n"
+            f"  Trace: parent={trace['parent']['id']}, subtasks={trace['total_subtasks']}\n"
         )
 
     def test_task_list_filter(self) -> None:

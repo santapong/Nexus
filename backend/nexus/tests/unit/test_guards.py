@@ -1,7 +1,7 @@
 """Unit tests for tools/guards.py — approval workflow."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 

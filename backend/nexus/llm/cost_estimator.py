@@ -3,6 +3,7 @@
 CEO uses this to estimate total cost before dispatching subtasks.
 Provides user-facing cost transparency.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -84,9 +85,7 @@ def _estimate_cost_for_tokens(model_name: str, tokens: int) -> float:
         return 0.0
     input_tokens = int(tokens * 0.6)
     output_tokens = int(tokens * 0.4)
-    return (
-        input_tokens * pricing["input"] + output_tokens * pricing["output"]
-    ) / 1_000_000
+    return (input_tokens * pricing["input"] + output_tokens * pricing["output"]) / 1_000_000
 
 
 async def estimate_task_cost(
@@ -111,10 +110,14 @@ async def estimate_task_cost(
 
     if session:
         try:
-            avg_query = select(
-                Agent.role,
-                func.avg(LLMUsage.input_tokens + LLMUsage.output_tokens).label("avg_tok"),
-            ).join(Agent, Agent.id == LLMUsage.agent_id).group_by(Agent.role)
+            avg_query = (
+                select(
+                    Agent.role,
+                    func.avg(LLMUsage.input_tokens + LLMUsage.output_tokens).label("avg_tok"),
+                )
+                .join(Agent, Agent.id == LLMUsage.agent_id)
+                .group_by(Agent.role)
+            )
 
             rows = (await session.execute(avg_query)).all()
             for row in rows:

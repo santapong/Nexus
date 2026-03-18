@@ -1,21 +1,31 @@
 import type {
   A2AToken,
+  AgentConfig,
   AgentInfo,
   Approval,
   AuditEvent,
   AuditTimelineEntry,
+  BillingRecord,
+  BillingSummary,
   CostBreakdown,
   CreateA2ATokenResponse,
+  CreateAgentRequest,
+  CreateListingRequest,
   CreateTaskResponse,
   DeadLetterData,
   EvalRunResponse,
   EvalScoresResponse,
   HealthCheck,
+  Invoice,
+  LoginResponse,
+  MarketplaceListing,
   PerformanceData,
+  RegisterResponse,
   ResolveApprovalResponse,
   RotateA2ATokenResponse,
   Task,
   TaskReplay,
+  Workspace,
 } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -116,5 +126,85 @@ export const api = {
   rotateA2AToken: (id: string) =>
     apiFetch<RotateA2ATokenResponse>(`/api/a2a-tokens/${id}/rotate`, {
       method: 'POST',
+    }),
+
+  // Auth
+  register: (email: string, password: string, displayName: string) =>
+    apiFetch<RegisterResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, display_name: displayName }),
+    }),
+
+  login: (email: string, password: string) =>
+    apiFetch<LoginResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+
+  // Workspaces
+  listWorkspaces: () => apiFetch<Workspace[]>('/api/workspaces'),
+
+  createWorkspace: (name: string, slug: string) =>
+    apiFetch<Workspace>('/api/workspaces', {
+      method: 'POST',
+      body: JSON.stringify({ name, slug }),
+    }),
+
+  // Marketplace
+  listMarketplaceListings: (skill?: string, minRating?: number) => {
+    const params = new URLSearchParams()
+    if (skill) params.set('skill', skill)
+    if (minRating) params.set('min_rating', String(minRating))
+    const qs = params.toString()
+    return apiFetch<MarketplaceListing[]>(`/api/marketplace${qs ? `?${qs}` : ''}`)
+  },
+
+  createListing: (data: CreateListingRequest) =>
+    apiFetch<MarketplaceListing>('/api/marketplace', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  publishListing: (id: string) =>
+    apiFetch<{ id: string; is_published: boolean }>(`/api/marketplace/${id}/publish`, {
+      method: 'POST',
+    }),
+
+  submitReview: (listingId: string, rating: number, comment?: string) =>
+    apiFetch<{ listing_id: string; review_submitted: boolean; new_rating: number }>(
+      `/api/marketplace/${listingId}/review`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ rating, comment }),
+      }
+    ),
+
+  // Billing
+  getBillingSummary: (period = '30d') =>
+    apiFetch<BillingSummary>(`/api/billing/summary?period=${period}`),
+
+  getBillingRecords: (limit = 50) =>
+    apiFetch<BillingRecord[]>(`/api/billing/records?limit=${limit}`),
+
+  getInvoice: (period = '30d') =>
+    apiFetch<Invoice>(`/api/billing/invoice?period=${period}`),
+
+  // Agent Builder
+  listAgentConfigs: () => apiFetch<AgentConfig[]>('/api/agent-builder'),
+
+  createCustomAgent: (data: CreateAgentRequest) =>
+    apiFetch<AgentConfig>('/api/agent-builder', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  activateAgent: (id: string) =>
+    apiFetch<{ id: string; is_active: boolean }>(`/api/agent-builder/${id}/activate`, {
+      method: 'POST',
+    }),
+
+  deactivateAgent: (id: string) =>
+    apiFetch<{ id: string; is_active: boolean }>(`/api/agent-builder/${id}`, {
+      method: 'DELETE',
     }),
 }

@@ -252,3 +252,108 @@ export interface DeadLetterItem {
   created_at: string
   resolved: boolean
 }
+
+// --- Auth Types ---
+
+export interface AuthUser {
+  user_id: string
+  email: string
+  workspace_id: string
+  display_name: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  user: AuthUser
+}
+
+export interface RegisterResponse {
+  user_id: string
+  workspace_id: string
+  access_token: string
+}
+
+// --- Workspace Types ---
+
+export interface Workspace {
+  id: string
+  name: string
+  slug: string
+  owner_id: string
+  is_active: boolean
+  daily_spend_limit_usd: number
+  created_at: string
+}
+
+// --- Marketplace Types ---
+
+export interface MarketplaceListing {
+  id: string
+  workspace_id: string | null
+  name: string
+  description: string
+  skills: string[]
+  price_per_task_usd: number
+  is_published: boolean
+  rating: number
+  total_reviews: number
+  total_tasks_completed: number
+}
+
+export interface CreateListingRequest {
+  name: string
+  description: string
+  skills: string[]
+  price_per_task_usd: number
+}
+
+// --- Billing Types ---
+
+export interface BillingSummary {
+  total_cost_usd: number
+  total_tasks_billed: number
+  by_type: Record<string, number>
+  period_start: string
+  period_end: string
+}
+
+export interface BillingRecord {
+  id: string
+  task_id: string
+  amount_usd: number
+  description: string
+  billing_type: string
+  created_at: string
+}
+
+export interface Invoice {
+  workspace_id: string
+  period_start: string
+  period_end: string
+  total_amount_usd: number
+  line_items: BillingRecord[]
+  generated_at: string
+}
+
+// --- Agent Builder Types ---
+
+export interface AgentConfig {
+  id: string
+  name: string
+  role: string
+  system_prompt: string
+  llm_model: string
+  tool_access: string[]
+  kafka_topics: string[]
+  token_budget_per_task: number
+  is_active: boolean
+}
+
+export interface CreateAgentRequest {
+  name: string
+  role?: string
+  system_prompt: string
+  llm_model?: string
+  tool_access?: string[]
+  token_budget_per_task?: number
+}

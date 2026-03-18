@@ -1,4 +1,5 @@
 """Unit tests for audit/service.py — log_event creates correct records."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock

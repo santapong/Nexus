@@ -3,6 +3,7 @@
 After 3 consecutive failures, a message is published to {topic}.dead_letter
 and a DeadLetter record is persisted to PostgreSQL for dashboard monitoring.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable

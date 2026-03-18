@@ -3,6 +3,7 @@
 Tests CEO task routing logic with mocked Kafka — verifies delegation
 to Engineer, not LLM quality.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -87,7 +88,7 @@ async def test_ceo_delegates_to_engineer(
         published_messages.append((topic, msg))
 
     with patch("nexus.agents.ceo.publish", side_effect=capture_publish):
-        response = await agent.handle_task(command, mock_session)
+        await agent.handle_task(command, mock_session)
 
     # CEO should publish exactly one message to agent.commands
     assert len(published_messages) == 1

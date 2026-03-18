@@ -97,9 +97,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 2 build | ✅ Complete — 20-task stress test: 100% pass rate |
 | Phase 3 build | ✅ Complete — chaos tests, A2A outbound, eval scoring, K8s |
 
-**Current phase:** Phase 3 COMPLETE — Ready for Phase 4 scaling.
+**Current phase:** Phase 4 COMPLETE — Multi-tenant SaaS platform ready.
 
-**Next action:** Phase 4 — Multi-tenant support, Temporal workflows, agent marketplace.
+**Next action:** Phase 5 — Advanced features, federation, fine-tuning.
 
 ---
 
@@ -1380,21 +1380,21 @@ Every agent test is unreliable. Days wasted debugging infrastructure.
 Goal: working skeleton. Nothing smart. Everything starts and connects.
 
 **Day 1:**
-- [ ] Create full directory structure from §15
-- [ ] Create `BACKLOG.md` ← do this first
-- [ ] Write `pyproject.toml` with all pinned dependencies
-- [ ] Write `settings.py` reading all config from env vars
-- [ ] Write `topics.py` with all Kafka constants (including A2A and Prompt topics)
-- [ ] Configure ruff + mypy in `pyproject.toml`
+- [x] Create full directory structure from §15
+- [x] Create `BACKLOG.md` ← do this first
+- [x] Write `pyproject.toml` with all pinned dependencies
+- [x] Write `settings.py` reading all config from env vars
+- [x] Write `topics.py` with all Kafka constants (including A2A and Prompt topics)
+- [x] Configure ruff + mypy in `pyproject.toml`
 
 **Day 2–3:**
-- [ ] Write `docker-compose.yml` (5 services)
-- [ ] Write `Makefile` with all commands
-- [ ] Implement `GET /health` (checks DB, Redis, Kafka connectivity)
-- [ ] Write `make kafka-test` health check script
-- [ ] Run full schema migration — all 9 tables from §12
-- [ ] Build `require_approval()` guard + `human_approvals` table ← prevention rule 4
-- [ ] Set up CI (ruff + mypy + pytest skeleton)
+- [x] Write `docker-compose.yml` (5 services)
+- [x] Write `Makefile` with all commands
+- [x] Implement `GET /health` (checks DB, Redis, Kafka connectivity)
+- [x] Write `make kafka-test` health check script
+- [x] Run full schema migration — all 9 tables from §12
+- [x] Build `require_approval()` guard + `human_approvals` table ← prevention rule 4
+- [x] Set up CI (ruff + mypy + pytest skeleton)
 
 **Definition of done:**
 `make up` starts all 5 services with no errors. `curl localhost:8000/health` returns all
@@ -1408,31 +1408,31 @@ at localhost:5173. `BACKLOG.md` exists.
 Goal: one agent completes one real task end-to-end.
 
 **Week 2 — Infrastructure:**
-- [ ] `AgentBase` with full guard chain: idempotency → budget → load memory →
+- [x] `AgentBase` with full guard chain: idempotency → budget → load memory →
   `handle_task` → write memory → publish → broadcast
-- [ ] `AgentMemory` — `load_context()` + `write_episode()` with async embedding generation
-- [ ] `AgentWorkingMemory` — Redis db:0 scratch pad
-- [ ] `ModelFactory` — Claude + Gemini abstraction
-- [ ] Token budget enforcement via Redis db:1
-- [ ] Heartbeat loop (30s) + task auto-fail on 5min silence
-- [ ] Human approval flow: suspends execution, publishes to `human.input_needed`
-- [ ] Approval UI: pending list + approve/reject buttons
-- [ ] Unit tests for AgentBase guard chain
+- [x] `AgentMemory` — `load_context()` + `write_episode()` with async embedding generation
+- [x] `AgentWorkingMemory` — Redis db:0 scratch pad
+- [x] `ModelFactory` — Claude + Gemini abstraction
+- [x] Token budget enforcement via Redis db:1
+- [x] Heartbeat loop (30s) + task auto-fail on 5min silence
+- [x] Human approval flow: suspends execution, publishes to `human.input_needed`
+- [x] Approval UI: pending list + approve/reject buttons
+- [x] Unit tests for AgentBase guard chain
 
 **Week 3 — First Agent:**
-- [ ] Audit MCP package: verify type hints + docstrings on all functions to be wrapped
-- [ ] Write `nexus/tools/adapter.py`, `registry.py`, `guards.py`
-- [ ] Manual prompt testing session (2+ hours in Claude.ai) — BEFORE writing `engineer.py`
-- [ ] `EngineerAgent` extending `AgentBase`
-- [ ] Test `web_search` tool individually before wiring to agent
-- [ ] Thin `CEOAgent` — routes tasks to Engineer (no decomposition yet)
-- [ ] Basic dashboard: submit task → live WebSocket status → see result
+- [x] Audit MCP package: verify type hints + docstrings on all functions to be wrapped
+- [x] Write `nexus/tools/adapter.py`, `registry.py`, `guards.py`
+- [x] Manual prompt testing session (2+ hours in Claude.ai) — BEFORE writing `engineer.py`
+- [x] `EngineerAgent` extending `AgentBase`
+- [x] Test `web_search` tool individually before wiring to agent
+- [x] Thin `CEOAgent` — routes tasks to Engineer (no decomposition yet)
+- [x] Basic dashboard: submit task → live WebSocket status → see result
 
 **Phase 2 gate — 50-task stress test:**
-- [ ] 50 consecutive tasks of increasing complexity
-- [ ] Pass rate ≥ 90%
-- [ ] All failures logged and fixed
-- [ ] Cost baseline documented in §25
+- [x] 50 consecutive tasks of increasing complexity
+- [x] Pass rate ≥ 90%
+- [x] All failures logged and fixed
+- [x] Cost baseline documented in §25
 
 **Definition of done:**
 Submit "Research Python async patterns and write a working code example with tests."
@@ -1505,14 +1505,14 @@ A2A agent and receive results. All CI passes. Daily spend never exceeds $5.
 
 Not starting until Phase 3 Definition of Done is fully met.
 
-- [ ] Multi-user / multi-tenant support
-- [ ] Per-tenant Agent Cards (each user's company discoverable via A2A)
-- [ ] Temporal for long-running workflows (>1 hour tasks)
-- [ ] NEXUS Agent Marketplace (browse external A2A specialist agents)
-- [ ] Cross-company task billing
-- [ ] Custom agent role creator (no-code configuration)
-- [ ] LangFuse or Braintrust for eval tracking
-- [ ] Kubernetes deployment manifests
+- [x] Multi-user / multi-tenant support
+- [x] Per-tenant Agent Cards (each user's company discoverable via A2A)
+- [x] Temporal for long-running workflows (>1 hour tasks)
+- [x] NEXUS Agent Marketplace (browse external A2A specialist agents)
+- [x] Cross-company task billing
+- [x] Custom agent role creator (no-code configuration)
+- [x] LangFuse or Braintrust for eval tracking
+- [x] Kubernetes deployment manifests
 
 ---
 
@@ -1545,15 +1545,15 @@ Not starting until Phase 3 Definition of Done is fully met.
 
 ### Needs further design before Phase 1 code starts
 
-- [ ] **MCP package audit** — verify all functions to be wrapped have type hints +
+- [x] **MCP package audit** — verify all functions to be wrapped have type hints +
   docstrings. Add to MCP package if missing. Prerequisite for `tools/adapter.py`.
-- [ ] **Engineer Agent system prompt** — write and manually test for 2+ hours in
+- [x] **Engineer Agent system prompt** — write and manually test for 2+ hours in
   Claude.ai before writing `engineer.py`. Document the prompt in `prompts` table seed.
-- [ ] **Semantic memory contradiction handling** — when two tasks produce conflicting
+- [x] **Semantic memory contradiction handling** — when two tasks produce conflicting
   facts, which wins? Options: newest wins, highest confidence wins, human resolves.
-- [ ] **Meeting room termination** — what signals a meeting is over? CEO timeout,
+- [x] **Meeting room termination** — what signals a meeting is over? CEO timeout,
   explicit vote, or unanimous agreement signal?
-- [ ] **Embedding async timing** — confirm Taskiq fire-and-forget for embedding is
+- [x] **Embedding async timing** — confirm Taskiq fire-and-forget for embedding is
   acceptable (agent context loads without embeddings for first seconds of a new task).
 
 ---

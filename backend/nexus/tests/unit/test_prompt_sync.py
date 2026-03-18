@@ -1,4 +1,5 @@
 """Unit tests for prompt versioning, sync, and rollback."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -7,7 +8,6 @@ from uuid import uuid4
 import pytest
 
 from nexus.api.prompts import _sync_agent_prompt, _to_response
-
 
 # ─── _sync_agent_prompt ──────────────────────────────────────────────────────
 

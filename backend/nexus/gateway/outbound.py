@@ -5,6 +5,7 @@ Supports the full outbound flow:
 2. Submit a task to their /a2a/tasks endpoint
 3. Poll status or stream results via SSE
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -115,9 +116,7 @@ async def submit_task(
         headers["Authorization"] = f"Bearer {request.bearer_token}"
 
     async with httpx.AsyncClient(timeout=_DEFAULT_TIMEOUT) as client:
-        response = await client.post(
-            target_url, json=payload, headers=headers
-        )
+        response = await client.post(target_url, json=payload, headers=headers)
         response.raise_for_status()
         data = response.json()
 
@@ -194,22 +193,22 @@ async def stream_results(
         httpx.AsyncClient(timeout=_SSE_TIMEOUT) as client,
         client.stream("GET", stream_url, headers=headers) as response,
     ):
-            response.raise_for_status()
-            async for line in response.aiter_lines():
-                if line.startswith("data: "):
-                    data_str = line[6:].strip()
-                    if not data_str:
-                        continue
-                    try:
-                        event = json.loads(data_str)
-                        yield event
-                        if event.get("event_type") == "done":
-                            return
-                    except json.JSONDecodeError:
-                        logger.warning(
-                            "a2a_sse_parse_error",
-                            line=data_str[:200],
-                        )
+        response.raise_for_status()
+        async for line in response.aiter_lines():
+            if line.startswith("data: "):
+                data_str = line[6:].strip()
+                if not data_str:
+                    continue
+                try:
+                    event = json.loads(data_str)
+                    yield event
+                    if event.get("event_type") == "done":
+                        return
+                except json.JSONDecodeError:
+                    logger.warning(
+                        "a2a_sse_parse_error",
+                        line=data_str[:200],
+                    )
 
 
 # ─── High-level hire flow ─────────────────────────────────────────────────────
@@ -276,9 +275,7 @@ async def hire_external_agent(
         )
 
     # Polling fallback: poll every 5s for up to 10 minutes
-    status_url = (
-        f"{agent_url.rstrip('/')}/a2a/tasks/{submission.task_id}/status"
-    )
+    status_url = f"{agent_url.rstrip('/')}/a2a/tasks/{submission.task_id}/status"
     for _ in range(120):
         result = await poll_status(status_url, bearer_token)
         if result.status in ("completed", "failed"):

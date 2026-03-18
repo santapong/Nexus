@@ -126,6 +126,8 @@ nexus/
 | Phase 1 — Single Agent Loop | **Complete** — 50-task stress test passed at 100% |
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 | Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
+| Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
+| Security Audit | **Complete** — 15 findings documented, 7 open (2 critical, 4 high, 1 medium) |
 
 ### What works today
 
@@ -153,7 +155,14 @@ nexus/
 - Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit, eval, A2A tokens)
 - LLM retry logic: rate limit backoff (5 retries) + tool call fallback + model fallback chains
 - `test:` model provider for infrastructure testing at zero API cost
-- Database schema deployed: 12 tables with pgvector extension
+- Database schema deployed: 18 tables with pgvector extension
+- **Multi-tenant support** — Users, workspaces, JWT auth, per-tenant isolation
+- **Per-tenant Agent Cards** — Workspace-scoped A2A discovery at `/.well-known/agent.json?workspace=`
+- **Temporal workflows** — Durable long-running task execution with auto-retry
+- **Agent Marketplace** — Browse, rate, and hire agents by skill/rating/price
+- **Cross-company billing** — Cost tracking, invoice generation, per-task attribution
+- **Custom agent builder** — No-code agent creation with model/tool/prompt configuration
+- **LangFuse integration** — External eval tracking with LLM call traces and dimension scores
 
 ## Getting Started
 
@@ -259,6 +268,16 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `POST` | `/a2a/tasks` | A2A inbound — submit task (bearer auth) |
 | `GET` | `/a2a/tasks/{id}/events` | A2A SSE event stream |
 | `WS` | `/ws/agent-activity` | Real-time agent event stream |
+| `POST` | `/api/auth/register` | Register new user + default workspace |
+| `POST` | `/api/auth/login` | Login and get JWT token |
+| `GET` | `/api/workspaces` | List workspaces |
+| `POST` | `/api/workspaces` | Create workspace |
+| `GET` | `/api/marketplace` | Browse agent marketplace |
+| `POST` | `/api/marketplace` | Create marketplace listing |
+| `GET` | `/api/billing/summary` | Billing cost summary |
+| `GET` | `/api/billing/invoice` | Generate invoice |
+| `GET` | `/api/agent-builder` | List custom agents |
+| `POST` | `/api/agent-builder` | Create custom agent (no-code) |
 
 ## Roadmap
 
@@ -268,7 +287,8 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 1 | Single agent loop — AgentBase, Engineer Agent, basic dashboard | **Complete** — stress test 100% |
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
 | Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **Complete** |
-| Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | Planned |
+| Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | **Complete** |
+| Phase 5 | Advanced features, federation, fine-tuning | Planned |
 
 ## Kubernetes Deployment
 
@@ -292,5 +312,42 @@ Services: PostgreSQL (StatefulSet + PVC), Redis, Kafka (StatefulSet + PVC), Back
 - **[RISK_REVIEW.md](docs/RISK_REVIEW.md)** — Risk assessment and phase gate checklist
 - **[BACKLOG.md](docs/BACKLOG.md)** — Captured ideas and deferred scope
 - **[CHANGELOG.md](docs/CHANGELOG.md)** — Version history
-- **[ERRORLOG.md](docs/ERRORLOG.md)** — Bug tracking and prevention rules (15 entries)
+- **[ERRORLOG.md](docs/ERRORLOG.md)** — Bug tracking and prevention rules (25 entries)
 - **[AGENTS.md](AGENTS.md)** — AI agent coding policy and workflow rules
+
+## Security
+
+A full security audit was performed on 2026-03-18. See [ERRORLOG.md](docs/ERRORLOG.md) entries ERROR-019 through ERROR-025 for details.
+
+### Audit Summary
+
+| Severity | Count | Status |
+|----------|-------|--------|
+| Critical | 2 | Open — must fix before production |
+| High | 4 | Open — must fix before production |
+| Medium | 3 | Open — recommended fix |
+| Low/Info | 6 | Tracked — enhancement |
+
+### Critical Issues (fix before deploying)
+
+1. **Hardcoded JWT secret** (`settings.py`) — Default dev secret must be removed; make env-var required
+2. **Hardcoded A2A dev token** (`gateway/auth.py`) — Auto-seeded token discoverable in source code
+
+### High Issues (fix before multi-tenant use)
+
+3. **Missing workspace isolation** (`api/workspaces.py`) — All workspaces visible to any user
+4. **Missing task tenant isolation** (`api/tasks.py`) — Tasks not scoped to workspace
+5. **Unsafe slug generation** (`api/workspaces.py`) — No validation or uniqueness constraint
+6. **Missing auth on approvals** (`api/approvals.py`) — `resolved_by` is user-controlled, no JWT check
+
+### What's Already Secure
+
+- Password hashing: PBKDF2-HMAC-SHA256, 600k iterations (OWASP 2023)
+- Timing-safe JWT comparison via `hmac.compare_digest()`
+- A2A tokens stored as SHA-256 hashes (not plaintext)
+- Pydantic validation at all API boundaries (no raw dict crossing modules)
+- No raw SQL — SQLAlchemy ORM throughout
+- Secret pattern detection in agent output (redacts `sk-`, `AKIA`, `Bearer`, `ghp_`, etc.)
+- Safe subprocess execution (list args, no `shell=True`)
+- 24-hour JWT token expiration
+- Sliding window rate limiting on A2A endpoints

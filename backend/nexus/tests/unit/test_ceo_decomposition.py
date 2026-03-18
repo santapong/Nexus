@@ -1,4 +1,5 @@
 """Unit tests for CEO task decomposition and multi-agent orchestration."""
+
 from __future__ import annotations
 
 import json
@@ -9,8 +10,7 @@ import pytest
 
 from nexus.agents.ceo import CEOAgent
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand, AgentResponse
-
+from nexus.kafka.schemas import AgentCommand
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -38,10 +38,7 @@ def _make_mock_session() -> AsyncMock:
 
 
 def _make_llm_agent(decomposition: list[dict] | str = "") -> MagicMock:
-    if isinstance(decomposition, list):
-        output = json.dumps(decomposition)
-    else:
-        output = decomposition
+    output = json.dumps(decomposition) if isinstance(decomposition, list) else decomposition
 
     mock_result = MagicMock()
     mock_result.output = output

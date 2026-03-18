@@ -55,6 +55,12 @@
 | ADR-033 | A2A SSE streaming via Redis pub/sub | accepted | 2026-03-16 |
 | ADR-034 | Prompt benchmark seeding strategy | accepted | 2026-03-16 |
 | ADR-035 | A2A gateway Task DB persistence before Kafka publish | accepted | 2026-03-16 |
+| ADR-036 | Multi-tenant via workspace_id FK (nullable for backward compat) | accepted | 2026-03-17 |
+| ADR-037 | JWT auth with SHA-256 password hashing (stdlib) | accepted | 2026-03-17 |
+| ADR-038 | Temporal coexists with Taskiq (not replaces) | accepted | 2026-03-17 |
+| ADR-039 | Marketplace rating via incremental average on review | accepted | 2026-03-17 |
+| ADR-040 | LangFuse integration as non-blocking, graceful degradation | accepted | 2026-03-17 |
+| ADR-041 | Per-tenant Agent Cards via query parameter | accepted | 2026-03-17 |
 
 ---
 

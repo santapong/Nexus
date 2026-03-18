@@ -80,6 +80,16 @@ services:
       DAILY_SPEND_LIMIT_USD: ${DAILY_SPEND_LIMIT_USD:-5.00}
       APP_ENV: development
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Temporal
+      TEMPORAL_HOST: temporal:7233
+      TEMPORAL_NAMESPACE: nexus
+      TEMPORAL_TASK_QUEUE: nexus-tasks
+      # JWT Auth
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-nexus-dev-secret-change-in-production}
+      # LangFuse
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
     ports:
       - "8000:8000"
     depends_on:
@@ -91,6 +101,29 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+
+  temporal:
+    image: temporalio/auto-setup:1.24
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=nexus
+      - POSTGRES_PWD=nexus_dev
+      - POSTGRES_SEEDS=postgres
+    ports:
+      - "7233:7233"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  temporal-ui:
+    image: temporalio/ui:2.26.2
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8088:8080"
+    depends_on:
+      - temporal
 
   frontend:
     build:

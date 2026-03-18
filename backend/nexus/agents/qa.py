@@ -6,6 +6,7 @@ and publishes final results to task.results (not agent.responses).
 The QA Agent is the gatekeeper — it ensures quality before any output
 reaches the user or external caller.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -29,9 +30,7 @@ _RETRY_BACKOFF_SECONDS = [5.0, 10.0, 20.0, 30.0, 45.0]
 class QAAgent(AgentBase):
     """QA agent — reviews outputs and publishes final results."""
 
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Review an aggregated result and decide approve/reject.
 
         On approval: publishes TaskResult to task.results.
@@ -71,7 +70,10 @@ class QAAgent(AgentBase):
         )
 
         if context_parts:
-            user_message = "\n\n".join(context_parts) + f"\n\n{review_prompt}Output to review:\n{message.instruction}"
+            user_message = (
+                "\n\n".join(context_parts)
+                + f"\n\n{review_prompt}Output to review:\n{message.instruction}"
+            )
         else:
             user_message = f"{review_prompt}Output to review:\n{message.instruction}"
 
@@ -107,6 +109,7 @@ class QAAgent(AgentBase):
         approved = True
         try:
             import json
+
             if isinstance(qa_output, str):
                 # Try to extract JSON from the response
                 # Handle cases where LLM wraps JSON in markdown code blocks
@@ -129,7 +132,10 @@ class QAAgent(AgentBase):
                 agent_id=self.agent_id,
                 payload=message.payload,
                 status="completed",
-                output={"qa_review": qa_output, "original_output": message.payload.get("aggregated_output", "")},
+                output={
+                    "qa_review": qa_output,
+                    "original_output": message.payload.get("aggregated_output", ""),
+                },
             )
             await publish(Topics.TASK_RESULTS, task_result, key=task_id)
 
@@ -146,7 +152,10 @@ class QAAgent(AgentBase):
                 agent_id=self.agent_id,
                 payload={"qa_feedback": qa_output, "rework": True},
                 target_role=message.payload.get("original_role", "engineer"),
-                instruction=f"QA REWORK REQUESTED: {qa_output}\n\nOriginal task: {message.payload.get('original_instruction', message.instruction)}",
+                instruction=(
+                    f"QA REWORK REQUESTED: {qa_output}\n\nOriginal task: "
+                    f"{message.payload.get('original_instruction', message.instruction)}"
+                ),
             )
             await publish(Topics.AGENT_COMMANDS, rework_command, key=task_id)
 

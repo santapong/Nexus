@@ -5,6 +5,7 @@ and end-to-end task flow including DB persistence and SSE streaming.
 
 Note: Auth tests use the DB-backed validate_token with mocked sessions.
 """
+
 from __future__ import annotations
 
 import json
@@ -44,9 +45,7 @@ class TestA2AAuthentication:
             expires_at=None,
             is_revoked=False,
         )
-        is_valid, error, rpm = _check_token_validity(
-            token, "general", "abc123"
-        )
+        is_valid, error, rpm = _check_token_validity(token, "general", "abc123")
         assert is_valid is True
         assert error == ""
         assert rpm == 60
@@ -61,9 +60,7 @@ class TestA2AAuthentication:
             expires_at=None,
             is_revoked=True,
         )
-        is_valid, error, rpm = _check_token_validity(
-            token, "general", "abc123"
-        )
+        is_valid, error, rpm = _check_token_validity(token, "general", "abc123")
         assert is_valid is False
         assert "revoked" in error.lower()
         assert rpm == 0
@@ -78,9 +75,7 @@ class TestA2AAuthentication:
             expires_at=datetime.now(UTC) - timedelta(hours=1),
             is_revoked=False,
         )
-        is_valid, error, _rpm = _check_token_validity(
-            token, "general", "abc123"
-        )
+        is_valid, error, _rpm = _check_token_validity(token, "general", "abc123")
         assert is_valid is False
         assert "expired" in error.lower()
 
@@ -95,15 +90,11 @@ class TestA2AAuthentication:
             is_revoked=False,
         )
         # Allowed skill
-        is_valid, _, _ = _check_token_validity(
-            token, "research", "abc123"
-        )
+        is_valid, _, _ = _check_token_validity(token, "research", "abc123")
         assert is_valid is True
 
         # Disallowed skill
-        is_valid, error, _ = _check_token_validity(
-            token, "code", "abc123"
-        )
+        is_valid, error, _ = _check_token_validity(token, "code", "abc123")
         assert is_valid is False
         assert "skill" in error.lower()
 
@@ -117,13 +108,9 @@ class TestA2AAuthentication:
             expires_at=None,
             is_revoked=False,
         )
-        is_valid, _, _ = _check_token_validity(
-            token, "code", "abc123"
-        )
+        is_valid, _, _ = _check_token_validity(token, "code", "abc123")
         assert is_valid is True
-        is_valid, _, _ = _check_token_validity(
-            token, "research", "abc123"
-        )
+        is_valid, _, _ = _check_token_validity(token, "research", "abc123")
         assert is_valid is True
 
     def test_invalidate_cache_clears(self) -> None:
@@ -266,40 +253,40 @@ class TestA2AEndToEndFlow:
         """SSE events follow the 'data: {json}\\n\\n' format."""
         task_id = "test-task-123"
 
-        connected = (
-            f"data: {json.dumps({'event_type': 'connected', 'task_id': task_id})}\n\n"
-        )
+        connected = f"data: {json.dumps({'event_type': 'connected', 'task_id': task_id})}\n\n"
         assert connected.startswith("data: ")
         assert connected.endswith("\n\n")
         parsed = json.loads(connected.replace("data: ", "").strip())
         assert parsed["event_type"] == "connected"
         assert parsed["task_id"] == task_id
 
-        done = (
-            f"data: {json.dumps({'event_type': 'done', 'task_id': task_id})}\n\n"
-        )
+        done = f"data: {json.dumps({'event_type': 'done', 'task_id': task_id})}\n\n"
         parsed_done = json.loads(done.replace("data: ", "").strip())
         assert parsed_done["event_type"] == "done"
 
     def test_sse_terminates_on_task_result(self) -> None:
         """SSE stream should terminate when it sees a task_result event."""
-        event_data = json.dumps({
-            "event": "task_result",
-            "task_id": "test-123",
-            "status": "completed",
-            "output": {"result": "done"},
-        })
+        event_data = json.dumps(
+            {
+                "event": "task_result",
+                "task_id": "test-123",
+                "status": "completed",
+                "output": {"result": "done"},
+            }
+        )
         parsed = json.loads(event_data)
         assert parsed.get("event") in ("task_result", "task_failed")
 
     def test_sse_does_not_terminate_on_subtask_event(self) -> None:
         """SSE stream should NOT terminate on intermediate events."""
-        event_data = json.dumps({
-            "event": "subtask_completed",
-            "task_id": "sub-456",
-            "parent_task_id": "test-123",
-            "status": "success",
-        })
+        event_data = json.dumps(
+            {
+                "event": "subtask_completed",
+                "task_id": "sub-456",
+                "parent_task_id": "test-123",
+                "status": "success",
+            }
+        )
         parsed = json.loads(event_data)
         assert parsed.get("event") not in ("task_result", "task_failed")
 

@@ -1,4 +1,5 @@
 """Unit tests for the Approvals API controller."""
+
 from __future__ import annotations
 
 from uuid import uuid4

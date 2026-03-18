@@ -3,6 +3,7 @@
 Tests the full flow with mocked LLM — verifies agent decision logic,
 not LLM output quality.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -78,9 +79,7 @@ async def test_engineer_records_token_usage() -> None:
     command = _make_command()
     mock_session = AsyncMock()
 
-    with patch(
-        "nexus.agents.engineer.record_usage", new_callable=AsyncMock
-    ) as mock_record:
+    with patch("nexus.agents.engineer.record_usage", new_callable=AsyncMock) as mock_record:
         await agent.handle_task(command, mock_session)
 
     mock_record.assert_called_once()

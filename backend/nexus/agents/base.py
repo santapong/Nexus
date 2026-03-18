@@ -9,6 +9,7 @@ All agents extend this base. It provides:
 
 Subclasses implement handle_task() only.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,15 +18,15 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
-from uuid import UUID
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import select
-
-from nexus.db.models import Agent as AgentModel, AgentRole, TaskStatus
+from nexus.audit.service import AuditEventType, log_event
+from nexus.db.models import Agent as AgentModel
+from nexus.db.models import AgentRole
 from nexus.kafka.consumer import check_idempotency, create_consumer
 from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
 from nexus.kafka.producer import get_producer, publish
@@ -34,7 +35,6 @@ from nexus.kafka.topics import Topics
 from nexus.llm.usage import check_daily_spend, check_task_budget
 from nexus.memory.embeddings import generate_embedding
 from nexus.memory.episodic import recall_similar, write_episode
-from nexus.audit.service import AuditEventType, log_event
 from nexus.memory.working import clear_working_memory, get_working_memory
 from nexus.redis.clients import redis_pubsub
 
@@ -43,11 +43,11 @@ logger = structlog.get_logger()
 # ─── Exceptions ──────────────────────────────────────────────────────────────
 
 
-class TokenBudgetExceeded(Exception):
+class TokenBudgetExceededError(Exception):
     """Raised when the daily or per-task token budget is exceeded."""
 
 
-class ToolCallLimitExceeded(Exception):
+class ToolCallLimitExceededError(Exception):
     """Raised when the agent exceeds 20 tool calls per task."""
 
 
@@ -84,9 +84,7 @@ class AgentBase(ABC):
         self._current_system_prompt: str | None = None
 
     @abstractmethod
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Execute the agent's core logic for a task.
 
         Subclasses implement this method. The guard chain in
@@ -106,9 +104,7 @@ class AgentBase(ABC):
 
     async def run(self) -> None:
         """Main Kafka consumer loop. Runs indefinitely until stopped."""
-        consumer = await create_consumer(
-            *self.subscribe_topics, group_id=self.group_id
-        )
+        consumer = await create_consumer(*self.subscribe_topics, group_id=self.group_id)
         self._running = True
         heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
@@ -124,9 +120,7 @@ class AgentBase(ABC):
                 try:
                     await self._process_message(msg.value)
                 except Exception as exc:
-                    await self._handle_consumer_error(
-                        msg.value, msg.topic, exc
-                    )
+                    await self._handle_consumer_error(msg.value, msg.topic, exc)
         finally:
             self._running = False
             heartbeat_task.cancel()
@@ -249,12 +243,14 @@ class AgentBase(ABC):
             await publish(Topics.AGENT_RESPONSES, response, key=task_id)
 
             # 7. Broadcast for dashboard
-            await self._broadcast({
-                "event": "task_completed",
-                "agent_id": self.agent_id,
-                "task_id": task_id,
-                "status": response.status,
-            })
+            await self._broadcast(
+                {
+                    "event": "task_completed",
+                    "agent_id": self.agent_id,
+                    "task_id": task_id,
+                    "status": response.status,
+                }
+            )
 
             # 8. Clear working memory (skip for orchestration responses
             #    that need tracking state to persist across subtasks)
@@ -270,7 +266,7 @@ class AgentBase(ABC):
                 duration_seconds=int(time.monotonic() - start_time),
             )
 
-        except TokenBudgetExceeded as exc:
+        except TokenBudgetExceededError as exc:
             logger.warning(
                 "token_budget_exceeded",
                 agent_id=self.agent_id,
@@ -278,12 +274,14 @@ class AgentBase(ABC):
                 error=str(exc),
             )
             await self._audit_outside_transaction(
-                task_id, trace_id, AuditEventType.BUDGET_EXCEEDED,
+                task_id,
+                trace_id,
+                AuditEventType.BUDGET_EXCEEDED,
                 {"error": str(exc), "role": self.role.value},
             )
             await self._request_human_input(command, reason="token_budget_exceeded")
 
-        except ToolCallLimitExceeded as exc:
+        except ToolCallLimitExceededError as exc:
             logger.warning(
                 "tool_call_limit_exceeded",
                 agent_id=self.agent_id,
@@ -291,7 +289,9 @@ class AgentBase(ABC):
                 error=str(exc),
             )
             await self._audit_outside_transaction(
-                task_id, trace_id, AuditEventType.TOOL_CALL_LIMIT_REACHED,
+                task_id,
+                trace_id,
+                AuditEventType.TOOL_CALL_LIMIT_REACHED,
                 {"error": str(exc), "role": self.role.value},
             )
             await self._request_human_input(command, reason="tool_call_limit_exceeded")
@@ -306,7 +306,9 @@ class AgentBase(ABC):
                 exc_info=True,
             )
             await self._audit_outside_transaction(
-                task_id, trace_id, AuditEventType.TASK_FAILED,
+                task_id,
+                trace_id,
+                AuditEventType.TASK_FAILED,
                 {"error": str(exc), "role": self.role.value},
             )
             error_response = AgentResponse(
@@ -318,30 +320,30 @@ class AgentBase(ABC):
                 error=str(exc),
             )
             await publish(Topics.AGENT_RESPONSES, error_response, key=task_id)
-            await self._broadcast({
-                "event": "task_failed",
-                "agent_id": self.agent_id,
-                "task_id": task_id,
-                "error": str(exc),
-            })
+            await self._broadcast(
+                {
+                    "event": "task_failed",
+                    "agent_id": self.agent_id,
+                    "task_id": task_id,
+                    "error": str(exc),
+                }
+            )
 
     # ─── Budget enforcement ──────────────────────────────────────────────────
 
     async def _check_budget(self, task_id: str) -> None:
         """Check both daily spend limit and per-task token budget.
 
-        Raises TokenBudgetExceeded if either limit is reached.
+        Raises TokenBudgetExceededError if either limit is reached.
         Must be called before every LLM call.
         """
         daily_ok = await check_daily_spend()
         if not daily_ok:
-            raise TokenBudgetExceeded("Daily spend limit reached")
+            raise TokenBudgetExceededError("Daily spend limit reached")
 
         task_ok, used = await check_task_budget(task_id)
         if not task_ok:
-            raise TokenBudgetExceeded(
-                f"Task token budget exceeded: {used} tokens used"
-            )
+            raise TokenBudgetExceededError(f"Task token budget exceeded: {used} tokens used")
 
     # ─── Prompt hot-reload ──────────────────────────────────────────────────
 
@@ -356,9 +358,7 @@ class AgentBase(ABC):
 
         try:
             async with self.db_session_factory() as session:
-                stmt = select(AgentModel).where(
-                    AgentModel.id == self.agent_id
-                )
+                stmt = select(AgentModel).where(AgentModel.id == self.agent_id)
                 result = await session.execute(stmt)
                 agent_record = result.scalar_one_or_none()
 
@@ -416,15 +416,15 @@ class AgentBase(ABC):
             logger.warning(
                 "audit_log_failed",
                 task_id=task_id,
-                event_type=event_type.value if isinstance(event_type, AuditEventType) else event_type,
+                event_type=event_type.value
+                if isinstance(event_type, AuditEventType)
+                else event_type,
                 error=str(exc),
             )
 
     # ─── Memory operations ───────────────────────────────────────────────────
 
-    async def _load_memory(
-        self, session: AsyncSession, command: AgentCommand
-    ) -> dict[str, Any]:
+    async def _load_memory(self, session: AsyncSession, command: AgentCommand) -> dict[str, Any]:
         """Load episodic + working memory context for the task."""
         # Generate embedding for similarity search
         embedding = await generate_embedding(command.instruction)
@@ -473,8 +473,15 @@ class AgentBase(ABC):
 
     # Patterns that suggest leaked secrets in output
     _SECRET_PATTERNS = (
-        "sk-", "AKIA", "Bearer ", "ghp_", "gho_", "github_pat_",
-        "xoxb-", "xoxp-", "-----BEGIN PRIVATE KEY",
+        "sk-",
+        "AKIA",
+        "Bearer ",
+        "ghp_",
+        "gho_",
+        "github_pat_",
+        "xoxb-",
+        "xoxp-",
+        "-----BEGIN PRIVATE KEY",
     )
     _MAX_OUTPUT_SIZE = 100_000  # 100KB
 
@@ -496,7 +503,11 @@ class AgentBase(ABC):
 
         # Check for secret patterns in output
         if response.output:
-            output_str = json.dumps(response.output) if isinstance(response.output, dict) else str(response.output)
+            output_str = (
+                json.dumps(response.output)
+                if isinstance(response.output, dict)
+                else str(response.output)
+            )
 
             for pattern in self._SECRET_PATTERNS:
                 if pattern in output_str:
@@ -525,9 +536,13 @@ class AgentBase(ABC):
 
     # ─── Orchestration detection ─────────────────────────────────────────────
 
-    _ORCHESTRATION_ACTIONS = frozenset({
-        "decomposed", "subtask_tracked", "aggregated_and_sent_to_qa",
-    })
+    _ORCHESTRATION_ACTIONS = frozenset(
+        {
+            "decomposed",
+            "subtask_tracked",
+            "aggregated_and_sent_to_qa",
+        }
+    )
 
     def _is_orchestration_response(self, response: AgentResponse) -> bool:
         """Check if a response represents an ongoing orchestration flow.
@@ -579,9 +594,7 @@ class AgentBase(ABC):
 
     # ─── Human escalation ────────────────────────────────────────────────────
 
-    async def _request_human_input(
-        self, command: AgentCommand, *, reason: str
-    ) -> None:
+    async def _request_human_input(self, command: AgentCommand, *, reason: str) -> None:
         """Pause task and publish to human.input_needed topic."""
         msg = KafkaMessage(
             task_id=command.task_id,
@@ -595,12 +608,14 @@ class AgentBase(ABC):
         )
         await publish(Topics.HUMAN_INPUT_NEEDED, msg, key=str(command.task_id))
 
-        await self._broadcast({
-            "event": "human_input_needed",
-            "agent_id": self.agent_id,
-            "task_id": str(command.task_id),
-            "reason": reason,
-        })
+        await self._broadcast(
+            {
+                "event": "human_input_needed",
+                "agent_id": self.agent_id,
+                "task_id": str(command.task_id),
+                "reason": reason,
+            }
+        )
 
         logger.info(
             "human_input_requested",

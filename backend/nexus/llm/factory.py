@@ -6,6 +6,7 @@ Google (Gemini), OpenAI, Groq, Mistral, Ollama, and any OpenAI-compatible endpoi
 Agent code never references a specific provider. All resolution happens here.
 All provider imports are lazy — only loaded when the provider is actually used.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -129,7 +130,7 @@ def _resolve_ollama(model_name: str) -> Model:
     return OpenAIModel(name, provider=provider)
 
 
-def _resolve_test(model_name: str) -> Model:  # noqa: ARG001
+def _resolve_test(model_name: str) -> Model:
     """Test model for stress testing and CI — no API calls, deterministic output."""
     from pydantic_ai.models.test import TestModel
 

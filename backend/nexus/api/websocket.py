@@ -1,7 +1,6 @@
 """WebSocket endpoint for real-time dashboard updates via Redis pub/sub."""
-from __future__ import annotations
 
-import json
+from __future__ import annotations
 
 import structlog
 from litestar import WebSocket, websocket

@@ -2,6 +2,7 @@
 
 Provides aggregate eval scores and manual eval trigger.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -125,11 +126,7 @@ class EvalController(Controller):
         ]
 
         # Recent results (last 20)
-        recent_query = (
-            select(EvalResult)
-            .order_by(EvalResult.created_at.desc())
-            .limit(20)
-        )
+        recent_query = select(EvalResult).order_by(EvalResult.created_at.desc()).limit(20)
         recent_result = await db_session.execute(recent_query)
         recent_records = recent_result.scalars().all()
 

@@ -3,6 +3,7 @@
 Each agent role has a list of tools it is allowed to use.
 Tools in IRREVERSIBLE_TOOLS require human approval before execution.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,22 +34,36 @@ IRREVERSIBLE_TOOLS: set[str] = {
 TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
     AgentRole.CEO: [tool_hire_external_agent],
     AgentRole.ENGINEER: [
-        tool_web_search, tool_file_read, tool_code_execute,
-        tool_file_write, tool_git_push, tool_hire_external_agent,
+        tool_web_search,
+        tool_file_read,
+        tool_code_execute,
+        tool_file_write,
+        tool_git_push,
+        tool_hire_external_agent,
     ],
     AgentRole.ANALYST: [
-        tool_web_search, tool_web_fetch, tool_file_read,
-        tool_file_write, tool_hire_external_agent,
+        tool_web_search,
+        tool_web_fetch,
+        tool_file_read,
+        tool_file_write,
+        tool_hire_external_agent,
     ],
     AgentRole.WRITER: [
-        tool_web_search, tool_file_read, tool_file_write,
-        tool_send_email, tool_hire_external_agent,
+        tool_web_search,
+        tool_file_read,
+        tool_file_write,
+        tool_send_email,
+        tool_hire_external_agent,
     ],
     AgentRole.QA: [
-        tool_file_read, tool_web_search, tool_hire_external_agent,
+        tool_file_read,
+        tool_web_search,
+        tool_hire_external_agent,
     ],
     AgentRole.PROMPT_CREATOR: [
-        tool_web_search, tool_file_read, tool_memory_read,
+        tool_web_search,
+        tool_file_read,
+        tool_memory_read,
     ],
 }
 

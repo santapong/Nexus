@@ -3,15 +3,19 @@ from __future__ import annotations
 from litestar import Router
 
 from nexus.api.a2a_tokens import A2ATokenController
+from nexus.api.agent_builder import AgentBuilderController
 from nexus.api.agents import AgentController
 from nexus.api.analytics import AnalyticsController
 from nexus.api.approvals import ApprovalController
 from nexus.api.audit import AuditController
+from nexus.api.billing import BillingController
 from nexus.api.eval import EvalController
 from nexus.api.health import HealthController
+from nexus.api.marketplace import MarketplaceController
 from nexus.api.prompts import PromptController
 from nexus.api.tasks import TaskController
 from nexus.api.websocket import agent_activity_ws
+from nexus.api.workspaces import AuthController, WorkspaceController
 from nexus.gateway.routes import A2AGatewayController, AgentCardController
 
 api_router = Router(
@@ -25,6 +29,11 @@ api_router = Router(
         AuditController,
         A2ATokenController,
         EvalController,
+        MarketplaceController,
+        BillingController,
+        AgentBuilderController,
+        AuthController,
+        WorkspaceController,
     ],
 )
 

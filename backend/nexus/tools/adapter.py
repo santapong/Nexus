@@ -1,11 +1,12 @@
-"""MCP tool wrappers as standalone async functions for Phase 1–2.
+"""MCP tool wrappers as standalone async functions for Phase 1-2.
 
-Each function is a Pydantic AI tool — the docstring is used by the LLM
+Each function is a Pydantic AI tool - the docstring is used by the LLM
 to understand when to call it. Keep docstrings clear and specific.
 
-These implementations are standalone for Phase 1–2. They will be replaced
+These implementations are standalone for Phase 1-2. They will be replaced
 by the full MCP package adapter when that package is ready.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -75,6 +76,7 @@ async def tool_web_fetch(url: str) -> str:
             if "text/html" in content_type:
                 # Simple HTML tag stripping
                 import re
+
                 text = re.sub(r"<script[^>]*>.*?</script>", "", response.text, flags=re.DOTALL)
                 text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
                 text = re.sub(r"<[^>]+>", " ", text)
@@ -173,6 +175,7 @@ async def tool_memory_read(
     try:
         if memory_type == "episodic":
             from nexus.db.models import Agent
+
             # Find agent by role
             agent_stmt = select(Agent).where(Agent.role == agent_role)
             agent_result = await _session.execute(agent_stmt)
@@ -202,6 +205,7 @@ async def tool_memory_read(
 
         elif memory_type == "semantic":
             from nexus.db.models import Agent
+
             agent_stmt = select(Agent).where(Agent.role == agent_role)
             agent_result = await _session.execute(agent_stmt)
             agent = agent_result.scalar_one_or_none()
