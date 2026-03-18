@@ -11,7 +11,7 @@ from nexus.agents.analyst import AnalystAgent
 from nexus.agents.qa import QAAgent
 from nexus.agents.writer import WriterAgent
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand
+from nexus.integrations.kafka.schemas import AgentCommand
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 

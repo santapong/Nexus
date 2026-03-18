@@ -21,9 +21,9 @@ from nexus.db.models import (
     PromptBenchmark,
     Task,
 )
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
-from nexus.kafka.topics import Topics
+from nexus.integrations.kafka.producer import publish
+from nexus.integrations.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
+from nexus.integrations.kafka.topics import Topics
 
 logger = structlog.get_logger()
 

@@ -297,7 +297,7 @@ async def tool_hire_external_agent(
     Returns:
         The external agent's result as formatted text.
     """
-    from nexus.gateway.outbound import hire_external_agent
+    from nexus.integrations.a2a.outbound import hire_external_agent
 
     try:
         result = await hire_external_agent(

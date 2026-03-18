@@ -17,7 +17,7 @@ from collections.abc import Callable
 from typing import Any
 
 from nexus.db.models import AgentRole
-from nexus.keepsave.tools import (
+from nexus.integrations.keepsave.tools import (
     tool_keepsave_audit_log,
     tool_keepsave_create_secret,
     tool_keepsave_get_secret_info,

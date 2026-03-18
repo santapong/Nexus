@@ -17,11 +17,11 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.db.models import AuditLog, Task, TaskStatus
-from nexus.kafka.consumer import create_consumer
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentResponse
-from nexus.kafka.topics import Topics
-from nexus.redis.clients import redis_cache
+from nexus.integrations.kafka.consumer import create_consumer
+from nexus.integrations.kafka.producer import publish
+from nexus.integrations.kafka.schemas import AgentResponse
+from nexus.integrations.kafka.topics import Topics
+from nexus.integrations.redis.clients import redis_cache
 
 logger = structlog.get_logger()
 

@@ -17,12 +17,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import Task, TaskStatus
-from nexus.kafka.consumer import check_idempotency, create_consumer
-from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentResponse, TaskResult
-from nexus.kafka.topics import Topics
-from nexus.redis.clients import redis_pubsub
+from nexus.integrations.kafka.consumer import check_idempotency, create_consumer
+from nexus.integrations.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
+from nexus.integrations.kafka.producer import publish
+from nexus.integrations.kafka.schemas import AgentResponse, TaskResult
+from nexus.integrations.kafka.topics import Topics
+from nexus.integrations.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 
@@ -208,7 +208,7 @@ async def _forward_to_ceo(
         subtask_output = response.output.get("result", str(response.output))
 
     # Publish to task.queue so CEO picks it up as a response notification
-    from nexus.kafka.schemas import AgentCommand
+    from nexus.integrations.kafka.schemas import AgentCommand
 
     ceo_command = AgentCommand(
         task_id=response.task_id,

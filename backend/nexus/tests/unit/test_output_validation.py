@@ -9,7 +9,7 @@ import pytest
 
 from nexus.agents.base import AgentBase
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentResponse
+from nexus.integrations.kafka.schemas import AgentResponse
 
 
 class FakeAgent(AgentBase):

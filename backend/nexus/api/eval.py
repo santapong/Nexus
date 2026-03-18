@@ -167,7 +167,7 @@ class EvalController(Controller):
         """
         try:
             from nexus.db.session import get_session_factory
-            from nexus.eval.runner import run_eval_suite
+            from nexus.integrations.eval.runner import run_eval_suite
 
             factory = get_session_factory()
             summary = await run_eval_suite(db_session_factory=factory)

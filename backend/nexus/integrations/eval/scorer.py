@@ -11,7 +11,7 @@ import json
 
 import structlog
 
-from nexus.eval.schemas import EvalDimensions, EvalScoreResult
+from nexus.integrations.eval.schemas import EvalDimensions, EvalScoreResult
 
 logger = structlog.get_logger()
 
@@ -64,7 +64,7 @@ async def score_output(
     )
 
     try:
-        from nexus.llm.factory import ModelFactory
+        from nexus.integrations.llm.factory import ModelFactory
 
         model = ModelFactory.get_model_by_name(_JUDGE_MODEL)
 

@@ -15,7 +15,7 @@ from nexus.agents.prompt_creator import (
     _FAILURE_RATE_THRESHOLD,
     PromptCreatorAgent,
 )
-from nexus.kafka.schemas import AgentCommand
+from nexus.integrations.kafka.schemas import AgentCommand
 
 
 @pytest.fixture

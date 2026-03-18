@@ -11,9 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import AgentRole, EpisodicMemory, LLMUsage, Task, TaskSource, TaskStatus
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentCommand
-from nexus.kafka.topics import Topics
+from nexus.integrations.kafka.producer import publish
+from nexus.integrations.kafka.schemas import AgentCommand
+from nexus.integrations.kafka.topics import Topics
 
 logger = structlog.get_logger()
 

@@ -15,7 +15,7 @@ import pytest
 from nexus.agents.ceo import CEOAgent
 from nexus.agents.qa import QAAgent
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand
+from nexus.integrations.kafka.schemas import AgentCommand
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 

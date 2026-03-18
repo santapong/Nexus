@@ -13,7 +13,7 @@ import time
 import structlog
 from aiokafka import AIOKafkaProducer
 
-from nexus.kafka.schemas import KafkaMessage
+from nexus.integrations.kafka.schemas import KafkaMessage
 from nexus.settings import settings
 
 logger = structlog.get_logger()

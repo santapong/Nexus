@@ -14,8 +14,8 @@ from pydantic_ai import Agent as PydanticAgent
 
 from nexus.agents.base import AgentBase, ToolCallLimitExceededError
 from nexus.db.models import AgentRole
-from nexus.kafka.topics import Topics
-from nexus.llm.factory import ModelFactory
+from nexus.integrations.kafka.topics import Topics
+from nexus.integrations.llm.factory import ModelFactory
 from nexus.tools.registry import get_tools_for_role
 
 # Kafka topic subscriptions per role

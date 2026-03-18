@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import structlog
 
-from nexus.workflows.schemas import TaskWorkflowInput, TaskWorkflowOutput
+from nexus.integrations.temporal.schemas import TaskWorkflowInput, TaskWorkflowOutput
 
 logger = structlog.get_logger()
 
@@ -37,7 +37,7 @@ async def task_execution_workflow(
         estimated_minutes=input_data.estimated_duration_minutes,
     )
 
-    from nexus.workflows.activities import execute_task_activity
+    from nexus.integrations.temporal.activities import execute_task_activity
 
     result = await execute_task_activity(input_data)
 

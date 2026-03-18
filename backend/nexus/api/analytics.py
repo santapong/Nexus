@@ -704,9 +704,9 @@ class AnalyticsController(Controller):
         try:
             import uuid
 
-            from nexus.kafka.producer import publish
-            from nexus.kafka.schemas import AgentCommand
-            from nexus.kafka.topics import Topics
+            from nexus.integrations.kafka.producer import publish
+            from nexus.integrations.kafka.schemas import AgentCommand
+            from nexus.integrations.kafka.topics import Topics
 
             command = AgentCommand(
                 task_id=uuid.uuid4(),

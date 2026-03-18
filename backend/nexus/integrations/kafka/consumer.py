@@ -5,7 +5,7 @@ import json
 import structlog
 from aiokafka import AIOKafkaConsumer
 
-from nexus.redis.clients import redis_locks
+from nexus.integrations.redis.clients import redis_locks
 from nexus.settings import settings
 
 logger = structlog.get_logger()

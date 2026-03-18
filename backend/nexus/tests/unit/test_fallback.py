@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from nexus.llm.factory import ModelFactory, _parse_fallback_list
+from nexus.integrations.llm.factory import ModelFactory, _parse_fallback_list
 
 
 class TestParseFallbackList:

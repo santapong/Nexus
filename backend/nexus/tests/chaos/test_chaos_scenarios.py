@@ -35,8 +35,8 @@ class TestKafkaUnavailable:
         )
         mock_get_producer.return_value = mock_producer
 
-        from nexus.kafka.producer import publish
-        from nexus.kafka.schemas import KafkaMessage
+        from nexus.integrations.kafka.producer import publish
+        from nexus.integrations.kafka.schemas import KafkaMessage
 
         msg = KafkaMessage(
             task_id=uuid4(),
@@ -61,7 +61,7 @@ class TestRedisWiped:
         """When Redis has no spend counter, check_daily_spend allows work."""
         mock_redis.get = AsyncMock(return_value=None)
 
-        from nexus.llm.usage import check_daily_spend
+        from nexus.integrations.llm.usage import check_daily_spend
 
         result = await check_daily_spend()
         assert result is True
@@ -72,7 +72,7 @@ class TestRedisWiped:
         """When Redis has no task budget key, check_task_budget allows work."""
         mock_redis.get = AsyncMock(return_value=None)
 
-        from nexus.llm.usage import check_task_budget
+        from nexus.integrations.llm.usage import check_task_budget
 
         result_ok, tokens_used = await check_task_budget("test-task-id")
         assert result_ok is True
@@ -84,7 +84,7 @@ class TestRedisWiped:
         """When idempotency keys are wiped, messages are processed."""
         mock_redis.set = AsyncMock(return_value=True)
 
-        from nexus.kafka.consumer import check_idempotency
+        from nexus.integrations.kafka.consumer import check_idempotency
 
         result = await check_idempotency("test-message-id")
         assert result is True
@@ -132,7 +132,7 @@ class TestTokenBudgetExceededError:
 
         mock_redis.get = AsyncMock(return_value=str(settings.daily_spend_limit_usd + 1.0))
 
-        from nexus.llm.usage import check_daily_spend
+        from nexus.integrations.llm.usage import check_daily_spend
 
         result = await check_daily_spend()
         assert result is False
@@ -143,7 +143,7 @@ class TestTokenBudgetExceededError:
         """check_task_budget returns False when tokens exceed budget."""
         mock_redis.get = AsyncMock(return_value="60000")
 
-        from nexus.llm.usage import check_task_budget
+        from nexus.integrations.llm.usage import check_task_budget
 
         result_ok, tokens_used = await check_task_budget("test-task", budget=50000)
         assert result_ok is False
@@ -169,7 +169,7 @@ class TestDuplicateMessage:
         """First occurrence of a message_id is marked as new."""
         mock_redis.set = AsyncMock(return_value=True)
 
-        from nexus.kafka.consumer import check_idempotency
+        from nexus.integrations.kafka.consumer import check_idempotency
 
         result = await check_idempotency("msg-001")
         assert result is True
@@ -180,7 +180,7 @@ class TestDuplicateMessage:
         """Second occurrence of same message_id is rejected."""
         mock_redis.set = AsyncMock(return_value=False)
 
-        from nexus.kafka.consumer import check_idempotency
+        from nexus.integrations.kafka.consumer import check_idempotency
 
         result = await check_idempotency("msg-001")
         assert result is False
@@ -191,7 +191,7 @@ class TestDuplicateMessage:
         """Idempotency key follows the pattern 'idempotency:{message_id}'."""
         mock_redis.set = AsyncMock(return_value=True)
 
-        from nexus.kafka.consumer import check_idempotency
+        from nexus.integrations.kafka.consumer import check_idempotency
 
         await check_idempotency("test-123")
         mock_redis.set.assert_called_with("idempotency:test-123", "1", nx=True, ex=86400)
@@ -206,7 +206,7 @@ class TestInvalidA2AToken:
     @pytest.mark.asyncio
     async def test_revoked_token_rejected(self) -> None:
         """Revoked token returns invalid from cache check."""
-        from nexus.gateway.auth import _CachedToken, _check_token_validity
+        from nexus.integrations.a2a.auth import _CachedToken, _check_token_validity
 
         token = _CachedToken(
             token_hash="abc",
@@ -284,7 +284,7 @@ class TestDeadLetterRouting:
         mock_redis.incr = AsyncMock(return_value=1)
         mock_redis.expire = AsyncMock()
 
-        from nexus.kafka.dead_letter import increment_retry
+        from nexus.integrations.kafka.dead_letter import increment_retry
 
         count = await increment_retry("msg-001")
         assert count == 1
@@ -297,14 +297,14 @@ class TestDeadLetterRouting:
         """After MAX_RETRIES, message should be routed to dead letter."""
         mock_redis.incr = AsyncMock(return_value=3)
 
-        from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry
+        from nexus.integrations.kafka.dead_letter import MAX_RETRIES, increment_retry
 
         count = await increment_retry("msg-001")
         assert count >= MAX_RETRIES
 
     def test_dead_letter_topic_naming(self) -> None:
         """Dead letter topics follow the naming convention."""
-        from nexus.kafka.topics import Topics
+        from nexus.integrations.kafka.topics import Topics
 
         assert Topics.dead_letter_for("task.queue") == "task.queue.dead_letter"
         assert Topics.dead_letter_for("agent.commands") == "agent.commands.dead_letter"

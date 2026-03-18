@@ -10,7 +10,7 @@ import pytest
 from nexus.agents.base import AgentBase, ToolCallLimitExceededError
 from nexus.agents.factory import _wrap_tools_with_counter
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand, AgentResponse
+from nexus.integrations.kafka.schemas import AgentCommand, AgentResponse
 
 # ─── Tool wrapping tests ─────────────────────────────────────────────────────
 

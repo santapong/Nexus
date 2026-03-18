@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from nexus.kafka.schemas import AgentCommand, AgentResponse
+from nexus.integrations.kafka.schemas import AgentCommand, AgentResponse
 
 
 @pytest.fixture
