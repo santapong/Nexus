@@ -64,7 +64,7 @@ async def score_output(
     )
 
     try:
-        from nexus.integrations.llm.factory import ModelFactory
+        from nexus.core.llm.factory import ModelFactory
 
         model = ModelFactory.get_model_by_name(_JUDGE_MODEL)
 

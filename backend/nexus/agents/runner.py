@@ -15,8 +15,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from nexus.agents.factory import build_agent
 from nexus.agents.health_monitor import run_health_monitor
+from nexus.core.kafka.result_consumer import run_result_consumer
 from nexus.db.models import Agent, AgentRole
-from nexus.integrations.kafka.result_consumer import run_result_consumer
 from nexus.settings import settings
 
 logger = structlog.get_logger()

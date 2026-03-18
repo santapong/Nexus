@@ -15,15 +15,15 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
+from nexus.core.kafka.topics import Topics
 from nexus.db.models import (
     EpisodicMemory,
     Prompt,
     PromptBenchmark,
     Task,
 )
-from nexus.integrations.kafka.producer import publish
-from nexus.integrations.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
-from nexus.integrations.kafka.topics import Topics
 
 logger = structlog.get_logger()
 

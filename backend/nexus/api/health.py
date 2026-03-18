@@ -30,7 +30,7 @@ class HealthController(Controller):
             checks["postgres"] = f"error: {exc}"
 
         # Check Redis (all 4 databases)
-        from nexus.integrations.redis.clients import redis_cache, redis_locks, redis_pubsub, redis_working
+        from nexus.core.redis.clients import redis_cache, redis_locks, redis_pubsub, redis_working
 
         for name, client in [
             ("redis_working", redis_working),

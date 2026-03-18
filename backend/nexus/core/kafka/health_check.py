@@ -9,7 +9,7 @@ import structlog
 from aiokafka import AIOKafkaProducer
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 
-from nexus.integrations.kafka.topics import Topics
+from nexus.core.kafka.topics import Topics
 from nexus.settings import settings
 
 logger = structlog.get_logger()

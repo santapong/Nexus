@@ -25,18 +25,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.audit.service import AuditEventType, log_event
+from nexus.core.kafka.consumer import check_idempotency, create_consumer
+from nexus.core.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
+from nexus.core.kafka.producer import get_producer, publish
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
+from nexus.core.kafka.topics import Topics
+from nexus.core.llm.usage import check_daily_spend, check_task_budget
+from nexus.core.redis.clients import redis_pubsub
 from nexus.db.models import Agent as AgentModel
 from nexus.db.models import AgentRole
-from nexus.integrations.kafka.consumer import check_idempotency, create_consumer
-from nexus.integrations.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
-from nexus.integrations.kafka.producer import get_producer, publish
-from nexus.integrations.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
-from nexus.integrations.kafka.topics import Topics
-from nexus.integrations.llm.usage import check_daily_spend, check_task_budget
 from nexus.memory.embeddings import generate_embedding
 from nexus.memory.episodic import recall_similar, write_episode
 from nexus.memory.working import clear_working_memory, get_working_memory
-from nexus.integrations.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 

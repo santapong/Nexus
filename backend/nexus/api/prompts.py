@@ -17,10 +17,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.audit.service import AuditEventType, log_event
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import KafkaMessage
+from nexus.core.kafka.topics import Topics
 from nexus.db.models import Agent, AuditLog, Prompt
-from nexus.integrations.kafka.producer import publish
-from nexus.integrations.kafka.schemas import KafkaMessage
-from nexus.integrations.kafka.topics import Topics
 
 logger = structlog.get_logger()
 

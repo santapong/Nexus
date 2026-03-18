@@ -8,8 +8,8 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from nexus.core.kafka.topics import Topics
 from nexus.db.models import Agent, AgentRole, Prompt, PromptBenchmark
-from nexus.integrations.kafka.topics import Topics
 from nexus.settings import settings
 
 logger = structlog.get_logger()

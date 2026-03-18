@@ -200,7 +200,7 @@ class TestA2AEndToEndFlow:
         """submit_task creates an AgentCommand targeting the CEO."""
         from uuid import uuid4
 
-        from nexus.integrations.kafka.schemas import AgentCommand
+        from nexus.core.kafka.schemas import AgentCommand
 
         task_id = uuid4()
         trace_id = uuid4()

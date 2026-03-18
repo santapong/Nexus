@@ -14,7 +14,7 @@ from uuid import uuid4
 
 import pytest
 
-from nexus.integrations.kafka.meeting import (
+from nexus.core.kafka.meeting import (
     MeetingConfig,
     MeetingMessage,
     MeetingRoom,

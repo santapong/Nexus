@@ -10,8 +10,8 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.audit.service import AuditEventType, log_event
+from nexus.core.redis.clients import redis_cache
 from nexus.db.models import LLMUsage
-from nexus.integrations.redis.clients import redis_cache
 from nexus.settings import settings
 
 logger = structlog.get_logger()

@@ -10,7 +10,7 @@ import time
 
 import structlog
 
-from nexus.integrations.redis.clients import redis_cache
+from nexus.core.redis.clients import redis_cache
 
 logger = structlog.get_logger()
 

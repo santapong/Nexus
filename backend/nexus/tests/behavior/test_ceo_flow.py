@@ -12,8 +12,8 @@ from uuid import uuid4
 import pytest
 
 from nexus.agents.ceo import CEOAgent
+from nexus.core.kafka.schemas import AgentCommand
 from nexus.db.models import AgentRole
-from nexus.integrations.kafka.schemas import AgentCommand
 
 
 def _make_mock_llm() -> MagicMock:

@@ -23,6 +23,10 @@ from litestar.response import Stream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand
+from nexus.core.kafka.topics import Topics
+from nexus.core.redis.clients import redis_pubsub
 from nexus.db.models import Task, TaskSource, TaskStatus
 from nexus.integrations.a2a.auth import validate_token
 from nexus.integrations.a2a.rate_limiter import check_rate_limit
@@ -31,10 +35,6 @@ from nexus.integrations.a2a.schemas import (
     A2ATaskResponse,
     AgentCard,
 )
-from nexus.integrations.kafka.producer import publish
-from nexus.integrations.kafka.schemas import AgentCommand
-from nexus.integrations.kafka.topics import Topics
-from nexus.integrations.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 

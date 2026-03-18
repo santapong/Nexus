@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from nexus.integrations.redis.clients import redis_working
+from nexus.core.redis.clients import redis_working
 
 
 async def get_working_memory(agent_id: str, task_id: str) -> dict[str, Any]:

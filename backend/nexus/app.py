@@ -9,8 +9,8 @@ from litestar import Litestar
 from litestar.config.cors import CORSConfig
 
 from nexus.api.router import a2a_router, api_router, health_router
+from nexus.core.kafka.producer import close_producer
 from nexus.db.session import sqlalchemy_config
-from nexus.integrations.kafka.producer import close_producer
 from nexus.settings import settings
 
 logger = structlog.get_logger()

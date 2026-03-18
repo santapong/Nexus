@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from nexus.integrations.kafka.result_consumer import _handle_response, _map_status
+from nexus.core.kafka.result_consumer import _handle_response, _map_status
 
 
 def _make_response_raw(
@@ -173,7 +173,7 @@ async def test_handle_response_skips_ceo_delegation() -> None:
 @pytest.mark.asyncio
 async def test_handle_response_publishes_task_result() -> None:
     """Completed response should publish a TaskResult to task.results topic."""
-    from nexus.integrations.kafka.topics import Topics
+    from nexus.core.kafka.topics import Topics
 
     raw = _make_response_raw(status="success")
     mock_task = MagicMock()

@@ -10,10 +10,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand
+from nexus.core.kafka.topics import Topics
 from nexus.db.models import AgentRole, EpisodicMemory, LLMUsage, Task, TaskSource, TaskStatus
-from nexus.integrations.kafka.producer import publish
-from nexus.integrations.kafka.schemas import AgentCommand
-from nexus.integrations.kafka.topics import Topics
 
 logger = structlog.get_logger()
 

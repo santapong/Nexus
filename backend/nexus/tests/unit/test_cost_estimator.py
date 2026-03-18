@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from nexus.integrations.llm.cost_estimator import (
+from nexus.core.llm.cost_estimator import (
     CostEstimate,
     SubtaskEstimate,
     _estimate_cost_for_tokens,
