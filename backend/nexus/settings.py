@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
+    cors_allowed_origins: str = "http://localhost:5173"
 
     # Agent Model Map (role -> model name)
     model_ceo: str = "claude-sonnet-4-20250514"

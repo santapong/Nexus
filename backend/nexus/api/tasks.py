@@ -47,6 +47,12 @@ class TaskController(Controller):
         db_session: AsyncSession,
     ) -> dict[str, str]:
         """Create a new task and publish to task.queue."""
+        from nexus.api.middleware import validate_instruction
+
+        validation = validate_instruction(data.instruction)
+        if not validation.valid:
+            return {"error": validation.error or "Invalid instruction", "status": "rejected"}
+
         trace_id = str(uuid4())
         task = Task(
             trace_id=trace_id,

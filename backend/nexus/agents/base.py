@@ -192,10 +192,9 @@ class AgentBase(ABC):
             # 0. Hot-reload system prompt if changed in DB
             await self._check_prompt_reload()
 
-            # 2. Budget check
-            await self._check_budget(task_id)
-
             async with self.db_session_factory() as session:
+                # 2. Budget check (inside session for DB fallback on Redis failure)
+                await self._check_budget(task_id, session=session)
                 # Audit: task_received
                 await log_event(
                     session=session,
@@ -331,13 +330,18 @@ class AgentBase(ABC):
 
     # ─── Budget enforcement ──────────────────────────────────────────────────
 
-    async def _check_budget(self, task_id: str) -> None:
+    async def _check_budget(
+        self,
+        task_id: str,
+        *,
+        session: AsyncSession | None = None,
+    ) -> None:
         """Check both daily spend limit and per-task token budget.
 
         Raises TokenBudgetExceededError if either limit is reached.
         Must be called before every LLM call.
         """
-        daily_ok = await check_daily_spend()
+        daily_ok = await check_daily_spend(session=session)
         if not daily_ok:
             raise TokenBudgetExceededError("Daily spend limit reached")
 

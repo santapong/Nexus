@@ -7,6 +7,7 @@ When Redis is unavailable, falls back to DB queries for budget checks.
 from __future__ import annotations
 
 import structlog
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.audit.service import AuditEventType, log_event
@@ -61,24 +62,59 @@ def calculate_cost(model_name: str, input_tokens: int, output_tokens: int) -> fl
     return (input_tokens * pricing["input"] + output_tokens * pricing["output"]) / 1_000_000
 
 
-async def check_daily_spend() -> bool:
+def _daily_spend_key() -> str:
+    """Date-keyed Redis key for daily spend tracking.
+
+    Prevents counter reset on Redis restart mid-day.
+    """
+    from datetime import date
+
+    return f"daily_spend_usd:{date.today().isoformat()}"
+
+
+async def check_daily_spend(
+    session: AsyncSession | None = None,
+) -> bool:
     """Check if daily spend limit has been reached.
 
-    Falls back to True (allow) if Redis is unavailable — the DB
-    is the source of truth and will catch overspend on next
-    record_usage call.
+    Uses date-keyed Redis counter. Falls back to DB query if Redis
+    misses or fails. Only returns True (allow) as last resort.
+
+    Args:
+        session: Optional DB session for fallback query.
 
     Returns:
         True if within budget, False if limit reached.
     """
+    limit = float(settings.daily_spend_limit_usd)
+
+    # Try Redis first (fast path)
     try:
-        current = await redis_cache.get("daily_spend_usd")
-        if current is None:
-            return True
-        return float(current) < float(settings.daily_spend_limit_usd)
+        current = await redis_cache.get(_daily_spend_key())
+        if current is not None:
+            return float(current) < limit
     except Exception as exc:
         logger.warning("redis_daily_spend_check_failed", error=str(exc))
-        return True  # Allow — DB is source of truth
+
+    # Redis miss or failure — fall back to DB (source of truth)
+    if session is not None:
+        try:
+            from datetime import UTC, datetime
+
+            today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+            result = await session.execute(
+                select(func.coalesce(func.sum(LLMUsage.cost_usd), 0.0)).where(
+                    LLMUsage.created_at >= today_start
+                )
+            )
+            db_total = float(result.scalar_one())
+            return db_total < limit
+        except Exception as exc:
+            logger.warning("db_daily_spend_check_failed", error=str(exc))
+
+    # Both Redis and DB failed — allow but log warning
+    logger.warning("daily_spend_check_fallback_allow")
+    return True
 
 
 async def check_task_budget(task_id: str, budget: int | None = None) -> tuple[bool, int]:
@@ -147,8 +183,9 @@ async def record_usage(
         )
 
     try:
-        await redis_cache.incrbyfloat("daily_spend_usd", cost_usd)
-        await redis_cache.expire("daily_spend_usd", 86400)
+        key = _daily_spend_key()
+        await redis_cache.incrbyfloat(key, cost_usd)
+        await redis_cache.expire(key, 90000)  # 25h — auto-expire next day
     except Exception as exc:
         logger.warning(
             "redis_daily_spend_update_failed",

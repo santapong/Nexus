@@ -16,6 +16,19 @@ from pathlib import Path
 import httpx
 import structlog
 from sqlalchemy import select
+
+_MAX_TOOL_OUTPUT_SIZE = 50_000  # 50KB max per tool response
+
+
+def _sanitize_tool_output(output: str) -> str:
+    """Truncate tool output if it exceeds the size limit.
+
+    Prevents agents from processing excessively large tool responses
+    that could consume excessive tokens or cause context overflow.
+    """
+    if len(output) > _MAX_TOOL_OUTPUT_SIZE:
+        return output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
+    return output
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import EpisodicMemory, SemanticMemory
@@ -49,7 +62,8 @@ async def tool_web_search(query: str) -> str:
             for topic in data.get("RelatedTopics", [])[:5]:
                 if isinstance(topic, dict) and "Text" in topic:
                     results.append(topic["Text"])
-            return "\n\n".join(results) if results else "No results found."
+            output = "\n\n".join(results) if results else "No results found."
+            return _sanitize_tool_output(output)
     except Exception as exc:
         logger.error("web_search_failed", query=query, error=str(exc))
         return f"Search failed: {exc}"
@@ -86,7 +100,7 @@ async def tool_web_fetch(url: str) -> str:
 
             if len(text) > 10_000:
                 text = text[:10_000] + "\n\n[Content truncated at 10000 characters]"
-            return text
+            return _sanitize_tool_output(text)
     except Exception as exc:
         logger.error("web_fetch_failed", url=url, error=str(exc))
         return f"Fetch failed: {exc}"
@@ -107,7 +121,7 @@ async def tool_file_read(path: str) -> str:
     if not file_path.is_file():
         return f"Error: Not a file: {path}"
     try:
-        return file_path.read_text(encoding="utf-8")
+        return _sanitize_tool_output(file_path.read_text(encoding="utf-8"))
     except Exception as exc:
         return f"Error reading file: {exc}"
 
@@ -140,7 +154,7 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
         output = result.stdout
         if result.stderr:
             output += f"\nSTDERR:\n{result.stderr}"
-        return output or "(no output)"
+        return _sanitize_tool_output(output or "(no output)")
     except subprocess.TimeoutExpired:
         return "Error: Code execution timed out (30s limit)"
     except Exception as exc:
