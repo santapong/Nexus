@@ -3,6 +3,12 @@
 Each agent role has a list of tools it is allowed to use.
 Tools in IRREVERSIBLE_TOOLS require human approval before execution.
 KeepSave tools provide secret management and MCP gateway access.
+
+Security layers (defense in depth):
+  1. This file (registry.py) — controls which TOOLS each role has
+  2. rbac.py — controls which SECRETS and OPERATIONS each role can touch
+  3. guards.py — requires human approval for irreversible operations
+  4. KeepSave-side — promotion approval for PROD changes
 """
 
 from __future__ import annotations
@@ -60,21 +66,30 @@ _KEEPSAVE_READ_TOOLS: list[Callable[..., Any]] = [
     tool_keepsave_mcp_list_tools,
 ]
 
-# KeepSave write tools — only CEO and Engineer can modify secrets
-_KEEPSAVE_WRITE_TOOLS: list[Callable[..., Any]] = [
+# KeepSave write tools — CEO gets full access, Engineer gets limited
+# Fine-grained secret scoping enforced by rbac.py (Layer 2)
+_KEEPSAVE_CEO_WRITE_TOOLS: list[Callable[..., Any]] = [
     tool_keepsave_update_secret,
     tool_keepsave_create_secret,
-    tool_keepsave_promote_environment,
+    tool_keepsave_promote_environment,  # CEO: can promote to uat + prod
+    tool_keepsave_mcp_call,
+]
+
+_KEEPSAVE_ENGINEER_WRITE_TOOLS: list[Callable[..., Any]] = [
+    tool_keepsave_update_secret,        # RBAC limits to LLM keys + cost only
+    tool_keepsave_promote_environment,  # RBAC limits to uat only (not prod)
     tool_keepsave_mcp_call,
 ]
 
 # Per-role tool access map — matches CLAUDE.md §8 + KeepSave integration
+# Layer 1: controls which tools each role can CALL
+# Layer 2 (rbac.py): controls which secrets/operations within those tools
 TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
     AgentRole.CEO: [
         tool_hire_external_agent,
-        # CEO can view secrets and trigger promotions (with approval)
+        # CEO: full KeepSave access (read + write all scopes)
         *_KEEPSAVE_READ_TOOLS,
-        *_KEEPSAVE_WRITE_TOOLS,
+        *_KEEPSAVE_CEO_WRITE_TOOLS,
     ],
     AgentRole.ENGINEER: [
         tool_web_search,
@@ -83,9 +98,9 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_write,
         tool_git_push,
         tool_hire_external_agent,
-        # Engineer can view secrets, update them (with approval), and call MCP tools
+        # Engineer: read all visible scopes + write LLM keys/cost only (RBAC enforced)
         *_KEEPSAVE_READ_TOOLS,
-        *_KEEPSAVE_WRITE_TOOLS,
+        *_KEEPSAVE_ENGINEER_WRITE_TOOLS,
     ],
     AgentRole.ANALYST: [
         tool_web_search,
@@ -93,7 +108,7 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_read,
         tool_file_write,
         tool_hire_external_agent,
-        # Analyst can view secrets and call MCP tools (with approval)
+        # Analyst: read-only secrets + MCP gateway (no secret writes)
         *_KEEPSAVE_READ_TOOLS,
         tool_keepsave_mcp_call,
     ],
@@ -103,18 +118,20 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_write,
         tool_send_email,
         tool_hire_external_agent,
+        # Writer: no KeepSave access
     ],
     AgentRole.QA: [
         tool_file_read,
         tool_web_search,
         tool_hire_external_agent,
-        # QA can view secrets for verification (read-only)
+        # QA: read-only KeepSave for verification
         *_KEEPSAVE_READ_TOOLS,
     ],
     AgentRole.PROMPT_CREATOR: [
         tool_web_search,
         tool_file_read,
         tool_memory_read,
+        # Prompt Creator: no KeepSave access
     ],
 }
 

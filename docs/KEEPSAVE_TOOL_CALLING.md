@@ -80,6 +80,41 @@ For environment promotions targeting PROD:
 **Result**: Even if a Nexus human approves the action, KeepSave still enforces
 its own security policy for PROD changes. Defense in depth.
 
+### Gate 1.5: RBAC Secret Scoping (rbac.py)
+
+Between the tool registry and the human approval, RBAC controls **which secrets**
+each role can touch. Even if an Engineer has `tool_keepsave_update_secret`, RBAC
+restricts them to LLM API keys and cost settings only.
+
+**Secret Scope Categories:**
+
+| Scope | Secrets | CEO | Engineer | Analyst | QA |
+|-------|---------|-----|----------|---------|-----|
+| `llm_keys` | ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY, etc. | R/W | R/W | R | R |
+| `infrastructure` | DATABASE_URL, REDIS_URL, KAFKA_* | R/W | - | - | - |
+| `auth` | JWT_SECRET_KEY, A2A_INBOUND_TOKEN | R/W | - | - | - |
+| `cost_controls` | DAILY_SPEND_LIMIT_USD, DEFAULT_TOKEN_BUDGET | R/W | R/W | R | R |
+| `external` | TEMPORAL_*, LANGFUSE_*, KEEPSAVE_* | R/W | R | - | - |
+| Unclassified | Any new secret not in the map | R/W | - | - | - |
+
+**Promotion Target Restrictions:**
+
+| Role | Can promote to |
+|------|---------------|
+| CEO | uat, prod |
+| Engineer | uat only |
+| All others | none |
+
+**Example — Engineer tries to update JWT_SECRET_KEY:**
+```
+Engineer calls tool_keepsave_update_secret("JWT_SECRET_KEY", "new-secret")
+  → RBAC check: JWT_SECRET_KEY is scope "auth"
+  → Engineer write scopes: {llm_keys, cost_controls}
+  → "auth" not in allowed scopes
+  → Returns: "RBAC denied: Engineer cannot write secret 'JWT_SECRET_KEY' — scope 'auth' not in write permissions"
+  → Human approval is never even asked
+```
+
 ## Tool Registry
 
 ### Read-Only Tools (no approval needed)
