@@ -304,9 +304,34 @@ kubectl apply -k k8s/overlays/prod
 
 Services: PostgreSQL (StatefulSet + PVC), Redis, Kafka (StatefulSet + PVC), Backend (with init container for migrations), Frontend (nginx), Ingress (WebSocket + SSE support).
 
+## KeepSave Integration
+
+NEXUS integrates with [KeepSave](https://github.com/santapong/KeepSave) for secure secret management, replacing hardcoded credentials with encrypted vault storage.
+
+| Feature | How NEXUS Uses It |
+|---------|-------------------|
+| **Secret Vault** | All LLM API keys, DB URLs, JWT secrets encrypted at rest (AES-256-GCM) |
+| **OAuth 2.0** | SSO for dashboard users + A2A external agent authentication |
+| **Environment Promotion** | Manage configs across dev → staging → prod with diff preview and approval |
+| **API Keys** | Scoped, time-limited keys for agent runtime secret access |
+| **Audit Trail** | Track who accessed which secrets and when |
+
+**Quick start:**
+```bash
+# Only 3 non-sensitive values needed in .env
+KEEPSAVE_URL=http://localhost:8080
+KEEPSAVE_API_KEY=ks_...
+KEEPSAVE_PROJECT_ID=<uuid>
+NEXUS_ENV=alpha
+# All other secrets (API keys, DB URLs, JWT) fetched from KeepSave at startup
+```
+
+This resolves security audit findings #1 (hardcoded JWT secret) and #2 (hardcoded A2A token). See [docs/KEEPSAVE_INTEGRATION.md](docs/KEEPSAVE_INTEGRATION.md) for the full guide.
+
 ## Documentation
 
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System architecture, data flows, and design fundamentals
+- **[KEEPSAVE_INTEGRATION.md](docs/KEEPSAVE_INTEGRATION.md)** — KeepSave secret management integration guide
 - **[CLAUDE.md](CLAUDE.md)** — Master project document with full architecture, schemas, and policies
 - **[DECISIONS.md](docs/DECISIONS.md)** — Architecture Decision Records (26 ADRs)
 - **[RISK_REVIEW.md](docs/RISK_REVIEW.md)** — Risk assessment and phase gate checklist
