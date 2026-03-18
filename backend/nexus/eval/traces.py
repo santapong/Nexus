@@ -3,6 +3,7 @@
 Provides integration functions called by AgentBase and the eval runner
 to automatically send traces to LangFuse without changing agent logic.
 """
+
 from __future__ import annotations
 
 import json

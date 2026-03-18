@@ -2,6 +2,7 @@
 
 Run standalone with: python -m nexus.workflows.worker
 """
+
 from __future__ import annotations
 
 import asyncio

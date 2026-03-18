@@ -4,10 +4,10 @@ Provides CRUD operations for agent prompts, including diff view
 between active and proposed versions, activation with approval,
 version creation, and rollback.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import structlog
@@ -100,9 +100,7 @@ class PromptController(Controller):
         Returns:
             List of prompts.
         """
-        stmt = select(Prompt).order_by(
-            Prompt.agent_role, Prompt.version.desc()
-        )
+        stmt = select(Prompt).order_by(Prompt.agent_role, Prompt.version.desc())
         if role:
             stmt = stmt.where(Prompt.agent_role == role)
         if active_only:
@@ -177,9 +175,7 @@ class PromptController(Controller):
             The newly created prompt.
         """
         # Get max version for this role
-        max_ver_stmt = select(func.max(Prompt.version)).where(
-            Prompt.agent_role == data.agent_role
-        )
+        max_ver_stmt = select(func.max(Prompt.version)).where(Prompt.agent_role == data.agent_role)
         max_ver_result = await db_session.execute(max_ver_stmt)
         max_version = max_ver_result.scalar() or 0
 
@@ -247,12 +243,9 @@ class PromptController(Controller):
 
         # Find current active version for audit trail
         previous_version: int | None = None
-        deactivate_stmt = (
-            select(Prompt)
-            .where(
-                Prompt.agent_role == prompt.agent_role,
-                Prompt.is_active.is_(True),
-            )
+        deactivate_stmt = select(Prompt).where(
+            Prompt.agent_role == prompt.agent_role,
+            Prompt.is_active.is_(True),
         )
         deactivate_result = await db_session.execute(deactivate_stmt)
         for old_prompt in deactivate_result.scalars().all():
@@ -261,7 +254,7 @@ class PromptController(Controller):
 
         # Activate the new prompt
         prompt.is_active = True
-        prompt.approved_at = datetime.now(timezone.utc)
+        prompt.approved_at = datetime.now(UTC)
 
         # Sync: update agents.system_prompt so running agents pick up the change
         await _sync_agent_prompt(db_session, prompt.agent_role, prompt.content)
@@ -324,12 +317,9 @@ class PromptController(Controller):
 
         # Find and deactivate current active prompt
         previous_version: int | None = None
-        deactivate_stmt = (
-            select(Prompt)
-            .where(
-                Prompt.agent_role == target.agent_role,
-                Prompt.is_active.is_(True),
-            )
+        deactivate_stmt = select(Prompt).where(
+            Prompt.agent_role == target.agent_role,
+            Prompt.is_active.is_(True),
         )
         deactivate_result = await db_session.execute(deactivate_stmt)
         for old_prompt in deactivate_result.scalars().all():
@@ -338,7 +328,7 @@ class PromptController(Controller):
 
         # Activate target version
         target.is_active = True
-        target.approved_at = datetime.now(timezone.utc)
+        target.approved_at = datetime.now(UTC)
 
         # Sync agents table
         await _sync_agent_prompt(db_session, target.agent_role, target.content)
@@ -394,10 +384,12 @@ class PromptController(Controller):
         stmt = (
             select(AuditLog)
             .where(
-                AuditLog.event_type.in_([
-                    AuditEventType.PROMPT_ACTIVATED.value,
-                    AuditEventType.PROMPT_ROLLBACK.value,
-                ]),
+                AuditLog.event_type.in_(
+                    [
+                        AuditEventType.PROMPT_ACTIVATED.value,
+                        AuditEventType.PROMPT_ROLLBACK.value,
+                    ]
+                ),
             )
             .order_by(AuditLog.created_at.desc())
             .limit(50)
@@ -411,13 +403,15 @@ class PromptController(Controller):
             data = event.event_data or {}
             if data.get("role") != role:
                 continue
-            history.append(PromptHistoryEntry(
-                version=data.get("version") or data.get("to_version", 0),
-                activated_at=str(event.created_at),
-                event_type=event.event_type,
-                previous_version=data.get("previous_version") or data.get("from_version"),
-                role=role,
-            ))
+            history.append(
+                PromptHistoryEntry(
+                    version=data.get("version") or data.get("to_version", 0),
+                    activated_at=str(event.created_at),
+                    event_type=event.event_type,
+                    previous_version=data.get("previous_version") or data.get("from_version"),
+                    role=role,
+                )
+            )
 
         return history
 
@@ -451,9 +445,7 @@ class PromptController(Controller):
                 "trigger": "manual",
             },
         )
-        await publish(
-            Topics.PROMPT_IMPROVEMENT, msg, key=str(task_id)
-        )
+        await publish(Topics.PROMPT_IMPROVEMENT, msg, key=str(task_id))
 
         logger.info(
             "prompt_improvement_triggered",
@@ -508,9 +500,7 @@ def _to_response(prompt: Prompt) -> PromptResponse:
     )
 
 
-def _simple_diff(
-    old_lines: list[str], new_lines: list[str]
-) -> list[str]:
+def _simple_diff(old_lines: list[str], new_lines: list[str]) -> list[str]:
     """Produce a simple line-by-line diff."""
     diff: list[str] = []
     old_set = set(old_lines)

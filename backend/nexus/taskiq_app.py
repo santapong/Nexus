@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from taskiq import TaskiqScheduler
 from taskiq_aio_kafka import AioKafkaBroker
 from taskiq_redis import RedisAsyncResultBackend
 

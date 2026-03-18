@@ -5,10 +5,10 @@ Endpoints:
 - GET  /api/billing/records       — List billing records
 - GET  /api/billing/invoice       — Generate invoice for a period
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from litestar import Controller, get
@@ -66,11 +66,9 @@ class BillingController(Controller):
     ) -> BillingSummary:
         """Get billing summary for the current workspace."""
         days = int(period.replace("d", "")) if period.endswith("d") else 30
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(UTC) - timedelta(days=days)
 
-        stmt = select(BillingRecord).where(
-            BillingRecord.created_at >= since
-        )
+        stmt = select(BillingRecord).where(BillingRecord.created_at >= since)
         result = await db_session.execute(stmt)
         records = list(result.scalars().all())
 
@@ -78,16 +76,14 @@ class BillingController(Controller):
         total = 0.0
         for record in records:
             total += record.amount_usd
-            by_type[record.billing_type] = (
-                by_type.get(record.billing_type, 0.0) + record.amount_usd
-            )
+            by_type[record.billing_type] = by_type.get(record.billing_type, 0.0) + record.amount_usd
 
         return BillingSummary(
             total_cost_usd=round(total, 4),
             total_tasks_billed=len(records),
             by_type={k: round(v, 4) for k, v in by_type.items()},
             period_start=since.isoformat(),
-            period_end=datetime.now(timezone.utc).isoformat(),
+            period_end=datetime.now(UTC).isoformat(),
         )
 
     @get("/records")
@@ -98,9 +94,7 @@ class BillingController(Controller):
         billing_type: str | None = None,
     ) -> list[BillingRecordResponse]:
         """List billing records with optional type filter."""
-        stmt = select(BillingRecord).order_by(
-            BillingRecord.created_at.desc()
-        )
+        stmt = select(BillingRecord).order_by(BillingRecord.created_at.desc())
         if billing_type:
             stmt = stmt.where(BillingRecord.billing_type == billing_type)
         stmt = stmt.limit(limit)
@@ -128,8 +122,8 @@ class BillingController(Controller):
     ) -> InvoiceResponse:
         """Generate an invoice for a billing period."""
         days = int(period.replace("d", "")) if period.endswith("d") else 30
-        since = datetime.now(timezone.utc) - timedelta(days=days)
-        now = datetime.now(timezone.utc)
+        since = datetime.now(UTC) - timedelta(days=days)
+        now = datetime.now(UTC)
 
         stmt = (
             select(BillingRecord)

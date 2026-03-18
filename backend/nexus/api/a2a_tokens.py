@@ -3,6 +3,7 @@
 Endpoints for creating, listing, revoking, and rotating A2A tokens.
 Tokens are stored in the a2a_tokens table with SHA-256 hash.
 """
+
 from __future__ import annotations
 
 import secrets
@@ -109,9 +110,7 @@ class A2ATokenController(Controller):
         if data.expires_in_hours is not None:
             from datetime import timedelta
 
-            expires_at = datetime.now(UTC) + timedelta(
-                hours=data.expires_in_hours
-            )
+            expires_at = datetime.now(UTC) + timedelta(hours=data.expires_in_hours)
 
         record = await create_token(
             raw_token=raw_token,
@@ -144,9 +143,7 @@ class A2ATokenController(Controller):
         Returns:
             TokenListResponse with token metadata.
         """
-        stmt = select(A2ATokenRecord).order_by(
-            A2ATokenRecord.created_at.desc()
-        )
+        stmt = select(A2ATokenRecord).order_by(A2ATokenRecord.created_at.desc())
         result = await db_session.execute(stmt)
         records = result.scalars().all()
 
@@ -160,9 +157,7 @@ class A2ATokenController(Controller):
                 is_revoked=r.is_revoked,
                 created_at=str(r.created_at),
                 expires_at=str(r.expires_at) if r.expires_at else None,
-                last_used_at=(
-                    str(r.last_used_at) if r.last_used_at else None
-                ),
+                last_used_at=(str(r.last_used_at) if r.last_used_at else None),
             )
             for r in records
         ]
@@ -207,9 +202,7 @@ class A2ATokenController(Controller):
             RotateTokenResponse with new token details.
         """
         # Look up old token
-        stmt = select(A2ATokenRecord).where(
-            A2ATokenRecord.id == token_id
-        )
+        stmt = select(A2ATokenRecord).where(A2ATokenRecord.id == token_id)
         result = await db_session.execute(stmt)
         old_record = result.scalar_one_or_none()
 
@@ -250,10 +243,6 @@ class A2ATokenController(Controller):
                 raw_token=raw_token,
                 allowed_skills=new_record.allowed_skills,
                 rate_limit_rpm=new_record.rate_limit_rpm,
-                expires_at=(
-                    str(new_record.expires_at)
-                    if new_record.expires_at
-                    else None
-                ),
+                expires_at=(str(new_record.expires_at) if new_record.expires_at else None),
             ),
         )

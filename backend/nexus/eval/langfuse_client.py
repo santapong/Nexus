@@ -7,9 +7,9 @@ not configured (empty host/keys).
 LangFuse replaces manual eval logging with a full observability platform
 for tracking prompt quality, model costs, and agent performance over time.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any
 
 import structlog
@@ -31,7 +31,7 @@ def _get_langfuse_client() -> Any | None:
     Returns:
         LangFuse client instance, or None if unavailable.
     """
-    global _langfuse_client, _langfuse_available  # noqa: PLW0603
+    global _langfuse_client, _langfuse_available
 
     if _langfuse_available is False:
         return None
@@ -240,7 +240,7 @@ async def trace_task_execution(
         return
 
     try:
-        trace = client.trace(
+        client.trace(
             id=trace_id,
             name=f"task-{task_id}",
             input=instruction[:2000],

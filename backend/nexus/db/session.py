@@ -5,6 +5,7 @@ Uses Advanced Alchemy with production-ready pool settings:
 - pool_size + max_overflow prevent connection exhaustion
 - pool_recycle prevents stale connections
 """
+
 from __future__ import annotations
 
 from advanced_alchemy.extensions.litestar import (
@@ -22,11 +23,11 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     session_config=session_config,
     create_all=False,  # Alembic handles schema
     engine_config={
-        "pool_pre_ping": True,       # Validate connections before use
-        "pool_size": 10,             # Persistent connections in pool
-        "max_overflow": 20,          # Extra connections under load
-        "pool_recycle": 3600,        # Recycle connections after 1 hour
-        "pool_timeout": 30,          # Wait max 30s for a connection
+        "pool_pre_ping": True,  # Validate connections before use
+        "pool_size": 10,  # Persistent connections in pool
+        "max_overflow": 20,  # Extra connections under load
+        "pool_recycle": 3600,  # Recycle connections after 1 hour
+        "pool_timeout": 30,  # Wait max 30s for a connection
         "echo": False,
     },
 )

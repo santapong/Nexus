@@ -50,6 +50,7 @@ class Topics:
         return [
             v
             for k, v in vars(cls).items()
-            if not k.startswith("_") and isinstance(v, str)
+            if not k.startswith("_")
+            and isinstance(v, str)
             and k not in ("all_topics", "dead_letter_for", "DEAD_LETTER_SUFFIX")
         ]

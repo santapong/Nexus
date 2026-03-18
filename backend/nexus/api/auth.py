@@ -3,11 +3,13 @@
 Provides password hashing, JWT token creation/validation, and
 Litestar auth guard for protecting endpoints.
 """
+
 from __future__ import annotations
 
 import hashlib
+import hmac
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
@@ -20,25 +22,27 @@ from nexus.settings import settings
 logger = structlog.get_logger()
 
 
-# ─── Password hashing (SHA-256 with salt — stdlib only) ──────────────────────
+# ─── Password hashing (PBKDF2-HMAC-SHA256 with salt — stdlib only) ───────────
+
+_PBKDF2_ITERATIONS = 600_000  # OWASP 2023 recommendation for SHA-256
 
 
 def hash_password(password: str) -> str:
-    """Hash a password using SHA-256 with a random salt.
+    """Hash a password using PBKDF2-HMAC-SHA256 with a random salt.
 
     Args:
         password: Plain text password.
 
     Returns:
-        Salt and hash concatenated as 'salt$hash'.
+        Salt and hash concatenated as 'salt$hash' (both hex-encoded).
     """
-    salt = os.urandom(16).hex()
-    hashed = hashlib.sha256(f"{salt}{password}".encode()).hexdigest()
-    return f"{salt}${hashed}"
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, _PBKDF2_ITERATIONS)
+    return f"{salt.hex()}${dk.hex()}"
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a password against a stored hash.
+    """Verify a password against a stored PBKDF2 hash.
 
     Args:
         plain: Plain text password to verify.
@@ -48,9 +52,10 @@ def verify_password(plain: str, hashed: str) -> bool:
         True if the password matches.
     """
     try:
-        salt, stored_hash = hashed.split("$", 1)
-        computed = hashlib.sha256(f"{salt}{plain}".encode()).hexdigest()
-        return computed == stored_hash
+        salt_hex, stored_hash = hashed.split("$", 1)
+        salt = bytes.fromhex(salt_hex)
+        dk = hashlib.pbkdf2_hmac("sha256", plain.encode(), salt, _PBKDF2_ITERATIONS)
+        return hmac.compare_digest(dk.hex(), stored_hash)
     except (ValueError, AttributeError):
         return False
 
@@ -82,15 +87,13 @@ def create_access_token(
     Returns:
         Encoded JWT token string.
     """
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.jwt_access_token_expire_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
     payload = {
         "sub": user_id,
         "workspace_id": workspace_id,
         "email": email,
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 

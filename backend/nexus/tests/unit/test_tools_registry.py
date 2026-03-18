@@ -1,4 +1,5 @@
 """Unit tests for tools registry."""
+
 from __future__ import annotations
 
 from nexus.db.models import AgentRole

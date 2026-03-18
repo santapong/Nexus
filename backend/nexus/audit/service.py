@@ -5,6 +5,7 @@ structured audit events to the audit_log table. All agent actions,
 prompt changes, budget events, and approval flows should go through
 this service.
 """
+
 from __future__ import annotations
 
 import enum
@@ -18,7 +19,7 @@ from nexus.db.models import AuditLog
 logger = structlog.get_logger()
 
 
-class AuditEventType(str, enum.Enum):
+class AuditEventType(enum.StrEnum):
     """Standardized event types for the audit log."""
 
     TASK_RECEIVED = "task_received"

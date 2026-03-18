@@ -10,6 +10,7 @@ Scenarios from CLAUDE.md section 14:
 7. DB connection pool exhausted -> graceful error
 8. Agent silent >5min -> health monitor auto-fails
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,9 +27,7 @@ class TestKafkaUnavailable:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.producer.get_producer")
-    async def test_publish_fails_cleanly(
-        self, mock_get_producer: AsyncMock
-    ) -> None:
+    async def test_publish_fails_cleanly(self, mock_get_producer: AsyncMock) -> None:
         """Publishing to Kafka when unavailable raises, not hangs."""
         mock_producer = AsyncMock()
         mock_producer.send_and_wait = AsyncMock(
@@ -58,9 +57,7 @@ class TestRedisWiped:
 
     @pytest.mark.asyncio
     @patch("nexus.llm.usage.redis_cache")
-    async def test_daily_spend_returns_true_on_empty_redis(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_daily_spend_returns_true_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When Redis has no spend counter, check_daily_spend allows work."""
         mock_redis.get = AsyncMock(return_value=None)
 
@@ -71,9 +68,7 @@ class TestRedisWiped:
 
     @pytest.mark.asyncio
     @patch("nexus.llm.usage.redis_cache")
-    async def test_task_budget_returns_ok_on_empty_redis(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_task_budget_returns_ok_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When Redis has no task budget key, check_task_budget allows work."""
         mock_redis.get = AsyncMock(return_value=None)
 
@@ -85,9 +80,7 @@ class TestRedisWiped:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.consumer.redis_locks")
-    async def test_idempotency_allows_on_empty_redis(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_idempotency_allows_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When idempotency keys are wiped, messages are processed."""
         mock_redis.set = AsyncMock(return_value=True)
 
@@ -128,20 +121,16 @@ class TestLLMTimeout:
 # --- Scenario 4: Token budget exceeded ------------------------------------
 
 
-class TestTokenBudgetExceeded:
+class TestTokenBudgetExceededError:
     """Budget exhaustion should pause task and escalate to human."""
 
     @pytest.mark.asyncio
     @patch("nexus.llm.usage.redis_cache")
-    async def test_daily_spend_rejects_over_limit(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_daily_spend_rejects_over_limit(self, mock_redis: AsyncMock) -> None:
         """check_daily_spend returns False when over the daily limit."""
         from nexus.settings import settings
 
-        mock_redis.get = AsyncMock(
-            return_value=str(settings.daily_spend_limit_usd + 1.0)
-        )
+        mock_redis.get = AsyncMock(return_value=str(settings.daily_spend_limit_usd + 1.0))
 
         from nexus.llm.usage import check_daily_spend
 
@@ -150,26 +139,22 @@ class TestTokenBudgetExceeded:
 
     @pytest.mark.asyncio
     @patch("nexus.llm.usage.redis_cache")
-    async def test_task_budget_rejects_over_limit(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_task_budget_rejects_over_limit(self, mock_redis: AsyncMock) -> None:
         """check_task_budget returns False when tokens exceed budget."""
         mock_redis.get = AsyncMock(return_value="60000")
 
         from nexus.llm.usage import check_task_budget
 
-        result_ok, tokens_used = await check_task_budget(
-            "test-task", budget=50000
-        )
+        result_ok, tokens_used = await check_task_budget("test-task", budget=50000)
         assert result_ok is False
         assert tokens_used == 60000
 
     def test_budget_exceeded_raises_in_guard_chain(self) -> None:
-        """TokenBudgetExceeded is raised and caught by the guard chain."""
-        from nexus.agents.base import TokenBudgetExceeded
+        """TokenBudgetExceededError is raised and caught by the guard chain."""
+        from nexus.agents.base import TokenBudgetExceededError
 
-        with pytest.raises(TokenBudgetExceeded):
-            raise TokenBudgetExceeded("Daily spend limit reached")
+        with pytest.raises(TokenBudgetExceededError):
+            raise TokenBudgetExceededError("Daily spend limit reached")
 
 
 # --- Scenario 5: Duplicate Kafka message ----------------------------------
@@ -180,9 +165,7 @@ class TestDuplicateMessage:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.consumer.redis_locks")
-    async def test_first_message_is_new(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_first_message_is_new(self, mock_redis: AsyncMock) -> None:
         """First occurrence of a message_id is marked as new."""
         mock_redis.set = AsyncMock(return_value=True)
 
@@ -193,9 +176,7 @@ class TestDuplicateMessage:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.consumer.redis_locks")
-    async def test_duplicate_message_is_skipped(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_duplicate_message_is_skipped(self, mock_redis: AsyncMock) -> None:
         """Second occurrence of same message_id is rejected."""
         mock_redis.set = AsyncMock(return_value=False)
 
@@ -206,18 +187,14 @@ class TestDuplicateMessage:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.consumer.redis_locks")
-    async def test_idempotency_uses_correct_key_format(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_idempotency_uses_correct_key_format(self, mock_redis: AsyncMock) -> None:
         """Idempotency key follows the pattern 'idempotency:{message_id}'."""
         mock_redis.set = AsyncMock(return_value=True)
 
         from nexus.kafka.consumer import check_idempotency
 
         await check_idempotency("test-123")
-        mock_redis.set.assert_called_with(
-            "idempotency:test-123", "1", nx=True, ex=86400
-        )
+        mock_redis.set.assert_called_with("idempotency:test-123", "1", nx=True, ex=86400)
 
 
 # --- Scenario 6: Invalid A2A bearer token --------------------------------
@@ -260,9 +237,7 @@ class TestDBPoolExhausted:
     @pytest.mark.asyncio
     async def test_session_factory_error_is_catchable(self) -> None:
         """When DB pool is exhausted, the error is a normal Exception."""
-        mock_factory = AsyncMock(
-            side_effect=Exception("connection pool exhausted")
-        )
+        mock_factory = AsyncMock(side_effect=Exception("connection pool exhausted"))
 
         with pytest.raises(Exception, match="connection pool exhausted"):
             async with mock_factory() as _session:
@@ -277,9 +252,7 @@ class TestAgentSilence:
 
     @pytest.mark.asyncio
     @patch("nexus.redis.clients.redis_cache")
-    async def test_heartbeat_stored_in_redis(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_heartbeat_stored_in_redis(self, mock_redis: AsyncMock) -> None:
         """Heartbeat is stored as a Redis key with TTL."""
         mock_redis.set = AsyncMock()
 
@@ -290,9 +263,7 @@ class TestAgentSilence:
 
     @pytest.mark.asyncio
     @patch("nexus.redis.clients.redis_cache")
-    async def test_missing_heartbeat_detected(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_missing_heartbeat_detected(self, mock_redis: AsyncMock) -> None:
         """Missing heartbeat key means agent is silent."""
         mock_redis.get = AsyncMock(return_value=None)
 
@@ -308,9 +279,7 @@ class TestDeadLetterRouting:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.dead_letter.redis_locks")
-    async def test_retry_counter_increments(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_retry_counter_increments(self, mock_redis: AsyncMock) -> None:
         """Retry counter increments on each failure."""
         mock_redis.incr = AsyncMock(return_value=1)
         mock_redis.expire = AsyncMock()
@@ -324,9 +293,7 @@ class TestDeadLetterRouting:
 
     @pytest.mark.asyncio
     @patch("nexus.kafka.dead_letter.redis_locks")
-    async def test_retry_counter_reaches_max(
-        self, mock_redis: AsyncMock
-    ) -> None:
+    async def test_retry_counter_reaches_max(self, mock_redis: AsyncMock) -> None:
         """After MAX_RETRIES, message should be routed to dead letter."""
         mock_redis.incr = AsyncMock(return_value=3)
 
@@ -340,9 +307,6 @@ class TestDeadLetterRouting:
         from nexus.kafka.topics import Topics
 
         assert Topics.dead_letter_for("task.queue") == "task.queue.dead_letter"
-        assert (
-            Topics.dead_letter_for("agent.commands")
-            == "agent.commands.dead_letter"
-        )
+        assert Topics.dead_letter_for("agent.commands") == "agent.commands.dead_letter"
         assert Topics.TASK_QUEUE_DL == "task.queue.dead_letter"
         assert Topics.AGENT_RESPONSES_DL == "agent.responses.dead_letter"

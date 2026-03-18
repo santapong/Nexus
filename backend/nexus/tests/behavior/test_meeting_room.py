@@ -5,6 +5,7 @@ timeout fallback, max rounds guard, and transcript generation.
 
 Meeting state is stored in Redis db:0 (working memory).
 """
+
 from __future__ import annotations
 
 import time
@@ -221,9 +222,7 @@ class TestMeetingGuards:
         room.current_round = 2
         assert room.is_max_rounds
 
-    def test_get_responses_for_round(
-        self, meeting_config: MeetingConfig
-    ) -> None:
+    def test_get_responses_for_round(self, meeting_config: MeetingConfig) -> None:
         """Can filter responses by round number."""
         room = MeetingRoom(meeting_config)
 

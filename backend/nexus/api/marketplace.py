@@ -8,6 +8,7 @@ Endpoints:
 - POST /api/marketplace/{id}/publish — Publish a listing
 - POST /api/marketplace/{id}/review — Submit a review
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -164,9 +165,7 @@ class MarketplaceController(Controller):
         return _listing_to_response(listing)
 
     @post("/{listing_id:str}/publish")
-    async def publish_listing(
-        self, listing_id: str, db_session: AsyncSession
-    ) -> dict[str, Any]:
+    async def publish_listing(self, listing_id: str, db_session: AsyncSession) -> dict[str, Any]:
         """Publish a listing to the marketplace."""
         stmt = select(AgentListing).where(AgentListing.id == listing_id)
         result = await db_session.execute(stmt)

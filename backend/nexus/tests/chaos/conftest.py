@@ -1,4 +1,5 @@
 """Chaos test fixtures — infrastructure failure injection."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock

@@ -3,16 +3,16 @@
 Tests that agent.responses messages correctly update task status in DB,
 publish to task.results, and broadcast via Redis pub/sub.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
 from nexus.kafka.result_consumer import _handle_response, _map_status
-from nexus.kafka.schemas import AgentResponse
 
 
 def _make_response_raw(
@@ -33,7 +33,7 @@ def _make_response_raw(
         "task_id": str(task_id),
         "trace_id": str(trace_id),
         "agent_id": "test-engineer",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "payload": {},
         "status": status,
         "output": out,
@@ -90,7 +90,11 @@ async def test_handle_response_updates_task_to_completed() -> None:
     mock_session_factory = _make_session_factory(mock_task)
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
+        patch(
+            "nexus.kafka.result_consumer.check_idempotency",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
         patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
@@ -111,7 +115,11 @@ async def test_handle_response_updates_task_to_failed() -> None:
     mock_session_factory = _make_session_factory(mock_task)
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
+        patch(
+            "nexus.kafka.result_consumer.check_idempotency",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
         patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
@@ -128,7 +136,11 @@ async def test_handle_response_skips_duplicate_messages() -> None:
     mock_session_factory = MagicMock()
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=False),
+        patch(
+            "nexus.kafka.result_consumer.check_idempotency",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
@@ -145,7 +157,11 @@ async def test_handle_response_skips_ceo_delegation() -> None:
     mock_session_factory = MagicMock()
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
+        patch(
+            "nexus.kafka.result_consumer.check_idempotency",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
         patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
@@ -170,7 +186,11 @@ async def test_handle_response_publishes_task_result() -> None:
         published.append((topic, msg))
 
     with (
-        patch("nexus.kafka.result_consumer.check_idempotency", new_callable=AsyncMock, return_value=True),
+        patch(
+            "nexus.kafka.result_consumer.check_idempotency",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
         patch("nexus.kafka.result_consumer.publish", side_effect=capture),
         patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):

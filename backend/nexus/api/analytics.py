@@ -3,6 +3,7 @@
 Aggregates data from existing llm_usage and tasks tables to provide
 observability into agent performance, cost trends, and system health.
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -232,12 +233,10 @@ class AnalyticsController(Controller):
             # Task stats
             task_query = select(
                 func.count(Task.id).label("total"),
-                func.count(Task.id).filter(
-                    Task.status == TaskStatus.COMPLETED.value
-                ).label("completed"),
-                func.count(Task.id).filter(
-                    Task.status == TaskStatus.FAILED.value
-                ).label("failed"),
+                func.count(Task.id)
+                .filter(Task.status == TaskStatus.COMPLETED.value)
+                .label("completed"),
+                func.count(Task.id).filter(Task.status == TaskStatus.FAILED.value).label("failed"),
                 func.avg(Task.tokens_used).label("avg_tokens"),
             ).where(Task.assigned_agent_id == str(agent.id))
 
@@ -252,9 +251,9 @@ class AnalyticsController(Controller):
 
             # Average duration
             dur_query = select(
-                func.avg(
-                    func.extract("epoch", Task.completed_at - Task.started_at)
-                ).label("avg_dur")
+                func.avg(func.extract("epoch", Task.completed_at - Task.started_at)).label(
+                    "avg_dur"
+                )
             ).where(
                 Task.assigned_agent_id == str(agent.id),
                 Task.completed_at.isnot(None),
@@ -325,13 +324,17 @@ class AnalyticsController(Controller):
         cutoff = _parse_period(period)
 
         # By model
-        model_query = select(
-            LLMUsage.model_name,
-            func.count(LLMUsage.id).label("calls"),
-            func.sum(LLMUsage.input_tokens).label("input_tok"),
-            func.sum(LLMUsage.output_tokens).label("output_tok"),
-            func.sum(LLMUsage.cost_usd).label("cost"),
-        ).group_by(LLMUsage.model_name).order_by(func.sum(LLMUsage.cost_usd).desc())
+        model_query = (
+            select(
+                LLMUsage.model_name,
+                func.count(LLMUsage.id).label("calls"),
+                func.sum(LLMUsage.input_tokens).label("input_tok"),
+                func.sum(LLMUsage.output_tokens).label("output_tok"),
+                func.sum(LLMUsage.cost_usd).label("cost"),
+            )
+            .group_by(LLMUsage.model_name)
+            .order_by(func.sum(LLMUsage.cost_usd).desc())
+        )
 
         if cutoff:
             model_query = model_query.where(LLMUsage.created_at >= cutoff)
@@ -350,12 +353,15 @@ class AnalyticsController(Controller):
         ]
 
         # By role (join with agents table)
-        role_query = select(
-            Agent.role,
-            func.count(LLMUsage.id).label("calls"),
-            func.sum(LLMUsage.cost_usd).label("cost"),
-        ).join(Agent, Agent.id == LLMUsage.agent_id).group_by(Agent.role).order_by(
-            func.sum(LLMUsage.cost_usd).desc()
+        role_query = (
+            select(
+                Agent.role,
+                func.count(LLMUsage.id).label("calls"),
+                func.sum(LLMUsage.cost_usd).label("cost"),
+            )
+            .join(Agent, Agent.id == LLMUsage.agent_id)
+            .group_by(Agent.role)
+            .order_by(func.sum(LLMUsage.cost_usd).desc())
         )
 
         if cutoff:
@@ -404,23 +410,24 @@ class AnalyticsController(Controller):
         cutoff = _parse_period(period)
 
         # Get agent info
-        agent_result = await db_session.execute(
-            select(Agent).where(Agent.id == agent_id)
-        )
+        agent_result = await db_session.execute(select(Agent).where(Agent.id == agent_id))
         agent = agent_result.scalar_one_or_none()
         if agent is None:
             return {"error": f"Agent {agent_id} not found"}
 
         # Aggregate costs by model
-        model_query = select(
-            LLMUsage.model_name,
-            func.count(LLMUsage.id).label("calls"),
-            func.sum(LLMUsage.input_tokens).label("input_tok"),
-            func.sum(LLMUsage.output_tokens).label("output_tok"),
-            func.sum(LLMUsage.cost_usd).label("cost"),
-        ).where(
-            LLMUsage.agent_id == agent_id
-        ).group_by(LLMUsage.model_name).order_by(func.sum(LLMUsage.cost_usd).desc())
+        model_query = (
+            select(
+                LLMUsage.model_name,
+                func.count(LLMUsage.id).label("calls"),
+                func.sum(LLMUsage.input_tokens).label("input_tok"),
+                func.sum(LLMUsage.output_tokens).label("output_tok"),
+                func.sum(LLMUsage.cost_usd).label("cost"),
+            )
+            .where(LLMUsage.agent_id == agent_id)
+            .group_by(LLMUsage.model_name)
+            .order_by(func.sum(LLMUsage.cost_usd).desc())
+        )
 
         if cutoff:
             model_query = model_query.where(LLMUsage.created_at >= cutoff)
@@ -444,9 +451,7 @@ class AnalyticsController(Controller):
         total_output = sum(m.total_output_tokens for m in by_model)
 
         # Count tasks for average
-        task_count_query = select(func.count(Task.id)).where(
-            Task.assigned_agent_id == agent_id
-        )
+        task_count_query = select(func.count(Task.id)).where(Task.assigned_agent_id == agent_id)
         if cutoff:
             task_count_query = task_count_query.where(Task.created_at >= cutoff)
         task_count = (await db_session.execute(task_count_query)).scalar() or 0
@@ -510,12 +515,16 @@ class AnalyticsController(Controller):
             base_filter.append(DeadLetter.resolved_at.is_(None))
 
         # Aggregate by source_topic
-        stats_query = select(
-            DeadLetter.source_topic,
-            func.count(DeadLetter.id).label("count"),
-            func.min(DeadLetter.created_at).label("oldest"),
-            func.max(DeadLetter.created_at).label("newest"),
-        ).where(*base_filter).group_by(DeadLetter.source_topic)
+        stats_query = (
+            select(
+                DeadLetter.source_topic,
+                func.count(DeadLetter.id).label("count"),
+                func.min(DeadLetter.created_at).label("oldest"),
+                func.max(DeadLetter.created_at).label("newest"),
+            )
+            .where(*base_filter)
+            .group_by(DeadLetter.source_topic)
+        )
 
         rows = (await db_session.execute(stats_query)).all()
 
@@ -532,9 +541,7 @@ class AnalyticsController(Controller):
         total = sum(s.count for s in by_topic)
 
         # Count unresolved
-        unresolved_query = select(func.count(DeadLetter.id)).where(
-            DeadLetter.resolved_at.is_(None)
-        )
+        unresolved_query = select(func.count(DeadLetter.id)).where(DeadLetter.resolved_at.is_(None))
         unresolved = (await db_session.execute(unresolved_query)).scalar() or 0
 
         return DeadLetterResponse(
@@ -592,9 +599,9 @@ class AnalyticsController(Controller):
             select(
                 LLMUsage.model_name,
                 func.sum(LLMUsage.input_tokens + LLMUsage.output_tokens).label("tokens"),
-            ).where(
-                LLMUsage.created_at >= today_start
-            ).group_by(LLMUsage.model_name)
+            )
+            .where(LLMUsage.created_at >= today_start)
+            .group_by(LLMUsage.model_name)
         )
 
         # Aggregate by provider prefix
@@ -609,7 +616,12 @@ class AnalyticsController(Controller):
                 provider = "groq"
             elif name.startswith("mistral:") or "mistral" in name:
                 provider = "mistral"
-            elif name.startswith("gpt") or name.startswith("openai:") or name.startswith("o1") or name.startswith("o3"):
+            elif (
+                name.startswith("gpt")
+                or name.startswith("openai:")
+                or name.startswith("o1")
+                or name.startswith("o3")
+            ):
                 provider = "openai"
             else:
                 provider = "other"
@@ -635,13 +647,15 @@ class AnalyticsController(Controller):
                 status = "warning"
             else:
                 status = "ok"
-            quotas.append(ProviderQuota(
-                provider=provider,
-                tokens_used_today=used,
-                daily_limit=limit,
-                utilization_pct=pct,
-                status=status,
-            ))
+            quotas.append(
+                ProviderQuota(
+                    provider=provider,
+                    tokens_used_today=used,
+                    daily_limit=limit,
+                    utilization_pct=pct,
+                    status=status,
+                )
+            )
 
         return QuotaResponse(
             date=today_start.strftime("%Y-%m-%d"),
@@ -688,10 +702,11 @@ class AnalyticsController(Controller):
             )
 
         try:
+            import uuid
+
             from nexus.kafka.producer import publish
             from nexus.kafka.schemas import AgentCommand
             from nexus.kafka.topics import Topics
-            import uuid
 
             command = AgentCommand(
                 task_id=uuid.uuid4(),

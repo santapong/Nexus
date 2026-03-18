@@ -7,6 +7,7 @@ Endpoints:
 - DELETE /api/agent-builder/{id}    — Deactivate a custom agent
 - POST /api/agent-builder/{id}/activate — Activate/register the agent
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -86,9 +87,7 @@ class AgentBuilderController(Controller):
     path = "/agent-builder"
 
     @get()
-    async def list_custom_agents(
-        self, db_session: AsyncSession
-    ) -> list[AgentConfigResponse]:
+    async def list_custom_agents(self, db_session: AsyncSession) -> list[AgentConfigResponse]:
         """List all agent configurations."""
         stmt = select(Agent).order_by(Agent.role)
         result = await db_session.execute(stmt)
@@ -154,9 +153,7 @@ class AgentBuilderController(Controller):
         return _agent_to_response(agent)
 
     @delete("/{agent_id:str}")
-    async def deactivate_agent(
-        self, agent_id: str, db_session: AsyncSession
-    ) -> dict[str, Any]:
+    async def deactivate_agent(self, agent_id: str, db_session: AsyncSession) -> dict[str, Any]:
         """Deactivate a custom agent."""
         stmt = select(Agent).where(Agent.id == agent_id)
         result = await db_session.execute(stmt)
@@ -172,9 +169,7 @@ class AgentBuilderController(Controller):
         return {"id": agent_id, "is_active": False}
 
     @post("/{agent_id:str}/activate")
-    async def activate_agent(
-        self, agent_id: str, db_session: AsyncSession
-    ) -> dict[str, Any]:
+    async def activate_agent(self, agent_id: str, db_session: AsyncSession) -> dict[str, Any]:
         """Activate a custom agent so it starts processing tasks."""
         stmt = select(Agent).where(Agent.id == agent_id)
         result = await db_session.execute(stmt)

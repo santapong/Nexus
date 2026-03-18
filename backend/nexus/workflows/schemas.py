@@ -1,4 +1,5 @@
 """Temporal workflow schemas — Pydantic models for workflow inputs/outputs."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import structlog
 import httpx
+import structlog
 
 from nexus.settings import settings
 
@@ -23,7 +23,7 @@ async def generate_embedding(text: str) -> list[float] | None:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1/models/embedding-001:embedContent",
+                "https://generativelanguage.googleapis.com/v1/models/embedding-001:embedContent",
                 params={"key": settings.google_api_key},
                 json={
                     "model": "models/embedding-001",

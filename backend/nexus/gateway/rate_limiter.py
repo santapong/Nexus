@@ -3,6 +3,7 @@
 Uses a sliding window counter in Redis db:1 to enforce per-token
 requests-per-minute (RPM) limits. Each token has its own counter.
 """
+
 from __future__ import annotations
 
 import time
@@ -16,9 +17,7 @@ logger = structlog.get_logger()
 _WINDOW_TTL = 120  # 2 minutes — covers current + previous minute
 
 
-async def check_rate_limit(
-    token_hash: str, rpm_limit: int
-) -> tuple[bool, int]:
+async def check_rate_limit(token_hash: str, rpm_limit: int) -> tuple[bool, int]:
     """Check if a token is within its rate limit.
 
     Uses a per-minute counter in Redis. Returns whether the request

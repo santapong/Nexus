@@ -4,6 +4,7 @@ Uses a separate LLM call (Claude Haiku for cost efficiency) to judge
 output quality across four dimensions: relevance, completeness,
 accuracy, and formatting.
 """
+
 from __future__ import annotations
 
 import json

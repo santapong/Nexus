@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -16,7 +16,7 @@ class KafkaMessage(BaseModel):
     task_id: UUID
     trace_id: UUID
     agent_id: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     payload: dict[str, object]
 
 
@@ -48,6 +48,6 @@ class HeartbeatMessage(BaseModel):
     """Lightweight heartbeat — does not require task_id."""
 
     agent_id: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: str = "alive"  # alive | busy | shutting_down
     current_task_id: UUID | None = None

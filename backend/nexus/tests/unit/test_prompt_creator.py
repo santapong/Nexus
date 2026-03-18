@@ -3,6 +3,7 @@
 Tests benchmark scoring, proposal creation (never auto-activates),
 and trigger logic on failure rate threshold.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,8 +12,8 @@ from uuid import uuid4
 import pytest
 
 from nexus.agents.prompt_creator import (
-    PromptCreatorAgent,
     _FAILURE_RATE_THRESHOLD,
+    PromptCreatorAgent,
 )
 from nexus.kafka.schemas import AgentCommand
 

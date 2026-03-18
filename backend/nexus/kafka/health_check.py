@@ -1,34 +1,36 @@
 """Kafka health check script. Run with: python -m nexus.kafka.health_check"""
+
 from __future__ import annotations
 
 import asyncio
 import sys
 
+import structlog
 from aiokafka import AIOKafkaProducer
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 
 from nexus.kafka.topics import Topics
 from nexus.settings import settings
 
+logger = structlog.get_logger()
+
 
 async def check_kafka() -> bool:
     """Verify Kafka connectivity and create topics if missing."""
-    print(f"Connecting to Kafka at {settings.kafka_bootstrap_servers}...")
+    logger.info("kafka_health_check_start", bootstrap_servers=settings.kafka_bootstrap_servers)
 
     try:
-        # Test producer connectivity
         producer = AIOKafkaProducer(
             bootstrap_servers=settings.kafka_bootstrap_servers,
         )
         await producer.start()
         await producer.stop()
-        print("  Producer connection: OK")
+        logger.info("kafka_producer_connection", status="ok")
     except Exception as e:
-        print(f"  Producer connection: FAILED - {e}")
+        logger.error("kafka_producer_connection", status="failed", error=str(e))
         return False
 
     try:
-        # Create topics if they don't exist
         admin = AIOKafkaAdminClient(
             bootstrap_servers=settings.kafka_bootstrap_servers,
         )
@@ -39,22 +41,19 @@ async def check_kafka() -> bool:
         missing = [t for t in all_topics if t not in existing]
 
         if missing:
-            new_topics = [
-                NewTopic(name=t, num_partitions=1, replication_factor=1)
-                for t in missing
-            ]
+            new_topics = [NewTopic(name=t, num_partitions=1, replication_factor=1) for t in missing]
             await admin.create_topics(new_topics)
-            print(f"  Created {len(missing)} topics: {missing}")
+            logger.info("kafka_topics_created", count=len(missing), topics=missing)
         else:
-            print(f"  All {len(all_topics)} topics exist")
+            logger.info("kafka_topics_exist", count=len(all_topics))
 
         await admin.close()
-        print("  Admin connection: OK")
+        logger.info("kafka_admin_connection", status="ok")
     except Exception as e:
-        print(f"  Admin connection: FAILED - {e}")
+        logger.error("kafka_admin_connection", status="failed", error=str(e))
         return False
 
-    print("Kafka health check: PASSED")
+    logger.info("kafka_health_check_passed")
     return True
 
 

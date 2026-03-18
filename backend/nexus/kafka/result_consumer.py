@@ -4,11 +4,12 @@ Consumes AgentResponse messages from agent.responses topic, updates task
 status in PostgreSQL, publishes final results to task.results, and
 broadcasts events via Redis pub/sub for WebSocket streaming.
 """
+
 from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -37,9 +38,7 @@ async def run_result_consumer(db_session_factory: Callable[..., Any]) -> None:
 
     Runs indefinitely until stopped. Idempotent — duplicate messages are skipped.
     """
-    consumer = await create_consumer(
-        Topics.AGENT_RESPONSES, group_id="result-consumer"
-    )
+    consumer = await create_consumer(Topics.AGENT_RESPONSES, group_id="result-consumer")
     logger.info("result_consumer_started")
 
     try:
@@ -109,10 +108,14 @@ async def _handle_response(
 
     # Skip CEO orchestration responses (decomposition, subtask tracking)
     if response.output and response.output.get("action") in (
-        "delegated_to_engineer", "decomposed", "subtask_tracked",
+        "delegated_to_engineer",
+        "decomposed",
+        "subtask_tracked",
         "aggregated_and_sent_to_qa",
     ):
-        logger.debug("result_consumer_skip_ceo_action", task_id=task_id, action=response.output.get("action"))
+        logger.debug(
+            "result_consumer_skip_ceo_action", task_id=task_id, action=response.output.get("action")
+        )
         return
 
     # Check if this response is for a subtask (has parent_task_id)
@@ -150,9 +153,7 @@ async def _handle_response(
         "error": response.error,
         "tokens_used": response.tokens_used,
     }
-    await redis_pubsub.publish(
-        f"agent_activity:{task_id}", json.dumps(event)
-    )
+    await redis_pubsub.publish(f"agent_activity:{task_id}", json.dumps(event))
 
     logger.info(
         "task_result_processed",
@@ -196,8 +197,9 @@ async def _forward_to_ceo(
         task.output = response.output
         task.error = response.error
         task.tokens_used = response.tokens_used
-        from datetime import datetime, timezone
-        task.completed_at = datetime.now(timezone.utc)
+        from datetime import datetime
+
+        task.completed_at = datetime.now(UTC)
         await session.commit()
 
     # Extract the result text from the response output
@@ -207,6 +209,7 @@ async def _forward_to_ceo(
 
     # Publish to task.queue so CEO picks it up as a response notification
     from nexus.kafka.schemas import AgentCommand
+
     ceo_command = AgentCommand(
         task_id=response.task_id,
         trace_id=response.trace_id,
@@ -231,9 +234,7 @@ async def _forward_to_ceo(
         "status": response.status,
         "tokens_used": response.tokens_used,
     }
-    await redis_pubsub.publish(
-        f"agent_activity:{parent_task_id}", json.dumps(event)
-    )
+    await redis_pubsub.publish(f"agent_activity:{parent_task_id}", json.dumps(event))
 
     logger.info(
         "subtask_forwarded_to_ceo",
@@ -273,7 +274,7 @@ async def _update_task_in_db(
     task.output = response.output
     task.error = response.error
     task.tokens_used = response.tokens_used
-    task.completed_at = datetime.now(timezone.utc)
+    task.completed_at = datetime.now(UTC)
     session.add(task)
 
     logger.info(

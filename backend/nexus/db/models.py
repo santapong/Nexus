@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from advanced_alchemy.base import UUIDAuditBase, UUIDBase
 from pgvector.sqlalchemy import Vector
@@ -9,7 +9,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -21,7 +20,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class AgentRole(str, enum.Enum):
+class AgentRole(enum.StrEnum):
     CEO = "ceo"
     ENGINEER = "engineer"
     ANALYST = "analyst"
@@ -30,7 +29,7 @@ class AgentRole(str, enum.Enum):
     PROMPT_CREATOR = "prompt_creator"
 
 
-class TaskStatus(str, enum.Enum):
+class TaskStatus(enum.StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
     PAUSED = "paused"
@@ -39,18 +38,18 @@ class TaskStatus(str, enum.Enum):
     ESCALATED = "escalated"
 
 
-class TaskSource(str, enum.Enum):
+class TaskSource(enum.StrEnum):
     HUMAN = "human"
     A2A = "a2a"
 
 
-class ApprovalStatus(str, enum.Enum):
+class ApprovalStatus(enum.StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
 
 
-class EpisodeOutcome(str, enum.Enum):
+class EpisodeOutcome(enum.StrEnum):
     SUCCESS = "success"
     FAILED = "failed"
     PARTIAL = "partial"
@@ -85,22 +84,14 @@ class Agent(UUIDAuditBase):
 class Task(UUIDAuditBase):
     __tablename__ = "tasks"
 
-    trace_id: Mapped[str] = mapped_column(
-        String(36), nullable=False, index=True
-    )
-    parent_task_id: Mapped[str | None] = mapped_column(
-        ForeignKey("tasks.id"), nullable=True
-    )
-    assigned_agent_id: Mapped[str | None] = mapped_column(
-        ForeignKey("agents.id"), nullable=True
-    )
+    trace_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    parent_task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True)
+    assigned_agent_id: Mapped[str | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
     instruction: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=TaskStatus.QUEUED.value, index=True
     )
-    source: Mapped[str] = mapped_column(
-        String(20), default=TaskSource.HUMAN.value
-    )
+    source: Mapped[str] = mapped_column(String(20), default=TaskSource.HUMAN.value)
     source_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
     output: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -133,7 +124,7 @@ class EpisodicMemory(UUIDBase):
     importance_score: Mapped[float] = mapped_column(Float, default=0.5)
     embedding = Column(Vector(1536), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
 
 
@@ -154,7 +145,9 @@ class SemanticMemory(UUIDBase):
     source_task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True)
     embedding = Column(Vector(1536), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
 
 
@@ -171,7 +164,7 @@ class LLMUsage(UUIDBase):
     output_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
     cost_usd: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -187,7 +180,7 @@ class AuditLog(UUIDBase):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     event_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
 
 
@@ -205,7 +198,7 @@ class HumanApproval(UUIDBase):
         String(20), default=ApprovalStatus.PENDING.value, index=True
     )
     requested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -216,9 +209,7 @@ class HumanApproval(UUIDBase):
 
 class Prompt(UUIDBase):
     __tablename__ = "prompts"
-    __table_args__ = (
-        UniqueConstraint("agent_role", "version", name="uq_prompt_role_version"),
-    )
+    __table_args__ = (UniqueConstraint("agent_role", "version", name="uq_prompt_role_version"),)
 
     agent_role: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -228,7 +219,7 @@ class Prompt(UUIDBase):
     authored_by: Mapped[str] = mapped_column(String(50), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -243,7 +234,7 @@ class PromptBenchmark(UUIDBase):
     input: Mapped[str] = mapped_column(Text, nullable=False)
     expected_criteria: Mapped[dict] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -260,11 +251,9 @@ class DeadLetter(UUIDBase):
     raw_message: Mapped[dict] = mapped_column(JSONB, nullable=False)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
-    resolved_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 # ─── Table 11: a2a_tokens ─────────────────────────────────────────────────
@@ -273,27 +262,19 @@ class DeadLetter(UUIDBase):
 class A2ATokenRecord(UUIDBase):
     __tablename__ = "a2a_tokens"
 
-    token_hash: Mapped[str] = mapped_column(
-        String(64), nullable=False, unique=True, index=True
-    )
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     allowed_skills: Mapped[list[str]] = mapped_column(
         ARRAY(Text), nullable=False, default=lambda: ["*"]
     )
     rate_limit_rpm: Mapped[int] = mapped_column(Integer, default=60)
-    expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
-    revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    last_used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     workspace_id: Mapped[str | None] = mapped_column(
         ForeignKey("workspaces.id"), nullable=True, index=True
     )
@@ -305,9 +286,7 @@ class A2ATokenRecord(UUIDBase):
 class EvalResult(UUIDBase):
     __tablename__ = "eval_results"
 
-    task_id: Mapped[str] = mapped_column(
-        ForeignKey("tasks.id"), nullable=False, index=True
-    )
+    task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), nullable=False, index=True)
     overall_score: Mapped[float] = mapped_column(Float, nullable=False)
     relevance: Mapped[float | None] = mapped_column(Float, nullable=True)
     completeness: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -316,7 +295,7 @@ class EvalResult(UUIDBase):
     judge_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
     judge_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -332,9 +311,7 @@ class User(UUIDAuditBase):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    workspaces: Mapped[list[Workspace]] = relationship(
-        back_populates="owner", lazy="selectin"
-    )
+    workspaces: Mapped[list[Workspace]] = relationship(back_populates="owner", lazy="selectin")
 
 
 # ─── Table 14: workspaces ───────────────────────────────────────────────────
@@ -359,15 +336,15 @@ class Workspace(UUIDAuditBase):
 
 class WorkspaceMember(UUIDBase):
     __tablename__ = "workspace_members"
-    __table_args__ = (
-        UniqueConstraint("workspace_id", "user_id", name="uq_workspace_member"),
-    )
+    __table_args__ = (UniqueConstraint("workspace_id", "user_id", name="uq_workspace_member"),)
 
-    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
     joined_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
 
@@ -382,9 +359,7 @@ class AgentListing(UUIDAuditBase):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    skills: Mapped[list[str]] = mapped_column(
-        ARRAY(Text), nullable=False, default=list
-    )
+    skills: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
     price_per_task_usd: Mapped[float] = mapped_column(Float, default=0.0)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     rating: Mapped[float] = mapped_column(Float, default=0.0)
@@ -416,9 +391,7 @@ class BillingRecord(UUIDAuditBase):
     workspace_id: Mapped[str | None] = mapped_column(
         ForeignKey("workspaces.id"), nullable=True, index=True
     )
-    task_id: Mapped[str] = mapped_column(
-        ForeignKey("tasks.id"), nullable=False, index=True
-    )
+    task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), nullable=False, index=True)
     amount_usd: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     billing_type: Mapped[str] = mapped_column(

@@ -8,6 +8,7 @@ Implements the A2A protocol endpoints:
 
 Authenticated via bearer token (see auth.py).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -79,6 +80,7 @@ class AgentCardController(Controller):
         """
         if workspace:
             from nexus.db.models import Workspace
+
             stmt = select(Workspace).where(Workspace.slug == workspace)
             result = await db_session.execute(stmt)
             ws = result.scalar_one_or_none()
@@ -131,13 +133,9 @@ class A2AGatewayController(Controller):
         # Rate limiting
         from nexus.gateway.auth import _hash_token
 
-        allowed, _remaining = await check_rate_limit(
-            _hash_token(token), rpm
-        )
+        allowed, _remaining = await check_rate_limit(_hash_token(token), rpm)
         if not allowed:
-            raise TooManyRequestsException(
-                detail="Rate limit exceeded. Try again later."
-            )
+            raise TooManyRequestsException(detail="Rate limit exceeded. Try again later.")
 
         trace_id = uuid4()
 
@@ -189,9 +187,7 @@ class A2AGatewayController(Controller):
         )
 
     @get("/tasks/{task_id:str}/status")
-    async def get_task_status(
-        self, task_id: str, db_session: AsyncSession
-    ) -> dict[str, Any]:
+    async def get_task_status(self, task_id: str, db_session: AsyncSession) -> dict[str, Any]:
         """Poll the status of an A2A task.
 
         Reads current task state from PostgreSQL.
@@ -243,9 +239,7 @@ class A2AGatewayController(Controller):
             NotAuthorizedException: If the bearer token is invalid.
         """
         token = _extract_token(request)
-        is_valid, error, _rpm = await validate_token(
-            token, db_session=db_session
-        )
+        is_valid, error, _rpm = await validate_token(token, db_session=db_session)
         if not is_valid:
             raise NotAuthorizedException(detail=error)
 
@@ -262,12 +256,8 @@ class A2AGatewayController(Controller):
             start = asyncio.get_event_loop().time()
 
             try:
-                while (
-                    asyncio.get_event_loop().time() - start
-                ) < timeout_seconds:
-                    message = await pubsub.get_message(
-                        ignore_subscribe_messages=True, timeout=1.0
-                    )
+                while (asyncio.get_event_loop().time() - start) < timeout_seconds:
+                    message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                     if message and message["type"] == "message":
                         data = message.get("data", "")
                         if isinstance(data, bytes):
@@ -301,6 +291,4 @@ class A2AGatewayController(Controller):
             finally:
                 await pubsub.unsubscribe(channel)
 
-        return Stream(
-            _event_generator(), media_type="text/event-stream"
-        )
+        return Stream(_event_generator(), media_type="text/event-stream")

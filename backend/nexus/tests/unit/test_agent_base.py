@@ -1,4 +1,5 @@
 """Unit tests for AgentBase guard chain."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -6,10 +7,9 @@ from uuid import uuid4
 
 import pytest
 
-from nexus.agents.base import AgentBase, TokenBudgetExceeded
+from nexus.agents.base import AgentBase
 from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand, AgentResponse
-
 
 # ─── Concrete test subclass ─────────────────────────────────────────────────
 

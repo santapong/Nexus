@@ -3,6 +3,7 @@
 Activities wrap existing agent logic so the same code works
 with both Taskiq (short tasks) and Temporal (long-running tasks).
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -172,11 +172,7 @@ class TaskController(Controller):
         if parent is None:
             return {"error": "Task not found"}
 
-        subtask_stmt = (
-            select(Task)
-            .where(Task.parent_task_id == task_id)
-            .order_by(Task.created_at)
-        )
+        subtask_stmt = select(Task).where(Task.parent_task_id == task_id).order_by(Task.created_at)
         subtask_result = await db_session.execute(subtask_stmt)
         subtasks = subtask_result.scalars().all()
 
@@ -243,17 +239,13 @@ class TaskController(Controller):
 
         # Get LLM usage for this task
         usage_stmt = (
-            select(LLMUsage)
-            .where(LLMUsage.task_id == task_id)
-            .order_by(LLMUsage.created_at)
+            select(LLMUsage).where(LLMUsage.task_id == task_id).order_by(LLMUsage.created_at)
         )
         usage_result = await db_session.execute(usage_stmt)
         usages = usage_result.scalars().all()
 
         # Also check subtasks
-        subtask_stmt = (
-            select(Task.id).where(Task.parent_task_id == task_id)
-        )
+        subtask_stmt = select(Task.id).where(Task.parent_task_id == task_id)
         subtask_result = await db_session.execute(subtask_stmt)
         subtask_ids = [str(row[0]) for row in subtask_result.all()]
 
@@ -268,33 +260,35 @@ class TaskController(Controller):
             )
             sub_mem_result = await db_session.execute(sub_mem_stmt)
             for m in sub_mem_result.scalars().all():
-                subtask_memories.append({
-                    "subtask_id": sid,
-                    "agent_id": m.agent_id,
-                    "summary": m.summary,
-                    "outcome": m.outcome,
-                    "tools_used": m.tools_used,
-                    "tokens_used": m.tokens_used,
-                    "duration_seconds": m.duration_seconds,
-                    "created_at": str(m.created_at),
-                })
+                subtask_memories.append(
+                    {
+                        "subtask_id": sid,
+                        "agent_id": m.agent_id,
+                        "summary": m.summary,
+                        "outcome": m.outcome,
+                        "tools_used": m.tools_used,
+                        "tokens_used": m.tokens_used,
+                        "duration_seconds": m.duration_seconds,
+                        "created_at": str(m.created_at),
+                    }
+                )
 
             sub_usage_stmt = (
-                select(LLMUsage)
-                .where(LLMUsage.task_id == sid)
-                .order_by(LLMUsage.created_at)
+                select(LLMUsage).where(LLMUsage.task_id == sid).order_by(LLMUsage.created_at)
             )
             sub_usage_result = await db_session.execute(sub_usage_stmt)
             for u in sub_usage_result.scalars().all():
-                subtask_usages.append({
-                    "subtask_id": sid,
-                    "agent_id": u.agent_id,
-                    "model_name": u.model_name,
-                    "input_tokens": u.input_tokens,
-                    "output_tokens": u.output_tokens,
-                    "cost_usd": u.cost_usd,
-                    "created_at": str(u.created_at),
-                })
+                subtask_usages.append(
+                    {
+                        "subtask_id": sid,
+                        "agent_id": u.agent_id,
+                        "model_name": u.model_name,
+                        "input_tokens": u.input_tokens,
+                        "output_tokens": u.output_tokens,
+                        "cost_usd": u.cost_usd,
+                        "created_at": str(u.created_at),
+                    }
+                )
 
         return {
             "task": {

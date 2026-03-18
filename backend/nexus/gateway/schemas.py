@@ -3,13 +3,13 @@
 Defines the data models for the Agent-to-Agent (A2A) protocol
 as specified in CLAUDE.md §9.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ─── Agent Card (/.well-known/agent.json) ────────────────────────────────────
 
@@ -36,63 +36,67 @@ class AgentCard(BaseModel):
     )
     url: str = ""
     version: str = "0.2.0"
-    skills: list[AgentSkill] = Field(default_factory=lambda: [
-        AgentSkill(
-            id="research",
-            name="Research & Analysis",
-            description="Research a topic and produce a structured report.",
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "topic": {"type": "string"},
-                    "depth": {"type": "string", "enum": ["brief", "detailed"]},
+    skills: list[AgentSkill] = Field(
+        default_factory=lambda: [
+            AgentSkill(
+                id="research",
+                name="Research & Analysis",
+                description="Research a topic and produce a structured report.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "topic": {"type": "string"},
+                        "depth": {"type": "string", "enum": ["brief", "detailed"]},
+                    },
+                    "required": ["topic"],
                 },
-                "required": ["topic"],
-            },
-        ),
-        AgentSkill(
-            id="write",
-            name="Content Writing",
-            description="Write emails, documents, or other content.",
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "type": {"type": "string", "enum": ["email", "document", "report"]},
-                    "instruction": {"type": "string"},
+            ),
+            AgentSkill(
+                id="write",
+                name="Content Writing",
+                description="Write emails, documents, or other content.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string", "enum": ["email", "document", "report"]},
+                        "instruction": {"type": "string"},
+                    },
+                    "required": ["instruction"],
                 },
-                "required": ["instruction"],
-            },
-        ),
-        AgentSkill(
-            id="code",
-            name="Engineering",
-            description="Write, debug, or review code.",
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "language": {"type": "string"},
-                    "instruction": {"type": "string"},
+            ),
+            AgentSkill(
+                id="code",
+                name="Engineering",
+                description="Write, debug, or review code.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "language": {"type": "string"},
+                        "instruction": {"type": "string"},
+                    },
+                    "required": ["instruction"],
                 },
-                "required": ["instruction"],
-            },
-        ),
-        AgentSkill(
-            id="general",
-            name="General Task",
-            description="Handle any task — CEO will decompose and route.",
-            input_schema={
-                "type": "object",
-                "properties": {
-                    "instruction": {"type": "string"},
+            ),
+            AgentSkill(
+                id="general",
+                name="General Task",
+                description="Handle any task — CEO will decompose and route.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "instruction": {"type": "string"},
+                    },
+                    "required": ["instruction"],
                 },
-                "required": ["instruction"],
-            },
-        ),
-    ])
-    auth: dict[str, str] = Field(default_factory=lambda: {
-        "type": "bearer",
-        "description": "Bearer token required for task submission.",
-    })
+            ),
+        ]
+    )
+    auth: dict[str, str] = Field(
+        default_factory=lambda: {
+            "type": "bearer",
+            "description": "Bearer token required for task submission.",
+        }
+    )
 
 
 # ─── A2A Task submission ────────────────────────────────────────────────────
@@ -124,9 +128,7 @@ class A2AEventStatus(BaseModel):
     task_id: str
     status: str  # accepted, working, completed, failed
     message: str = ""
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class A2AArtifactEvent(BaseModel):
@@ -136,9 +138,7 @@ class A2AArtifactEvent(BaseModel):
     task_id: str
     artifact_type: str  # text, code, data
     content: str
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class A2ACompletionEvent(BaseModel):
@@ -149,6 +149,4 @@ class A2ACompletionEvent(BaseModel):
     status: str  # completed, failed
     output: dict[str, Any] | None = None
     error: str | None = None
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))

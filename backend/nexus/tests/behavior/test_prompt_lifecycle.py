@@ -3,6 +3,7 @@
 Tests the prompt management functions directly (not via Litestar route handlers)
 to verify the business logic works correctly.
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -245,4 +246,4 @@ def test_version_auto_increment_logic() -> None:
     assert (None or 0) + 1 == 1
 
     # Existing version 5
-    assert (5 or 0) + 1 == 6
+    assert (5) + 1 == 6

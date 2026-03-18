@@ -3,6 +3,7 @@
 Run standalone with: python -m nexus.agents.runner
 Or import start_all_agents() for Litestar startup integration.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -60,9 +61,7 @@ async def start_all_agents(
                 system_prompt=agent_db.system_prompt,
                 db_session_factory=db_session_factory,
             )
-            task = asyncio.create_task(
-                agent.run(), name=f"agent-{role.value}"
-            )
+            task = asyncio.create_task(agent.run(), name=f"agent-{role.value}")
             tasks.append(task)
             logger.info(
                 "agent_task_created",

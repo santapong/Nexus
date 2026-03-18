@@ -3,6 +3,7 @@
 Handles software engineering tasks: code generation, debugging,
 research, file operations, and code execution.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +13,6 @@ from pydantic_ai import Agent as PydanticAgent
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
-from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand, AgentResponse
 from nexus.llm.usage import calculate_cost, record_usage
 
@@ -26,9 +26,7 @@ _RETRY_BACKOFF_SECONDS = [5.0, 10.0, 20.0, 30.0, 45.0]
 class EngineerAgent(AgentBase):
     """Engineer agent — executes coding and technical tasks."""
 
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Execute an engineering task using the Pydantic AI agent with tools."""
         task_id = str(message.task_id)
         trace_id = str(message.trace_id)
@@ -51,10 +49,7 @@ class EngineerAgent(AgentBase):
             )
 
         if memory_context.get("working_memory"):
-            context_parts.append(
-                "Working memory:\n"
-                + str(memory_context["working_memory"])
-            )
+            context_parts.append("Working memory:\n" + str(memory_context["working_memory"]))
 
         # Construct the user message
         if context_parts:

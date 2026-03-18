@@ -7,11 +7,10 @@ Tests cover:
 - Test model prefix → no wrapper
 - Failed fallback resolve → skipped gracefully
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from nexus.llm.factory import ModelFactory, _parse_fallback_list
 
@@ -54,13 +53,15 @@ class TestModelFactoryFallbacks:
 
         from nexus.db.models import AgentRole
 
-        with patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}):
-            with patch(
+        with (
+            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch(
                 "nexus.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.ENGINEER: "groq:llama-3.3-70b-versatile"},
-            ):
-                result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
-                assert isinstance(result, TestModel)
+            ),
+        ):
+            result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
+            assert isinstance(result, TestModel)
 
     def test_no_fallbacks_configured_returns_primary_directly(self) -> None:
         """Empty fallback string returns primary model without wrapping."""
@@ -68,10 +69,12 @@ class TestModelFactoryFallbacks:
 
         from nexus.db.models import AgentRole
 
-        with patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}):
-            with patch("nexus.llm.factory._AGENT_FALLBACK_MAP", {AgentRole.ENGINEER: ""}):
-                result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
-                assert isinstance(result, TestModel)
+        with (
+            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch("nexus.llm.factory._AGENT_FALLBACK_MAP", {AgentRole.ENGINEER: ""}),
+        ):
+            result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
+            assert isinstance(result, TestModel)
 
     def test_invalid_fallback_skipped_gracefully(self) -> None:
         """If a fallback model fails to resolve, it is skipped with a warning."""
@@ -80,14 +83,16 @@ class TestModelFactoryFallbacks:
         from nexus.db.models import AgentRole
 
         # Primary is test model (no API call), fallback is an unknown provider
-        with patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}):
-            with patch(
+        with (
+            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch(
                 "nexus.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.ENGINEER: "unknown-provider:xyz"},
-            ):
-                # Should not raise — just skips and returns the primary
-                result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
-                assert isinstance(result, TestModel)
+            ),
+        ):
+            # Should not raise - just skips and returns the primary
+            result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
+            assert isinstance(result, TestModel)
 
     def test_two_valid_models_builds_fallback_model(self) -> None:
         """Primary + 1 valid fallback produces a FallbackModel wrapper."""
@@ -97,23 +102,22 @@ class TestModelFactoryFallbacks:
         mock_fallback = MagicMock()
         mock_fb_instance = MagicMock()
 
-        with patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.CEO: "claude-sonnet"}):
-            with patch(
+        with (
+            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.CEO: "claude-sonnet"}),
+            patch(
                 "nexus.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.CEO: "groq:llama-3.3-70b-versatile"},
-            ):
-                with patch("nexus.llm.factory.resolve_model") as mock_resolve:
-                    mock_resolve.side_effect = [mock_primary, mock_fallback]
-
-                    # FallbackModel is imported locally inside get_model_with_fallbacks()
-                    # so we patch at the source module, not at nexus.llm.factory
-                    with patch(
-                        "pydantic_ai.models.fallback.FallbackModel",
-                        return_value=mock_fb_instance,
-                    ) as mock_fb_cls:
-                        result = ModelFactory.get_model_with_fallbacks(AgentRole.CEO)
-                        mock_fb_cls.assert_called_once_with(mock_primary, mock_fallback)
-                        assert result is mock_fb_instance
+            ),
+            patch("nexus.llm.factory.resolve_model") as mock_resolve,
+            patch(
+                "pydantic_ai.models.fallback.FallbackModel",
+                return_value=mock_fb_instance,
+            ) as mock_fb_cls,
+        ):
+            mock_resolve.side_effect = [mock_primary, mock_fallback]
+            result = ModelFactory.get_model_with_fallbacks(AgentRole.CEO)
+            mock_fb_cls.assert_called_once_with(mock_primary, mock_fallback)
+            assert result is mock_fb_instance
 
     def test_get_model_by_name_works(self) -> None:
         """get_model_by_name() resolves a test model without error."""

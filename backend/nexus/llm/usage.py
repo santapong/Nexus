@@ -3,6 +3,7 @@
 Tracks costs in both Redis (speed layer) and PostgreSQL (source of truth).
 When Redis is unavailable, falls back to DB queries for budget checks.
 """
+
 from __future__ import annotations
 
 import structlog
@@ -42,9 +43,7 @@ _MODEL_PRICING: dict[str, dict[str, float]] = {
 }
 
 
-def calculate_cost(
-    model_name: str, input_tokens: int, output_tokens: int
-) -> float:
+def calculate_cost(model_name: str, input_tokens: int, output_tokens: int) -> float:
     """Calculate USD cost for an LLM call.
 
     Args:
@@ -59,10 +58,7 @@ def calculate_cost(
     if not pricing:
         logger.warning("unknown_model_pricing", model_name=model_name)
         return 0.0
-    return (
-        input_tokens * pricing["input"]
-        + output_tokens * pricing["output"]
-    ) / 1_000_000
+    return (input_tokens * pricing["input"] + output_tokens * pricing["output"]) / 1_000_000
 
 
 async def check_daily_spend() -> bool:
@@ -85,9 +81,7 @@ async def check_daily_spend() -> bool:
         return True  # Allow — DB is source of truth
 
 
-async def check_task_budget(
-    task_id: str, budget: int | None = None
-) -> tuple[bool, int]:
+async def check_task_budget(task_id: str, budget: int | None = None) -> tuple[bool, int]:
     """Check if a task is within its token budget.
 
     Args:

@@ -7,9 +7,8 @@ Endpoints:
 - POST /api/workspaces     — Create a new workspace
 - GET  /api/workspaces/{id} — Get workspace details
 """
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 import structlog
 from litestar import Controller, get, post
@@ -20,7 +19,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.api.auth import (
     AuthUser,
     create_access_token,
-    get_auth_user_from_request,
     hash_password,
     verify_password,
 )
@@ -107,9 +105,7 @@ class AuthController(Controller):
         stmt = select(User).where(User.email == data.email)
         result = await db_session.execute(stmt)
         if result.scalar_one_or_none() is not None:
-            return RegisterResponse(
-                user_id="", workspace_id="", access_token=""
-            )
+            return RegisterResponse(user_id="", workspace_id="", access_token="")
 
         # Create user
         user = User(
@@ -215,9 +211,7 @@ class WorkspaceController(Controller):
     path = "/workspaces"
 
     @get()
-    async def list_workspaces(
-        self, db_session: AsyncSession
-    ) -> list[WorkspaceResponse]:
+    async def list_workspaces(self, db_session: AsyncSession) -> list[WorkspaceResponse]:
         """List all workspaces (for the current user in multi-tenant mode)."""
         stmt = select(Workspace).where(Workspace.is_active.is_(True))
         result = await db_session.execute(stmt)
@@ -263,9 +257,7 @@ class WorkspaceController(Controller):
         )
 
     @get("/{workspace_id:str}")
-    async def get_workspace(
-        self, workspace_id: str, db_session: AsyncSession
-    ) -> WorkspaceResponse:
+    async def get_workspace(self, workspace_id: str, db_session: AsyncSession) -> WorkspaceResponse:
         """Get workspace details by ID."""
         stmt = select(Workspace).where(Workspace.id == workspace_id)
         result = await db_session.execute(stmt)

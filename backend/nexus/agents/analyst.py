@@ -3,6 +3,7 @@
 Handles research tasks, data analysis, competitive analysis,
 and report generation using web search, web fetch, and file tools.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -24,9 +25,7 @@ _RETRY_BACKOFF_SECONDS = [5.0, 10.0, 20.0, 30.0, 45.0]
 class AnalystAgent(AgentBase):
     """Analyst agent — executes research and data analysis tasks."""
 
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Execute a research/analysis task using the Pydantic AI agent with tools."""
         task_id = str(message.task_id)
         trace_id = str(message.trace_id)
@@ -49,10 +48,7 @@ class AnalystAgent(AgentBase):
             )
 
         if memory_context.get("working_memory"):
-            context_parts.append(
-                "Working memory:\n"
-                + str(memory_context["working_memory"])
-            )
+            context_parts.append("Working memory:\n" + str(memory_context["working_memory"]))
 
         if context_parts:
             user_message = "\n\n".join(context_parts) + f"\n\nTask: {message.instruction}"

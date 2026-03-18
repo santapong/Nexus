@@ -1,4 +1,5 @@
 """Unit tests for tool call limit enforcement."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -6,11 +7,10 @@ from uuid import uuid4
 
 import pytest
 
-from nexus.agents.base import AgentBase, ToolCallLimitExceeded
+from nexus.agents.base import AgentBase, ToolCallLimitExceededError
 from nexus.agents.factory import _wrap_tools_with_counter
 from nexus.db.models import AgentRole
 from nexus.kafka.schemas import AgentCommand, AgentResponse
-
 
 # ─── Tool wrapping tests ─────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ async def test_counter_increments_on_each_call() -> None:
 
 @pytest.mark.asyncio
 async def test_raises_at_limit() -> None:
-    """Counter should raise ToolCallLimitExceeded when limit is exceeded."""
+    """Counter should raise ToolCallLimitExceededError when limit is exceeded."""
     counter = {"count": 0, "limit": 3}
 
     async def dummy_tool() -> str:
@@ -48,7 +48,7 @@ async def test_raises_at_limit() -> None:
         await wrapped[0]()
 
     # Call 4 should raise
-    with pytest.raises(ToolCallLimitExceeded, match="3"):
+    with pytest.raises(ToolCallLimitExceededError, match="3"):
         await wrapped[0]()
 
 
@@ -178,10 +178,10 @@ async def test_counter_resets_between_tasks() -> None:
 
 @pytest.mark.asyncio
 async def test_tool_call_limit_triggers_human_input() -> None:
-    """ToolCallLimitExceeded should escalate to human.input_needed."""
+    """ToolCallLimitExceededError should escalate to human.input_needed."""
     agent = _make_agent()
     agent.handle_task_mock = AsyncMock(
-        side_effect=ToolCallLimitExceeded("Tool call limit (20) exceeded")
+        side_effect=ToolCallLimitExceededError("Tool call limit (20) exceeded")
     )
     command = AgentCommand(
         task_id=uuid4(),
@@ -210,7 +210,6 @@ async def test_tool_call_limit_triggers_human_input() -> None:
 
         # Should have published to human.input_needed
         publish_calls = [
-            call for call in mock_publish.call_args_list
-            if call[0][0] == "human.input_needed"
+            call for call in mock_publish.call_args_list if call[0][0] == "human.input_needed"
         ]
         assert len(publish_calls) == 1

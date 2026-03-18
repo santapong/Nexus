@@ -1,4 +1,5 @@
 """Database seed script. Run with: python -m nexus.db.seed"""
+
 from __future__ import annotations
 
 import asyncio
@@ -876,12 +877,18 @@ async def _seed_prompts(session: AsyncSession) -> None:
         existing = result.scalar_one_or_none()
 
         if existing:
-            logger.info("prompt_already_exists", role=prompt_data["agent_role"], version=prompt_data["version"])
+            logger.info(
+                "prompt_already_exists",
+                role=prompt_data["agent_role"],
+                version=prompt_data["version"],
+            )
             continue
 
         prompt = Prompt(**prompt_data)
         session.add(prompt)
-        logger.info("prompt_created", role=prompt_data["agent_role"], version=prompt_data["version"])
+        logger.info(
+            "prompt_created", role=prompt_data["agent_role"], version=prompt_data["version"]
+        )
 
 
 async def _seed_benchmarks(session: AsyncSession) -> None:

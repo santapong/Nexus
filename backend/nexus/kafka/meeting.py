@@ -7,6 +7,7 @@ reads agent responses, and decides when to close the meeting.
 The meeting uses the existing `meeting.room` topic with a keyed partition
 scheme: all messages for one meeting share the same key (meeting_id).
 """
+
 from __future__ import annotations
 
 import json
@@ -127,9 +128,7 @@ class MeetingRoom:
             round=msg.round_number,
         )
 
-    async def pose_question(
-        self, question: str, sender_id: str
-    ) -> None:
+    async def pose_question(self, question: str, sender_id: str) -> None:
         """CEO poses a question to all participants.
 
         Args:
@@ -147,9 +146,7 @@ class MeetingRoom:
         )
         await self.publish_message(msg)
 
-    async def submit_response(
-        self, response: str, sender_role: str, sender_id: str
-    ) -> None:
+    async def submit_response(self, response: str, sender_role: str, sender_id: str) -> None:
         """An agent submits a response to the current question.
 
         Args:
@@ -235,8 +232,7 @@ class MeetingRoom:
             List of response messages from that round.
         """
         return [
-            m for m in self.messages
-            if m.round_number == round_num and m.message_type == "response"
+            m for m in self.messages if m.round_number == round_num and m.message_type == "response"
         ]
 
 
@@ -251,12 +247,14 @@ def _redis_key(meeting_id: str) -> str:
 
 def _serialize_room(room: MeetingRoom) -> str:
     """Serialize a MeetingRoom to JSON for Redis storage."""
-    return json.dumps({
-        "config": room.config.model_dump(),
-        "messages": [m.model_dump() for m in room.messages],
-        "current_round": room.current_round,
-        "start_time": room._start_time,
-    })
+    return json.dumps(
+        {
+            "config": room.config.model_dump(),
+            "messages": [m.model_dump() for m in room.messages],
+            "current_round": room.current_round,
+            "start_time": room._start_time,
+        }
+    )
 
 
 def _deserialize_room(data: str) -> MeetingRoom:
@@ -311,9 +309,7 @@ async def get_meeting(meeting_id: str) -> MeetingRoom | None:
     data = await redis_working.get(_redis_key(meeting_id))
     if data is None:
         return None
-    return _deserialize_room(
-        data if isinstance(data, str) else data.decode("utf-8")
-    )
+    return _deserialize_room(data if isinstance(data, str) else data.decode("utf-8"))
 
 
 async def save_meeting(room: MeetingRoom) -> None:
@@ -324,9 +320,7 @@ async def save_meeting(room: MeetingRoom) -> None:
     Args:
         room: The meeting room to save.
     """
-    remaining_ttl = await redis_working.ttl(
-        _redis_key(room.meeting_id)
-    )
+    remaining_ttl = await redis_working.ttl(_redis_key(room.meeting_id))
     ttl = max(remaining_ttl, 60) if remaining_ttl > 0 else 360
     await redis_working.set(
         _redis_key(room.meeting_id),

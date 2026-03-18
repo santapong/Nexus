@@ -1,4 +1,5 @@
 """Eval scoring schemas — data models for LLM-as-judge evaluation."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

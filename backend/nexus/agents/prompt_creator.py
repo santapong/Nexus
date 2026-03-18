@@ -4,6 +4,7 @@ Reads episodic memory failures for a target agent, identifies patterns,
 drafts improved prompts, benchmarks them, and proposes the best version
 for human approval. Never auto-deploys — always requires approval.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,9 +46,7 @@ class PromptCreatorAgent(AgentBase):
     7. Request human approval — never auto-activates
     """
 
-    async def handle_task(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Handle a prompt improvement request.
 
         Args:
@@ -152,9 +151,7 @@ class PromptCreatorAgent(AgentBase):
                 "failure_rate": analysis["failure_rate"],
             },
         )
-        await publish(
-            Topics.HUMAN_INPUT_NEEDED, approval_msg, key=task_id
-        )
+        await publish(Topics.HUMAN_INPUT_NEEDED, approval_msg, key=task_id)
 
         logger.info(
             "prompt_creator_proposed",
@@ -238,9 +235,7 @@ class PromptCreatorAgent(AgentBase):
             "has_issues": failure_rate >= _FAILURE_RATE_THRESHOLD,
         }
 
-    async def _get_active_prompt(
-        self, session: AsyncSession, role: str
-    ) -> str:
+    async def _get_active_prompt(self, session: AsyncSession, role: str) -> str:
         """Get the current active prompt for a role.
 
         Args:
@@ -278,9 +273,7 @@ class PromptCreatorAgent(AgentBase):
         Returns:
             The improved prompt text.
         """
-        issues_str = "\n".join(
-            f"- {issue}" for issue in failure_analysis["common_issues"]
-        )
+        issues_str = "\n".join(f"- {issue}" for issue in failure_analysis["common_issues"])
 
         improvement_prompt = (
             f"You are improving the system prompt for the '{target_role}' agent.\n\n"
@@ -308,9 +301,7 @@ class PromptCreatorAgent(AgentBase):
             )
             return current_prompt  # Fallback to current
 
-    async def _get_benchmarks(
-        self, session: AsyncSession, role: str
-    ) -> list[dict[str, Any]]:
+    async def _get_benchmarks(self, session: AsyncSession, role: str) -> list[dict[str, Any]]:
         """Get benchmark test cases for a role.
 
         Args:
@@ -320,10 +311,7 @@ class PromptCreatorAgent(AgentBase):
         Returns:
             List of benchmark dicts with input and expected_criteria.
         """
-        stmt = (
-            select(PromptBenchmark)
-            .where(PromptBenchmark.agent_role == role)
-        )
+        stmt = select(PromptBenchmark).where(PromptBenchmark.agent_role == role)
         result = await session.execute(stmt)
         benchmarks = result.scalars().all()
 
@@ -380,9 +368,7 @@ class PromptCreatorAgent(AgentBase):
             )
             return 0.5  # Default neutral score
 
-    async def _get_next_version(
-        self, session: AsyncSession, role: str
-    ) -> int:
+    async def _get_next_version(self, session: AsyncSession, role: str) -> int:
         """Get the next version number for a role's prompt.
 
         Args:
@@ -392,10 +378,7 @@ class PromptCreatorAgent(AgentBase):
         Returns:
             Next version number (current max + 1).
         """
-        stmt = (
-            select(func.max(Prompt.version))
-            .where(Prompt.agent_role == role)
-        )
+        stmt = select(func.max(Prompt.version)).where(Prompt.agent_role == role)
         result = await session.execute(stmt)
         max_version = result.scalar() or 0
         return max_version + 1
