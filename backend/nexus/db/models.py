@@ -525,3 +525,64 @@ class AgentCostAlert(UUIDBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+
+
+# ─── Table 25: feedback_signals (Phase 5 Track B — RLHF-lite) ───────────────
+
+
+class FeedbackSignal(UUIDBase):
+    __tablename__ = "feedback_signals"
+
+    task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id"), nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # approval | rating | rework | escalation
+    signal_value: Mapped[float] = mapped_column(Float, nullable=False)  # 0.0–1.0
+    context: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )
+
+
+# ─── Table 26: fine_tuning_jobs (Phase 5 Track B) ────────────────────────────
+
+
+class FineTuningJob(UUIDBase):
+    __tablename__ = "fine_tuning_jobs"
+
+    agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id"), nullable=False, index=True)
+    agent_role: Mapped[str] = mapped_column(String(50), nullable=False)
+    base_model: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_model: Mapped[str] = mapped_column(String(100), nullable=False)
+    dataset_path: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", index=True
+    )  # pending | running | completed | failed
+    config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    metrics: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+# ─── Table 27: plugin_registrations (Phase 5 Track C) ────────────────────────
+
+
+class PluginRegistration(UUIDBase):
+    __tablename__ = "plugin_registrations"
+
+    plugin_id: Mapped[str] = mapped_column(String(500), nullable=False, unique=True, index=True)
+    plugin_type: Mapped[str] = mapped_column(String(20), nullable=False)  # python | http
+    source: Mapped[str] = mapped_column(String(500), nullable=False)  # module path or URL
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )

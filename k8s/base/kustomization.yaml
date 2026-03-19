@@ -13,6 +13,7 @@ resources:
   - backend.yaml
   - frontend.yaml
   - ingress.yaml
+  - hpa.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: kustomize
