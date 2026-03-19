@@ -100,6 +100,7 @@ class TestAnalyticsModels:
         """DeadLetterResponse should serialize topic-level stats."""
         resp = DeadLetterResponse(
             total_dead_letters=3,
+            unresolved=3,
             by_topic=[
                 DeadLetterStats(topic="task.queue.dead_letter", count=2),
                 DeadLetterStats(topic="agent.commands.dead_letter", count=1),

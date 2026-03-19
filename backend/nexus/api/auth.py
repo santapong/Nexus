@@ -117,7 +117,7 @@ def decode_access_token(token: str) -> dict[str, Any]:
     )
 
 
-def get_auth_user_from_request(request: Request) -> AuthUser | None:
+def get_auth_user_from_request(request: Request[Any, Any, Any]) -> AuthUser | None:
     """Extract authenticated user from request Authorization header.
 
     Args:

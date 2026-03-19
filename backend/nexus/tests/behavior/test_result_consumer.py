@@ -7,6 +7,7 @@ publish to task.results, and broadcast via Redis pub/sub.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -18,11 +19,11 @@ from nexus.core.kafka.result_consumer import _handle_response, _map_status
 def _make_response_raw(
     *,
     status: str = "success",
-    output: dict | None = None,
+    output: dict[str, Any] | None = None,
     error: str | None = None,
     tokens_used: int = 500,
     action: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Build a raw dict mimicking an AgentResponse Kafka message."""
     task_id = uuid4()
     trace_id = uuid4()

@@ -8,7 +8,14 @@ from litestar import Controller, get
 logger = structlog.get_logger()
 
 # Core services — system cannot function without these
-_CORE_SERVICES = {"postgres", "redis_working", "redis_cache", "redis_pubsub", "redis_locks", "kafka"}
+_CORE_SERVICES = {
+    "postgres",
+    "redis_working",
+    "redis_cache",
+    "redis_pubsub",
+    "redis_locks",
+    "kafka",
+}
 
 
 class HealthController(Controller):
@@ -86,9 +93,9 @@ class HealthController(Controller):
             from nexus.settings import settings as s
 
             if s.temporal_host:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient() as http_client:
                     host = s.temporal_host.replace(":7233", ":7233")
-                    resp = await client.get(f"http://{host}/api/v1/namespaces", timeout=3.0)
+                    resp = await http_client.get(f"http://{host}/api/v1/namespaces", timeout=3.0)
                     optional["temporal"] = "ok" if resp.status_code < 500 else "error"
             else:
                 optional["temporal"] = "not_configured"
@@ -100,8 +107,8 @@ class HealthController(Controller):
             from nexus.settings import settings as s
 
             if s.keepsave_url:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.get(f"{s.keepsave_url}/health", timeout=3.0)
+                async with httpx.AsyncClient() as http_client:
+                    resp = await http_client.get(f"{s.keepsave_url}/health", timeout=3.0)
                     optional["keepsave"] = "ok" if resp.status_code == 200 else "error"
             else:
                 optional["keepsave"] = "not_configured"

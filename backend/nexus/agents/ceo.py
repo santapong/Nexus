@@ -106,7 +106,7 @@ class CEOAgent(AgentBase):
         await session.commit()
 
         # Store subtask tracking state in Redis working memory
-        tracking = {
+        tracking: dict[str, Any] = {
             "parent_task_id": task_id,
             "original_instruction": message.instruction,
             "subtasks": {
@@ -477,7 +477,7 @@ class CEOAgent(AgentBase):
             tokens_used=0,
         )
 
-    async def _run_with_retry(self, user_message: str, task_id: str) -> object:
+    async def _run_with_retry(self, user_message: str, task_id: str) -> Any:
         """Run LLM agent with retry logic for transient errors."""
         last_error: Exception | None = None
 

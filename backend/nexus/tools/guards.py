@@ -176,4 +176,5 @@ async def resolve_approval(
         },
     )
 
-    return record
+    approval: HumanApproval = record
+    return approval

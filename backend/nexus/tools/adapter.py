@@ -16,6 +16,11 @@ from pathlib import Path
 import httpx
 import structlog
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from nexus.db.models import EpisodicMemory, SemanticMemory
+
+logger = structlog.get_logger()
 
 _MAX_TOOL_OUTPUT_SIZE = 50_000  # 50KB max per tool response
 
@@ -29,11 +34,6 @@ def _sanitize_tool_output(output: str) -> str:
     if len(output) > _MAX_TOOL_OUTPUT_SIZE:
         return output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
     return output
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from nexus.db.models import EpisodicMemory, SemanticMemory
-
-logger = structlog.get_logger()
 
 
 # ─── READ-ONLY tools (no approval needed) ────────────────────────────────────
@@ -226,13 +226,13 @@ async def tool_memory_read(
             if not agent:
                 return f"Error: No agent found with role '{agent_role}'"
 
-            stmt = select(SemanticMemory).where(
+            sem_stmt = select(SemanticMemory).where(
                 SemanticMemory.agent_id == str(agent.id),
             )
             if namespace:
-                stmt = stmt.where(SemanticMemory.namespace == namespace)
-            stmt = stmt.order_by(SemanticMemory.updated_at.desc()).limit(limit)
-            result = await _session.execute(stmt)
+                sem_stmt = sem_stmt.where(SemanticMemory.namespace == namespace)
+            sem_stmt = sem_stmt.order_by(SemanticMemory.updated_at.desc()).limit(limit)
+            result = await _session.execute(sem_stmt)
             facts = result.scalars().all()
 
             if not facts:
@@ -278,7 +278,7 @@ async def tool_create_plan(
 
 GOAL: {goal}
 
-CONSTRAINTS: {constraints or 'None specified'}
+CONSTRAINTS: {constraints or "None specified"}
 
 Structure the plan as {num_phases} phases. For each phase include:
 1. Phase name and objective (1 sentence)
@@ -313,7 +313,7 @@ async def tool_design_system(
 
 REQUIREMENTS: {requirements}
 
-KNOWN COMPONENTS: {components or 'None — design from scratch'}
+KNOWN COMPONENTS: {components or "None — design from scratch"}
 ARCHITECTURE STYLE: {style}
 
 Provide:
@@ -348,7 +348,7 @@ async def tool_design_database(
     prompt = f"""Design a database schema for the following entities:
 
 ENTITIES: {entities}
-RELATIONSHIPS: {relationships or 'Infer from entity names'}
+RELATIONSHIPS: {relationships or "Infer from entity names"}
 DATABASE: {database_type}
 
 Provide:
@@ -382,7 +382,7 @@ async def tool_design_api(
     prompt = f"""Design a REST API for these resources:
 
 RESOURCES: {resources}
-OPERATIONS: {operations or 'Standard CRUD + any obvious operations'}
+OPERATIONS: {operations or "Standard CRUD + any obvious operations"}
 AUTH: {auth_method}
 
 Provide:

@@ -28,7 +28,7 @@ async def upsert_fact(
         SemanticMemory.key == key,
     )
     result = await session.execute(stmt)
-    existing = result.scalar_one_or_none()
+    existing: SemanticMemory | None = result.scalar_one_or_none()
 
     if existing:
         existing.value = value

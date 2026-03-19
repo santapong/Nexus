@@ -103,5 +103,5 @@ async def test_engineer_includes_memory_context() -> None:
         await agent.handle_task(command, mock_session)
 
     # Verify the LLM was called with context-enriched message
-    call_args = agent.llm_agent.run.call_args[0][0]
+    call_args = agent.llm_agent.run.call_args[0][0]  # type: ignore[attr-defined]
     assert "past experience" in call_args.lower() or "similar" in call_args.lower()

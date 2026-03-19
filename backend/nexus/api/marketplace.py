@@ -97,7 +97,7 @@ class MarketplaceController(Controller):
         """Browse published marketplace listings."""
         stmt = select(AgentListing).where(AgentListing.is_published.is_(True))
         if skill:
-            stmt = stmt.where(AgentListing.skills.any(skill))
+            stmt = stmt.where(AgentListing.skills.contains([skill]))
         if min_rating is not None:
             stmt = stmt.where(AgentListing.rating >= min_rating)
         stmt = stmt.limit(limit).order_by(AgentListing.rating.desc())

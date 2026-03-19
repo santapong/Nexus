@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 from litestar import WebSocket, websocket
 
@@ -11,7 +13,7 @@ logger = structlog.get_logger()
 
 
 @websocket("/ws/agents")
-async def agent_activity_ws(socket: WebSocket) -> None:
+async def agent_activity_ws(socket: WebSocket[Any, Any, Any]) -> None:
     """Stream agent activity events to the dashboard in real-time.
 
     Subscribes to Redis pub/sub pattern agent_activity:* and forwards

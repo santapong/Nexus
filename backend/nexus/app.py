@@ -8,7 +8,8 @@ from advanced_alchemy.extensions.litestar import SQLAlchemyPlugin
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 
-from nexus.api.router import a2a_router, api_router, health_router
+from nexus.api.middleware import RLSMiddleware
+from nexus.api.router import a2a_router, api_router, health_router, stripe_router
 from nexus.core.kafka.producer import close_producer
 from nexus.db.session import sqlalchemy_config
 from nexus.settings import settings
@@ -35,10 +36,19 @@ async def _security_checks() -> None:
                 "no_llm_api_keys_configured",
                 hint="Set ANTHROPIC_API_KEY or GOOGLE_API_KEY for LLM functionality",
             )
+        if settings.stripe_api_key and not settings.stripe_webhook_secret:
+            logger.warning(
+                "stripe_webhook_secret_missing",
+                hint="Set STRIPE_WEBHOOK_SECRET for secure webhook verification",
+            )
     logger.info(
         "security_checks_passed",
         env=settings.app_env,
         jwt_default=settings.jwt_secret_key == "nexus-dev-secret-change-in-production",
+        oauth_google=bool(settings.oauth_google_client_id),
+        oauth_github=bool(settings.oauth_github_client_id),
+        stripe=bool(settings.stripe_api_key),
+        injection_classifier=settings.injection_classifier_enabled,
     )
 
 
@@ -97,9 +107,10 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[api_router, health_router, a2a_router],
+        route_handlers=[api_router, health_router, a2a_router, stripe_router],
         plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
         cors_config=cors_config,
+        middleware=[RLSMiddleware],
         on_startup=[_on_startup],
         on_shutdown=[_on_shutdown],
         debug=settings.is_development,

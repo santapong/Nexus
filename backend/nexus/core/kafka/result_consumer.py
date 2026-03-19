@@ -205,7 +205,7 @@ async def _forward_to_ceo(
     # Extract the result text from the response output
     subtask_output = ""
     if response.output:
-        subtask_output = response.output.get("result", str(response.output))
+        subtask_output = str(response.output.get("result", str(response.output)))
 
     # Publish to task.queue so CEO picks it up as a response notification
     from nexus.core.kafka.schemas import AgentCommand

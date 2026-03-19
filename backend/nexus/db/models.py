@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 from datetime import UTC, datetime
+from typing import Any
 
 from advanced_alchemy.base import UUIDAuditBase, UUIDBase
 from pgvector.sqlalchemy import Vector
@@ -93,7 +94,7 @@ class Task(UUIDAuditBase):
     )
     source: Mapped[str] = mapped_column(String(20), default=TaskSource.HUMAN.value)
     source_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    output: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    output: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -116,7 +117,7 @@ class EpisodicMemory(UUIDBase):
     agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id"), nullable=False, index=True)
     task_id: Mapped[str] = mapped_column(ForeignKey("tasks.id"), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
-    full_context: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    full_context: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     outcome: Mapped[str] = mapped_column(String(20), nullable=False)
     tools_used: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     tokens_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -178,7 +179,7 @@ class AuditLog(UUIDBase):
     trace_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     agent_id: Mapped[str] = mapped_column(String(100), nullable=False)
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    event_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    event_data: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
@@ -232,7 +233,7 @@ class PromptBenchmark(UUIDBase):
 
     agent_role: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     input: Mapped[str] = mapped_column(Text, nullable=False)
-    expected_criteria: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    expected_criteria: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -248,7 +249,7 @@ class DeadLetter(UUIDBase):
     message_id: Mapped[str] = mapped_column(String(36), nullable=False)
     task_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     error: Mapped[str] = mapped_column(Text, nullable=False)
-    raw_message: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    raw_message: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
@@ -324,7 +325,7 @@ class Workspace(UUIDAuditBase):
     slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
     owner_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    settings: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     daily_spend_limit_usd: Mapped[float] = mapped_column(Float, default=5.0)
 
     # Relationships
@@ -397,3 +398,44 @@ class BillingRecord(UUIDAuditBase):
     billing_type: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # llm_usage | tool_usage | a2a_hire
+
+
+# ─── Table 19: oauth_accounts ───────────────────────────────────────────
+
+
+class OAuthAccount(UUIDAuditBase):
+    __tablename__ = "oauth_accounts"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_user_id", name="uq_oauth_provider_user"),
+    )
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)  # google | github | microsoft
+    provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    access_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    refresh_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+# ─── Table 20: webhook_subscriptions ─────────────────────────────────────
+
+
+class WebhookSubscription(UUIDAuditBase):
+    __tablename__ = "webhook_subscriptions"
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    events: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    secret_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    failure_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_triggered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

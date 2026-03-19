@@ -69,7 +69,8 @@ class KeepSaveClient:
                 timeout=timeout,
             )
             response.raise_for_status()
-            return response.json()
+            result: dict[str, Any] = dict(response.json())
+            return result
 
     # ── Secret Management ─────────────────────────────────────────────
 
@@ -81,7 +82,10 @@ class KeepSaveClient:
             f"/api/v1/projects/{self.project_id}/secrets",
             params={"environment": env},
         )
-        return result if isinstance(result, list) else result.get("secrets", [])
+        secrets: list[dict[str, Any]] = (
+            result if isinstance(result, list) else result.get("secrets", [])
+        )
+        return secrets
 
     async def get_secret(self, secret_key: str, environment: str | None = None) -> dict[str, Any]:
         """Get a specific secret by key name."""
@@ -130,7 +134,10 @@ class KeepSaveClient:
             "GET",
             f"/api/v1/projects/{self.project_id}/secrets/{secret_id}/versions",
         )
-        return result if isinstance(result, list) else result.get("versions", [])
+        versions: list[dict[str, Any]] = (
+            result if isinstance(result, list) else result.get("versions", [])
+        )
+        return versions
 
     # ── Environment Promotion ─────────────────────────────────────────
 
@@ -175,7 +182,10 @@ class KeepSaveClient:
             "GET",
             f"/api/v1/projects/{self.project_id}/promotions",
         )
-        return result if isinstance(result, list) else result.get("promotions", [])
+        promotions: list[dict[str, Any]] = (
+            result if isinstance(result, list) else result.get("promotions", [])
+        )
+        return promotions
 
     async def approve_promotion(self, promotion_id: str) -> dict[str, Any]:
         """Approve a pending promotion request."""
@@ -220,9 +230,10 @@ class KeepSaveClient:
             },
             timeout=60.0,
         )
-        if "error" in result and result["error"]:
+        if result.get("error"):
             return {"error": result["error"].get("message", str(result["error"]))}
-        return result.get("result", result)
+        mcp_result: dict[str, Any] = result.get("result", result)
+        return mcp_result
 
     async def mcp_list_tools(self) -> list[dict[str, Any]]:
         """List all available tools across installed MCP servers."""
@@ -239,7 +250,10 @@ class KeepSaveClient:
             f"/api/v1/projects/{self.project_id}/audit-log",
             params={"limit": str(limit)},
         )
-        return result if isinstance(result, list) else result.get("entries", [])
+        entries: list[dict[str, Any]] = (
+            result if isinstance(result, list) else result.get("entries", [])
+        )
+        return entries
 
 
 # Singleton instance — lazily initialized
@@ -248,7 +262,7 @@ _client: KeepSaveClient | None = None
 
 def get_keepsave_client() -> KeepSaveClient:
     """Get or create the singleton KeepSave client."""
-    global _client  # noqa: PLW0603
+    global _client
     if _client is None:
         _client = KeepSaveClient()
     return _client

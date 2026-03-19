@@ -7,6 +7,7 @@ and report generation using web search, web fetch, and file tools.
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
@@ -100,7 +101,7 @@ class AnalystAgent(AgentBase):
             tokens_used=total_tokens,
         )
 
-    async def _run_with_retry(self, user_message: str, task_id: str) -> object:
+    async def _run_with_retry(self, user_message: str, task_id: str) -> Any:
         """Run LLM agent with retry logic for transient errors."""
         last_error: Exception | None = None
 

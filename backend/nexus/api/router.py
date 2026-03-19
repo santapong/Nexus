@@ -12,11 +12,14 @@ from nexus.api.billing import BillingController
 from nexus.api.eval import EvalController
 from nexus.api.health import HealthController
 from nexus.api.marketplace import MarketplaceController
+from nexus.api.oauth import OAuthController
 from nexus.api.prompts import PromptController
 from nexus.api.tasks import TaskController
+from nexus.api.webhooks import WebhookController
 from nexus.api.websocket import agent_activity_ws
 from nexus.api.workspaces import AuthController, WorkspaceController
 from nexus.integrations.a2a.routes import A2AGatewayController, AgentCardController
+from nexus.integrations.stripe.webhooks import StripeWebhookController
 
 api_router = Router(
     path="/api",
@@ -34,6 +37,8 @@ api_router = Router(
         AgentBuilderController,
         AuthController,
         WorkspaceController,
+        OAuthController,
+        WebhookController,
     ],
 )
 
@@ -47,4 +52,10 @@ health_router = Router(
 a2a_router = Router(
     path="/",
     route_handlers=[AgentCardController, A2AGatewayController],
+)
+
+# Stripe webhook route (outside /api — Stripe sends to root path)
+stripe_router = Router(
+    path="/",
+    route_handlers=[StripeWebhookController],
 )

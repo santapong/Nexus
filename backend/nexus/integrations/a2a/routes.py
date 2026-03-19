@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import structlog
@@ -39,7 +39,7 @@ from nexus.integrations.a2a.schemas import (
 logger = structlog.get_logger()
 
 
-def _extract_token(request: Request) -> str:
+def _extract_token(request: Request[Any, Any, Any]) -> str:
     """Extract bearer token from the Authorization header.
 
     Args:
@@ -48,7 +48,7 @@ def _extract_token(request: Request) -> str:
     Returns:
         The raw token string, or empty string if missing.
     """
-    auth_header = request.headers.get("authorization", "")
+    auth_header = cast(str, request.headers.get("authorization", ""))
     if auth_header.startswith("Bearer "):
         return auth_header[7:]
     return ""
@@ -103,7 +103,7 @@ class A2AGatewayController(Controller):
     @post("/tasks")
     async def submit_task(
         self,
-        request: Request,
+        request: Request[Any, Any, Any],
         data: A2ATaskRequest,
         db_session: AsyncSession,
     ) -> A2ATaskResponse:
@@ -217,7 +217,7 @@ class A2AGatewayController(Controller):
     @get("/tasks/{task_id:str}/events")
     async def stream_task_events(
         self,
-        request: Request,
+        request: Request[Any, Any, Any],
         task_id: str,
         db_session: AsyncSession,
     ) -> Stream:

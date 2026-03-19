@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -15,7 +16,7 @@ from nexus.db.models import AgentRole
 class FakeAgent(AgentBase):
     """Minimal concrete agent for testing."""
 
-    async def handle_task(self, message, session):
+    async def handle_task(self, message: Any, session: Any) -> Any:
         pass  # pragma: no cover
 
 
@@ -32,7 +33,7 @@ def _make_agent() -> FakeAgent:
 
 def _make_response(
     status: str = "success",
-    output: dict | None = None,
+    output: dict[str, Any] | None = None,
 ) -> AgentResponse:
     return AgentResponse(
         task_id=uuid4(),
@@ -137,7 +138,8 @@ def test_large_output_gets_truncation_flag() -> None:
 
     assert result.output is not None
     assert result.output.get("_truncated") is True
-    assert result.output.get("_original_size", 0) > AgentBase._MAX_OUTPUT_SIZE
+    original_size = result.output.get("_original_size", 0)
+    assert int(str(original_size)) > AgentBase._MAX_OUTPUT_SIZE
 
 
 def test_normal_size_output_no_truncation() -> None:

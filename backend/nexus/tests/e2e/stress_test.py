@@ -13,6 +13,7 @@ import json
 import sys
 import time
 from dataclasses import dataclass, field
+from typing import Any
 
 import httpx
 
@@ -96,16 +97,17 @@ def submit_task(client: httpx.Client, instruction: str) -> str:
         json={"instruction": instruction},
     )
     resp.raise_for_status()
-    return resp.json()["task_id"]
+    result: str = str(resp.json()["task_id"])
+    return result
 
 
-def poll_task(client: httpx.Client, task_id: str, timeout: float) -> dict:
+def poll_task(client: httpx.Client, task_id: str, timeout: float) -> dict[str, Any]:
     """Poll until task completes or times out."""
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         resp = client.get(f"{BASE_URL}/api/tasks/{task_id}")
         resp.raise_for_status()
-        data = resp.json()
+        data: dict[str, Any] = dict(resp.json())
         if data["status"] in ("completed", "failed", "escalated"):
             return data
         time.sleep(2.0)

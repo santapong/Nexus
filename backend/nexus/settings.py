@@ -90,6 +90,29 @@ class Settings(BaseSettings):
     model_qa_fallbacks: str = "groq:llama-3.3-70b-versatile"
     model_prompt_creator_fallbacks: str = "groq:llama-3.3-70b-versatile"
 
+    # ─── Phase 5: OAuth2/OIDC ────────────────────────────────────────────
+    oauth_google_client_id: str = ""
+    oauth_google_client_secret: str = ""
+    oauth_github_client_id: str = ""
+    oauth_github_client_secret: str = ""
+    oauth_redirect_base_url: str = "http://localhost:8000"
+
+    # ─── Phase 5: Stripe Billing ─────────────────────────────────────────
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id_per_task: str = ""
+
+    # ─── Phase 5: Prompt Injection Classifier ────────────────────────────
+    injection_classifier_enabled: bool = False  # Enable in production
+    injection_classifier_model: str = "claude-haiku-4-5-20251001"
+
+    # ─── Phase 5: Audit Log Retention ────────────────────────────────────
+    audit_retention_days: int = 30
+
+    # ─── Phase 5: Webhook Notifications ──────────────────────────────────
+    webhook_max_retries: int = 3
+    webhook_retry_backoff_base: int = 2
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"

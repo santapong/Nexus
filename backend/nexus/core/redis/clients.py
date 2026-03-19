@@ -20,7 +20,7 @@ _SOCKET_CONNECT_TIMEOUT = 5.0
 _HEALTH_CHECK_INTERVAL = 30
 
 
-def _make_client(db: int) -> Redis:  # type: ignore[type-arg]
+def _make_client(db: int) -> Redis:
     """Create an async Redis client with connection pool and retry.
 
     Args:

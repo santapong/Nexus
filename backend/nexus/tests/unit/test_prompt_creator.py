@@ -67,7 +67,7 @@ class TestPromptCreatorAnalysis:
         response = await agent.handle_task(command, mock_session)
 
         assert response.status == "failed"
-        assert "target_role" in response.error
+        assert response.error is not None and "target_role" in response.error
 
 
 class TestPromptCreatorProposal:

@@ -100,7 +100,7 @@ class TestLLMTimeout:
     async def test_timeout_produces_error_not_hang(self) -> None:
         """An LLM timeout raises within bounded time, never hangs."""
 
-        async def mock_llm_call():
+        async def mock_llm_call() -> None:
             await asyncio.sleep(100)
 
         with pytest.raises(TimeoutError):
@@ -130,7 +130,7 @@ class TestTokenBudgetExceededError:
         """check_daily_spend returns False when over the daily limit."""
         from nexus.settings import settings
 
-        mock_redis.get = AsyncMock(return_value=str(settings.daily_spend_limit_usd + 1.0))
+        mock_redis.get = AsyncMock(return_value=str(float(settings.daily_spend_limit_usd) + 1.0))
 
         from nexus.core.llm.usage import check_daily_spend
 

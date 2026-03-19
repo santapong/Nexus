@@ -72,7 +72,7 @@ async def score_output(
 
         judge = PydanticAgent(model=model, system_prompt="You are an eval judge.")
         result = await judge.run(prompt)
-        response_text = result.data
+        response_text = result.output
 
         # Parse JSON from response
         parsed = json.loads(response_text)

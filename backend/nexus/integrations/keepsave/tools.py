@@ -23,7 +23,7 @@ import structlog
 from nexus.db.models import AgentRole
 from nexus.integrations.keepsave.client import get_keepsave_client
 from nexus.integrations.keepsave.rbac import (
-    KeepSaveAccessDenied,
+    KeepSaveAccessDeniedError,
     KeepSaveOperation,
     check_operation,
     check_promote_target,
@@ -89,7 +89,7 @@ async def tool_keepsave_list_secrets(
             if desc:
                 lines.append(f"    Description: {desc}")
         return "\n".join(lines)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_list_secrets_failed", error=str(exc))
@@ -124,7 +124,7 @@ async def tool_keepsave_get_secret_info(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         return (
             f"Secret: {secret.get('key', secret_key)}\n"
             f"  ID: {secret.get('id', 'n/a')}\n"
@@ -134,7 +134,7 @@ async def tool_keepsave_get_secret_info(
             f"  Created: {secret.get('created_at', 'n/a')}\n"
             f"  Updated: {secret.get('updated_at', 'n/a')}"
         )
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_get_secret_info_failed", error=str(exc))
@@ -167,7 +167,7 @@ async def tool_keepsave_get_secret_versions(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         secret_id = secret.get("id")
         if not secret_id:
             return f"Could not find ID for secret '{secret_key}'"
@@ -176,12 +176,9 @@ async def tool_keepsave_get_secret_versions(
             return f"No version history found for '{secret_key}'."
         lines = [f"Version history for {secret_key}:"]
         for v in versions:
-            lines.append(
-                f"  v{v.get('version', '?')} — "
-                f"created: {v.get('created_at', 'unknown')}"
-            )
+            lines.append(f"  v{v.get('version', '?')} — created: {v.get('created_at', 'unknown')}")
         return "\n".join(lines)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_get_versions_failed", error=str(exc))
@@ -212,8 +209,9 @@ async def tool_keepsave_preview_promotion(
 
         client = get_keepsave_client()
         diff = await client.promote_diff(source_environment, target_environment)
-        return f"Promotion preview ({source_environment} → {target_environment}):\n{json.dumps(diff, indent=2)}"
-    except KeepSaveAccessDenied as exc:
+        preview = json.dumps(diff, indent=2)
+        return f"Promotion preview ({source_environment} → {target_environment}):\n{preview}"
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_preview_promotion_failed", error=str(exc))
@@ -244,7 +242,7 @@ async def tool_keepsave_list_promotions(_agent_role: str = "") -> str:
                 f"at {p.get('created_at', 'unknown')}"
             )
         return "\n".join(lines)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_list_promotions_failed", error=str(exc))
@@ -279,7 +277,7 @@ async def tool_keepsave_audit_log(limit: int = 20, _agent_role: str = "") -> str
                 f"by user {e.get('user_id', 'unknown')}"
             )
         return "\n".join(lines)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_audit_log_failed", error=str(exc))
@@ -311,7 +309,7 @@ async def tool_keepsave_mcp_list_tools(_agent_role: str = "") -> str:
                 f"  (server: {t.get('server_name', '?')})"
             )
         return "\n".join(lines)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_mcp_list_tools_failed", error=str(exc))
@@ -363,7 +361,7 @@ async def tool_keepsave_update_secret(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         secret_id = secret.get("id")
         if not secret_id:
             return f"Could not find ID for secret '{secret_key}'"
@@ -385,7 +383,7 @@ async def tool_keepsave_update_secret(
             f"  Reason: {reason}\n"
             f"  Note: Restart NEXUS to load the new value."
         )
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_update_secret_failed", error=str(exc))
@@ -440,7 +438,7 @@ async def tool_keepsave_create_secret(
             f"  Created by: {_agent_role or 'unknown'}\n"
             f"  Description: {description}"
         )
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_create_secret_failed", error=str(exc))
@@ -514,7 +512,7 @@ async def tool_keepsave_promote_environment(
             f"  Requested by: {_agent_role or 'unknown'}\n"
             f"  Notes: {notes}"
         )
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
     except Exception as exc:
         logger.error("keepsave_promote_failed", error=str(exc))
@@ -545,7 +543,7 @@ async def tool_keepsave_mcp_call(
         role = _get_role(_agent_role)
         if role:
             check_operation(role, KeepSaveOperation.MCP_CALL)
-    except KeepSaveAccessDenied as exc:
+    except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"
 
     try:
