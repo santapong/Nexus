@@ -155,7 +155,7 @@ class WebhookController(Controller):
         self,
         webhook_id: str,
         db_session: AsyncSession,
-    ) -> Response:
+    ) -> Response[None]:
         """Delete a webhook subscription.
 
         Args:

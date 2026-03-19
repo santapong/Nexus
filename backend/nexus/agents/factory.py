@@ -104,33 +104,33 @@ def build_agent(
     if role == AgentRole.CEO:
         from nexus.agents.ceo import CEOAgent
 
-        agent = CEOAgent(**kwargs)
+        agent = CEOAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.ENGINEER:
         from nexus.agents.engineer import EngineerAgent
 
-        agent = EngineerAgent(**kwargs)
+        agent = EngineerAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.ANALYST:
         from nexus.agents.analyst import AnalystAgent
 
-        agent = AnalystAgent(**kwargs)
+        agent = AnalystAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.WRITER:
         from nexus.agents.writer import WriterAgent
 
-        agent = WriterAgent(**kwargs)
+        agent = WriterAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.QA:
         from nexus.agents.qa import QAAgent
 
-        agent = QAAgent(**kwargs)
+        agent = QAAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.PROMPT_CREATOR:
         from nexus.agents.prompt_creator import PromptCreatorAgent
 
-        agent = PromptCreatorAgent(**kwargs)
+        agent = PromptCreatorAgent(**kwargs)  # type: ignore[arg-type]
     else:
         msg = f"No agent implementation for role: {role.value}"
         raise ValueError(msg)
 
     # Attach tool call counter so base.py can reset it per task
-    agent._tool_call_counter = tool_counter
+    agent._tool_call_counter = tool_counter  # type: ignore[union-attr]
     # Store system prompt text for hot-reload detection
     agent._current_system_prompt = system_prompt
     return agent

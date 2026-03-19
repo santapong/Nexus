@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -37,7 +38,7 @@ def _make_mock_session() -> AsyncMock:
     return mock_session
 
 
-def _make_llm_agent(decomposition: list[dict] | str = "") -> MagicMock:
+def _make_llm_agent(decomposition: list[dict[str, Any]] | str = "") -> MagicMock:
     output = json.dumps(decomposition) if isinstance(decomposition, list) else decomposition
 
     mock_result = MagicMock()
@@ -54,7 +55,7 @@ def _make_llm_agent(decomposition: list[dict] | str = "") -> MagicMock:
     return mock_agent
 
 
-def _make_ceo(decomposition: list[dict] | str = "") -> CEOAgent:
+def _make_ceo(decomposition: list[dict[str, Any]] | str = "") -> CEOAgent:
     return CEOAgent(
         role=AgentRole.CEO,
         agent_id="ceo-1",
@@ -89,7 +90,7 @@ async def test_ceo_decomposes_multi_agent_task(
     mock_publish: AsyncMock,
 ) -> None:
     """CEO should decompose a task into multiple subtasks and dispatch them."""
-    decomposition = [
+    decomposition: list[dict[str, Any]] = [
         {"role": "analyst", "instruction": "Research competitors", "depends_on": []},
         {"role": "writer", "instruction": "Draft email summary", "depends_on": [0]},
     ]

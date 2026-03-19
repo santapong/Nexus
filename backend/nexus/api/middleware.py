@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 import time
+from typing import Any
 
 import structlog
 from litestar import Request
@@ -40,11 +41,11 @@ class RLSMiddleware(AbstractMiddleware):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Process request and set RLS context if authenticated."""
-        if scope["type"] != "http":
+        if scope["type"] not in ("http", "websocket"):
             await self.app(scope, receive, send)
             return
 
-        request = Request(scope)
+        request: Request[Any, Any, Any] = Request(scope)
         auth_header = request.headers.get("authorization", "")
 
         if auth_header.startswith("Bearer "):
@@ -214,7 +215,7 @@ async def classify_injection_llm(instruction: str) -> InstructionValidationResul
         result = await classifier.run(
             _INJECTION_CLASSIFIER_PROMPT.format(instruction=instruction[:2000])
         )
-        response_text = str(result.data).lower().strip()
+        response_text = str(result.output).lower().strip()
 
         if response_text.startswith("injection"):
             logger.warning(

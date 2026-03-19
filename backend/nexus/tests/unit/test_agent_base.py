@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -19,7 +20,7 @@ class FakeAgent(AgentBase):
 
     handle_task_mock: AsyncMock
 
-    async def handle_task(self, message, session):
+    async def handle_task(self, message: Any, session: Any) -> Any:
         return await self.handle_task_mock(message, session)
 
 

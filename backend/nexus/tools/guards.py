@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from typing import cast
 
 import structlog
 from pydantic import BaseModel
@@ -176,4 +177,4 @@ async def resolve_approval(
         },
     )
 
-    return record
+    return cast(HumanApproval, record)

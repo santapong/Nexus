@@ -11,7 +11,7 @@ import json
 from typing import Any
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import Text, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
@@ -58,7 +58,7 @@ class PromptCreatorAgent(AgentBase):
         """
         task_id = str(message.task_id)
         trace_id = str(message.trace_id)
-        target_role = message.payload.get("target_role", "")
+        target_role = str(message.payload.get("target_role", ""))
 
         if not target_role:
             return AgentResponse(
@@ -198,7 +198,7 @@ class PromptCreatorAgent(AgentBase):
             select(EpisodicMemory)
             .join(
                 Task,
-                EpisodicMemory.task_id == func.cast(Task.id, func.text()),
+                EpisodicMemory.task_id == func.cast(Task.id, Text()),
             )
             .where(EpisodicMemory.outcome.in_(["failed", "partial"]))
             .order_by(EpisodicMemory.created_at.desc())

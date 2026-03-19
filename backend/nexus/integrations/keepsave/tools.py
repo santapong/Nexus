@@ -124,7 +124,7 @@ async def tool_keepsave_get_secret_info(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         return (
             f"Secret: {secret.get('key', secret_key)}\n"
             f"  ID: {secret.get('id', 'n/a')}\n"
@@ -167,7 +167,7 @@ async def tool_keepsave_get_secret_versions(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         secret_id = secret.get("id")
         if not secret_id:
             return f"Could not find ID for secret '{secret_key}'"
@@ -361,7 +361,7 @@ async def tool_keepsave_update_secret(
         env = environment if environment else None
         secret = await client.get_secret(secret_key, env)
         if "error" in secret:
-            return secret["error"]
+            return str(secret["error"])
         secret_id = secret.get("id")
         if not secret_id:
             return f"Could not find ID for secret '{secret_key}'"

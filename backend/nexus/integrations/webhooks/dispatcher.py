@@ -12,6 +12,7 @@ import asyncio
 import hashlib
 import hmac
 from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 import structlog
@@ -105,7 +106,7 @@ async def _deliver_single(
 async def dispatch_event(
     workspace_id: str,
     event_type: WebhookEventType,
-    data: dict,
+    data: dict[str, Any],
     db_session: AsyncSession,
 ) -> int:
     """Dispatch a webhook event to all matching subscriptions.

@@ -81,6 +81,9 @@ strict = true
 plugins = ["pydantic.mypy"]
 warn_return_any = true
 warn_unused_configs = true
+# Litestar Controller/decorators are typed as Any in stubs — suppress false positives
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
 module = [

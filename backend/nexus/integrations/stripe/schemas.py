@@ -7,6 +7,7 @@ checkout sessions, and webhook event parsing.
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -90,4 +91,4 @@ class StripeWebhookEvent(BaseModel):
     invoice_id: str | None = None
     amount_paid: int | None = None  # cents
     currency: str = "usd"
-    raw_data: dict | None = None
+    raw_data: dict[str, Any] | None = None

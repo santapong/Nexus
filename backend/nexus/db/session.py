@@ -8,6 +8,8 @@ Uses Advanced Alchemy with production-ready pool settings:
 
 from __future__ import annotations
 
+from typing import Any
+
 from advanced_alchemy.extensions.litestar import (
     AsyncSessionConfig,
     SQLAlchemyAsyncConfig,
@@ -33,7 +35,7 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
 )
 
 
-def get_session_factory() -> async_sessionmaker:
+def get_session_factory() -> async_sessionmaker[Any]:
     """Create a standalone session factory for background tasks.
 
     Used by eval runner, dead letter publisher, and other code

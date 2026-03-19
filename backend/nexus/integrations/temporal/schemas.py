@@ -20,7 +20,7 @@ class TaskWorkflowOutput(BaseModel):
 
     task_id: str
     status: str  # completed, failed
-    output: dict | None = None
+    output: dict[str, object] | None = None
     error: str | None = None
     tokens_used: int = 0
     duration_seconds: int = 0

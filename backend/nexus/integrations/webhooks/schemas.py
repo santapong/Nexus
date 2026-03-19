@@ -7,6 +7,7 @@ the specific payloads for each event type.
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -27,7 +28,7 @@ class WebhookPayload(BaseModel):
     event_type: WebhookEventType
     workspace_id: str
     timestamp: str
-    data: dict
+    data: dict[str, Any]
 
 
 class TaskEventData(BaseModel):

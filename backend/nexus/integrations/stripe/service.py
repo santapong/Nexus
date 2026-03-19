@@ -6,6 +6,8 @@ import stripe directly. Degrades gracefully when stripe_api_key is empty.
 
 from __future__ import annotations
 
+from types import ModuleType
+
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +26,7 @@ from nexus.settings import settings
 logger = structlog.get_logger()
 
 
-def _get_stripe():  # type: ignore[no-untyped-def]
+def _get_stripe() -> ModuleType | None:
     """Lazy-load stripe module to avoid import errors when not installed.
 
     Returns:
@@ -35,7 +37,7 @@ def _get_stripe():  # type: ignore[no-untyped-def]
 
         if settings.stripe_api_key:
             stripe.api_key = settings.stripe_api_key
-            return stripe
+            return stripe  # type: ignore[no-any-return]
     except ImportError:
         pass
     return None
@@ -75,7 +77,7 @@ async def get_or_create_customer(
 
     # Check if workspace already has a Stripe customer
     ws_settings = workspace.settings or {}
-    customer_id = ws_settings.get("stripe_customer_id")
+    customer_id: str | None = ws_settings.get("stripe_customer_id")
     if customer_id:
         return customer_id
 
@@ -83,7 +85,7 @@ async def get_or_create_customer(
     customer = stripe.Customer.create(
         metadata={"workspace_id": workspace_id, "workspace_name": workspace.name},
     )
-    customer_id = customer["id"]
+    customer_id = str(customer["id"])
 
     # Store in workspace settings
     ws_settings["stripe_customer_id"] = customer_id

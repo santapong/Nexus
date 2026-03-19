@@ -6,7 +6,7 @@ Provides user-facing cost transparency.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from pydantic import BaseModel
@@ -64,8 +64,9 @@ def _get_model_for_role(role: str) -> str:
     """
     model_map = getattr(settings, "AGENT_MODEL_MAP", None)
     if model_map and role in model_map:
-        return model_map[role]
-    return _ROLE_MODEL_MAP.get(role, "claude-sonnet-4-20250514")
+        return cast(str, model_map[role])
+    result: str = _ROLE_MODEL_MAP.get(role, "claude-sonnet-4-20250514")
+    return result
 
 
 def _estimate_cost_for_tokens(model_name: str, tokens: int) -> float:

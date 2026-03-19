@@ -18,6 +18,7 @@ Example:
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any
 
 import structlog
 
@@ -267,8 +268,8 @@ def check_promote_target(role: AgentRole, target_environment: str) -> None:
 
 def filter_secrets_for_role(
     role: AgentRole,
-    secrets: list[dict],
-) -> list[dict]:
+    secrets: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Filter a list of secrets to only those the role can see.
 
     Used by tool_keepsave_list_secrets to hide secrets outside the role's scope.

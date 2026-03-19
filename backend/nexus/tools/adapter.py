@@ -226,13 +226,13 @@ async def tool_memory_read(
             if not agent:
                 return f"Error: No agent found with role '{agent_role}'"
 
-            stmt = select(SemanticMemory).where(
+            sem_stmt = select(SemanticMemory).where(
                 SemanticMemory.agent_id == str(agent.id),
             )
             if namespace:
-                stmt = stmt.where(SemanticMemory.namespace == namespace)
-            stmt = stmt.order_by(SemanticMemory.updated_at.desc()).limit(limit)
-            result = await _session.execute(stmt)
+                sem_stmt = sem_stmt.where(SemanticMemory.namespace == namespace)
+            sem_stmt = sem_stmt.order_by(SemanticMemory.updated_at.desc()).limit(limit)
+            result = await _session.execute(sem_stmt)
             facts = result.scalars().all()
 
             if not facts:

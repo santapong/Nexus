@@ -177,7 +177,8 @@ def submit_task(client: httpx.Client, instruction: str) -> str:
         json={"instruction": instruction},
     )
     resp.raise_for_status()
-    return resp.json()["task_id"]
+    result: str = str(resp.json()["task_id"])
+    return result
 
 
 def poll_task(client: httpx.Client, task_id: str, timeout: float) -> dict[str, Any]:
@@ -186,7 +187,7 @@ def poll_task(client: httpx.Client, task_id: str, timeout: float) -> dict[str, A
     while time.monotonic() - start < timeout:
         resp = client.get(f"{BASE_URL}/api/tasks/{task_id}")
         resp.raise_for_status()
-        data = resp.json()
+        data: dict[str, Any] = dict(resp.json())
         if data["status"] in ("completed", "failed", "escalated"):
             return data
         time.sleep(2.0)
@@ -198,7 +199,8 @@ def get_subtask_count(client: httpx.Client, task_id: str) -> int:
     try:
         resp = client.get(f"{BASE_URL}/api/tasks/{task_id}/trace")
         resp.raise_for_status()
-        return resp.json().get("total_subtasks", 0)
+        count: int = int(resp.json().get("total_subtasks", 0))
+        return count
     except Exception:
         return 0
 

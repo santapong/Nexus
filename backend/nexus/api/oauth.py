@@ -243,6 +243,8 @@ class OAuthController(Controller):
 
         is_new_user = False
 
+        user: User | None = None
+
         if oauth_account:
             # Existing OAuth account — get user
             user_stmt = select(User).where(User.id == oauth_account.user_id)
@@ -314,11 +316,18 @@ class OAuthController(Controller):
 
         await db_session.commit()
 
+        if user is None:
+            return OAuthLoginResponse(
+                access_token="",
+                user=AuthUser(user_id="", workspace_id="", email=""),
+                is_new_user=False,
+            )
+
         # Get workspace for JWT
         ws_stmt = select(Workspace).where(Workspace.owner_id == str(user.id))
         ws_result = await db_session.execute(ws_stmt)
-        workspace = ws_result.scalar_one_or_none()
-        workspace_id = str(workspace.id) if workspace else ""
+        user_workspace = ws_result.scalar_one_or_none()
+        workspace_id = str(user_workspace.id) if user_workspace else ""
 
         jwt_token = create_access_token(
             user_id=str(user.id),

@@ -10,6 +10,8 @@ Processes Stripe events:
 
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 from litestar import Controller, Response, post
 from litestar.enums import MediaType
@@ -23,7 +25,7 @@ from nexus.settings import settings
 logger = structlog.get_logger()
 
 
-def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict | None:
+def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict[str, Any] | None:
     """Verify Stripe webhook signature and parse event.
 
     Args:
@@ -37,7 +39,9 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict | None:
         import stripe
 
         stripe.api_key = settings.stripe_api_key
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
+        event: dict[str, Any] = stripe.Webhook.construct_event(
+            payload, sig_header, settings.stripe_webhook_secret
+        )
         return event
     except ImportError:
         logger.warning("stripe_not_installed")
@@ -47,7 +51,7 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict | None:
         return None
 
 
-async def _handle_checkout_completed(event_data: dict, db_session: AsyncSession) -> None:
+async def _handle_checkout_completed(event_data: dict[str, Any], db_session: AsyncSession) -> None:
     """Handle checkout.session.completed — activate subscription.
 
     Args:
@@ -83,7 +87,9 @@ async def _handle_checkout_completed(event_data: dict, db_session: AsyncSession)
     )
 
 
-async def _handle_subscription_updated(event_data: dict, db_session: AsyncSession) -> None:
+async def _handle_subscription_updated(
+    event_data: dict[str, Any], db_session: AsyncSession
+) -> None:
     """Handle customer.subscription.updated — sync subscription status.
 
     Args:
@@ -117,7 +123,9 @@ async def _handle_subscription_updated(event_data: dict, db_session: AsyncSessio
             return
 
 
-async def _handle_subscription_deleted(event_data: dict, db_session: AsyncSession) -> None:
+async def _handle_subscription_deleted(
+    event_data: dict[str, Any], db_session: AsyncSession
+) -> None:
     """Handle customer.subscription.deleted — deactivate.
 
     Args:
@@ -142,7 +150,9 @@ async def _handle_subscription_deleted(event_data: dict, db_session: AsyncSessio
             return
 
 
-async def _handle_invoice_payment_failed(event_data: dict, db_session: AsyncSession) -> None:
+async def _handle_invoice_payment_failed(
+    event_data: dict[str, Any], db_session: AsyncSession
+) -> None:
     """Handle invoice.payment_failed — flag workspace.
 
     Args:
@@ -184,9 +194,9 @@ class StripeWebhookController(Controller):
     @post()
     async def handle_webhook(
         self,
-        data: dict,
+        data: dict[str, Any],
         db_session: AsyncSession,
-    ) -> Response:
+    ) -> Response[dict[str, bool]]:
         """Process a Stripe webhook event.
 
         Verifies the webhook signature, routes to the appropriate handler,

@@ -43,7 +43,7 @@ async def start_temporal_worker() -> None:
         worker = Worker(
             client,
             task_queue=settings.temporal_task_queue,
-            workflows=[task_execution_workflow],
+            workflows=[task_execution_workflow],  # type: ignore[list-item]
             activities=[execute_task_activity, execute_subtask_activity],
         )
 

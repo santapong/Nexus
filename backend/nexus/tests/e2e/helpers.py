@@ -52,7 +52,8 @@ def submit_task(client: httpx.Client, instruction: str) -> str:
         json={"instruction": instruction},
     )
     resp.raise_for_status()
-    return resp.json()["task_id"]
+    result: str = str(resp.json()["task_id"])
+    return result
 
 
 def poll_until_done(
@@ -65,7 +66,7 @@ def poll_until_done(
     while time.monotonic() - start < timeout:
         resp = client.get(f"{BASE_URL}/api/tasks/{task_id}")
         resp.raise_for_status()
-        data = resp.json()
+        data: dict[str, Any] = dict(resp.json())
         if data["status"] in ("completed", "failed", "escalated"):
             return data
         time.sleep(POLL_INTERVAL)
@@ -76,21 +77,24 @@ def get_task(client: httpx.Client, task_id: str) -> dict[str, Any]:
     """Fetch a single task by ID."""
     resp = client.get(f"{BASE_URL}/api/tasks/{task_id}")
     resp.raise_for_status()
-    return resp.json()
+    result: dict[str, Any] = dict(resp.json())
+    return result
 
 
 def get_trace(client: httpx.Client, task_id: str) -> dict[str, Any]:
     """Fetch the task trace (parent + subtasks)."""
     resp = client.get(f"{BASE_URL}/api/tasks/{task_id}/trace")
     resp.raise_for_status()
-    return resp.json()
+    result: dict[str, Any] = dict(resp.json())
+    return result
 
 
 def get_replay(client: httpx.Client, task_id: str) -> dict[str, Any]:
     """Fetch the task replay (episodic memory + LLM usage timeline)."""
     resp = client.get(f"{BASE_URL}/api/tasks/{task_id}/replay")
     resp.raise_for_status()
-    return resp.json()
+    result: dict[str, Any] = dict(resp.json())
+    return result
 
 
 def run_task(

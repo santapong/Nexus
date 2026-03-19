@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import cast
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -36,7 +37,7 @@ async def upsert_fact(
         if source_task_id:
             existing.source_task_id = source_task_id
         await session.flush()
-        return existing
+        return cast(SemanticMemory, existing)
 
     fact = SemanticMemory(
         id=uuid4(),

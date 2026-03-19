@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
 from sqlalchemy import text
@@ -62,7 +63,7 @@ async def archive_old_audit_records(
             """),
             {"now": now, "cutoff": cutoff, "batch_size": batch_size},
         )
-        batch_count = result.rowcount
+        batch_count: int = result.rowcount or 0
         await db_session.commit()
 
         total_archived += batch_count
@@ -83,7 +84,7 @@ async def archive_old_audit_records(
     return total_archived
 
 
-async def get_archive_stats(db_session: AsyncSession) -> dict:
+async def get_archive_stats(db_session: AsyncSession) -> dict[str, Any]:
     """Get audit log archive statistics.
 
     Args:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -23,7 +24,7 @@ logger = structlog.get_logger()
 
 
 async def start_all_agents(
-    db_session_factory: async_sessionmaker | None = None,
+    db_session_factory: async_sessionmaker[Any] | None = None,
 ) -> list[asyncio.Task[None]]:
     """Load agent configs from DB and start all active agents + result consumer.
 

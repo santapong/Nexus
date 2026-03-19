@@ -96,8 +96,8 @@ class EvalController(Controller):
             agg_query = agg_query.where(EvalResult.created_at >= cutoff)
 
         agg_row = (await db_session.execute(agg_query)).one()
-        total = agg_row.count or 0
-        mean = float(agg_row.mean or 0)
+        total = agg_row[0] or 0
+        mean = float(agg_row[1] or 0)
 
         # By role (join tasks -> agents)
         from nexus.db.models import Task
