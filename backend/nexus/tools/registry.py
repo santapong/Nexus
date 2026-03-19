@@ -31,6 +31,7 @@ from nexus.integrations.keepsave.tools import (
     tool_keepsave_update_secret,
 )
 from nexus.tools.adapter import (
+    tool_analyze_image,
     tool_code_execute,
     tool_create_plan,
     tool_design_api,
@@ -107,6 +108,7 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_write,
         tool_git_push,
         tool_hire_external_agent,
+        tool_analyze_image,
         # Planning & design tools
         tool_create_plan,
         tool_design_system,
@@ -122,6 +124,7 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_read,
         tool_file_write,
         tool_hire_external_agent,
+        tool_analyze_image,
         # Planning tool only (no design tools)
         tool_create_plan,
         # Analyst: read-only secrets + MCP gateway (no secret writes)

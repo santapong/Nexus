@@ -479,6 +479,131 @@ async def tool_hire_external_agent(
         return f"Failed to hire external agent: {exc}"
 
 
+async def tool_analyze_image(
+    image_path: str,
+    instruction: str = "Describe this image in detail.",
+    model: str = "",
+) -> str:
+    """Analyze an image using a multi-modal LLM (Claude or Gemini).
+
+    Supports screenshots, charts, diagrams, UI mockups, photos, and PDFs.
+    The agent sends the image along with an instruction to a vision-capable model.
+
+    Args:
+        image_path: Path to the image file (PNG, JPG, WEBP, GIF, or PDF).
+        instruction: What to analyze or extract from the image.
+        model: Optional model override. Defaults to the agent's configured model.
+
+    Returns:
+        The LLM's analysis of the image as text.
+    """
+    import base64
+    import mimetypes
+
+    file_path = Path(image_path)
+    if not file_path.exists():
+        return f"Error: Image not found: {image_path}"
+
+    mime_type, _ = mimetypes.guess_type(image_path)
+    supported = {
+        "image/png", "image/jpeg", "image/webp", "image/gif",
+        "application/pdf",
+    }
+    if mime_type not in supported:
+        return f"Error: Unsupported file type '{mime_type}'. Supported: {', '.join(supported)}"
+
+    # Read and encode the image
+    try:
+        image_data = file_path.read_bytes()
+        if len(image_data) > 20 * 1024 * 1024:  # 20MB limit
+            return "Error: Image file exceeds 20MB size limit"
+        b64_data = base64.b64encode(image_data).decode("utf-8")
+    except Exception as exc:
+        return f"Error reading image: {exc}"
+
+    # Call vision-capable model via httpx (provider-agnostic)
+    try:
+        from nexus.settings import settings
+
+        # Try Anthropic first (Claude supports vision natively)
+        if settings.anthropic_api_key:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": settings.anthropic_api_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": model or "claude-haiku-4-5-20251001",
+                        "max_tokens": 4096,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image",
+                                        "source": {
+                                            "type": "base64",
+                                            "media_type": mime_type,
+                                            "data": b64_data,
+                                        },
+                                    },
+                                    {"type": "text", "text": instruction},
+                                ],
+                            }
+                        ],
+                    },
+                    timeout=60.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                content = data.get("content", [{}])
+                result_text = content[0].get("text", "") if content else ""
+                return _sanitize_tool_output(result_text)
+
+        # Fallback to Gemini
+        elif settings.google_api_key:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/"
+                    f"{model or 'gemini-2.0-flash'}:generateContent",
+                    params={"key": settings.google_api_key},
+                    json={
+                        "contents": [
+                            {
+                                "parts": [
+                                    {
+                                        "inline_data": {
+                                            "mime_type": mime_type,
+                                            "data": b64_data,
+                                        }
+                                    },
+                                    {"text": instruction},
+                                ]
+                            }
+                        ]
+                    },
+                    timeout=60.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                candidates = data.get("candidates", [{}])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    result_text = parts[0].get("text", "") if parts else ""
+                    return _sanitize_tool_output(result_text)
+                return "No response from Gemini vision model."
+
+        else:
+            return "Error: No vision-capable LLM API key configured (need ANTHROPIC_API_KEY or GOOGLE_API_KEY)"
+
+    except Exception as exc:
+        logger.error("analyze_image_failed", image_path=image_path, error=str(exc))
+        return f"Image analysis failed: {exc}"
+
+
 async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
     """Push code changes to a git repository. This action requires human approval.
 

@@ -125,6 +125,22 @@ class Settings(BaseSettings):
     # ─── Phase 5 Track B: Per-Agent Cost Alerts ─────────────────────────
     agent_cost_alert_default_limit_usd: float = 2.0
 
+    # ─── Phase 5 Track A: SOPS Secrets Management ─────────────────────
+    sops_secrets_dir: str = ""  # Path to directory with SOPS-encrypted files
+    sops_age_key_file: str = ""  # Path to AGE private key for decryption
+
+    # ─── Phase 5 Track B: Fine-Tuning Pipeline ────────────────────────
+    finetune_output_dir: str = "/tmp/nexus-finetune"
+    finetune_min_eval_score: float = 0.7
+    finetune_max_samples: int = 500
+
+    # ─── Phase 5 Track C: OpenTelemetry ───────────────────────────────
+    otel_exporter_endpoint: str = ""  # e.g. http://localhost:4318/v1/traces
+    otel_service_name: str = "nexus-backend"
+
+    # ─── Phase 5 Track C: Plugin System ───────────────────────────────
+    plugin_auto_load: bool = True  # Load plugins from DB on startup
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"
