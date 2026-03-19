@@ -80,9 +80,7 @@ class WebhookController(Controller):
         Returns:
             List of webhook subscriptions.
         """
-        stmt = select(WebhookSubscription).order_by(
-            WebhookSubscription.created_at.desc()
-        )
+        stmt = select(WebhookSubscription).order_by(WebhookSubscription.created_at.desc())
         if workspace_id:
             stmt = stmt.where(WebhookSubscription.workspace_id == workspace_id)
 
@@ -215,8 +213,6 @@ class WebhookController(Controller):
             },
         )
 
-        delivered = await _deliver_single(
-            subscription.url, test_payload, subscription.secret_hash
-        )
+        delivered = await _deliver_single(subscription.url, test_payload, subscription.secret_hash)
 
         return WebhookTestResponse(delivered=delivered, event_id=event_id)

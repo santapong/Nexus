@@ -176,10 +176,7 @@ async def tool_keepsave_get_secret_versions(
             return f"No version history found for '{secret_key}'."
         lines = [f"Version history for {secret_key}:"]
         for v in versions:
-            lines.append(
-                f"  v{v.get('version', '?')} — "
-                f"created: {v.get('created_at', 'unknown')}"
-            )
+            lines.append(f"  v{v.get('version', '?')} — created: {v.get('created_at', 'unknown')}")
         return "\n".join(lines)
     except KeepSaveAccessDeniedError as exc:
         return f"RBAC denied: {exc}"

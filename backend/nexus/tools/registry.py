@@ -80,7 +80,7 @@ _KEEPSAVE_CEO_WRITE_TOOLS: list[Callable[..., Any]] = [
 ]
 
 _KEEPSAVE_ENGINEER_WRITE_TOOLS: list[Callable[..., Any]] = [
-    tool_keepsave_update_secret,        # RBAC limits to LLM keys + cost only
+    tool_keepsave_update_secret,  # RBAC limits to LLM keys + cost only
     tool_keepsave_promote_environment,  # RBAC limits to uat only (not prod)
     tool_keepsave_mcp_call,
 ]

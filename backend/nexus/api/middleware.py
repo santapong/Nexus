@@ -29,6 +29,7 @@ logger = structlog.get_logger()
 
 # ─── RLS Middleware ──────────────────────────────────────────────────────────
 
+
 class RLSMiddleware(AbstractMiddleware):
     """Sets PostgreSQL RLS context from JWT workspace_id on every request.
 
@@ -62,6 +63,7 @@ class RLSMiddleware(AbstractMiddleware):
                 pass  # Invalid token — RLS defaults to no access
 
         await self.app(scope, receive, send)
+
 
 _RATE_LIMITS = {
     "authenticated": 100,  # requests per minute
@@ -269,8 +271,4 @@ def sandbox_instruction(instruction: str) -> str:
     Returns:
         Sandboxed instruction with clear delimiters.
     """
-    return (
-        "<user_instruction>\n"
-        f"{instruction}\n"
-        "</user_instruction>"
-    )
+    return f"<user_instruction>\n{instruction}\n</user_instruction>"

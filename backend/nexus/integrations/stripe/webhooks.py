@@ -37,9 +37,7 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict | None:
         import stripe
 
         stripe.api_key = settings.stripe_api_key
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.stripe_webhook_secret
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
         return event
     except ImportError:
         logger.warning("stripe_not_installed")

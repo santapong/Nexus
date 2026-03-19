@@ -278,7 +278,7 @@ async def tool_create_plan(
 
 GOAL: {goal}
 
-CONSTRAINTS: {constraints or 'None specified'}
+CONSTRAINTS: {constraints or "None specified"}
 
 Structure the plan as {num_phases} phases. For each phase include:
 1. Phase name and objective (1 sentence)
@@ -313,7 +313,7 @@ async def tool_design_system(
 
 REQUIREMENTS: {requirements}
 
-KNOWN COMPONENTS: {components or 'None — design from scratch'}
+KNOWN COMPONENTS: {components or "None — design from scratch"}
 ARCHITECTURE STYLE: {style}
 
 Provide:
@@ -348,7 +348,7 @@ async def tool_design_database(
     prompt = f"""Design a database schema for the following entities:
 
 ENTITIES: {entities}
-RELATIONSHIPS: {relationships or 'Infer from entity names'}
+RELATIONSHIPS: {relationships or "Infer from entity names"}
 DATABASE: {database_type}
 
 Provide:
@@ -382,7 +382,7 @@ async def tool_design_api(
     prompt = f"""Design a REST API for these resources:
 
 RESOURCES: {resources}
-OPERATIONS: {operations or 'Standard CRUD + any obvious operations'}
+OPERATIONS: {operations or "Standard CRUD + any obvious operations"}
 AUTH: {auth_method}
 
 Provide:

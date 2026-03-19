@@ -226,22 +226,22 @@ class AnalyticsController(Controller):
         agent_map = {str(a.id): a for a in agents}
 
         # Batch task stats for all agents (fixes N+1: was 3 queries per agent)
-        task_query = select(
-            Task.assigned_agent_id,
-            func.count(Task.id).label("total"),
-            func.count(Task.id)
-            .filter(Task.status == TaskStatus.COMPLETED.value)
-            .label("completed"),
-            func.count(Task.id).filter(Task.status == TaskStatus.FAILED.value).label("failed"),
-            func.avg(Task.tokens_used).label("avg_tokens"),
-            func.avg(
-                func.extract("epoch", Task.completed_at - Task.started_at)
+        task_query = (
+            select(
+                Task.assigned_agent_id,
+                func.count(Task.id).label("total"),
+                func.count(Task.id)
+                .filter(Task.status == TaskStatus.COMPLETED.value)
+                .label("completed"),
+                func.count(Task.id).filter(Task.status == TaskStatus.FAILED.value).label("failed"),
+                func.avg(Task.tokens_used).label("avg_tokens"),
+                func.avg(func.extract("epoch", Task.completed_at - Task.started_at))
+                .filter(Task.completed_at.isnot(None), Task.started_at.isnot(None))
+                .label("avg_dur"),
             )
-            .filter(Task.completed_at.isnot(None), Task.started_at.isnot(None))
-            .label("avg_dur"),
-        ).where(
-            Task.assigned_agent_id.in_(list(agent_map.keys()))
-        ).group_by(Task.assigned_agent_id)
+            .where(Task.assigned_agent_id.in_(list(agent_map.keys())))
+            .group_by(Task.assigned_agent_id)
+        )
 
         if cutoff:
             task_query = task_query.where(Task.created_at >= cutoff)

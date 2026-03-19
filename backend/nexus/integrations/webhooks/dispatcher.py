@@ -130,10 +130,7 @@ async def dispatch_event(
     subscriptions = list(result.scalars().all())
 
     # Filter by event type
-    matching = [
-        sub for sub in subscriptions
-        if event_type in sub.events or "*" in sub.events
-    ]
+    matching = [sub for sub in subscriptions if event_type in sub.events or "*" in sub.events]
 
     if not matching:
         return 0

@@ -168,9 +168,7 @@ class OAuthController(Controller):
             }
 
             headers = {"Accept": "application/json"}
-            token_resp = await client.post(
-                config["token_url"], data=token_data, headers=headers
-            )
+            token_resp = await client.post(config["token_url"], data=token_data, headers=headers)
             token_json = token_resp.json()
             access_token = token_json.get("access_token", "")
 
@@ -299,9 +297,7 @@ class OAuthController(Controller):
             if token_json.get("expires_in"):
                 from datetime import timedelta
 
-                expires_at = datetime.now(UTC) + timedelta(
-                    seconds=int(token_json["expires_in"])
-                )
+                expires_at = datetime.now(UTC) + timedelta(seconds=int(token_json["expires_in"]))
 
             oauth_account = OAuthAccount(
                 user_id=str(user.id),

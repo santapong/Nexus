@@ -65,11 +65,11 @@ class CircuitBreaker:
         if self._state == CircuitState.OPEN and (
             time.monotonic() - self._last_failure_time >= self.recovery_timeout
         ):
-                self._state = CircuitState.HALF_OPEN
-                logger.info(
-                    "circuit_half_open",
-                    provider=self.provider,
-                )
+            self._state = CircuitState.HALF_OPEN
+            logger.info(
+                "circuit_half_open",
+                provider=self.provider,
+            )
         return self._state
 
     def check(self) -> None:

@@ -29,13 +29,13 @@ logger = structlog.get_logger()
 class SecretScope(StrEnum):
     """Categories of secrets for RBAC scoping."""
 
-    LLM_KEYS = "llm_keys"                # ANTHROPIC_API_KEY, GOOGLE_API_KEY, etc.
-    INFRASTRUCTURE = "infrastructure"      # DATABASE_URL, REDIS_URL, KAFKA_*
-    AUTH = "auth"                          # JWT_SECRET_KEY, A2A_INBOUND_TOKEN
-    COST_CONTROLS = "cost_controls"        # DAILY_SPEND_LIMIT_USD, TOKEN_BUDGET
-    EXTERNAL_SERVICES = "external"         # TEMPORAL_HOST, LANGFUSE_*, KEEPSAVE_*
-    MCP = "mcp"                            # MCP gateway operations
-    PROMOTION = "promotion"                # Environment promotion operations
+    LLM_KEYS = "llm_keys"  # ANTHROPIC_API_KEY, GOOGLE_API_KEY, etc.
+    INFRASTRUCTURE = "infrastructure"  # DATABASE_URL, REDIS_URL, KAFKA_*
+    AUTH = "auth"  # JWT_SECRET_KEY, A2A_INBOUND_TOKEN
+    COST_CONTROLS = "cost_controls"  # DAILY_SPEND_LIMIT_USD, TOKEN_BUDGET
+    EXTERNAL_SERVICES = "external"  # TEMPORAL_HOST, LANGFUSE_*, KEEPSAVE_*
+    MCP = "mcp"  # MCP gateway operations
+    PROMOTION = "promotion"  # Environment promotion operations
 
 
 class KeepSaveOperation(StrEnum):

@@ -9,8 +9,12 @@ logger = structlog.get_logger()
 
 # Core services — system cannot function without these
 _CORE_SERVICES = {
-    "postgres", "redis_working", "redis_cache",
-    "redis_pubsub", "redis_locks", "kafka",
+    "postgres",
+    "redis_working",
+    "redis_cache",
+    "redis_pubsub",
+    "redis_locks",
+    "kafka",
 }
 
 
