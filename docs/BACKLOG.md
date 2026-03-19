@@ -51,11 +51,14 @@ in adapter.py. Update registry to grant multi-modal tools to relevant agents.
 **Suggested phase:** Phase 5 — Track B
 **Added by:** claude_code
 **Date:** 2026-03-19
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** IDEA-009, Phase 5 planning
 **Description:** Cron-like scheduler for recurring tasks using Temporal (already deployed
 in Phase 4). New `task_schedules` table with cron expression, next_run_at, enabled flag.
 Temporal workflow handles missed runs and retry. Dashboard UI for schedule management.
 Example: "Every Monday at 9am, compile a competitive intelligence report."
+**Resolution:** `core/scheduler.py` with croniter-based cron evaluation. `task_schedules` table
+(migration 007). CRUD API at `/api/schedules`. Supports max_runs, timezone, auto-deactivation.
 
 ---
 
@@ -100,11 +103,14 @@ before production deployment with real customer data.
 **Suggested phase:** Phase 5 — Track A
 **Added by:** claude_code
 **Date:** 2026-03-19
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** Risk 17 residual, CLAUDE.md §23
 **Description:** Current defense uses 5 regex patterns (middleware.py) which cannot catch
 novel injection techniques. Add an LLM-based classifier (small model or Haiku/Flash API
 call) that runs on every task instruction before execution. Separate from the task LLM to
 prevent recursive manipulation. Target: block 95%+ of OWASP prompt injection test cases.
+**Resolution:** `classify_injection_llm()` in `api/middleware.py`. Uses Haiku/Flash as classifier.
+Graceful degradation on failure.
 
 ---
 
@@ -159,9 +165,11 @@ for a decentralized agent marketplace.
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-18
+**Status:** ✅ RESOLVED — 2026-03-19
 **Description:** Replace internal billing_records with Stripe-backed payment processing.
 Usage-based pricing per task, per-model token metering, invoice generation, and payment
 webhooks. Required before any paid multi-tenant offering.
+**Resolution:** `integrations/stripe/` with service.py, schemas.py, webhooks.py. Graceful degradation.
 
 ---
 
@@ -169,9 +177,11 @@ webhooks. Required before any paid multi-tenant offering.
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-18
+**Status:** ✅ RESOLVED — 2026-03-19
 **Description:** Add OAuth2/OIDC support (Google, GitHub, Microsoft) alongside existing
 JWT auth. SSO for enterprise tenants. Token refresh flow. Session management. Required
 for production multi-tenant deployment with external identity providers.
+**Resolution:** `api/oauth.py` with Google + GitHub flows. Auto user creation. Account linking.
 
 ---
 
@@ -179,10 +189,13 @@ for production multi-tenant deployment with external identity providers.
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-18
+**Status:** ✅ RESOLVED — 2026-03-19
 **Description:** Implement PostgreSQL row-level security policies to enforce tenant isolation
 at the database level. Currently tenant filtering is application-level only (workspace_id
 WHERE clauses). RLS provides defense-in-depth: even SQL injection or ORM bugs cannot leak
 cross-tenant data.
+**Resolution:** Migration 006 with RLS policies on all workspace-scoped tables. Middleware injects
+workspace_id into DB session. Superuser bypass for admin operations.
 
 ---
 
@@ -341,11 +354,14 @@ ensures consistency across builds.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-14
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** Per-agent cost tracking implementation (ADR-027)
 **Description:** Now that per-agent cost tracking exists (`GET /analytics/costs/{agent_id}`),
 add configurable per-agent budget limits (not just per-task). Alert when an agent's cumulative
 daily cost exceeds a threshold. Enable different budget tiers per role (e.g., CEO gets higher
 budget than QA). Dashboard should show cost trends per agent over time.
+**Resolution:** `core/llm/cost_alerts.py` + `agent_cost_alerts` table (migration 007). Redis-cached
+counters with DB fallback. Integrated into AgentBase guard chain. API at `/analytics/agent-cost-alerts`.
 
 ---
 
@@ -353,11 +369,14 @@ budget than QA). Dashboard should show cost trends per agent over time.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-14
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** Audit logging service implementation (ADR-027)
 **Description:** The `audit_log` table grows unboundedly. Define a retention policy (e.g., keep
 30 days in hot storage, archive to cold storage). Add a periodic cleanup job. Consider
 partitioning the table by date for efficient deletion. The API already supports `since` filter
 but no upper bound on table size exists.
+**Resolution:** `audit/retention.py` with batch archival. Configurable retention period (default 30 days).
+`SKIP LOCKED` for safe concurrent operations.
 
 ---
 
@@ -365,11 +384,15 @@ but no upper bound on table size exists.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-10
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** ADR-022, Phase 2 QA implementation
 **Description:** Current QA pipeline does one rework attempt. If the specialist fails again,
 the task fails. Add configurable max_rework_rounds (default 2) so QA can cycle rejected output
 back to the specialist multiple times. Include the previous QA feedback in each rework instruction
 so the specialist knows exactly what to fix. Guard against unbounded loops via the round counter.
+**Resolution:** `qa.py` updated with round tracking, feedback accumulation, and escalation to
+human.input_needed after max rounds. `settings.qa_max_rework_rounds` configurable. `tasks.rework_round`
+column added in migration 007.
 
 ---
 
@@ -477,10 +500,13 @@ cost detail at `GET /analytics/costs/{agent_id}`. See CHANGELOG 2026-03-11.
 **Suggested phase:** Phase 3
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** §23 Risk 5, universal ModelFactory upgrade
 **Description:** Monitor API health for all configured providers. Track latency, error
 rates, and availability per provider. Show in dashboard. Feeds into automatic fallback
 decisions (BACKLOG-019). Helps debug "why is the agent slow" questions.
+**Resolution:** `core/llm/provider_health.py` with ring buffer tracking. `provider_health` table
+(migration 007). API at `/analytics/provider-health`. Integrates with circuit breaker.
 
 ---
 
@@ -488,10 +514,13 @@ decisions (BACKLOG-019). Helps debug "why is the agent slow" questions.
 **Suggested phase:** Phase 2 (with Prompt Creator Agent)
 **Added by:** claude_code
 **Date:** 2026-03-08
+**Status:** ✅ RESOLVED — 2026-03-19
 **Source:** universal ModelFactory upgrade, §7 Prompt Creator Agent
 **Description:** Run the same prompt_benchmarks test suite against different models to
 compare quality/cost/speed tradeoffs. Prompt Creator Agent can use this data to recommend
 optimal model assignments per role. Store results in a new `model_benchmarks` table.
+**Resolution:** `core/llm/benchmarking.py` with model comparison. `model_benchmarks` table
+(migration 007). API at `/analytics/model-benchmarks/{role}`. Reuses prompt_benchmarks test cases.
 
 ---
 
@@ -643,4 +672,6 @@ annotations to the MCP package before Phase 1 adapter work begins.
 *Last updated: 2026-03-19*
 *Next item ID: BACKLOG-052*
 *Phase 4 items (029-033) all resolved.*
-*Phase 5 items: BACKLOG-038–041, 043–051 + promoted BACKLOG-013,014,022,023,024,035,036,037.*
+*Phase 5 Track A resolved: BACKLOG-038,039,040,045.*
+*Phase 5 Track B resolved: BACKLOG-013,014,022,023,024,036,049.*
+*Phase 5 remaining: BACKLOG-041,043,044,046,047,048,050,051 + BACKLOG-035,037.*

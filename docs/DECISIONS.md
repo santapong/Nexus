@@ -67,6 +67,16 @@
 | ADR-045 | Prompt injection defense layers | accepted | 2026-03-18 |
 | ADR-046 | Performance indexes strategy | accepted | 2026-03-18 |
 | ADR-047 | LLM-powered agent tools for planning and design | accepted | 2026-03-18 |
+| ADR-048 | PostgreSQL RLS for multi-tenant isolation | accepted | 2026-03-19 |
+| ADR-049 | OAuth2/OIDC alongside JWT auth | accepted | 2026-03-19 |
+| ADR-050 | Stripe billing integration with graceful degradation | accepted | 2026-03-19 |
+| ADR-051 | LLM-based prompt injection classifier (second layer) | accepted | 2026-03-19 |
+| ADR-052 | Webhook notifications with HMAC signing | accepted | 2026-03-19 |
+| ADR-053 | Per-agent cost alerts with three-layer budget enforcement | accepted | 2026-03-19 |
+| ADR-054 | Provider health monitoring with ring buffer | accepted | 2026-03-19 |
+| ADR-055 | Model benchmarking reusing prompt_benchmarks test cases | accepted | 2026-03-19 |
+| ADR-056 | Cron-based task scheduling via croniter | accepted | 2026-03-19 |
+| ADR-057 | QA multi-round rework with escalation guard | accepted | 2026-03-19 |
 
 ---
 
@@ -1479,11 +1489,181 @@ Add 4 LLM-powered tools in `tools/adapter.py`: `tool_create_plan` (project plans
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-048 -->
+## ADR-048 — PostgreSQL RLS for multi-tenant isolation
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Application-level workspace_id filtering is fragile — ORM bugs or SQL injection could leak cross-tenant data. Need defense-in-depth for production multi-tenant deployment.
+
+### Decision
+
+Implement PostgreSQL Row-Level Security (RLS) on all workspace-scoped tables via migration 006. Every query is automatically filtered by `nexus.workspace_id` set via `SET LOCAL` at session start. Superuser bypass for admin operations.
+
+### Consequences
+
+**Positive:** Zero-trust isolation. Even raw SQL can't access other tenants' data.
+**Negative:** Requires middleware to inject workspace_id into every DB session. Admin queries need superuser context.
 
 ---
 
-*Last updated: 2026-03-18*
-*Next ADR ID: ADR-048*
-*Decision count: 38 accepted, 3 superseded*
+## ADR-049 — OAuth2/OIDC alongside JWT auth
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** JWT-only auth requires users to manage passwords. Enterprise customers need SSO via existing identity providers.
+
+### Decision
+
+Add OAuth2 authorization code flow for Google and GitHub in `api/oauth.py`. Auto-create users on first login. Link OAuth accounts to existing users. Issue JWT tokens after OAuth callback. Keep existing password auth as fallback.
+
+### Consequences
+
+**Positive:** SSO for enterprise. Better UX. No password management burden.
+**Negative:** Additional complexity. Provider-specific callback handling. Token refresh needed.
+
+---
+
+## ADR-050 — Stripe billing integration with graceful degradation
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Internal billing_records table tracks costs but can't process payments. Production SaaS needs real payment processing.
+
+### Decision
+
+Integrate Stripe in `integrations/stripe/` with graceful degradation when unconfigured. Customer management, checkout sessions, subscription webhooks. Replace manual billing with Stripe-backed records. Stripe Connect for marketplace payouts.
+
+### Consequences
+
+**Positive:** Real payment processing. Usage-based billing. Invoice generation.
+**Negative:** External dependency. Webhook reliability concerns (mitigated by retry + idempotency).
+
+---
+
+## ADR-051 — LLM-based prompt injection classifier (second layer)
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Regex-only injection defense (5 patterns in middleware.py) cannot catch novel attack techniques. Need stronger defense for production.
+
+### Decision
+
+Add LLM-based classifier using small/fast model (Haiku/Flash) in `middleware.py:classify_injection_llm()`. Runs after regex check passes. Gracefully degrades on classifier failure (allows request with warning log).
+
+### Consequences
+
+**Positive:** Catches novel injection techniques. Defense-in-depth.
+**Negative:** Added latency (~200ms per request). Token cost for classifier calls.
+
+---
+
+## ADR-052 — Webhook notifications with HMAC signing
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Users need to integrate NEXUS task events into external workflows (Slack, CI/CD, monitoring).
+
+### Decision
+
+CRUD webhook subscriptions in `integrations/webhooks/`. HMAC-SHA256 signed payloads with `X-Nexus-Signature` header. Exponential backoff retry (3 attempts). Auto-deactivate after 10 consecutive failures.
+
+### Consequences
+
+**Positive:** Extensible notification system. Verifiable payloads.
+**Negative:** Outbound HTTP calls from backend. Needs monitoring for delivery failures.
+
+---
+
+## ADR-053 — Per-agent cost alerts with three-layer budget enforcement
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Global daily spend cap ($5/day) and per-task token budgets exist, but no way to limit spending per individual agent. High-cost agents (CEO, Engineer) can consume disproportionate budget.
+
+### Decision
+
+Add `agent_cost_alerts` table with per-agent daily_limit_usd. Redis-cached spend counter with DB fallback. Integrated into `AgentBase._check_budget()` as third check layer (daily global → per-task → per-agent).
+
+### Consequences
+
+**Positive:** Granular cost control. Three independent budget layers.
+**Negative:** Additional Redis key per agent per day. Query cost for DB fallback.
+
+---
+
+## ADR-054 — Provider health monitoring with ring buffer
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Circuit breaker catches failures but provides no latency or error rate visibility. Users can't answer "why is the agent slow?" without provider-level metrics.
+
+### Decision
+
+In-memory ring buffer (last 100 calls per provider) in `core/llm/provider_health.py`. Tracks latency + success/failure. Periodic flush to `provider_health` DB table. Status derived from error rate + circuit breaker state.
+
+### Consequences
+
+**Positive:** Real-time provider visibility. Historical health data.
+**Negative:** In-memory state lost on restart (mitigated by periodic DB flush).
+
+---
+
+## ADR-055 — Model benchmarking reusing prompt_benchmarks test cases
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** 60 prompt_benchmarks already exist (10 per role). No way to compare how different models perform on the same test cases.
+
+### Decision
+
+Reuse `prompt_benchmarks` table as test input. Run benchmarks against specified models. Score using keyword/format matching against expected_criteria. Store results in `model_benchmarks` table.
+
+### Consequences
+
+**Positive:** No duplicate test case maintenance. Directly comparable results.
+**Negative:** Scoring is heuristic-based (not LLM-as-judge). Sufficient for cost/speed comparison.
+
+---
+
+## ADR-056 — Cron-based task scheduling via croniter
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** Users need recurring tasks ("every Monday, compile a report"). Temporal handles durable execution but scheduling needs cron expression support.
+
+### Decision
+
+Add `task_schedules` table with cron_expression field. Use `croniter` library for cron parsing and next_run_at calculation. Scheduler tick checks for due schedules and creates tasks. CRUD API for schedule management.
+
+### Consequences
+
+**Positive:** Standard cron syntax. Familiar to users. Lightweight scheduling.
+**Negative:** New dependency (croniter). Scheduler tick must run reliably (background task).
+
+---
+
+## ADR-057 — QA multi-round rework with escalation guard
+
+**Status:** accepted
+**Date:** 2026-03-19
+**Context:** QA rejection triggers one rework attempt. If it fails again, the task fails permanently. No way for QA to give iterative feedback across multiple rounds.
+
+### Decision
+
+Add configurable `qa_max_rework_rounds` (default 2). Track round in payload. Accumulate previous QA feedback in each rework instruction. After max rounds, escalate to `human.input_needed` instead of failing.
+
+### Consequences
+
+**Positive:** Better output quality through iterative refinement. Human escalation prevents infinite loops.
+**Negative:** Multi-round rework increases token cost. Needs monitoring for rework rate.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-058 -->
+
+---
+
+*Last updated: 2026-03-19*
+*Next ADR ID: ADR-058*
+*Decision count: 48 accepted, 3 superseded*

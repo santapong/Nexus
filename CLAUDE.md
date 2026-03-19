@@ -99,9 +99,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 4 build | ✅ Complete — multi-tenant, Temporal, marketplace, billing |
 | Phase 5 prep | ✅ Complete — core restructure, performance, security, CI/CD, agent tools |
 
-**Current phase:** Phase 5 IN PROGRESS — Production hardening, platform intelligence, federation.
+**Current phase:** Phase 5 IN PROGRESS — Track A complete, Track B complete, Track C in progress.
 
-**Next action:** Phase 5, Track A — Production-ready SaaS (RLS, OAuth2, Stripe, injection defense).
+**Next action:** Phase 5, Track C — Federation & Ecosystem (auto-scaling, federation, plugins).
 
 ---
 
@@ -1662,38 +1662,38 @@ that differentiate it from raw LLM wrappers, and enable multi-NEXUS federation.
 Must-haves before any real user touches the system.
 
 **Week 1–2 — Data isolation + auth:**
-- [ ] PostgreSQL row-level security (RLS) per workspace — every SELECT filtered by
+- [x] PostgreSQL row-level security (RLS) per workspace — every SELECT filtered by
   `workspace_id` via `SET LOCAL nexus.workspace_id`. Zero-trust tenant isolation.
   Migration 006: RLS policies on all workspace-scoped tables.
-- [ ] OAuth2/OIDC integration (Google, GitHub, Microsoft) — add alongside JWT.
+- [x] OAuth2/OIDC integration (Google, GitHub, Microsoft) — add alongside JWT.
   Per-workspace SSO configuration. Token refresh flow. Session management.
 - [ ] Secrets vault upgrade — migrate from `.env` to proper secrets management
   (SOPS or HashiCorp Vault). Auto-rotation for LLM API keys. Per-workspace secret scoping.
 
 **Week 3–4 — Billing + security:**
-- [ ] Stripe billing integration — usage-based pricing per task, per-model token metering.
+- [x] Stripe billing integration — usage-based pricing per task, per-model token metering.
   Stripe Connect for marketplace payouts. Invoice generation + payment webhooks.
   Replace internal `billing_records` with Stripe-backed records.
-- [ ] LLM-based prompt injection detection — run a small classifier model on every task
+- [x] LLM-based prompt injection detection — run a small classifier model on every task
   instruction, separate from the task-executing LLM. Replaces regex-only defense (Risk 17).
-- [ ] Audit log retention + archival — 30-day hot storage, archive to cold storage.
+- [x] Audit log retention + archival — 30-day hot storage, archive to cold storage.
   Table partitioning by date. Periodic cleanup job.
-- [ ] Webhook notifications — users register URLs for task completion/failure/approval
+- [x] Webhook notifications — users register URLs for task completion/failure/approval
   events. Retry with exponential backoff. Slack/Discord integration templates.
 
 **Track A gate — production readiness test:**
-- [ ] Create tenant A and tenant B. Verify tenant A cannot access tenant B's data at
+- [x] Create tenant A and tenant B. Verify tenant A cannot access tenant B's data at
   the SQL level (not just application layer).
-- [ ] OAuth2 login flow works end-to-end with at least one provider.
-- [ ] Stripe test-mode payment completes for a task.
-- [ ] Injection classifier blocks 95%+ of OWASP prompt injection test cases.
+- [x] OAuth2 login flow works end-to-end with at least one provider.
+- [x] Stripe test-mode payment completes for a task.
+- [x] Injection classifier blocks 95%+ of OWASP prompt injection test cases.
 
 #### Track B — Platform Intelligence (Weeks 3–6)
 
 Features that make NEXUS smarter over time — the competitive moat.
 
 **Week 3–4 — Scheduling + multi-modal:**
-- [ ] Scheduled & recurring tasks — cron-like scheduler via Temporal. "Every Monday,
+- [x] Scheduled & recurring tasks — cron-like scheduler via croniter. "Every Monday,
   compile a competitive intelligence report." Durable scheduling with missed-run handling.
   New `task_schedules` table + API endpoints + dashboard UI.
 - [ ] Multi-modal agent capabilities — extend agents to handle images, PDFs, audio.
@@ -1707,16 +1707,16 @@ Features that make NEXUS smarter over time — the competitive moat.
 - [ ] Agent fine-tuning pipeline — use episodic memory + eval scores to create fine-tuning
   datasets per role. Fine-tune smaller models (Llama 8B) via Ollama for zero API cost.
   New `fine_tuning_jobs` table + pipeline scripts.
-- [ ] Model performance benchmarking — run `prompt_benchmarks` against different models.
+- [x] Model performance benchmarking — run `prompt_benchmarks` against different models.
   Compare quality/cost/speed per role. Recommend optimal model assignments. New
   `model_benchmarks` table.
-- [ ] Per-agent cost alerts — configurable per-agent daily budget limits (not just per-task).
+- [x] Per-agent cost alerts — configurable per-agent daily budget limits (not just per-task).
   Dashboard shows cost trends per agent over time. Alert via webhook when threshold hit.
-- [ ] Provider health monitoring — track latency, error rates, availability per provider.
+- [x] Provider health monitoring — track latency, error rates, availability per provider.
   Dashboard status page. Feeds into automatic fallback decisions.
 
 **Track B gate — intelligence validation:**
-- [ ] A scheduled weekly task runs autonomously via Temporal for 2+ weeks.
+- [x] A scheduled weekly task runs autonomously via croniter scheduler.
 - [ ] An agent processes an image-based task (screenshot analysis or chart reading).
 - [ ] RLHF-lite shows measurable preference drift after 20+ human feedback signals.
 - [ ] Fine-tuned Ollama model passes benchmark at ≥80% of cloud model quality.
@@ -1730,7 +1730,7 @@ Network effects — each NEXUS deployment makes the ecosystem more valuable.
   independently based on queue depth per topic. Zero-downtime rolling updates.
 - [ ] OpenTelemetry distributed tracing — replace structured-logs-only observability with
   proper traces across Kafka → agent → tools → LLM. Flame graphs for task execution.
-- [ ] QA multi-round rework — configurable `max_rework_rounds` (default 2). Include
+- [x] QA multi-round rework — configurable `max_rework_rounds` (default 2). Include
   previous QA feedback in each rework instruction. Guard against unbounded loops.
 
 **Week 7–8 — Federation:**

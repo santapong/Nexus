@@ -102,7 +102,7 @@ nexus/
 │       │   ├── temporal/         # Long-running workflow orchestration
 │       │   └── eval/             # LLM-as-judge eval scoring + LangFuse
 │       ├── memory/                # Episodic, semantic, working memory + embeddings
-│       ├── db/                    # SQLAlchemy models (18 tables), session, seed data
+│       ├── db/                    # SQLAlchemy models (24 tables), session, seed data
 │       ├── audit/                 # Structured audit logging
 │       └── tests/                 # Unit, behavior, integration, e2e, chaos
 ├── frontend/
@@ -132,8 +132,9 @@ nexus/
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 | Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
 | Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
-| Phase 5 Preparation | **Complete** — Core restructure, performance indexes, security hardening, CI/CD, agent tools |
-| Security Audit | **Complete** — 15 findings documented, 7 open (2 critical, 4 high, 1 medium) |
+| Phase 5 Track A — Production SaaS | **Complete** — RLS, OAuth2, Stripe, injection defense, webhooks, audit retention |
+| Phase 5 Track B — Platform Intelligence | **Complete** — Cost alerts, provider health, model benchmarks, scheduled tasks |
+| Phase 5 Track C — Federation & Ecosystem | **In Progress** — QA multi-round rework done; federation, auto-scaling pending |
 
 ### What works today
 
@@ -179,6 +180,16 @@ nexus/
 - **Core/integrations separation** — kafka, redis, llm in `core/`; keepsave, a2a, temporal, eval in `integrations/`
 - **Tool output sanitization** — 50KB limit on all tool responses
 - **Startup security checks** — blocks production with default JWT secret
+- **PostgreSQL Row-Level Security (RLS)** — zero-trust tenant isolation at the database level
+- **OAuth2/OIDC** — Google and GitHub SSO with automatic user creation
+- **Stripe billing** — usage-based pricing, checkout sessions, webhook handler
+- **LLM-based prompt injection defense** — classifier model as second defense layer
+- **Webhook notifications** — HMAC-signed deliveries with exponential backoff retry
+- **Per-agent cost alerts** — configurable daily budget limits per agent with Redis tracking
+- **Provider health monitoring** — latency, error rates, circuit breaker status per provider
+- **Model performance benchmarking** — compare quality/cost/speed across models per role
+- **Scheduled & recurring tasks** — cron-based task scheduler with croniter
+- **QA multi-round rework** — configurable max rework rounds with feedback accumulation
 
 ## Getting Started
 
@@ -294,6 +305,17 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | `GET` | `/api/billing/invoice` | Generate invoice |
 | `GET` | `/api/agent-builder` | List custom agents |
 | `POST` | `/api/agent-builder` | Create custom agent (no-code) |
+| `GET` | `/api/analytics/agent-cost-alerts` | Per-agent cost alert status |
+| `GET` | `/api/analytics/provider-health` | LLM provider health status |
+| `GET` | `/api/analytics/model-benchmarks/{role}` | Model benchmark results by role |
+| `POST` | `/api/schedules` | Create scheduled/recurring task |
+| `GET` | `/api/schedules` | List task schedules |
+| `PATCH` | `/api/schedules/{id}` | Update schedule |
+| `DELETE` | `/api/schedules/{id}` | Deactivate schedule |
+| `GET` | `/api/oauth/{provider}/authorize` | OAuth2 login redirect |
+| `GET` | `/api/oauth/{provider}/callback` | OAuth2 callback handler |
+| `POST` | `/api/webhooks` | Register webhook subscription |
+| `POST` | `/stripe/webhooks` | Stripe payment webhook handler |
 
 ## Roadmap
 
@@ -305,7 +327,9 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **Complete** |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | **Complete** |
 | Phase 5 Prep | Core restructure, performance, security, CI/CD, agent tools | **Complete** |
-| Phase 5 | Advanced features, federation, fine-tuning | Planned |
+| Phase 5A | Production SaaS — RLS, OAuth2, Stripe, injection defense | **Complete** |
+| Phase 5B | Platform Intelligence — cost alerts, health, benchmarks, scheduling | **Complete** |
+| Phase 5C | Federation & Ecosystem — QA rework, federation, auto-scaling | **In Progress** |
 
 ## Kubernetes Deployment
 
