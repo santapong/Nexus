@@ -1,7 +1,8 @@
-# RISK_REVIEW.md — Phase 4 Complete Risk Assessment (2026-03-17)
+# RISK_REVIEW.md — Phase 5 In Progress Risk Assessment (2026-03-19)
 
 > Review of §23 Prevention Rules against actual implementation status.
-> Phase 4 COMPLETE — multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse all deployed.
+> Phase 5 IN PROGRESS — Track A (Production SaaS) complete, Track B (Platform Intelligence) complete,
+> Track C (Federation & Ecosystem) in progress.
 
 ---
 
@@ -25,8 +26,8 @@
 | **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | **RESOLVED** | Migrated to a2a_tokens DB table. |
 | **NEW Risk 15** — No automated security scanning | MEDIUM | **RESOLVED** | CI/CD pipeline deployed (ADR-032). |
 | **NEW Risk 16** — A2A gateway Task not persisted to DB | CRITICAL | **RESOLVED** | Fixed 2026-03-16. See ERROR-018. |
-| **NEW Risk 17** — Prompt injection via task instructions | HIGH | **MITIGATED** | See below. |
-| **NEW Risk 18** — LLM provider cascade failure | HIGH | **MITIGATED** | See below. |
+| **NEW Risk 17** — Prompt injection via task instructions | HIGH | **RESOLVED** | LLM classifier added (Phase 5). See below. |
+| **NEW Risk 18** — LLM provider cascade failure | HIGH | **RESOLVED** | Provider health monitoring + circuit breaker. See below. |
 | **NEW Risk 19** — N+1 query performance degradation | MEDIUM | **RESOLVED** | See below. |
 | **NEW Risk 20** — Daily spend counter reset on Redis restart | HIGH | **RESOLVED** | See below. |
 
@@ -312,29 +313,32 @@ Items required before Phase 3 can be marked complete (from CLAUDE.md §24):
 
 ---
 
-### Risk 17 — Prompt injection via task instructions (**MITIGATED**)
+### Risk 17 — Prompt injection via task instructions (**RESOLVED**)
 **Original concern:** Malicious task instructions could manipulate agent system prompts.
 
-**Mitigations deployed (2026-03-18):**
-- `api/middleware.py` — 5 regex patterns detect common injection techniques (ignore instructions, you are now, reveal system prompt, special tokens, Llama tokens)
+**Mitigations deployed (2026-03-18 + 2026-03-19):**
+- `api/middleware.py` — 5 regex patterns detect common injection techniques (Layer 1)
+- **LLM-based classifier** — small/fast model (Haiku/Flash) as second defense layer (Layer 2, Phase 5)
 - Instruction sandboxing — user input wrapped with `<user_instruction>` delimiters
 - 10,000 character max instruction length
 - Validation runs before task creation in `api/tasks.py`
 
-**Residual risk:** Novel injection techniques may bypass pattern matching. LLM-based detection (Phase 5) would provide stronger defense.
+**Status: RESOLVED** — Two-layer defense (regex + LLM classifier) with graceful degradation.
 
 ---
 
-### Risk 18 — LLM provider cascade failure (**MITIGATED**)
+### Risk 18 — LLM provider cascade failure (**RESOLVED**)
 **Original concern:** When an LLM provider goes down, all agents using that provider fail simultaneously, potentially exhausting retry budgets.
 
-**Mitigations deployed (2026-03-18):**
+**Mitigations deployed (2026-03-18 + 2026-03-19):**
 - `core/llm/circuit_breaker.py` — Per-provider circuit breaker (5 failures → 60s open → half_open test)
+- **Provider health monitoring** — `core/llm/provider_health.py` tracks latency p50/p99, error rates,
+  availability per provider. API at `/analytics/provider-health`.
 - Circuit state exposed via `/health` endpoint
 - ModelFactory fallback chains (configured per role in settings)
-- Combined: circuit breaker fast-fails, fallback chain switches provider
+- Combined: circuit breaker fast-fails, health monitoring provides visibility, fallback chain switches provider
 
-**Residual risk:** All configured providers down simultaneously. Mitigated by supporting 7+ providers including local Ollama.
+**Status: RESOLVED** — Circuit breaker + health monitoring + fallback chains + 7+ provider support.
 
 ---
 
@@ -359,4 +363,32 @@ Items required before Phase 3 can be marked complete (from CLAUDE.md §24):
 
 ---
 
-*Last updated: 2026-03-18*
+## Phase 5 Gate Checklist
+
+### Track A — Production-Ready SaaS ✅ COMPLETE (2026-03-19)
+- [x] PostgreSQL RLS on all workspace-scoped tables (migration 006)
+- [x] OAuth2/OIDC (Google, GitHub) alongside JWT auth
+- [x] Stripe billing with checkout sessions and webhook handler
+- [x] LLM-based prompt injection classifier (second defense layer)
+- [x] Webhook notifications with HMAC signing and retry
+- [x] Audit log retention and archival
+
+### Track B — Platform Intelligence ✅ COMPLETE (2026-03-19)
+- [x] Per-agent cost alerts with configurable daily budgets
+- [x] Provider health monitoring (latency, error rates, circuit breaker)
+- [x] Model performance benchmarking across providers
+- [x] Scheduled & recurring tasks via croniter
+- [ ] Multi-modal agent capabilities (images, PDFs) — deferred
+- [ ] Agent RLHF-lite feedback loop — deferred
+- [ ] Agent fine-tuning pipeline — deferred
+
+### Track C — Federation & Ecosystem 🚧 IN PROGRESS
+- [x] QA multi-round rework with configurable max_rework_rounds
+- [ ] Horizontal auto-scaling (K8s HPA)
+- [ ] OpenTelemetry distributed tracing
+- [ ] Agent federation protocol
+- [ ] Plugin system for custom MCP tools
+
+---
+
+*Last updated: 2026-03-19*

@@ -760,3 +760,53 @@ class AnalyticsController(Controller):
                 agent_role=data.agent_role,
                 message=f"Failed to trigger prompt review: {exc}",
             )
+
+    @get("/agent-cost-alerts")
+    async def get_agent_cost_alerts(
+        self,
+        db_session: AsyncSession,
+    ) -> dict[str, object]:
+        """Get cost alert status for all agents with configured alerts.
+
+        Returns current spend vs limit for each agent.
+        """
+        from nexus.core.llm.cost_alerts import get_all_agent_cost_status
+
+        statuses = await get_all_agent_cost_status(db_session)
+        return {"alerts": statuses}
+
+    @get("/provider-health")
+    async def get_provider_health(
+        self,
+        db_session: AsyncSession,
+    ) -> dict[str, object]:
+        """Get health status for all LLM providers.
+
+        Returns latency, error rates, and circuit breaker state.
+        """
+        from nexus.core.llm.provider_health import get_all_provider_health
+
+        providers = await get_all_provider_health()
+        return {"providers": providers}
+
+    @get("/model-benchmarks/{agent_role:str}")
+    async def get_model_benchmarks(
+        self,
+        agent_role: str,
+        db_session: AsyncSession,
+        model_name: str | None = Parameter(query="model", default=None, required=False),
+    ) -> dict[str, object]:
+        """Get benchmark history for a role, optionally filtered by model.
+
+        Args:
+            agent_role: Agent role to query benchmarks for.
+            db_session: Async database session.
+            model_name: Optional model name filter.
+
+        Returns:
+            List of benchmark results.
+        """
+        from nexus.core.llm.benchmarking import get_benchmark_history
+
+        results = await get_benchmark_history(db_session, agent_role, model_name=model_name)
+        return {"benchmarks": results, "agent_role": agent_role}

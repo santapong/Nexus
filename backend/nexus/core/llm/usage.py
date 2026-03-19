@@ -193,6 +193,18 @@ async def record_usage(
             error=str(exc),
         )
 
+    # Update per-agent cost alert counter
+    try:
+        from nexus.core.llm.cost_alerts import record_agent_spend
+
+        await record_agent_spend(agent_id, cost_usd)
+    except Exception as exc:
+        logger.warning(
+            "agent_spend_tracking_failed",
+            agent_id=agent_id,
+            error=str(exc),
+        )
+
     # Audit: llm_call
     await log_event(
         session=session,

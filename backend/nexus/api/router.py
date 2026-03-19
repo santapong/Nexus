@@ -14,6 +14,7 @@ from nexus.api.health import HealthController
 from nexus.api.marketplace import MarketplaceController
 from nexus.api.oauth import OAuthController
 from nexus.api.prompts import PromptController
+from nexus.api.schedules import ScheduleController
 from nexus.api.tasks import TaskController
 from nexus.api.webhooks import WebhookController
 from nexus.api.websocket import agent_activity_ws
@@ -39,6 +40,7 @@ api_router = Router(
         WorkspaceController,
         OAuthController,
         WebhookController,
+        ScheduleController,
     ],
 )
 

@@ -316,5 +316,331 @@ regressions. Critical for Phase 3 chaos testing and production readiness.
 
 ---
 
-*Last updated: 2026-03-16*
-*Next item ID: IDEA-016*
+## Research-Backed Ideas (2026 arXiv + GitHub Trends)
+
+> Ideas sourced from recent arXiv papers, GitHub trending projects, and industry
+> patterns observed in March 2026. Each includes research citations.
+
+---
+
+### IDEA-016 — Active Tool Discovery (MCP-Zero Pattern)
+**Category:** Platform / Self-Improvement
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [MCP-Zero: Active Tool Discovery (arXiv 2506.01056)](https://arxiv.org/abs/2506.01056),
+[MCP Tool Descriptions Are Smelly (arXiv 2602.14878)](https://arxiv.org/abs/2602.14878)
+**Description:** Instead of loading all tools upfront (consuming context window), agents
+actively discover tools on-demand. When an agent encounters a capability gap, it requests
+specific tools via a Hierarchical Semantic Router. The MCP-Zero paper shows this approach
+reduces context usage by 60%+ while maintaining task success rates. For NEXUS: agents start
+with zero tools and request them from the registry as needed. Combined with the finding
+that tool description quality directly impacts agent performance (the "smelly descriptions"
+paper), this means NEXUS should audit and optimize all tool docstrings.
+**Key questions:**
+- How to implement lazy tool loading with Pydantic AI's current tool registration model?
+- Should tool discovery be agent-initiated or orchestrator-managed?
+- Performance impact of on-demand tool fetching vs preloaded tools?
+
+---
+
+### IDEA-017 — Agent Registry & Federated Discovery (AGNTCY Pattern)
+**Category:** Platform / Federation
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Evolution of AI Agent Registry Solutions (arXiv 2508.03095)](https://arxiv.org/abs/2508.03095),
+[AGNTCY Agent Directory Service (arXiv 2509.18787)](https://arxiv.org/html/2509.18787),
+[Agent Name Service (arXiv 2505.10609)](https://arxiv.org/html/2505.10609),
+[The Trust Fabric: Nanda Unified Architecture (arXiv 2507.07901)](https://arxiv.org/html/2507.07901)
+**Description:** The arXiv survey (2508.03095) evaluates 5 registry approaches and concludes
+that **federated models** that separate stable identity from dynamic capability metadata are
+the future. For NEXUS federation: adopt a hybrid approach — simple registry for Phase 6
+(centralized, fast to build) → federated AGNTCY-style directory for Phase 7 (decentralized,
+OCI artifacts, Sigstore signing). The Agent Name Service (ANS) paper proposes DNS-inspired
+agent discovery with PKI certificates — worth evaluating for NEXUS's trust model.
+**Key questions:**
+- Start with centralized registry or jump to federated?
+- DID-based identity (NANDA) vs PKI certificates (ANS) vs simple bearer tokens (current)?
+- How to handle cross-registry capability negotiation?
+
+---
+
+### IDEA-018 — Error Cascade Prevention in Multi-Agent Systems
+**Category:** Self-Improvement / Resilience
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [From Spark to Fire: Modeling Error Cascades in Multi-Agent LLM Collaboration
+(arXiv, March 2026)](https://arxiv.org/list/cs.MA/current)
+**Description:** When CEO decomposes a task incorrectly, the error cascades through all
+downstream agents — every specialist wastes tokens on wrong subtasks. This recent paper
+models how errors propagate in multi-agent LLM systems and proposes mitigation strategies.
+For NEXUS: add a "decomposition validator" step where a second LLM verifies the CEO's
+task plan before dispatching subtasks. Could be the QA agent reviewing the plan, or a
+lightweight classifier checking for common decomposition errors (wrong roles, missing
+dependencies, overly granular splits).
+**Key questions:**
+- Should validation be a separate agent or a step in CEO's guard chain?
+- Cost of validation LLM call vs cost of cascaded errors?
+- How to measure decomposition quality (track rework rate per decomposition pattern)?
+
+---
+
+### IDEA-019 — Safe RLHF for Multi-Modal Agent Alignment
+**Category:** Self-Improvement / Safety
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Safe RLHF-V: Multi-modal Safety Alignment (arXiv 2503.17682)](https://arxiv.org/abs/2503.17682),
+[M3HF: Multi-agent RL from Human Feedback (arXiv 2503.02077)](https://arxiv.org/pdf/2503.02077),
+[Multi-Agent RLHF: Data Coverage (arXiv 2409.00717)](https://arxiv.org/html/2409.00717v2)
+**Description:** Safe RLHF-V introduces dual preference annotations (helpfulness AND safety)
+for multi-modal alignment, improving both by 34%. M3HF extends this to multi-agent with
+online mixed-quality feedback. For NEXUS: when implementing RLHF-lite (BACKLOG-051), use
+dual scoring — "was this output helpful?" AND "was this output safe?" Track both dimensions
+in the feedback loop. The multi-agent RLHF paper shows that standard single-policy coverage
+fails in multi-agent settings — NEXUS should ensure feedback covers all agent roles, not
+just the most active ones.
+**Key questions:**
+- Dual annotation UI: how to make safety scoring intuitive for users?
+- Minimum feedback signals needed before RLHF affects agent behavior?
+- How to handle conflicting feedback across different users/tenants?
+
+---
+
+### IDEA-020 — Agentic SRE: Self-Healing Infrastructure
+**Category:** DevOps / Resilience
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Agentic SRE in Enterprise AIOps (Unite.AI, 2026)](https://www.unite.ai/agentic-sre-how-self-healing-infrastructure-is-redefining-enterprise-aiops-in-2026/),
+[Self-Healing SRE Agent (GitHub)](https://github.com/jalpatel11/Self-Healing-SRE-Agent),
+[Self-Healing CI/CD with AI Agents (Dagger)](https://dagger.io/blog/automate-your-ci-fixes-self-healing-pipelines-with-ai-agents/)
+**Description:** In 2026, Agentic SRE is production-ready. The pattern: monitoring agents
+detect anomalies → diagnosis agents trace root causes → remediation agents execute fixes
+→ validation agents verify recovery. All under Policy-as-Code guardrails (OPA-style).
+For NEXUS: the Engineer agent already has code execution tools. Add an "SRE mode" where
+the Engineer monitors NEXUS's own infrastructure (Kafka lag, Redis health, DB pool usage,
+LLM provider latency) and auto-remediates common issues. Self-healing scope: restart
+stalled consumers, clear Redis caches, switch LLM providers, scale Kafka partitions.
+**Key questions:**
+- Scope: should NEXUS heal only itself, or also user applications?
+- Guardrails: which auto-remediation actions are safe without human approval?
+- How to prevent remediation loops (fix causes new problem, triggers new fix)?
+- Integration with existing circuit breaker and provider health monitoring?
+
+---
+
+### IDEA-021 — Browser Agent Chrome Extension (Enhanced)
+**Category:** Integration / Distribution
+**Added by:** claude_code (research expansion of IDEA-001)
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Nanobrowser (GitHub)](https://github.com/nanobrowser/nanobrowser),
+[BrowserOS](https://www.blog.brightcoding.dev/2026/02/14/browseros-the-revolutionary-ai-browser-that-runs-agents-natively),
+[Stagehand v3](https://www.firecrawl.dev/blog/best-browser-agents),
+Google WebMCP in Chrome Canary (Feb 2026)
+**Description:** Builds on IDEA-001. In 2026, browser agents have matured significantly.
+Nanobrowser runs multi-agent workflows from a Chrome extension using your own LLM keys.
+Google shipped WebMCP preview in Chrome Canary — a protocol for structured AI agent
+interactions with websites. For NEXUS: build a Chrome extension where NEXUS agents can
+read the current page (via WebMCP or DOM extraction), take actions on websites (fill forms,
+click buttons), and stream results back to the dashboard. The "right-click → send to NEXUS"
+workflow from IDEA-001, plus active browser automation capabilities.
+**Key questions:**
+- Use WebMCP (Google standard) or CDP (Chrome DevTools Protocol) for page interaction?
+- Security model: which sites can the extension access?
+- Should agents be able to take browser actions autonomously, or only with approval?
+- Integration with existing A2A gateway for external browser-based agents?
+
+---
+
+### IDEA-022 — 2D Virtual Office with Agent Avatars (Enhanced)
+**Category:** UX / Visualization
+**Added by:** claude_code (research expansion of IDEA-002)
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [VirT-Lab: LLM Agent Team Simulations in 2D (arXiv 2508.04634)](https://arxiv.org/html/2508.04634v1),
+[OpenClaw Office (GitHub)](https://github.com/WW-AI-Lab/openclaw-office),
+[Augmenting Teamwork with Spatial AI (arXiv 2503.09794)](https://arxiv.org/html/2503.09794v1)
+**Description:** Builds on IDEA-002. VirT-Lab validates the concept — 2D spatial environments
+for LLM agent teams using Phaser.js are production-viable. OpenClaw Office is already doing
+this: SVG-rendered isometric office with desk zones, meeting areas, and WebSocket-driven
+agent visualization. For NEXUS: use Phaser.js or PixiJS for the 2D engine. Map Kafka events
+to avatar movements — when CEO publishes to agent.commands, the CEO avatar "walks" to the
+specialist's desk. Meeting room Kafka topic triggers avatars gathering in the meeting area.
+Users can click on any agent avatar to see its current task, memory, and tools.
+**Key questions:**
+- Phaser.js (game engine, more features) vs PixiJS (lighter, faster)?
+- AI-generated pixel art avatars per agent role?
+- Performance: WebSocket event rate for smooth avatar animation?
+- Mobile-friendly 2D view or desktop-only?
+
+---
+
+### IDEA-023 — Visual Workflow Builder (DAG Editor)
+**Category:** UX / Platform
+**Added by:** claude_code (research expansion of IDEA-007)
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Firecrawl Open Agent Builder (GitHub)](https://github.com/firecrawl/open-agent-builder),
+[Dify (130K GitHub stars)](https://dify.ai/),
+[Flowise](https://flowiseai.com/),
+[The Agency (TuringWorks)](https://github.com/TuringWorks/the-agency),
+[Sim Studio](https://github.com/simstudioai/sim)
+**Description:** Builds on IDEA-007. In 2026, visual workflow builders for AI agents are
+mainstream — Dify (130K stars), Langflow, Flowise all prove the model. For NEXUS: build
+a React-based node editor (using React Flow library) where users drag agent nodes, tool
+nodes, and condition nodes into a DAG. Connect them with edges that define data flow.
+The workflow compiles to a JSON spec that replaces CEO decomposition for that task — the
+user defines the agent pipeline instead of relying on LLM planning. Supports conditional
+branching (if QA rejects → rework vs escalate), parallel execution, and loops.
+**Key questions:**
+- Use React Flow (most popular) or Xyflow (newer, faster)?
+- Workflow spec format: JSON DAG with node types and edge conditions?
+- Relationship to CEO decomposition: override, supplement, or fallback?
+- Template marketplace: share and import workflow templates?
+
+---
+
+### IDEA-024 — Plugin System with MCP Tool Manifest
+**Category:** Platform / Extensibility
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [Orchestral AI Framework (arXiv 2601.02577)](https://arxiv.org/pdf/2601.02577),
+[AgentScope 1.0 (arXiv 2508.16279)](https://arxiv.org/pdf/2508.16279),
+[OpenDev Lazy Tool Discovery (arXiv 2603.05344)](https://arxiv.org/html/2603.05344v1),
+[AI Agent Plugins Guide (Nevo, 2026)](https://nevo.systems/blogs/nevo-journal/what-are-ai-agent-plugins)
+**Description:** A plugin is more than an MCP tool — it bundles skills, hooks, custom agent
+behavior, and MCP server configs into a distributable unit. For NEXUS: define a plugin
+manifest format (JSON/YAML) that specifies: tool functions (Python callables or HTTP
+endpoints), required secrets, approval requirements, compatible agent roles, and version.
+Plugins hot-reload without restart using AgentScope's lifecycle hooks pattern. The registry
+validates plugin signatures and runs sandboxed tests before activation.
+**Key questions:**
+- Manifest format: JSON schema vs YAML vs Python package metadata?
+- Security: sandboxed execution for third-party plugins?
+- Distribution: PyPI packages, GitHub repos, or custom plugin registry?
+- Should plugins be able to define new agent roles or only new tools?
+
+---
+
+### IDEA-025 — Hierarchical Multi-Agent Planning (StackPlanner Pattern)
+**Category:** Self-Improvement / Architecture
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [StackPlanner: Hierarchical Multi-Agent Framework (VoltAgent/awesome-ai-agent-papers)](https://github.com/VoltAgent/awesome-ai-agent-papers),
+[CTHA: Constrained Temporal Hierarchical Architecture](https://github.com/VoltAgent/awesome-ai-agent-papers)
+**Description:** StackPlanner decouples high-level coordination from subtask execution with
+active task-level memory control. CTHA adds typed message contracts and authority bounds.
+For NEXUS: evolve the CEO from a flat decomposer to a hierarchical planner. CEO creates
+a high-level plan → each specialist agent can further decompose its subtask into micro-tasks
+→ creating a tree of work instead of a flat list. This enables complex multi-step tasks
+(e.g., "build a web app") where the Engineer agent internally plans architecture → coding →
+testing as sub-subtasks without burdening the CEO with implementation details.
+**Key questions:**
+- Max depth of hierarchical decomposition? (recommend 2-3 levels)
+- How to handle cross-level dependencies?
+- Token budget allocation across hierarchy levels?
+- Does this conflict with the current flat subtask model?
+
+---
+
+### IDEA-026 — Integration Hub (Slack, Jira, Google Workspace)
+**Category:** Integration
+**Added by:** claude_code (research expansion of IDEA-010)
+**Date:** 2026-03-19
+**Status:** OPEN
+**Research:** [n8n workflow automation (400+ integrations)](https://github.com/topics/workflow-builder),
+Webhook notifications system (already built in Phase 5 Track A)
+**Description:** NEXUS already has webhook notifications (Phase 5). Next step: build first-party
+integrations. Priority order based on enterprise value: (1) Slack bot for task submission
+and notifications, (2) GitHub integration for PR review and issue tracking, (3) Google
+Workspace for Docs/Sheets/Calendar access, (4) Jira/Linear for ticket management. Each
+integration is a plugin (IDEA-024) that bundles MCP tools + webhook handlers.
+**Key questions:**
+- Build custom integrations or leverage n8n/Zapier as middleware?
+- OAuth flow management for per-user external service credentials?
+- Which integration delivers the most value first? (likely Slack)
+
+---
+
+## Strategic Analysis: The 5 Questions
+
+### Q1: Learning vs Multi-Modal — Which First?
+
+**Recommendation: Learning first (RLHF-lite + fine-tuning).**
+
+**Research backing:** The Safe RLHF-V paper shows 34% improvement in both helpfulness and
+safety with dual preference annotations. M3HF demonstrates online multi-agent RLHF is
+feasible. Meanwhile, multi-modal support is mostly a model capability (Claude/Gemini already
+handle images) — it's a tool integration task, not an architectural change.
+
+**Why learning first:**
+- NEXUS already collects the data needed (episodic memory, QA approvals, eval scores)
+- Learning compounds over time — earlier start = larger advantage
+- Multi-modal is "plug in when needed" — agents already work without it
+- Fine-tuning to Ollama models provides 10x cost reduction — high business value
+
+### Q2: Full Federation vs Simple Registry
+
+**Recommendation: Simple registry first (Phase 6) → federated (Phase 7).**
+
+**Research backing:** The arXiv survey (2508.03095) evaluates 5 approaches and concludes
+federated models are the future BUT centralized approaches ship faster. AGNTCY separates
+identity from capability metadata — this separation can be adopted incrementally.
+
+**Why phased approach:**
+- Simple registry: one NEXUS instance publishes Agent Card, another discovers it via HTTP
+- Federated: DID-based identity, OCI artifacts, Sigstore signing — months of work
+- NEXUS already has A2A gateway + Agent Cards — registry is a natural extension
+- Federation protocols (ANP, NANDA) are still maturing — wait for stability
+
+### Q3: Visual Workflow Builder — When?
+
+**Recommendation: Phase 6 (late) or Phase 7 (early).**
+
+**Research backing:** Dify (130K stars), Langflow, Flowise prove massive demand. But all
+are standalone products — integrating a visual builder into an existing multi-agent system
+(with CEO decomposition, QA review, meeting rooms) is architecturally complex.
+
+**Why not rush it:**
+- NEXUS's CEO decomposition already works — the builder supplements, not replaces
+- React Flow library makes the UI fast to build, but the workflow-to-Kafka compilation is hard
+- Should come AFTER learning (Phase 6A) so workflows can leverage improved agents
+- Build it alongside the plugin system — workflows use plugins as nodes
+
+### Q4: Plugin System Scope
+
+**Recommendation: Start with tool-level plugins, expand to full agent plugins later.**
+
+**Research backing:** The Orchestral AI paper shows MCP + automatic schema generation creates
+a powerful extensibility model. AgentScope 1.0 uses lifecycle hooks for runtime modification.
+
+**Scope for Phase 6/7:**
+- **Phase 6:** Tool plugins — register Python callables or HTTP endpoints as MCP tools.
+  Manifest defines parameters, approval requirements, and compatible roles. Hot-reload.
+- **Phase 7:** Full plugins — bundle tools + custom agent roles + hooks + MCP servers.
+  Plugin marketplace for sharing across NEXUS instances.
+
+### Q5: Self-Healing Infrastructure — Worth It?
+
+**Recommendation: Yes, but scoped to NEXUS-internal healing only.**
+
+**Research backing:** Agentic SRE is production-ready in 2026. The Self-Healing SRE Agent
+on GitHub shows the pattern works. The key insight: use Policy-as-Code guardrails so
+auto-remediation actions are bounded and auditable.
+
+**Why yes (scoped):**
+- NEXUS already has circuit breakers, provider health monitoring, and dead letter queues
+- Self-healing is the logical next step: detect → diagnose → remediate → verify
+- Scope to internal only: restart consumers, clear caches, switch providers, scale partitions
+- DO NOT auto-heal user applications — too risky, requires domain knowledge
+
+---
+
+*Last updated: 2026-03-19*
+*Next item ID: IDEA-027*

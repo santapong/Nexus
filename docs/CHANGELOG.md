@@ -40,6 +40,83 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-19] — Phase 5 Track B/C: Platform intelligence, scheduled tasks, QA rework, provider health
+
+### Added
+- **Per-agent cost alerts** (`core/llm/cost_alerts.py`) — Configurable daily budget limits per agent
+  with Redis-cached spend tracking and PostgreSQL fallback. Integrated into `AgentBase._check_budget()`
+  guard chain. API endpoint `GET /api/analytics/agent-cost-alerts` returns all agent spend status.
+- **Provider health monitoring** (`core/llm/provider_health.py`) — Tracks latency (p50/p99), error
+  rates, and availability per LLM provider. In-memory ring buffer with periodic flush to
+  `provider_health` DB table. Integrates with circuit breaker for status derivation. API endpoint
+  `GET /api/analytics/provider-health`.
+- **Model performance benchmarking** (`core/llm/benchmarking.py`) — Run `prompt_benchmarks` test
+  cases against different models. Measures quality (keyword/format scoring), latency, token usage,
+  and cost. Stores results in `model_benchmarks` table. Compare models with
+  `GET /api/analytics/model-benchmarks/{role}`.
+- **Scheduled & recurring tasks** (`core/scheduler.py`) — Cron-based task scheduler using `croniter`.
+  Evaluates cron expressions, creates tasks on schedule, publishes to Kafka. Supports max_runs limit,
+  timezone, and automatic deactivation. CRUD API at `/api/schedules`.
+- **QA multi-round rework** (`agents/qa.py`) — Configurable `max_rework_rounds` (default 2). Tracks
+  rework round in task payload, includes previous QA feedback in rework instructions for context.
+  After max rounds exceeded, escalates to `human.input_needed` instead of infinite loop.
+- **Migration 007** (`007_phase5_track_b_c.py`) — 4 new tables: `task_schedules`, `model_benchmarks`,
+  `provider_health`, `agent_cost_alerts`. Added `tasks.schedule_id` FK and `tasks.rework_round`.
+- **4 new DB models** — `TaskSchedule`, `ModelBenchmark`, `ProviderHealth`, `AgentCostAlert`.
+- **Schedules API** (`api/schedules.py`) — Full CRUD controller for task schedules with cron
+  validation, next_run_at calculation, and soft delete.
+- `croniter>=3.0.0` added to `pyproject.toml` dependencies.
+
+### Changed
+- `agents/base.py` — `_check_budget()` now includes per-agent cost alert check alongside daily spend
+  and per-task budget checks. Three-layer budget enforcement.
+- `core/llm/usage.py` — `record_usage()` now calls `record_agent_spend()` to update per-agent Redis
+  counter for cost alert tracking.
+- `agents/qa.py` — Rejection flow rewritten to support multi-round rework with round tracking,
+  cumulative feedback, and escalation guard.
+- `api/analytics.py` — 3 new endpoints: `agent-cost-alerts`, `provider-health`, `model-benchmarks/{role}`.
+- `api/router.py` — Registered `ScheduleController`.
+- `settings.py` — Added `qa_max_rework_rounds`, `scheduler_check_interval_seconds`,
+  `provider_health_window_minutes`, `agent_cost_alert_default_limit_usd`.
+
+### Database
+- Migration: `007_phase5_track_b_c.py` — task_schedules, model_benchmarks, provider_health,
+  agent_cost_alerts tables + tasks.schedule_id + tasks.rework_round
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
+## [2026-03-19] — Phase 5 Track A Complete: RLS, OAuth2, Stripe, injection defense, webhooks
+
+### Added
+- **PostgreSQL Row-Level Security** (Migration 006) — RLS policies on all workspace-scoped tables.
+  Zero-trust tenant isolation via `SET LOCAL nexus.workspace_id`. Superuser bypass for admin ops.
+- **OAuth2/OIDC** (`api/oauth.py`) — Google and GitHub authorization code flow. Auto user creation.
+  Account linking. JWT token issuance. Per-workspace SSO configuration.
+- **Stripe billing** (`integrations/stripe/`) — Customer management, checkout sessions, customer
+  portal. Webhook handler for subscription lifecycle. Graceful degradation when unconfigured.
+- **LLM-based injection defense** (`api/middleware.py`) — Small/fast classifier model (Haiku/Flash)
+  as second defense layer alongside regex patterns. Fallback on classifier error.
+- **Webhook notifications** (`integrations/webhooks/`) — CRUD subscriptions. HMAC-SHA256 signed
+  deliveries. Exponential backoff retry (3 attempts). Auto-deactivate after 10 consecutive failures.
+- **Audit log retention** (`audit/retention.py`) — Batch archival of old records with configurable
+  retention period. `SKIP LOCKED` for safe concurrent operations.
+- **RLS middleware** — Extracts workspace_id from JWT and injects into DB session context.
+- `oauth_accounts` and `webhook_subscriptions` tables in migration 006.
+
+### Fixed
+- Resolved all 149 mypy strict errors across 47 files.
+- Upgraded pydantic-ai to >=1.56.0 for CVE-2026-25580 SSRF fix.
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-18] — Phase 5 Preparation: Core restructure, performance, security, CI/CD, agent tools
 
 ### Added

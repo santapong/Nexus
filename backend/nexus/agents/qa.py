@@ -21,6 +21,7 @@ from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, TaskResult
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import calculate_cost, record_usage
+from nexus.settings import settings
 
 logger = structlog.get_logger()
 
@@ -146,25 +147,95 @@ class QAAgent(AgentBase):
                 trace_id=trace_id,
             )
         else:
-            # Reject — send feedback back for rework via agent.commands
-            rework_command = AgentCommand(
-                task_id=message.task_id,
-                trace_id=message.trace_id,
-                agent_id=self.agent_id,
-                payload={"qa_feedback": qa_output, "rework": True},
-                target_role=message.payload.get("original_role", "engineer"),
-                instruction=(
-                    f"QA REWORK REQUESTED: {qa_output}\n\nOriginal task: "
-                    f"{message.payload.get('original_instruction', message.instruction)}"
-                ),
-            )
-            await publish(Topics.AGENT_COMMANDS, rework_command, key=task_id)
+            # Multi-round rework: track round and guard against unbounded loops
+            current_round = message.payload.get("rework_round", 0)
+            max_rounds = settings.qa_max_rework_rounds
 
-            logger.info(
-                "qa_rejected",
-                task_id=task_id,
-                trace_id=trace_id,
-            )
+            if current_round >= max_rounds:
+                # Max rework rounds exceeded — escalate to human
+                logger.warning(
+                    "qa_max_rework_exceeded",
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    rework_round=current_round,
+                    max_rounds=max_rounds,
+                )
+                # Publish as completed with QA notes — let human decide
+                task_result = TaskResult(
+                    task_id=message.task_id,
+                    trace_id=message.trace_id,
+                    agent_id=self.agent_id,
+                    payload=message.payload,
+                    status="escalated",
+                    output={
+                        "qa_review": qa_output,
+                        "original_output": message.payload.get("aggregated_output", ""),
+                        "rework_rounds_exhausted": True,
+                        "total_rework_rounds": current_round,
+                    },
+                )
+                await publish(Topics.TASK_RESULTS, task_result, key=task_id)
+
+                # Also publish to human.input_needed
+                from nexus.core.kafka.schemas import KafkaMessage
+
+                human_msg = KafkaMessage(
+                    task_id=message.task_id,
+                    trace_id=message.trace_id,
+                    agent_id=self.agent_id,
+                    payload={
+                        "reason": "qa_max_rework_rounds_exceeded",
+                        "rework_round": current_round,
+                        "qa_feedback": qa_output,
+                    },
+                )
+                await publish(Topics.HUMAN_INPUT_NEEDED, human_msg, key=task_id)
+            else:
+                # Reject — send feedback back for rework via agent.commands
+                # Include previous QA feedback for context
+                previous_feedback = message.payload.get("previous_qa_feedback", [])
+                if isinstance(previous_feedback, list):
+                    previous_feedback.append(qa_output)
+                else:
+                    previous_feedback = [qa_output]
+
+                rework_instruction = (
+                    f"QA REWORK REQUESTED (round {current_round + 1}/{max_rounds}): {qa_output}"
+                )
+                if current_round > 0:
+                    prev_lines = "\n".join(
+                        f"- Round {i + 1}: {fb}" for i, fb in enumerate(previous_feedback[:-1])
+                    )
+                    rework_instruction += (
+                        "\n\nPrevious QA feedback from earlier rounds:\n" + prev_lines
+                    )
+                rework_instruction += (
+                    f"\n\nOriginal task: "
+                    f"{message.payload.get('original_instruction', message.instruction)}"
+                )
+
+                rework_command = AgentCommand(
+                    task_id=message.task_id,
+                    trace_id=message.trace_id,
+                    agent_id=self.agent_id,
+                    payload={
+                        "qa_feedback": qa_output,
+                        "rework": True,
+                        "rework_round": current_round + 1,
+                        "previous_qa_feedback": previous_feedback,
+                    },
+                    target_role=message.payload.get("original_role", "engineer"),
+                    instruction=rework_instruction,
+                )
+                await publish(Topics.AGENT_COMMANDS, rework_command, key=task_id)
+
+                logger.info(
+                    "qa_rejected_rework",
+                    task_id=task_id,
+                    trace_id=trace_id,
+                    rework_round=current_round + 1,
+                    max_rounds=max_rounds,
+                )
 
         logger.info(
             "qa_review_completed",

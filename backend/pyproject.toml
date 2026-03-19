@@ -35,6 +35,8 @@ dependencies = [
     "httpx>=0.28.0,<1.0",
     # JWT authentication
     "PyJWT>=2.9.0,<3.0",
+    # Scheduling
+    "croniter>=3.0.0,<4.0",
     # Utilities
     "uvicorn[standard]>=0.34.0,<1.0",
 ]

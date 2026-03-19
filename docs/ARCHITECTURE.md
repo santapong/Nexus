@@ -80,7 +80,7 @@ tools via MCP, and are callable by external systems via the A2A protocol.
               │
 ┌─────────────▼────────────────────────────────────────────────────────────┐
 │  PERSISTENCE                                                             │
-│  PostgreSQL 16 + pgvector  ← Source of truth (18 tables)                 │
+│  PostgreSQL 16 + pgvector  ← Source of truth (24 tables + RLS)           │
 │  Redis 7 (4 databases)     ← Speed layer / working memory               │
 │  Temporal Server           ← Durable workflows (long-running tasks)      │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -267,7 +267,7 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 
 ### PostgreSQL (Source of Truth)
 
-18 tables with pgvector extension for embedding search:
+24 tables with pgvector extension, RLS policies, and embedding search:
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
@@ -283,6 +283,12 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 | `dead_letters` | Failed Kafka messages after 3 retries | topic, message_id, payload, error, retry_count |
 | `a2a_tokens` | Bearer tokens for external A2A callers | token_hash, name, allowed_skills, rate_limit_rpm |
 | `eval_results` | LLM-as-judge quality scores | task_id, overall_score, dimension scores, judge_model |
+| `oauth_accounts` | OAuth2 provider accounts | user_id, provider, provider_user_id, tokens |
+| `webhook_subscriptions` | Webhook notification URLs | workspace_id, url, events, secret_hash |
+| `task_schedules` | Cron-based recurring tasks | workspace_id, cron_expression, instruction, next_run_at |
+| `model_benchmarks` | Model quality/cost/speed comparison | agent_role, model_name, score, latency_ms, cost |
+| `provider_health` | LLM provider health metrics | provider, latency_p50/p99, error_rate, window |
+| `agent_cost_alerts` | Per-agent daily budget limits | agent_id, daily_limit_usd, alert_threshold_pct |
 
 ### Redis (Speed Layer — 4 Databases)
 
@@ -809,5 +815,69 @@ Production deployments blocked if:
 
 ---
 
-*Last updated: 2026-03-18*
-*Phase: 4 Complete — Phase 5 preparation done (core restructure, performance, security, CI/CD, agent tools)*
+## 18. Scheduled & Recurring Tasks (`core/scheduler.py`)
+
+Cron-based task scheduler for recurring automated tasks:
+
+- **Cron evaluation** via `croniter` library — standard 5-field cron expressions
+- **`task_schedules` table** — stores schedule definition, cron expression, next_run_at, total_runs
+- **Scheduler tick** — finds due schedules (next_run_at <= now), creates tasks, publishes to Kafka
+- **Max runs guard** — auto-deactivates schedule after reaching configured max_runs
+- **Missed run handling** — next_run_at recalculated after each execution
+- **CRUD API** — `POST /api/schedules`, `GET /api/schedules`, `PATCH`, `DELETE`
+
+---
+
+## 19. Per-Agent Cost Alerts (`core/llm/cost_alerts.py`)
+
+Configurable daily budget limits per agent:
+
+- **`agent_cost_alerts` table** — per-agent daily_limit_usd + alert_threshold_pct
+- **Redis-cached spend counter** — `agent_daily_spend:{agent_id}:{date}` key
+- **PostgreSQL fallback** — queries `llm_usage` when Redis unavailable
+- **Guard chain integration** — `AgentBase._check_budget()` checks agent cost alerts alongside
+  global daily spend and per-task token budgets (three-layer enforcement)
+- **API** — `GET /api/analytics/agent-cost-alerts` returns spend status for all configured agents
+
+---
+
+## 20. Provider Health Monitoring (`core/llm/provider_health.py`)
+
+Tracks LLM provider health for informed routing and debugging:
+
+- **In-memory ring buffer** — records latency + success/failure for last 100 calls per provider
+- **Status derivation** — `healthy` / `degraded` (>10% errors) / `down` (>50% errors or circuit open)
+- **Circuit breaker integration** — reads from `circuit_breaker.py` for immediate failure detection
+- **Periodic flush** — writes rolling window summary to `provider_health` DB table
+- **API** — `GET /api/analytics/provider-health` returns per-provider status, latency percentiles,
+  error rates, and circuit breaker state
+
+---
+
+## 21. Model Performance Benchmarking (`core/llm/benchmarking.py`)
+
+Compare quality/cost/speed across models for each agent role:
+
+- **Reuses `prompt_benchmarks` table** — existing test cases drive comparisons
+- **Per-benchmark execution** — runs test input against specified model, measures output quality,
+  latency, tokens, and cost
+- **Scoring** — keyword matching, format validation, length checks against expected_criteria
+- **`model_benchmarks` table** — stores results for historical comparison
+- **API** — `GET /api/analytics/model-benchmarks/{role}` returns benchmark history
+
+---
+
+## 22. QA Multi-Round Rework
+
+Configurable rework loop with escalation guard:
+
+- **`qa_max_rework_rounds`** setting (default 2) — prevents unbounded rework loops
+- **Round tracking** — `rework_round` counter in task payload and `tasks.rework_round` column
+- **Feedback accumulation** — each rework includes all previous QA feedback for context
+- **Escalation** — after max rounds, QA publishes to `human.input_needed` instead of reworking
+- **Task status** — escalated tasks marked with `rework_rounds_exhausted: true`
+
+---
+
+*Last updated: 2026-03-19*
+*Phase: 5 In Progress — Track A complete, Track B complete, Track C in progress*
