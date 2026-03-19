@@ -23,6 +23,43 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-044 — Evaluate Agent Network Protocol (ANP) for decentralized federation
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** Protocol evaluation — https://github.com/agent-network-protocol/AgentNetworkProtocol
+**Description:** ANP aims to be "the HTTP of the Agentic Web" with three layers: identity
+(W3C DID), meta-protocol (negotiation), and application (semantic web). Its decentralized
+discovery and DID-based identity could replace centralized registry for NEXUS federation
+(BACKLOG-041). Currently incomplete — application layer still in progress. Evaluate when
+it reaches stable release. Best fit for multi-NEXUS interop.
+
+---
+
+### BACKLOG-043 — Evaluate AP2 (Agent Payments Protocol) for cross-company billing
+**Suggested phase:** Phase 5
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** Protocol evaluation — https://github.com/google-agentic-commerce/AP2
+**Description:** Google's open protocol for AI agent payment transactions. Could standardize
+cross-company task billing (BACKLOG-032) with typed payment data structures. Currently
+early-stage and Google/Gemini-centric. Evaluate if it matures and gains multi-provider
+support. Only relevant if NEXUS moves to paid A2A marketplace interactions.
+
+---
+
+### BACKLOG-042 — Evaluate UCP (Universal Commerce Protocol) for commerce capabilities
+**Suggested phase:** Phase 5+
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** Protocol evaluation — https://github.com/Universal-Commerce-Protocol/ucp
+**Description:** Open standard for commerce interoperability — checkout, orders, payments,
+identity linking. Transport-flexible (REST, MCP, A2A). Only relevant if NEXUS agents need
+to perform commerce operations (e-commerce tasks, payment processing). Domain-specific —
+not a general agent protocol. Evaluate only if commerce becomes a NEXUS task category.
+
+---
+
 ### BACKLOG-041 — Agent federation protocol (multi-NEXUS interop)
 **Suggested phase:** Phase 5
 **Added by:** claude_code
@@ -518,6 +555,6 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-18*
-*Next item ID: BACKLOG-042*
+*Last updated: 2026-03-19*
+*Next item ID: BACKLOG-045*
 *Phase 4 items (029-033) all resolved.*
