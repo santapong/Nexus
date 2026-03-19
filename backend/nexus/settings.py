@@ -113,6 +113,18 @@ class Settings(BaseSettings):
     webhook_max_retries: int = 3
     webhook_retry_backoff_base: int = 2
 
+    # ─── Phase 5 Track B: QA Multi-Round Rework ─────────────────────────
+    qa_max_rework_rounds: int = 2
+
+    # ─── Phase 5 Track B: Scheduled Tasks ───────────────────────────────
+    scheduler_check_interval_seconds: int = 60
+
+    # ─── Phase 5 Track B: Provider Health Monitoring ────────────────────
+    provider_health_window_minutes: int = 15
+
+    # ─── Phase 5 Track B: Per-Agent Cost Alerts ─────────────────────────
+    agent_cost_alert_default_limit_usd: float = 2.0
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"

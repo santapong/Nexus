@@ -102,6 +102,10 @@ class Task(UUIDAuditBase):
     workspace_id: Mapped[str | None] = mapped_column(
         ForeignKey("workspaces.id"), nullable=True, index=True
     )
+    schedule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("task_schedules.id"), nullable=True, index=True
+    )
+    rework_round: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
     assigned_agent: Mapped[Agent | None] = relationship(back_populates="tasks", lazy="raise")
@@ -438,4 +442,86 @@ class WebhookSubscription(UUIDAuditBase):
     failure_count: Mapped[int] = mapped_column(Integer, default=0)
     last_triggered_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+
+
+# ─── Table 21: task_schedules (Phase 5 Track B) ────────────────────────────
+
+
+class TaskSchedule(UUIDAuditBase):
+    __tablename__ = "task_schedules"
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    cron_expression: Mapped[str] = mapped_column(String(100), nullable=False)
+    instruction: Mapped[str] = mapped_column(Text, nullable=False)
+    target_role: Mapped[str] = mapped_column(String(50), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    timezone: Mapped[str] = mapped_column(String(50), default="UTC")
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    next_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    total_runs: Mapped[int] = mapped_column(Integer, default=0)
+    max_runs: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+
+
+# ─── Table 22: model_benchmarks (Phase 5 Track B) ──────────────────────────
+
+
+class ModelBenchmark(UUIDBase):
+    __tablename__ = "model_benchmarks"
+
+    agent_role: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    model_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    benchmark_id: Mapped[str] = mapped_column(ForeignKey("prompt_benchmarks.id"), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False)
+    output_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+# ─── Table 23: provider_health (Phase 5 Track B) ───────────────────────────
+
+
+class ProviderHealth(UUIDBase):
+    __tablename__ = "provider_health"
+
+    provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    model_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)  # healthy|degraded|down
+    latency_p50_ms: Mapped[int] = mapped_column(Integer, default=0)
+    latency_p99_ms: Mapped[int] = mapped_column(Integer, default=0)
+    error_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    total_requests: Mapped[int] = mapped_column(Integer, default=0)
+    total_errors: Mapped[int] = mapped_column(Integer, default=0)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+
+# ─── Table 24: agent_cost_alerts (Phase 5 Track B) ─────────────────────────
+
+
+class AgentCostAlert(UUIDBase):
+    __tablename__ = "agent_cost_alerts"
+
+    agent_id: Mapped[str] = mapped_column(ForeignKey("agents.id"), nullable=False, index=True)
+    daily_limit_usd: Mapped[float] = mapped_column(Float, nullable=False)
+    alert_threshold_pct: Mapped[float] = mapped_column(Float, default=0.9)
+    webhook_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_alert_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )

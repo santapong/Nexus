@@ -336,9 +336,9 @@ class AgentBase(ABC):
         *,
         session: AsyncSession | None = None,
     ) -> None:
-        """Check both daily spend limit and per-task token budget.
+        """Check daily spend, per-task token budget, and per-agent cost alerts.
 
-        Raises TokenBudgetExceededError if either limit is reached.
+        Raises TokenBudgetExceededError if any limit is reached.
         Must be called before every LLM call.
         """
         daily_ok = await check_daily_spend(session=session)
@@ -348,6 +348,28 @@ class AgentBase(ABC):
         task_ok, used = await check_task_budget(task_id)
         if not task_ok:
             raise TokenBudgetExceededError(f"Task token budget exceeded: {used} tokens used")
+
+        # Per-agent cost alert check
+        if session is not None:
+            try:
+                from nexus.core.llm.cost_alerts import check_agent_daily_cost
+
+                within_budget, current_spend, limit = await check_agent_daily_cost(
+                    self.agent_id, session
+                )
+                if not within_budget:
+                    raise TokenBudgetExceededError(
+                        f"Agent daily cost limit reached: ${current_spend:.4f} / ${limit:.2f}"
+                    )
+            except TokenBudgetExceededError:
+                raise
+            except Exception as exc:
+                logger.warning(
+                    "agent_cost_alert_check_failed",
+                    agent_id=self.agent_id,
+                    task_id=task_id,
+                    error=str(exc),
+                )
 
     # ─── Prompt hot-reload ──────────────────────────────────────────────────
 
