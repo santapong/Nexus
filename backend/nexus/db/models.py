@@ -397,3 +397,44 @@ class BillingRecord(UUIDAuditBase):
     billing_type: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # llm_usage | tool_usage | a2a_hire
+
+
+# ─── Table 19: oauth_accounts ───────────────────────────────────────────
+
+
+class OAuthAccount(UUIDAuditBase):
+    __tablename__ = "oauth_accounts"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_user_id", name="uq_oauth_provider_user"),
+    )
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)  # google | github | microsoft
+    provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    access_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    refresh_token_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+# ─── Table 20: webhook_subscriptions ─────────────────────────────────────
+
+
+class WebhookSubscription(UUIDAuditBase):
+    __tablename__ = "webhook_subscriptions"
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    events: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    secret_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    failure_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_triggered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
