@@ -24,10 +24,10 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     create_all=False,  # Alembic handles schema
     engine_config={
         "pool_pre_ping": True,  # Validate connections before use
-        "pool_size": 10,  # Persistent connections in pool
-        "max_overflow": 20,  # Extra connections under load
-        "pool_recycle": 3600,  # Recycle connections after 1 hour
-        "pool_timeout": 30,  # Wait max 30s for a connection
+        "pool_size": settings.db_pool_size,  # Configurable via env
+        "max_overflow": settings.db_max_overflow,  # Configurable via env
+        "pool_recycle": settings.db_pool_recycle,  # Recycle stale connections
+        "pool_timeout": settings.db_pool_timeout,  # Wait max for a connection
         "echo": False,
     },
 )

@@ -13,8 +13,8 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.llm.usage import _MODEL_PRICING
 from nexus.db.models import Agent, LLMUsage
-from nexus.llm.usage import _MODEL_PRICING
 from nexus.settings import settings
 
 logger = structlog.get_logger()

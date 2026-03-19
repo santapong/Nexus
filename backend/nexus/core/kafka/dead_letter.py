@@ -11,9 +11,9 @@ from typing import Any
 
 import structlog
 
+from nexus.core.kafka.topics import Topics
+from nexus.core.redis.clients import redis_locks
 from nexus.db.models import DeadLetter
-from nexus.kafka.topics import Topics
-from nexus.redis.clients import redis_locks
 
 logger = structlog.get_logger()
 
@@ -59,7 +59,7 @@ async def publish_dead_letter(
 
     # Publish to dead letter Kafka topic
     try:
-        from nexus.kafka.producer import get_producer
+        from nexus.core.kafka.producer import get_producer
 
         producer = await get_producer()
         await producer.send_and_wait(dl_topic, value=raw_message, key=task_id)

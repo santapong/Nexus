@@ -15,7 +15,7 @@ import httpx
 import structlog
 from pydantic import BaseModel
 
-from nexus.gateway.schemas import AgentCard
+from nexus.integrations.a2a.schemas import AgentCard
 
 logger = structlog.get_logger()
 

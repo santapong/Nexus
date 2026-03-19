@@ -82,7 +82,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Architecture design | ✅ Complete |
 | Tech stack decisions | ✅ Finalized |
 | AI framework decision | ✅ Pydantic AI (see §5) |
-| Database schema design | ✅ Deployed — all 12 tables (see §12) |
+| Database schema design | ✅ Deployed — all 18 tables (see §12) |
 | Coding policy | ✅ Defined + CI enforced (see §16–21) |
 | MCP integration | ✅ Complete — adapter + registry + guards (see §8) |
 | A2A gateway | ✅ Complete — inbound + outbound with SSE streaming (see §9) |
@@ -90,14 +90,16 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Prevention guide | ✅ Defined (see §23) |
 | MCP tools project | ✅ Integrated (Python package, direct import) |
 | Codebase scaffolding | ✅ Complete |
-| Docker Compose setup | ✅ Complete (5 services) |
+| Docker Compose setup | ✅ Complete (7 services) |
 | Agent base class | ✅ Complete |
 | Phase 0 build | ✅ Complete |
 | Phase 1 build | ✅ Complete — 50-task stress test: 100% pass rate |
 | Phase 2 build | ✅ Complete — 20-task stress test: 100% pass rate |
 | Phase 3 build | ✅ Complete — chaos tests, A2A outbound, eval scoring, K8s |
+| Phase 4 build | ✅ Complete — multi-tenant, Temporal, marketplace, billing |
+| Phase 5 prep | ✅ Complete — core restructure, performance, security, CI/CD, agent tools |
 
-**Current phase:** Phase 4 COMPLETE — Multi-tenant SaaS platform ready.
+**Current phase:** Phase 4 COMPLETE — Multi-tenant SaaS platform ready. Phase 5 preparation done.
 
 **Next action:** Phase 5 — Advanced features, federation, fine-tuning.
 
@@ -271,7 +273,7 @@ All LLM calls go through `llm/factory.py → ModelFactory`.
 ### ModelFactory
 
 ```python
-# nexus/llm/factory.py
+# nexus/core/llm/factory.py
 class ModelFactory:
     @staticmethod
     def get_model(role: AgentRole, override: str | None = None) -> BaseModel:
@@ -488,6 +490,10 @@ TOOL_REGISTRY: dict[AgentRole, list] = {
 | `send_email` ⚠ | Irreversible | writer only |
 | `memory_read` | Read-only | prompt_creator only |
 | `hire_external_agent` ⚠ | Irreversible + A2A | all (Phase 3) |
+| `create_plan` | Read-only (LLM-powered) | ceo, engineer, analyst |
+| `design_system` | Read-only (LLM-powered) | ceo, engineer |
+| `design_database` | Read-only (LLM-powered) | ceo, engineer |
+| `design_api` | Read-only (LLM-powered) | ceo, engineer |
 
 ### MCP prerequisite — before Phase 1
 
@@ -591,11 +597,11 @@ external service. Prevents agents from autonomously spending on third-party APIs
 
 ### Topic registry
 
-**All topic names in `nexus/kafka/topics.py` as constants.**
+**All topic names in `nexus/core/kafka/topics.py` as constants.**
 **No hardcoded topic strings anywhere else in the codebase. Ever.**
 
 ```python
-# nexus/kafka/topics.py
+# nexus/core/kafka/topics.py
 class Topics:
     TASK_QUEUE                = "task.queue"
     TASK_RESULTS              = "task.results"
@@ -895,66 +901,129 @@ nexus/
 ├── CLAUDE.md
 ├── docs/
 │   ├── ARCHITECTURE.md                  ← system architecture & design fundamentals
-│   ├── DECISIONS.md                     ← architecture decision records
+│   ├── DECISIONS.md                     ← architecture decision records (47 ADRs)
 │   ├── RISK_REVIEW.md                   ← risk assessment & phase gates
 │   ├── BACKLOG.md                       ← scope creep capture
 │   ├── CHANGELOG.md                     ← version history
 │   ├── ERRORLOG.md                      ← bug tracking & prevention
 │   └── archive/                         ← old planning documents
 ├── docker-compose.yml
-├── docker-compose.test.yml
 ├── Makefile
 ├── .env.example
 ├── .gitignore
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                       ← lint + tests + security scanning
+│       ├── deploy.yml                   ← K8s deployment (staging → production)
+│       ├── docker-publish.yml           ← Docker image build + push to GHCR
+│       └── security.yml                 ← pip-audit, bandit, gitleaks, trivy
+│
+├── k8s/
+│   ├── base/                            ← K8s manifests (namespace, configmap, secrets,
+│   │   │                                  postgres, redis, kafka, backend, frontend, ingress)
+│   │   └── kustomization.yaml
+│   └── overlays/
+│       ├── dev/                          ← single replicas, small resources
+│       ├── staging/                      ← staging overrides
+│       └── production/                   ← HA replicas, large resources
 │
 ├── backend/
 │   ├── pyproject.toml                   ← deps + ruff + mypy + pytest config
 │   ├── Dockerfile
 │   ├── alembic/
-│   │   ├── versions/
+│   │   ├── versions/                    ← 001–005 migrations
 │   │   └── env.py
 │   │
 │   └── nexus/
 │       ├── __init__.py
 │       ├── settings.py                  ← ALL config from env vars only
-│       ├── app.py                       ← Litestar app factory
+│       ├── app.py                       ← Litestar app factory + security checks
 │       ├── taskiq_app.py                ← Taskiq broker
 │       │
+│       ├── core/                        ← CORE INFRASTRUCTURE (system breaks without these)
+│       │   ├── kafka/
+│       │   │   ├── topics.py            ← ALL topic constants — single source of truth
+│       │   │   ├── schemas.py           ← KafkaMessage base + per-topic models
+│       │   │   ├── producer.py
+│       │   │   ├── consumer.py
+│       │   │   ├── meeting.py           ← meeting room pattern
+│       │   │   ├── dead_letter.py       ← dead letter queue routing
+│       │   │   ├── result_consumer.py   ← task result consumer
+│       │   │   └── health_check.py
+│       │   │
+│       │   ├── redis/
+│       │   │   └── clients.py           ← 4 clients, one per db role
+│       │   │
+│       │   └── llm/
+│       │       ├── factory.py           ← ModelFactory (7+ providers)
+│       │       ├── usage.py             ← token tracking + cost logging
+│       │       ├── cost_estimator.py    ← pre-execution cost estimation
+│       │       └── circuit_breaker.py   ← per-provider fault tolerance
+│       │
 │       ├── api/
-│       │   ├── health.py                ← GET /health — first endpoint built
+│       │   ├── health.py               ← GET /health (healthy/degraded/unhealthy)
 │       │   ├── tasks.py
 │       │   ├── agents.py
-│       │   ├── approvals.py             ← GET /approvals · POST /approvals/{id}/approve
+│       │   ├── approvals.py
+│       │   ├── auth.py                 ← JWT + password hashing
+│       │   ├── middleware.py            ← rate limiting + prompt injection defense
 │       │   ├── websocket.py
+│       │   ├── analytics.py            ← performance metrics + cost breakdown
+│       │   ├── prompts.py              ← prompt versioning + activation
+│       │   ├── audit.py                ← audit log viewer
+│       │   ├── eval.py                 ← eval scoring endpoints
+│       │   ├── billing.py              ← cost tracking + invoices
+│       │   ├── workspaces.py           ← multi-tenant workspace management
+│       │   ├── marketplace.py          ← agent marketplace
+│       │   ├── agent_builder.py        ← no-code agent creation
+│       │   ├── a2a_tokens.py           ← A2A token CRUD
 │       │   └── router.py
 │       │
 │       ├── agents/
 │       │   ├── base.py                  ← AgentBase — most critical class
+│       │   ├── factory.py               ← agent construction
+│       │   ├── runner.py                ← agent startup orchestration
+│       │   ├── health_monitor.py        ← heartbeat + auto-fail
 │       │   ├── ceo.py
-│       │   ├── engineer.py              ← first full implementation (Phase 1)
+│       │   ├── engineer.py
 │       │   ├── analyst.py
 │       │   ├── writer.py
 │       │   ├── qa.py
-│       │   └── prompt_creator.py        ← Phase 2
+│       │   └── prompt_creator.py
 │       │
-│       ├── tools/                       ← NEW — MCP integration (Phase 1)
-│       │   ├── __init__.py
-│       │   ├── adapter.py               ← wraps MCP package as Pydantic AI tools
-│       │   ├── registry.py              ← per-role tool access map
-│       │   └── guards.py               ← require_approval() + IrreversibleAction
+│       ├── tools/                       ← MCP integration
+│       │   ├── adapter.py              ← tool wrappers (13 tools) + output sanitization
+│       │   ├── registry.py             ← per-role tool access map (Layer 1)
+│       │   └── guards.py              ← require_approval() + IrreversibleAction
 │       │
-│       ├── gateway/                     ← NEW — A2A protocol gateway (Phase 2)
-│       │   ├── __init__.py
-│       │   ├── routes.py                ← /.well-known/agent.json · POST /a2a · SSE
-│       │   ├── outbound.py              ← A2A client for hiring external agents
-│       │   ├── schemas.py               ← A2ATask, AgentCard, A2AEvent models
-│       │   └── auth.py                  ← Bearer token validation
-│       │
-│       ├── kafka/
-│       │   ├── topics.py                ← ALL topic constants — single source of truth
-│       │   ├── schemas.py               ← KafkaMessage base + per-topic models
-│       │   ├── producer.py
-│       │   └── consumer.py
+│       ├── integrations/               ← PLUGGABLE SERVICES (degrade gracefully)
+│       │   ├── a2a/                    ← A2A protocol gateway
+│       │   │   ├── routes.py           ← /.well-known/agent.json · POST /a2a · SSE
+│       │   │   ├── outbound.py         ← A2A client for hiring external agents
+│       │   │   ├── schemas.py          ← A2ATask, AgentCard, A2AEvent models
+│       │   │   ├── auth.py             ← Bearer token validation
+│       │   │   └── rate_limiter.py     ← per-token sliding window
+│       │   │
+│       │   ├── keepsave/               ← Secret management + MCP gateway
+│       │   │   ├── client.py           ← async KeepSave REST client
+│       │   │   ├── tools.py            ← KeepSave tools for agents
+│       │   │   ├── rbac.py             ← role-based access control (Layer 2)
+│       │   │   └── schemas.py
+│       │   │
+│       │   ├── temporal/               ← Long-running workflow orchestration
+│       │   │   ├── task_workflow.py
+│       │   │   ├── activities.py
+│       │   │   ├── schemas.py
+│       │   │   ├── worker.py
+│       │   │   └── client.py
+│       │   │
+│       │   └── eval/                   ← LLM-as-judge evaluation
+│       │       ├── runner.py
+│       │       ├── scorer.py
+│       │       ├── schemas.py
+│       │       ├── traces.py
+│       │       └── langfuse_client.py
 │       │
 │       ├── memory/
 │       │   ├── episodic.py
@@ -962,39 +1031,40 @@ nexus/
 │       │   ├── working.py               ← Redis db:0 scratch pad
 │       │   └── embeddings.py            ← Google embedding-001
 │       │
-│       ├── llm/
-│       │   ├── factory.py               ← ModelFactory
-│       │   └── usage.py                 ← token tracking + cost logging
-│       │
 │       ├── db/
-│       │   ├── models.py                ← SQLAlchemy models for all 9 tables
-│       │   └── session.py
+│       │   ├── models.py                ← SQLAlchemy models for all 18 tables
+│       │   ├── session.py               ← configurable pool settings
+│       │   └── seed.py
 │       │
-│       ├── redis/
-│       │   └── clients.py               ← 4 clients, one per db role
+│       ├── audit/
+│       │   └── service.py               ← log_event() + AuditEventType enum
 │       │
 │       └── tests/
 │           ├── conftest.py
 │           ├── unit/
 │           ├── behavior/
-│           └── e2e/
+│           ├── e2e/
+│           ├── integration/
+│           └── chaos/
 │
 └── frontend/
     ├── package.json
     ├── vite.config.ts
     ├── tsconfig.json
     └── src/
-        ├── api/                         ← generated from OpenAPI
+        ├── api/                         ← typed API client
         ├── components/
         │   ├── dashboard/
         │   ├── agents/
         │   ├── tasks/
         │   ├── approvals/               ← human approval queue UI
-        │   └── meeting/
+        │   ├── meeting/
+        │   ├── eval/                    ← eval scoring dashboard
+        │   └── a2a/                     ← A2A token management
         ├── hooks/                       ← TanStack Query hooks
         ├── store/                       ← Zustand (UI state only)
         ├── ws/                          ← WebSocket context provider
-        └── types/                       ← generated from OpenAPI
+        └── types/                       ← TypeScript interfaces
 ```
 
 ---
@@ -1023,6 +1093,11 @@ Applies to all `backend/**/*.py`. Agents generating Python MUST follow these rul
 6. **Settings via `settings` module only.** Never `os.environ` directly.
    No hardcoded URLs, ports, or secrets anywhere.
 
+7. **Core vs integrations boundary.** `nexus/core/` contains kafka, redis, llm — the system
+   breaks without them. `nexus/integrations/` contains keepsave, a2a, temporal, eval — they
+   degrade gracefully. Never put a pluggable service in `core/`. Never put a system-critical
+   service in `integrations/`.
+
 ### NEVER rules
 
 - `print()` for logging
@@ -1031,6 +1106,8 @@ Applies to all `backend/**/*.py`. Agents generating Python MUST follow these rul
 - Raw SQL strings with dynamic content
 - Hardcoded topic strings — always use `Topics.CONSTANT`
 - Calling MCP tools directly from agent code — always through the adapter + registry
+- Importing from `nexus.integrations.kafka`, `nexus.integrations.redis`, or
+  `nexus.integrations.llm` — these are now in `nexus.core.*`
 
 ---
 
@@ -1174,12 +1251,25 @@ Agents MUST follow this format when writing commits.
 3. PRs over 400 lines flagged for splitting
 4. **Engineer Agent may open PRs but never merge them — human review required**
 
-### CI pipeline
+### CI pipeline (`.github/workflows/ci.yml`)
 
 ```
-Every commit:   ruff check · mypy --strict · pytest tests/unit/
-Every PR:       pytest tests/behavior/ · E2E smoke test · OpenAPI types up to date
-Nightly:        pytest tests/e2e/ · LLM eval scoring run
+Every commit:   ruff check · ruff format · mypy --strict · pytest tests/unit/
+Every PR:       pytest tests/behavior/ · pytest tests/chaos/ · pytest tests/integration/
+                frontend: tsc --noEmit · npm run build
+Security:       pip-audit (dependency vulns) · bandit (SAST) · npm audit
+                gitleaks (secret scanning) · trivy (Docker image scan)
+On main merge:  Docker build + push (backend + frontend) to GitHub Container Registry
+```
+
+### Deployment pipeline (`.github/workflows/deploy.yml`)
+
+```
+On tag push (v*):
+  1. Build + push Docker images
+  2. Deploy to staging (kubectl apply -k k8s/overlays/staging)
+  3. Smoke test (GET /health must return healthy)
+  4. Deploy to production (kubectl apply -k k8s/overlays/production)
 ```
 
 ---
@@ -1336,7 +1426,7 @@ run a migration, but the running agent has the old model loaded. Or embedding di
 is wrong. Schema changes mid-phase are expensive.
 
 **Prevention:**
-- Full schema (all 9 tables, all indexes) deployed in Phase 0.
+- Full schema (all 18 tables, all indexes) deployed in Phase 0.
 - Populate with synthetic test data. Test embedding recall query with real embeddings.
 
 **Gate:** Full schema deployed and tested before Phase 1 starts.
@@ -1373,6 +1463,50 @@ Every agent test is unreliable. Days wasted debugging infrastructure.
 
 ---
 
+### Risk 9 — HIGH: Prompt injection via task instructions
+
+**What happens:** Adversarial user instructions override system prompts, extract agent
+instructions, or manipulate agent behavior. Agent acts on attacker's behalf.
+
+**Prevention:**
+- `api/middleware.py` — 5 regex patterns detect common injection techniques
+- Instruction sandboxing — wraps user input with `<user_instruction>` delimiters
+- 10,000 character max instruction length, validated before task creation
+- LLM-based detection planned for Phase 5 (regex alone won't catch novel attacks)
+
+**Gate:** `validate_instruction()` called before every task creation.
+
+---
+
+### Risk 10 — HIGH: LLM provider cascade failure
+
+**What happens:** Provider goes down. All agents using it fail. Retries exhaust token
+budgets. System appears frozen.
+
+**Prevention:**
+- `core/llm/circuit_breaker.py` — 5 failures → circuit opens for 60s → half_open test
+- ModelFactory fallback chains (configured per role via env vars)
+- Circuit state exposed in `/health` endpoint for monitoring
+- 7+ providers supported including local Ollama (offline fallback)
+
+**Gate:** Circuit breaker integrated into ModelFactory before any production deployment.
+
+---
+
+### Risk 11 — HIGH: Daily spend counter reset on Redis restart
+
+**What happens:** Redis restarts mid-day. `daily_spend_usd` key resets to 0. Agents
+continue spending, bypassing the $5/day limit.
+
+**Prevention:**
+- Date-keyed counter: `daily_spend_usd:{YYYY-MM-DD}` instead of flat key
+- DB fallback: queries `llm_usage` table when Redis unavailable
+- Budget check runs inside DB session for reliable fallback
+
+**Gate:** Date-keyed counter + DB fallback live before any real LLM calls.
+
+---
+
 ## 24. Build Roadmap — Phased Plan
 
 ### Phase 0 — Foundation (Week 1, Days 1–3)
@@ -1392,13 +1526,13 @@ Goal: working skeleton. Nothing smart. Everything starts and connects.
 - [x] Write `Makefile` with all commands
 - [x] Implement `GET /health` (checks DB, Redis, Kafka connectivity)
 - [x] Write `make kafka-test` health check script
-- [x] Run full schema migration — all 9 tables from §12
+- [x] Run full schema migration — all 18 tables from §12
 - [x] Build `require_approval()` guard + `human_approvals` table ← prevention rule 4
 - [x] Set up CI (ruff + mypy + pytest skeleton)
 
 **Definition of done:**
 `make up` starts all 5 services with no errors. `curl localhost:8000/health` returns all
-green. `make kafka-test` passes. `make migrate` creates all 9 tables. Frontend loads
+green. `make kafka-test` passes. `make migrate` creates all 18 tables. Frontend loads
 at localhost:5173. `BACKLOG.md` exists.
 
 ---
@@ -1538,10 +1672,20 @@ Not starting until Phase 3 Definition of Done is fully met.
 
 | Question | Options | Priority |
 |----------|---------|----------|
-| Log aggregation | File-based JSON vs Loki vs OpenSearch | Medium — decide before Phase 3 |
-| Secrets management | `.env` vs Docker secrets vs Vault | Low for v1 solo; required before multi-user |
 | Agent naming | Generic roles vs named personas | Low — cosmetic |
-| Kafka fallback | Stay with Kafka vs Redis Streams for Phase 1 | Decide on Day 2 of setup |
+| Row-level security | PostgreSQL RLS vs application-layer filtering | High — before production multi-tenant |
+| OAuth2/OIDC | Add alongside JWT vs replace JWT entirely | Medium — before enterprise tenants |
+| Billing provider | Stripe vs internal-only | Medium — before paid offering |
+| Agent federation | Multi-NEXUS interop protocol | Low — Phase 5+ |
+
+### Recently Decided ✅
+
+| Decision | Choice | Date | Reason |
+|----------|--------|------|--------|
+| Log aggregation | Structured JSON + LangFuse | 2026-03-18 | JSON logs for local dev; LangFuse for eval tracking |
+| Secrets management | KeepSave | 2026-03-17 | Integrated with RBAC, per-role access, environment promotion |
+| Kafka fallback | Stay with Kafka | 2026-03-08 | KRaft stable, `make kafka-test` passes reliably |
+| Core vs integrations | `core/` for kafka,redis,llm; `integrations/` for rest | 2026-03-18 | Clear dependency hierarchy, graceful degradation |
 
 ### Needs further design before Phase 1 code starts
 

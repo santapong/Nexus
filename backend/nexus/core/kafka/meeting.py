@@ -17,10 +17,10 @@ from uuid import UUID, uuid4
 import structlog
 from pydantic import BaseModel, Field
 
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import KafkaMessage
-from nexus.kafka.topics import Topics
-from nexus.redis.clients import redis_working
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import KafkaMessage
+from nexus.core.kafka.topics import Topics
+from nexus.core.redis.clients import redis_working
 
 logger = structlog.get_logger()
 

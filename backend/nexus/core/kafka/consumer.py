@@ -1,14 +1,35 @@
 from __future__ import annotations
 
 import json
+import os
 
 import structlog
 from aiokafka import AIOKafkaConsumer
 
-from nexus.redis.clients import redis_locks
+from nexus.core.redis.clients import redis_locks
 from nexus.settings import settings
 
 logger = structlog.get_logger()
+
+# Instance ID for horizontal scaling — each pod/container gets a unique ID
+# Multiple instances of the same agent role share a consumer group,
+# and Kafka distributes partitions across them automatically.
+_INSTANCE_ID = os.environ.get("NEXUS_INSTANCE_ID", "0")
+
+
+def build_group_id(role: str) -> str:
+    """Build a consumer group ID for an agent role.
+
+    All instances of the same role share the same group, enabling
+    Kafka partition-based load balancing across replicas.
+
+    Args:
+        role: Agent role name (e.g., 'engineer', 'ceo').
+
+    Returns:
+        Consumer group ID (e.g., 'nexus-engineer').
+    """
+    return f"nexus-{role}"
 
 
 async def create_consumer(
@@ -33,7 +54,12 @@ async def create_consumer(
         enable_auto_commit=True,
     )
     await consumer.start()
-    logger.info("kafka_consumer_started", topics=topics, group_id=group_id)
+    logger.info(
+        "kafka_consumer_started",
+        topics=topics,
+        group_id=group_id,
+        instance_id=_INSTANCE_ID,
+    )
     return consumer
 
 

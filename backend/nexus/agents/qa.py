@@ -16,10 +16,10 @@ from pydantic_ai import Agent as PydanticAgent
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentCommand, AgentResponse, TaskResult
-from nexus.kafka.topics import Topics
-from nexus.llm.usage import calculate_cost, record_usage
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse, TaskResult
+from nexus.core.kafka.topics import Topics
+from nexus.core.llm.usage import calculate_cost, record_usage
 
 logger = structlog.get_logger()
 

@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from nexus.kafka.schemas import AgentCommand, HeartbeatMessage, KafkaMessage
+from nexus.core.kafka.schemas import AgentCommand, HeartbeatMessage, KafkaMessage
 
 
 def test_kafka_message_requires_mandatory_fields() -> None:

@@ -75,7 +75,7 @@ class Agent(UUIDAuditBase):
     )
 
     # Relationships
-    tasks: Mapped[list[Task]] = relationship(back_populates="assigned_agent", lazy="selectin")
+    tasks: Mapped[list[Task]] = relationship(back_populates="assigned_agent", lazy="raise")
 
 
 # ─── Table 2: tasks ──────────────────────────────────────────────────────────
@@ -103,8 +103,8 @@ class Task(UUIDAuditBase):
     )
 
     # Relationships
-    assigned_agent: Mapped[Agent | None] = relationship(back_populates="tasks", lazy="selectin")
-    parent_task: Mapped[Task | None] = relationship(remote_side="Task.id", lazy="selectin")
+    assigned_agent: Mapped[Agent | None] = relationship(back_populates="tasks", lazy="raise")
+    parent_task: Mapped[Task | None] = relationship(remote_side="Task.id", lazy="raise")
 
 
 # ─── Table 3: episodic_memory ────────────────────────────────────────────────
@@ -311,7 +311,7 @@ class User(UUIDAuditBase):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    workspaces: Mapped[list[Workspace]] = relationship(back_populates="owner", lazy="selectin")
+    workspaces: Mapped[list[Workspace]] = relationship(back_populates="owner", lazy="raise")
 
 
 # ─── Table 14: workspaces ───────────────────────────────────────────────────
@@ -328,7 +328,7 @@ class Workspace(UUIDAuditBase):
     daily_spend_limit_usd: Mapped[float] = mapped_column(Float, default=5.0)
 
     # Relationships
-    owner: Mapped[User] = relationship(back_populates="workspaces", lazy="selectin")
+    owner: Mapped[User] = relationship(back_populates="workspaces", lazy="raise")
 
 
 # ─── Table 15: workspace_members ─────────────────────────────────────────────

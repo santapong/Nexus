@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from nexus.kafka.topics import Topics
+from nexus.core.kafka.topics import Topics
 
 
 def test_all_topics_returns_all_defined_topics() -> None:

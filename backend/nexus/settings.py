@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
+    cors_allowed_origins: str = "http://localhost:5173"
+
+    # Database Pool (tunable for horizontal scaling)
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+    db_pool_recycle: int = 3600
+    db_pool_timeout: int = 30
 
     # Agent Model Map (role -> model name)
     model_ceo: str = "claude-sonnet-4-20250514"

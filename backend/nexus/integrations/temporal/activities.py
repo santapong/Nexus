@@ -11,7 +11,7 @@ import time
 
 import structlog
 
-from nexus.workflows.schemas import (
+from nexus.integrations.temporal.schemas import (
     SubtaskActivityInput,
     SubtaskActivityOutput,
     TaskWorkflowInput,
@@ -43,9 +43,9 @@ async def execute_task_activity(input_data: TaskWorkflowInput) -> TaskWorkflowOu
     )
 
     try:
-        from nexus.kafka.producer import publish
-        from nexus.kafka.schemas import AgentCommand
-        from nexus.kafka.topics import Topics
+        from nexus.core.kafka.producer import publish
+        from nexus.core.kafka.schemas import AgentCommand
+        from nexus.core.kafka.topics import Topics
 
         command = AgentCommand(
             task_id=input_data.task_id,
@@ -137,9 +137,9 @@ async def execute_subtask_activity(
     )
 
     try:
-        from nexus.kafka.producer import publish
-        from nexus.kafka.schemas import AgentCommand
-        from nexus.kafka.topics import Topics
+        from nexus.core.kafka.producer import publish
+        from nexus.core.kafka.schemas import AgentCommand
+        from nexus.core.kafka.topics import Topics
 
         command = AgentCommand(
             task_id=input_data.task_id,

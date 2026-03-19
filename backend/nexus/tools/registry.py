@@ -17,7 +17,7 @@ from collections.abc import Callable
 from typing import Any
 
 from nexus.db.models import AgentRole
-from nexus.keepsave.tools import (
+from nexus.integrations.keepsave.tools import (
     tool_keepsave_audit_log,
     tool_keepsave_create_secret,
     tool_keepsave_get_secret_info,
@@ -32,6 +32,10 @@ from nexus.keepsave.tools import (
 )
 from nexus.tools.adapter import (
     tool_code_execute,
+    tool_create_plan,
+    tool_design_api,
+    tool_design_database,
+    tool_design_system,
     tool_file_read,
     tool_file_write,
     tool_git_push,
@@ -87,6 +91,11 @@ _KEEPSAVE_ENGINEER_WRITE_TOOLS: list[Callable[..., Any]] = [
 TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
     AgentRole.CEO: [
         tool_hire_external_agent,
+        # Planning & design tools
+        tool_create_plan,
+        tool_design_system,
+        tool_design_database,
+        tool_design_api,
         # CEO: full KeepSave access (read + write all scopes)
         *_KEEPSAVE_READ_TOOLS,
         *_KEEPSAVE_CEO_WRITE_TOOLS,
@@ -98,6 +107,11 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_write,
         tool_git_push,
         tool_hire_external_agent,
+        # Planning & design tools
+        tool_create_plan,
+        tool_design_system,
+        tool_design_database,
+        tool_design_api,
         # Engineer: read all visible scopes + write LLM keys/cost only (RBAC enforced)
         *_KEEPSAVE_READ_TOOLS,
         *_KEEPSAVE_ENGINEER_WRITE_TOOLS,
@@ -108,6 +122,8 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_read,
         tool_file_write,
         tool_hire_external_agent,
+        # Planning tool only (no design tools)
+        tool_create_plan,
         # Analyst: read-only secrets + MCP gateway (no secret writes)
         *_KEEPSAVE_READ_TOOLS,
         tool_keepsave_mcp_call,

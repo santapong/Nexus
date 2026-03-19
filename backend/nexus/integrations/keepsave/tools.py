@@ -21,8 +21,8 @@ import json
 import structlog
 
 from nexus.db.models import AgentRole
-from nexus.keepsave.client import get_keepsave_client
-from nexus.keepsave.rbac import (
+from nexus.integrations.keepsave.client import get_keepsave_client
+from nexus.integrations.keepsave.rbac import (
     KeepSaveAccessDenied,
     KeepSaveOperation,
     check_operation,

@@ -25,18 +25,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.audit.service import AuditEventType, log_event
+from nexus.core.kafka.consumer import check_idempotency, create_consumer
+from nexus.core.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
+from nexus.core.kafka.producer import get_producer, publish
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
+from nexus.core.kafka.topics import Topics
+from nexus.core.llm.usage import check_daily_spend, check_task_budget
+from nexus.core.redis.clients import redis_pubsub
 from nexus.db.models import Agent as AgentModel
 from nexus.db.models import AgentRole
-from nexus.kafka.consumer import check_idempotency, create_consumer
-from nexus.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
-from nexus.kafka.producer import get_producer, publish
-from nexus.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
-from nexus.kafka.topics import Topics
-from nexus.llm.usage import check_daily_spend, check_task_budget
 from nexus.memory.embeddings import generate_embedding
 from nexus.memory.episodic import recall_similar, write_episode
 from nexus.memory.working import clear_working_memory, get_working_memory
-from nexus.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 
@@ -192,10 +192,9 @@ class AgentBase(ABC):
             # 0. Hot-reload system prompt if changed in DB
             await self._check_prompt_reload()
 
-            # 2. Budget check
-            await self._check_budget(task_id)
-
             async with self.db_session_factory() as session:
+                # 2. Budget check (inside session for DB fallback on Redis failure)
+                await self._check_budget(task_id, session=session)
                 # Audit: task_received
                 await log_event(
                     session=session,
@@ -331,13 +330,18 @@ class AgentBase(ABC):
 
     # ─── Budget enforcement ──────────────────────────────────────────────────
 
-    async def _check_budget(self, task_id: str) -> None:
+    async def _check_budget(
+        self,
+        task_id: str,
+        *,
+        session: AsyncSession | None = None,
+    ) -> None:
         """Check both daily spend limit and per-task token budget.
 
         Raises TokenBudgetExceededError if either limit is reached.
         Must be called before every LLM call.
         """
-        daily_ok = await check_daily_spend()
+        daily_ok = await check_daily_spend(session=session)
         if not daily_ok:
             raise TokenBudgetExceededError("Daily spend limit reached")
 

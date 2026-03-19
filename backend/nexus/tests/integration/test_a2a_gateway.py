@@ -11,13 +11,13 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 
-from nexus.gateway.auth import (
+from nexus.integrations.a2a.auth import (
     _CachedToken,
     _check_token_validity,
     _hash_token,
     invalidate_cache,
 )
-from nexus.gateway.schemas import A2ATaskRequest, AgentCard
+from nexus.integrations.a2a.schemas import A2ATaskRequest, AgentCard
 
 
 class TestA2AAuthentication:
@@ -115,7 +115,7 @@ class TestA2AAuthentication:
 
     def test_invalidate_cache_clears(self) -> None:
         """invalidate_cache() empties the cache dict."""
-        from nexus.gateway.auth import _token_cache
+        from nexus.integrations.a2a.auth import _token_cache
 
         _token_cache["test"] = _CachedToken(
             token_hash="test",
@@ -200,7 +200,7 @@ class TestA2AEndToEndFlow:
         """submit_task creates an AgentCommand targeting the CEO."""
         from uuid import uuid4
 
-        from nexus.kafka.schemas import AgentCommand
+        from nexus.core.kafka.schemas import AgentCommand
 
         task_id = uuid4()
         trace_id = uuid4()

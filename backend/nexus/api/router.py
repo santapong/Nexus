@@ -16,7 +16,7 @@ from nexus.api.prompts import PromptController
 from nexus.api.tasks import TaskController
 from nexus.api.websocket import agent_activity_ws
 from nexus.api.workspaces import AuthController, WorkspaceController
-from nexus.gateway.routes import A2AGatewayController, AgentCardController
+from nexus.integrations.a2a.routes import A2AGatewayController, AgentCardController
 
 api_router = Router(
     path="/api",

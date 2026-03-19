@@ -40,6 +40,79 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-18] — Phase 5 Preparation: Core restructure, performance, security, CI/CD, agent tools
+
+### Added
+- **`nexus/core/` module** — Separated core infrastructure (kafka, redis, llm) from pluggable
+  integrations (keepsave, a2a, temporal, eval). Core services are required for system operation;
+  integrations degrade gracefully when unavailable.
+- **Circuit breaker** (`core/llm/circuit_breaker.py`) — Per-provider circuit breaker with
+  closed/open/half_open states. 5 consecutive failures opens the circuit for 60s. Prevents
+  cascading failures when an LLM provider is down. States exposed via `/health` endpoint.
+- **API middleware** (`api/middleware.py`) — Rate limiting (100 req/min authenticated, 20/min
+  unauthenticated, 10/min task creation) + prompt injection detection (5 regex patterns) +
+  instruction sandboxing with `<user_instruction>` delimiters + 10K char instruction limit.
+- **Tool output sanitization** (`tools/adapter.py`) — `_sanitize_tool_output()` truncates all
+  tool responses at 50KB to prevent token overflow and context window exhaustion.
+- **4 LLM-powered agent tools** — `tool_create_plan` (structured project plans), `tool_design_system`
+  (system architecture with Mermaid diagrams), `tool_design_database` (schema design with DDL),
+  `tool_design_api` (REST API design with schemas). Added to CEO, Engineer (all 4) and Analyst
+  (create_plan only) in registry.
+- **Security scanning in CI** — `pip-audit` (Python dependency vulnerabilities), `bandit` (SAST),
+  `npm audit` (frontend), `gitleaks` (secret scanning), `trivy` (Docker image scan).
+- **Docker build pipeline** — Backend and frontend images built and pushed to GitHub Container
+  Registry on main branch merge. Trivy scan blocks on CRITICAL/HIGH.
+- **Deployment workflow** (`.github/workflows/deploy.yml`) — Tag-triggered K8s deployment to
+  staging (with smoke test) then production.
+- **K8s overlays** — `k8s/overlays/staging/` and `k8s/overlays/production/` added alongside
+  existing dev overlay.
+- **Migration 005** (`005_performance_indexes.py`) — 7 composite and partial indexes for hot
+  query paths: tasks(agent+created), approvals(status+requested), billing(workspace+created),
+  llm_usage(agent+created), audit_log(agent+created), episodic_memory(agent+created), plus
+  partial index on active tasks (queued/running/paused).
+- **Configurable DB pool** — `settings.py` gains `db_pool_size`, `db_max_overflow`,
+  `db_pool_recycle`, `db_pool_timeout` for horizontal scaling tuning.
+- **Production CORS** — `cors_allowed_origins` setting; environment-driven in `app.py`.
+
+### Changed
+- **Core restructure** — Moved `integrations/kafka/` → `core/kafka/`, `integrations/redis/` →
+  `core/redis/`, `integrations/llm/` → `core/llm/`. All imports updated across ~40 files.
+  `integrations/` now contains only pluggable external services (keepsave, a2a, temporal, eval).
+- **ORM relationships** — All `lazy="selectin"` changed to `lazy="raise"` on Agent.tasks,
+  Task.assigned_agent, Task.parent_task, User.workspaces, Workspace.owner. Prevents accidental
+  N+1 queries; requires explicit `selectinload()` when needed.
+- **N+1 fix: analytics** (`api/analytics.py`) — Replaced per-agent loop (3 queries × N agents)
+  with 2 batch queries using GROUP BY. Single query for task stats, single query for costs.
+- **N+1 fix: task replay** (`api/tasks.py`) — Replaced per-subtask loop (2 queries × N subtasks)
+  with batch `IN` clause queries for memories and usage.
+- **Health endpoint** (`api/health.py`) — Now returns `healthy`/`degraded`/`unhealthy` status.
+  Checks optional services (Temporal, KeepSave, LangFuse) separately. Reports circuit breaker
+  states per LLM provider.
+- **Startup security** (`app.py`) — Blocks production startup if JWT secret is default value.
+  Warns if no LLM API keys configured. Enforces 1MB request body limit.
+- **Daily spend tracking** (`core/llm/usage.py`) — Changed Redis key from `daily_spend_usd`
+  to `daily_spend_usd:{date}` (date-keyed). Prevents counter reset on Redis restart. Added
+  DB fallback: queries llm_usage table when Redis unavailable.
+- **Budget check** (`agents/base.py`) — `_check_budget()` now accepts optional `session` param
+  for DB fallback on Redis failure. Moved inside DB session context in guard chain.
+- **Task creation** (`api/tasks.py`) — Validates instruction via `middleware.validate_instruction()`
+  before creating task. Rejects empty, oversized, or injection-pattern instructions.
+
+### Database
+- Migration: `005_performance_indexes.py` — 7 indexes on tasks, human_approvals, billing_records,
+  llm_usage, audit_log, episodic_memory (composite + partial)
+
+### Breaking
+- Import paths changed: `nexus.integrations.kafka` → `nexus.core.kafka`,
+  `nexus.integrations.redis` → `nexus.core.redis`, `nexus.integrations.llm` → `nexus.core.llm`.
+  Any external code importing from old paths must update.
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-18] — Security audit, README update, ERRORLOG update
 
 ### Added

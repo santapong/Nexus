@@ -9,8 +9,8 @@ from litestar import Litestar
 from litestar.config.cors import CORSConfig
 
 from nexus.api.router import a2a_router, api_router, health_router
+from nexus.core.kafka.producer import close_producer
 from nexus.db.session import sqlalchemy_config
-from nexus.kafka.producer import close_producer
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -19,8 +19,33 @@ logger = structlog.get_logger()
 _agent_tasks: list[asyncio.Task[None]] = []
 
 
+async def _security_checks() -> None:
+    """Verify critical security settings on startup.
+
+    Blocks startup in production if dangerous defaults are detected.
+    """
+    if not settings.is_development:
+        if settings.jwt_secret_key == "nexus-dev-secret-change-in-production":
+            raise RuntimeError(
+                "FATAL: JWT_SECRET_KEY must be changed from default for production. "
+                "Set a strong random secret via environment variable."
+            )
+        if not settings.anthropic_api_key and not settings.google_api_key:
+            logger.warning(
+                "no_llm_api_keys_configured",
+                hint="Set ANTHROPIC_API_KEY or GOOGLE_API_KEY for LLM functionality",
+            )
+    logger.info(
+        "security_checks_passed",
+        env=settings.app_env,
+        jwt_default=settings.jwt_secret_key == "nexus-dev-secret-change-in-production",
+    )
+
+
 async def _on_startup() -> None:
-    """Start all agents and result consumer as background tasks."""
+    """Run security checks and start all agents."""
+    await _security_checks()
+
     try:
         from nexus.agents.runner import start_all_agents
 
@@ -58,8 +83,15 @@ def create_app() -> Litestar:
         ),
     )
 
+    # CORS: environment-driven origins
+    cors_origins = (
+        ["http://localhost:5173"]
+        if settings.is_development
+        else settings.cors_allowed_origins.split(",")
+    )
+
     cors_config = CORSConfig(
-        allow_origins=["http://localhost:5173"],
+        allow_origins=cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -71,6 +103,7 @@ def create_app() -> Litestar:
         on_startup=[_on_startup],
         on_shutdown=[_on_shutdown],
         debug=settings.is_development,
+        request_max_body_size=1_048_576,  # 1MB — prevent oversized payloads
     )
 
     return app

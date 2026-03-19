@@ -91,14 +91,19 @@ nexus/
 │   └── nexus/
 │       ├── api/                   # Litestar REST + WebSocket endpoints
 │       ├── agents/                # Agent implementations (base, ceo, engineer, ...)
-│       ├── tools/                 # MCP adapter, per-role registry, approval guards
-│       ├── gateway/               # A2A protocol gateway
-│       ├── kafka/                 # Topics, schemas, producer, consumer, meeting
+│       ├── core/                  # Core infrastructure (system breaks without these)
+│       │   ├── kafka/             # Topics, schemas, producer, consumer, meeting
+│       │   ├── redis/             # 4-role client abstraction
+│       │   └── llm/              # ModelFactory, usage tracking, circuit breaker
+│       ├── tools/                 # MCP adapter (13 tools), per-role registry, approval guards
+│       ├── integrations/          # Pluggable services (degrade gracefully)
+│       │   ├── a2a/              # A2A protocol gateway
+│       │   ├── keepsave/         # Secret management + RBAC
+│       │   ├── temporal/         # Long-running workflow orchestration
+│       │   └── eval/             # LLM-as-judge eval scoring + LangFuse
 │       ├── memory/                # Episodic, semantic, working memory + embeddings
-│       ├── llm/                   # ModelFactory + token/cost tracking
-│       ├── db/                    # SQLAlchemy models, session, seed data
-│       ├── eval/                  # LLM-as-judge eval scoring
-│       ├── redis/                 # 4-role client abstraction
+│       ├── db/                    # SQLAlchemy models (18 tables), session, seed data
+│       ├── audit/                 # Structured audit logging
 │       └── tests/                 # Unit, behavior, integration, e2e, chaos
 ├── frontend/
 │   ├── package.json
@@ -127,6 +132,7 @@ nexus/
 | Phase 2 — Multi-Agent + A2A | **Complete** — All 7 priority groups done |
 | Phase 3 — Hardening + A2A Outbound | **Complete** — Chaos tests, eval scoring, A2A outbound, K8s |
 | Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
+| Phase 5 Preparation | **Complete** — Core restructure, performance indexes, security hardening, CI/CD, agent tools |
 | Security Audit | **Complete** — 15 findings documented, 7 open (2 critical, 4 high, 1 medium) |
 
 ### What works today
@@ -163,6 +169,16 @@ nexus/
 - **Cross-company billing** — Cost tracking, invoice generation, per-task attribution
 - **Custom agent builder** — No-code agent creation with model/tool/prompt configuration
 - **LangFuse integration** — External eval tracking with LLM call traces and dimension scores
+- **Circuit breaker** for LLM providers — per-provider fault tolerance (closed/open/half_open), auto-recovery
+- **API rate limiting** — 100 req/min authenticated, 20/min unauthenticated, 10/min task creation
+- **Prompt injection defense** — 5 regex patterns + instruction sandboxing + 10K char limit
+- **7 performance indexes** — composite + partial indexes on hot query paths (migration 005)
+- **4 LLM-powered planning/design tools** — create_plan, design_system, design_database, design_api
+- **Security scanning in CI** — pip-audit, bandit, npm audit, gitleaks, trivy
+- **Docker image pipeline** — auto-build + push to GHCR + Trivy scan on main merge
+- **Core/integrations separation** — kafka, redis, llm in `core/`; keepsave, a2a, temporal, eval in `integrations/`
+- **Tool output sanitization** — 50KB limit on all tool responses
+- **Startup security checks** — blocks production with default JWT secret
 
 ## Getting Started
 
@@ -288,6 +304,7 @@ The dashboard will be available at `http://localhost:5173` and the API at `http:
 | Phase 2 | Multi-agent collaboration, Prompt Creator, A2A inbound | **Complete** — All groups done |
 | Phase 3 | Hardening, chaos testing, A2A outbound, K8s | **Complete** |
 | Phase 4 | Multi-tenant SaaS, Temporal workflows, marketplace | **Complete** |
+| Phase 5 Prep | Core restructure, performance, security, CI/CD, agent tools | **Complete** |
 | Phase 5 | Advanced features, federation, fine-tuning | Planned |
 
 ## Kubernetes Deployment
@@ -333,7 +350,7 @@ This resolves security audit findings #1 (hardcoded JWT secret) and #2 (hardcode
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System architecture, data flows, and design fundamentals
 - **[KEEPSAVE_INTEGRATION.md](docs/KEEPSAVE_INTEGRATION.md)** — KeepSave secret management integration guide
 - **[CLAUDE.md](CLAUDE.md)** — Master project document with full architecture, schemas, and policies
-- **[DECISIONS.md](docs/DECISIONS.md)** — Architecture Decision Records (26 ADRs)
+- **[DECISIONS.md](docs/DECISIONS.md)** — Architecture Decision Records (47 ADRs)
 - **[RISK_REVIEW.md](docs/RISK_REVIEW.md)** — Risk assessment and phase gate checklist
 - **[BACKLOG.md](docs/BACKLOG.md)** — Captured ideas and deferred scope
 - **[CHANGELOG.md](docs/CHANGELOG.md)** — Version history

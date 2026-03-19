@@ -267,7 +267,7 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 
 ### PostgreSQL (Source of Truth)
 
-12 tables with pgvector extension for embedding search:
+18 tables with pgvector extension for embedding search:
 
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
@@ -710,5 +710,104 @@ For the full integration guide, see [KEEPSAVE_INTEGRATION.md](KEEPSAVE_INTEGRATI
 
 ---
 
+## 15. Performance Optimization
+
+### Database Indexes (Migration 005)
+
+Seven composite and partial indexes added for hot query paths:
+
+| Index | Table | Columns | Use Case |
+|-------|-------|---------|----------|
+| `ix_tasks_agent_created` | tasks | (assigned_agent_id, created_at DESC) | Agent task history, analytics |
+| `ix_approvals_status_requested` | human_approvals | (status, requested_at DESC) | Pending approvals listing |
+| `ix_billing_workspace_created` | billing_records | (workspace_id, created_at DESC) | Tenant billing queries |
+| `ix_tasks_active` | tasks | (status, created_at DESC) WHERE status IN ('queued','running','paused') | Active task lookups |
+| `ix_llm_usage_agent_created` | llm_usage | (agent_id, created_at DESC) | Per-agent cost analytics |
+| `ix_audit_agent_created` | audit_log | (agent_id, created_at DESC) | Per-agent audit queries |
+| `ix_episodic_agent_created` | episodic_memory | (agent_id, created_at DESC) | Agent memory recall |
+
+### N+1 Query Fixes
+
+- **Analytics** (`api/analytics.py`) — Replaced per-agent loop (3 queries × N agents) with 2 batch
+  GROUP BY queries. Single query for task stats, single query for costs.
+- **Task replay** (`api/tasks.py`) — Replaced per-subtask loop (2 queries × N subtasks) with
+  batch `IN` clause queries for memories and usage.
+- **ORM relationships** — All `lazy="selectin"` changed to `lazy="raise"` on Agent.tasks,
+  Task.assigned_agent, Task.parent_task, User.workspaces, Workspace.owner. Accidental eager
+  loading now raises an error instead of silently executing N+1 queries.
+
+---
+
+## 16. Circuit Breaker & Fault Tolerance
+
+### LLM Provider Circuit Breaker (`core/llm/circuit_breaker.py`)
+
+Per-provider circuit breaker prevents cascading failures when an LLM provider is down.
+
+**States:**
+- **CLOSED** — Normal operation. Calls go through.
+- **OPEN** — Provider failing (5 consecutive failures). Calls rejected immediately → fallback chain.
+- **HALF_OPEN** — Recovery test after 60s timeout. One call allowed to probe.
+
+**Integration:** ModelFactory checks circuit breaker before each LLM call. If circuit is open,
+immediately tries the next provider in the fallback chain. States exposed via `/health` endpoint
+under `circuit_breakers` key.
+
+### Enhanced Health Check
+
+The `/health` endpoint now returns three-tier status:
+
+| Status | Meaning | HTTP Code |
+|--------|---------|-----------|
+| `healthy` | All core + optional services up | 200 |
+| `degraded` | Core services up, optional services (Temporal, KeepSave, LangFuse) down | 200 |
+| `unhealthy` | One or more core services (PostgreSQL, Redis, Kafka) down | 200 |
+
+Response includes `checks` (core), `optional` (integrations), and `circuit_breakers` (LLM providers).
+
+---
+
+## 17. API Security Middleware (`api/middleware.py`)
+
+### Rate Limiting
+
+Sliding window counters in Redis db:1:
+
+| Tier | Limit | Scope |
+|------|-------|-------|
+| Authenticated | 100 req/min | Per user_id |
+| Unauthenticated | 20 req/min | Per IP |
+| Task creation | 10 req/min | Per user_id |
+
+Falls back to allowing requests if Redis is unavailable.
+
+### Prompt Injection Defense
+
+Two-layer defense:
+
+1. **`validate_instruction()`** — Rejects instructions matching 5 regex patterns:
+   - "ignore previous instructions"
+   - "you are now"
+   - "reveal/show system prompt"
+   - Special tokens (`<|...|>`)
+   - Llama tokens (`[INST]`, `<<SYS>>`)
+   - Max 10,000 character length
+
+2. **`sandbox_instruction()`** — Wraps user input with `<user_instruction>` delimiters.
+   System prompts instruct the LLM to treat delimited content as untrusted user input.
+
+### Startup Security Checks
+
+Production deployments blocked if:
+- JWT secret is the default value (`nexus-dev-secret-change-in-production`)
+- No LLM API keys configured (warning only)
+
+### Request Size Limits
+
+- Litestar `request_max_body_size=1_048_576` (1MB)
+- Tool output sanitization: `_sanitize_tool_output()` truncates at 50KB
+
+---
+
 *Last updated: 2026-03-18*
-*Phase: 4 Complete — Multi-tenant SaaS platform with KeepSave integration*
+*Phase: 4 Complete — Phase 5 preparation done (core restructure, performance, security, CI/CD, agent tools)*

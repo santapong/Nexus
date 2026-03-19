@@ -8,8 +8,8 @@ from uuid import uuid4
 import pytest
 
 from nexus.agents.base import AgentBase
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse
 from nexus.db.models import AgentRole
-from nexus.kafka.schemas import AgentCommand, AgentResponse
 
 # ─── Concrete test subclass ─────────────────────────────────────────────────
 

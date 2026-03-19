@@ -10,10 +10,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand
+from nexus.core.kafka.topics import Topics
 from nexus.db.models import AgentRole, EpisodicMemory, LLMUsage, Task, TaskSource, TaskStatus
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentCommand
-from nexus.kafka.topics import Topics
 
 logger = structlog.get_logger()
 
@@ -47,6 +47,12 @@ class TaskController(Controller):
         db_session: AsyncSession,
     ) -> dict[str, str]:
         """Create a new task and publish to task.queue."""
+        from nexus.api.middleware import validate_instruction
+
+        validation = validate_instruction(data.instruction)
+        if not validation.valid:
+            return {"error": validation.error or "Invalid instruction", "status": "rejected"}
+
         trace_id = str(uuid4())
         task = Task(
             trace_id=trace_id,
@@ -249,20 +255,20 @@ class TaskController(Controller):
         subtask_result = await db_session.execute(subtask_stmt)
         subtask_ids = [str(row[0]) for row in subtask_result.all()]
 
-        # Get memories and usage for subtasks too
+        # Batch-fetch memories and usage for all subtasks (fixes N+1 query)
         subtask_memories: list[dict[str, Any]] = []
         subtask_usages: list[dict[str, Any]] = []
-        for sid in subtask_ids:
+        if subtask_ids:
             sub_mem_stmt = (
                 select(EpisodicMemory)
-                .where(EpisodicMemory.task_id == sid)
+                .where(EpisodicMemory.task_id.in_(subtask_ids))
                 .order_by(EpisodicMemory.created_at)
             )
             sub_mem_result = await db_session.execute(sub_mem_stmt)
             for m in sub_mem_result.scalars().all():
                 subtask_memories.append(
                     {
-                        "subtask_id": sid,
+                        "subtask_id": str(m.task_id),
                         "agent_id": m.agent_id,
                         "summary": m.summary,
                         "outcome": m.outcome,
@@ -274,13 +280,15 @@ class TaskController(Controller):
                 )
 
             sub_usage_stmt = (
-                select(LLMUsage).where(LLMUsage.task_id == sid).order_by(LLMUsage.created_at)
+                select(LLMUsage)
+                .where(LLMUsage.task_id.in_(subtask_ids))
+                .order_by(LLMUsage.created_at)
             )
             sub_usage_result = await db_session.execute(sub_usage_stmt)
             for u in sub_usage_result.scalars().all():
                 subtask_usages.append(
                     {
-                        "subtask_id": sid,
+                        "subtask_id": str(u.task_id),
                         "agent_id": u.agent_id,
                         "model_name": u.model_name,
                         "input_tokens": u.input_tokens,

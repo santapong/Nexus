@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import A2ATokenRecord
-from nexus.gateway.auth import (
+from nexus.integrations.a2a.auth import (
     _hash_token,
     create_token,
     invalidate_cache,

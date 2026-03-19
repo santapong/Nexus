@@ -5,7 +5,7 @@ from __future__ import annotations
 import structlog
 from litestar import WebSocket, websocket
 
-from nexus.redis.clients import redis_pubsub
+from nexus.core.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 

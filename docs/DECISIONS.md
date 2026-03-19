@@ -61,6 +61,12 @@
 | ADR-039 | Marketplace rating via incremental average on review | accepted | 2026-03-17 |
 | ADR-040 | LangFuse integration as non-blocking, graceful degradation | accepted | 2026-03-17 |
 | ADR-041 | Per-tenant Agent Cards via query parameter | accepted | 2026-03-17 |
+| ADR-042 | Core/integrations module separation | accepted | 2026-03-18 |
+| ADR-043 | Circuit breaker pattern for LLM providers | accepted | 2026-03-18 |
+| ADR-044 | API rate limiting middleware | accepted | 2026-03-18 |
+| ADR-045 | Prompt injection defense layers | accepted | 2026-03-18 |
+| ADR-046 | Performance indexes strategy | accepted | 2026-03-18 |
+| ADR-047 | LLM-powered agent tools for planning and design | accepted | 2026-03-18 |
 
 ---
 
@@ -1353,11 +1359,131 @@ is never published — but this is the correct behavior (fail early, fail visibl
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-036 -->
+## ADR-042 — Core/integrations module separation
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** The `integrations/` directory mixed core infrastructure (kafka, redis, llm) that the system cannot function without, alongside pluggable external services (keepsave, a2a, temporal, eval) that degrade gracefully. This made the dependency hierarchy unclear and complicated reasoning about system resilience.
+
+### Decision
+
+Create `nexus/core/` for kafka, redis, llm. Keep `nexus/integrations/` for keepsave, a2a, temporal, eval. Core modules are always available; integration modules may be unavailable.
+
+### Consequences
+
+**Positive:**
+- Clear architectural boundary: if it's in `core/`, the system breaks without it. If it's in `integrations/`, the system degrades but continues.
+
+**Negative / tradeoffs:**
+- ~40 files needed import updates.
 
 ---
 
-*Last updated: 2026-03-16*
-*Next ADR ID: ADR-036*
-*Decision count: 32 accepted, 3 superseded*
+## ADR-043 — Circuit breaker pattern for LLM providers
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** LLM providers occasionally go down. Without circuit breakers, agents retry indefinitely, consuming token budgets and blocking tasks. The existing 5-retry with backoff helped for transient errors but not for sustained outages.
+
+### Decision
+
+Implement per-provider circuit breaker in `core/llm/circuit_breaker.py` with 3 states (closed/open/half_open), 5-failure threshold, 60s recovery timeout. Integrate with ModelFactory fallback chains. Expose states via `/health` endpoint.
+
+### Consequences
+
+**Positive:**
+- Fast failure on known-down providers. Automatic recovery testing. Dashboard visibility into provider health.
+
+**Negative / tradeoffs:**
+- No external dependency (stdlib only).
+
+---
+
+## ADR-044 — API rate limiting middleware
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** Only A2A endpoints had rate limiting (per-token via Redis). General API endpoints had no protection against abuse, DoS, or runaway automated clients.
+
+### Decision
+
+Add `api/middleware.py` with sliding window counters in Redis db:1. Three tiers: 100 req/min (authenticated), 20 req/min (unauthenticated by IP), 10 req/min (task creation). Falls back to allowing requests if Redis is unavailable.
+
+### Consequences
+
+**Positive:**
+- Protection against abuse without blocking legitimate use. Graceful degradation on Redis failure. Same sliding window pattern as A2A rate limiter (consistency).
+
+**Negative / tradeoffs:**
+- Additional Redis round-trip per request. Mitigated by pipelining.
+
+---
+
+## ADR-045 — Prompt injection defense layers
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** User task instructions are passed to LLM prompts. Without validation, adversarial inputs could override system prompts, extract agent instructions, or manipulate agent behavior.
+
+### Decision
+
+Two-layer defense: (1) `validate_instruction()` in middleware.py rejects known injection patterns (5 regex patterns) and enforces 10K char limit. (2) `sandbox_instruction()` wraps user input with `<user_instruction>` delimiters so the system prompt can instruct the LLM to treat delimited content as untrusted.
+
+### Consequences
+
+**Positive:**
+- Blocks common injection techniques. No false positives on legitimate instructions in testing.
+
+**Negative / tradeoffs:**
+- Novel attacks may bypass regex — LLM-based detection planned for Phase 5.
+
+---
+
+## ADR-046 — Performance indexes strategy
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** Analytics and task replay endpoints showed increasing latency as data grew. Profiling identified missing composite indexes on frequently queried columns and N+1 query patterns in two endpoints.
+
+### Decision
+
+(1) Migration 005 adds 7 indexes: 6 composite (agent+created on tasks, llm_usage, audit_log, episodic_memory; status+requested on approvals; workspace+created on billing) + 1 partial index on active tasks. (2) Fix N+1 in analytics.py (batch GROUP BY) and tasks.py (batch IN clause). (3) Change all ORM relationship lazy loading from `selectin` to `raise`.
+
+### Consequences
+
+**Positive:**
+- Query performance improves for analytics dashboards and task tracing.
+
+**Negative / tradeoffs:**
+- `lazy="raise"` may require explicit `selectinload()` in new queries — prevents accidental N+1 but requires developer awareness.
+
+---
+
+## ADR-047 — LLM-powered agent tools for planning and design
+
+**Status:** accepted
+**Date:** 2026-03-18
+**Context:** Agents could search, read, write, and execute code but lacked structured planning and design capabilities. Users wanting architectural designs or project plans had to describe requirements in natural language and hope the agent produced structured output.
+
+### Decision
+
+Add 4 LLM-powered tools in `tools/adapter.py`: `tool_create_plan` (project plans with phases/milestones), `tool_design_system` (architecture with Mermaid diagrams), `tool_design_database` (schema with DDL), `tool_design_api` (REST endpoints with schemas). Tools return structured prompts that the agent's LLM processes into rich output. Registered for CEO and Engineer (all 4), Analyst (create_plan only).
+
+### Consequences
+
+**Positive:**
+- Structured output format. Consistent design artifacts.
+
+**Negative / tradeoffs:**
+- Additional LLM token cost per tool call. Read-only tools — no approval required.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-048 -->
+
+---
+
+*Last updated: 2026-03-18*
+*Next ADR ID: ADR-048*
+*Decision count: 38 accepted, 3 superseded*

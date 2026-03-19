@@ -16,6 +16,19 @@ from pathlib import Path
 import httpx
 import structlog
 from sqlalchemy import select
+
+_MAX_TOOL_OUTPUT_SIZE = 50_000  # 50KB max per tool response
+
+
+def _sanitize_tool_output(output: str) -> str:
+    """Truncate tool output if it exceeds the size limit.
+
+    Prevents agents from processing excessively large tool responses
+    that could consume excessive tokens or cause context overflow.
+    """
+    if len(output) > _MAX_TOOL_OUTPUT_SIZE:
+        return output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
+    return output
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import EpisodicMemory, SemanticMemory
@@ -49,7 +62,8 @@ async def tool_web_search(query: str) -> str:
             for topic in data.get("RelatedTopics", [])[:5]:
                 if isinstance(topic, dict) and "Text" in topic:
                     results.append(topic["Text"])
-            return "\n\n".join(results) if results else "No results found."
+            output = "\n\n".join(results) if results else "No results found."
+            return _sanitize_tool_output(output)
     except Exception as exc:
         logger.error("web_search_failed", query=query, error=str(exc))
         return f"Search failed: {exc}"
@@ -86,7 +100,7 @@ async def tool_web_fetch(url: str) -> str:
 
             if len(text) > 10_000:
                 text = text[:10_000] + "\n\n[Content truncated at 10000 characters]"
-            return text
+            return _sanitize_tool_output(text)
     except Exception as exc:
         logger.error("web_fetch_failed", url=url, error=str(exc))
         return f"Fetch failed: {exc}"
@@ -107,7 +121,7 @@ async def tool_file_read(path: str) -> str:
     if not file_path.is_file():
         return f"Error: Not a file: {path}"
     try:
-        return file_path.read_text(encoding="utf-8")
+        return _sanitize_tool_output(file_path.read_text(encoding="utf-8"))
     except Exception as exc:
         return f"Error reading file: {exc}"
 
@@ -140,7 +154,7 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
         output = result.stdout
         if result.stderr:
             output += f"\nSTDERR:\n{result.stderr}"
-        return output or "(no output)"
+        return _sanitize_tool_output(output or "(no output)")
     except subprocess.TimeoutExpired:
         return "Error: Code execution timed out (30s limit)"
     except Exception as exc:
@@ -239,6 +253,150 @@ async def tool_memory_read(
         return f"Memory read failed: {exc}"
 
 
+# ─── LLM-POWERED planning & design tools ─────────────────────────────────────
+
+
+async def tool_create_plan(
+    goal: str,
+    constraints: str = "",
+    num_phases: int = 3,
+) -> str:
+    """Create a structured project plan with phases, milestones, and dependencies.
+
+    Uses the agent's reasoning to break down a goal into actionable phases
+    with concrete tasks, dependencies, and milestones.
+
+    Args:
+        goal: What the project should achieve.
+        constraints: Budget, timeline, tech stack, or other constraints.
+        num_phases: Number of phases to plan (default 3).
+
+    Returns:
+        Structured project plan in markdown with phases, tasks, and milestones.
+    """
+    prompt = f"""Create a detailed project plan for the following goal:
+
+GOAL: {goal}
+
+CONSTRAINTS: {constraints or 'None specified'}
+
+Structure the plan as {num_phases} phases. For each phase include:
+1. Phase name and objective (1 sentence)
+2. Tasks (numbered, with estimated effort: S/M/L)
+3. Dependencies (which tasks depend on others)
+4. Milestone / Definition of Done
+5. Risks and mitigations
+
+Format as clean markdown. Be specific and actionable — no vague tasks."""
+
+    return _sanitize_tool_output(prompt)
+
+
+async def tool_design_system(
+    requirements: str,
+    components: str = "",
+    style: str = "microservices",
+) -> str:
+    """Design a system architecture with components, interactions, and data flow.
+
+    Produces a Mermaid diagram and component descriptions for a system design.
+
+    Args:
+        requirements: What the system needs to do (functional requirements).
+        components: Known components or services to include.
+        style: Architecture style — microservices, monolith, serverless, event-driven.
+
+    Returns:
+        System design with Mermaid diagram and component descriptions.
+    """
+    prompt = f"""Design a system architecture for these requirements:
+
+REQUIREMENTS: {requirements}
+
+KNOWN COMPONENTS: {components or 'None — design from scratch'}
+ARCHITECTURE STYLE: {style}
+
+Provide:
+1. A Mermaid C4 or flowchart diagram showing all components and their interactions
+2. Component table: name, responsibility, technology, scaling strategy
+3. Data flow description for the primary use case
+4. API boundaries between components
+5. Key design decisions and trade-offs
+
+Use ```mermaid code blocks for diagrams."""
+
+    return _sanitize_tool_output(prompt)
+
+
+async def tool_design_database(
+    entities: str,
+    relationships: str = "",
+    database_type: str = "postgresql",
+) -> str:
+    """Design a database schema with tables, columns, indexes, and relationships.
+
+    Produces an ER diagram in Mermaid and SQL DDL for the schema.
+
+    Args:
+        entities: Business entities to model (e.g., 'users, orders, products').
+        relationships: Known relationships (e.g., 'user has many orders').
+        database_type: Target database — postgresql, mysql, mongodb.
+
+    Returns:
+        Database design with ER diagram, DDL, and index recommendations.
+    """
+    prompt = f"""Design a database schema for the following entities:
+
+ENTITIES: {entities}
+RELATIONSHIPS: {relationships or 'Infer from entity names'}
+DATABASE: {database_type}
+
+Provide:
+1. Mermaid ER diagram showing all tables and relationships
+2. SQL DDL for each table (CREATE TABLE with types, constraints, defaults)
+3. Index recommendations with rationale
+4. Key design decisions (normalization level, JSON columns, etc.)
+
+Use ```mermaid code blocks for diagrams and ```sql for DDL."""
+
+    return _sanitize_tool_output(prompt)
+
+
+async def tool_design_api(
+    resources: str,
+    operations: str = "",
+    auth_method: str = "bearer",
+) -> str:
+    """Design REST API endpoints with request/response schemas.
+
+    Produces an OpenAPI-style specification for the API design.
+
+    Args:
+        resources: API resources to design (e.g., 'users, tasks, projects').
+        operations: Specific operations needed (e.g., 'bulk create, search, export').
+        auth_method: Authentication method — bearer, api_key, oauth2.
+
+    Returns:
+        API design with endpoints, request/response schemas, and error codes.
+    """
+    prompt = f"""Design a REST API for these resources:
+
+RESOURCES: {resources}
+OPERATIONS: {operations or 'Standard CRUD + any obvious operations'}
+AUTH: {auth_method}
+
+Provide:
+1. Endpoint table: method, path, description, auth required
+2. Request/response schemas for each endpoint (JSON examples)
+3. Error response format and common error codes
+4. Pagination strategy for list endpoints
+5. Rate limiting recommendations
+
+Follow REST best practices. Use consistent naming conventions."""
+
+    return _sanitize_tool_output(prompt)
+
+
 # ─── IRREVERSIBLE tools (require human approval) ─────────────────────────────
 # Approval is enforced by the agent guard chain, not in these functions.
 # These are only called AFTER approval has been granted.
@@ -297,7 +455,7 @@ async def tool_hire_external_agent(
     Returns:
         The external agent's result as formatted text.
     """
-    from nexus.gateway.outbound import hire_external_agent
+    from nexus.integrations.a2a.outbound import hire_external_agent
 
     try:
         result = await hire_external_agent(

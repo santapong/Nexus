@@ -11,7 +11,7 @@ from typing import Any
 
 import structlog
 
-from nexus.eval.langfuse_client import (
+from nexus.integrations.eval.langfuse_client import (
     trace_eval_score,
     trace_llm_call,
     trace_task_execution,

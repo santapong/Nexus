@@ -23,18 +23,18 @@ from litestar.response import Stream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.kafka.producer import publish
+from nexus.core.kafka.schemas import AgentCommand
+from nexus.core.kafka.topics import Topics
+from nexus.core.redis.clients import redis_pubsub
 from nexus.db.models import Task, TaskSource, TaskStatus
-from nexus.gateway.auth import validate_token
-from nexus.gateway.rate_limiter import check_rate_limit
-from nexus.gateway.schemas import (
+from nexus.integrations.a2a.auth import validate_token
+from nexus.integrations.a2a.rate_limiter import check_rate_limit
+from nexus.integrations.a2a.schemas import (
     A2ATaskRequest,
     A2ATaskResponse,
     AgentCard,
 )
-from nexus.kafka.producer import publish
-from nexus.kafka.schemas import AgentCommand
-from nexus.kafka.topics import Topics
-from nexus.redis.clients import redis_pubsub
 
 logger = structlog.get_logger()
 
@@ -131,7 +131,7 @@ class A2AGatewayController(Controller):
             raise NotAuthorizedException(detail=error)
 
         # Rate limiting
-        from nexus.gateway.auth import _hash_token
+        from nexus.integrations.a2a.auth import _hash_token
 
         allowed, _remaining = await check_rate_limit(_hash_token(token), rpm)
         if not allowed:

@@ -16,8 +16,8 @@ import structlog
 from sqlalchemy import select
 
 from nexus.db.models import Agent, EvalResult, Task, TaskStatus
-from nexus.eval.schemas import EvalScoreResult, EvalSummary
-from nexus.eval.scorer import score_output
+from nexus.integrations.eval.schemas import EvalScoreResult, EvalSummary
+from nexus.integrations.eval.scorer import score_output
 
 logger = structlog.get_logger()
 
