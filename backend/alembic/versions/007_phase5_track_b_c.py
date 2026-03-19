@@ -35,7 +35,7 @@ def upgrade() -> None:
     op.create_table(
         "task_schedules",
         sa.Column("id", sa.String(36), primary_key=True),
-        sa.Column("workspace_id", sa.String(36), sa.ForeignKey("workspaces.id"), nullable=False),
+        sa.Column("workspace_id", sa.String(36), sa.ForeignKey("workspaces.id"), nullable=True),
         sa.Column("name", sa.String(200), nullable=False),
         sa.Column("cron_expression", sa.String(100), nullable=False),
         sa.Column("instruction", sa.Text, nullable=False),

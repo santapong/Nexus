@@ -9,7 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from nexus.core.kafka.topics import Topics
-from nexus.db.models import Agent, AgentRole, Prompt, PromptBenchmark
+from nexus.core.scheduler import calculate_next_run
+from nexus.db.models import Agent, AgentRole, Prompt, PromptBenchmark, TaskSchedule
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -846,6 +847,7 @@ async def seed() -> None:
         await _seed_agents(session)
         await _seed_prompts(session)
         await _seed_benchmarks(session)
+        await _seed_schedules(session)
         await session.commit()
 
     await engine.dispose()
@@ -915,6 +917,74 @@ async def _seed_benchmarks(session: AsyncSession) -> None:
             role=bench_data["agent_role"],
             input_preview=str(bench_data["input"])[:50],
         )
+
+
+# ─── Schedule seed data ──────────────────────────────────────────────────────
+
+SCHEDULES_SEED: list[dict[str, object]] = [
+    {
+        "name": "Weekly Competitive Intelligence Report",
+        "cron_expression": "0 9 * * 1",  # Every Monday at 9:00 AM
+        "instruction": (
+            "Research the latest developments, product launches, and strategic moves "
+            "from our top 5 competitors this past week. Compile a competitive intelligence "
+            "report with key findings, market trends, and recommended actions."
+        ),
+        "target_role": "analyst",
+        "timezone": "UTC",
+    },
+    {
+        "name": "Daily Task Summary Digest",
+        "cron_expression": "0 17 * * 1-5",  # Mon-Fri at 5:00 PM
+        "instruction": (
+            "Review all tasks completed today across all agents. Write a concise daily "
+            "summary highlighting key accomplishments, any issues encountered, and "
+            "recommendations for tomorrow. Format as a brief executive update."
+        ),
+        "target_role": "writer",
+        "timezone": "UTC",
+    },
+    {
+        "name": "Monthly Code Quality Audit",
+        "cron_expression": "0 10 1 * *",  # 1st of each month at 10:00 AM
+        "instruction": (
+            "Perform a code quality audit of the NEXUS codebase. Review recent changes "
+            "for potential issues, check test coverage, identify technical debt, and "
+            "suggest improvements. Produce a structured report with priority rankings."
+        ),
+        "target_role": "engineer",
+        "timezone": "UTC",
+    },
+]
+
+
+async def _seed_schedules(session: AsyncSession) -> None:
+    for sched_data in SCHEDULES_SEED:
+        name = str(sched_data["name"])
+        stmt = select(TaskSchedule).where(TaskSchedule.name == name)
+        result = await session.execute(stmt)
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            logger.info("schedule_already_exists", name=name)
+            continue
+
+        cron_expr = str(sched_data["cron_expression"])
+        tz = str(sched_data.get("timezone", "UTC"))
+        next_run = calculate_next_run(cron_expr, tz)
+
+        schedule = TaskSchedule(
+            name=name,
+            cron_expression=cron_expr,
+            instruction=str(sched_data["instruction"]),
+            target_role=str(sched_data["target_role"]),
+            timezone=tz,
+            is_active=True,
+            next_run_at=next_run,
+            workspace_id=None,  # Global schedules (no workspace scope)
+        )
+        session.add(schedule)
+        logger.info("schedule_created", name=name, next_run_at=next_run.isoformat())
 
 
 if __name__ == "__main__":

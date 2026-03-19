@@ -451,8 +451,8 @@ class WebhookSubscription(UUIDAuditBase):
 class TaskSchedule(UUIDAuditBase):
     __tablename__ = "task_schedules"
 
-    workspace_id: Mapped[str] = mapped_column(
-        ForeignKey("workspaces.id"), nullable=False, index=True
+    workspace_id: Mapped[str | None] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=True, index=True
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     cron_expression: Mapped[str] = mapped_column(String(100), nullable=False)

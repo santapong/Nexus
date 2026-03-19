@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from nexus.agents.factory import build_agent
 from nexus.agents.health_monitor import run_health_monitor
 from nexus.core.kafka.result_consumer import run_result_consumer
+from nexus.core.scheduler import run_scheduler_tick
 from nexus.db.models import Agent, AgentRole
 from nexus.settings import settings
 
@@ -92,8 +93,42 @@ async def start_all_agents(
     tasks.append(health_task)
     logger.info("health_monitor_task_created")
 
+    # Start the scheduler — checks for due scheduled tasks periodically
+    scheduler_task = asyncio.create_task(
+        _run_scheduler_loop(db_session_factory),
+        name="scheduler",
+    )
+    tasks.append(scheduler_task)
+    logger.info("scheduler_task_created")
+
     logger.info("all_agents_running", count=len(tasks))
     return tasks
+
+
+async def _run_scheduler_loop(
+    db_session_factory: async_sessionmaker[Any],
+) -> None:
+    """Background loop that checks for due scheduled tasks.
+
+    Runs every `scheduler_check_interval_seconds` (default 60s).
+    Creates tasks for schedules whose next_run_at has passed.
+    """
+    interval = settings.scheduler_check_interval_seconds
+    logger.info("scheduler_loop_started", interval_seconds=interval)
+
+    while True:
+        try:
+            async with db_session_factory() as session:
+                created = await run_scheduler_tick(session)
+                if created > 0:
+                    logger.info("scheduler_tick_tasks_created", count=created)
+        except Exception as exc:
+            logger.error(
+                "scheduler_tick_failed",
+                error=str(exc),
+                exc_info=True,
+            )
+        await asyncio.sleep(interval)
 
 
 async def main() -> None:
