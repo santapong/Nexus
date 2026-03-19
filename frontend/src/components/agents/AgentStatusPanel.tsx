@@ -1,9 +1,22 @@
 import { useAgents } from '../../hooks/useAgents'
+import { Skeleton } from '../ui/skeleton'
 
 export function AgentStatusPanel() {
   const { data: agents = [], isLoading } = useAgents()
 
-  if (isLoading) return null
+  if (isLoading) {
+    return (
+      <section className="bg-gray-900 rounded-lg p-5">
+        <h2 className="text-lg font-semibold mb-3 text-white">Agents</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="bg-gray-900 rounded-lg p-5">

@@ -1,4 +1,5 @@
 import { useAgents } from '../../hooks/useAgents'
+import { Skeleton } from '../ui/skeleton'
 
 const ROLE_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
   ceo: { emoji: '👔', color: 'border-amber-500', label: 'Chief Executive' },
@@ -14,8 +15,15 @@ export function AgentOrgChart() {
 
   if (isLoading) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center text-gray-500 text-sm animate-pulse">
-        Loading organization chart...
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-32 w-48" />
+          <div className="flex gap-4">
+            <Skeleton className="h-28 w-36" />
+            <Skeleton className="h-28 w-36" />
+            <Skeleton className="h-28 w-36" />
+          </div>
+        </div>
       </div>
     )
   }

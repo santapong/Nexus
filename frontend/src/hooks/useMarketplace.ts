@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { api } from '../api/client'
 import type { CreateListingRequest } from '../types'
 
@@ -14,7 +15,13 @@ export function useCreateListing() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateListingRequest) => api.createListing(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+      toast.success('Listing created')
+    },
+    onError: () => {
+      toast.error('Failed to create listing')
+    },
   })
 }
 
@@ -22,7 +29,13 @@ export function usePublishListing() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => api.publishListing(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+      toast.success('Listing published')
+    },
+    onError: () => {
+      toast.error('Failed to publish listing')
+    },
   })
 }
 
@@ -38,6 +51,12 @@ export function useSubmitReview() {
       rating: number
       comment?: string
     }) => api.submitReview(listingId, rating, comment),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+      toast.success('Review submitted')
+    },
+    onError: () => {
+      toast.error('Failed to submit review')
+    },
   })
 }

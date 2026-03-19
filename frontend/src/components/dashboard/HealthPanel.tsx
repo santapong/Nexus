@@ -1,4 +1,5 @@
 import { useHealth } from '../../hooks/useHealth'
+import { Skeleton } from '../ui/skeleton'
 
 export function HealthPanel() {
   const { data: health, isLoading, error } = useHealth()
@@ -6,7 +7,14 @@ export function HealthPanel() {
   return (
     <section className="bg-gray-900 rounded-lg p-5">
       <h2 className="text-lg font-semibold mb-3 text-white">System Health</h2>
-      {isLoading && <p className="text-gray-400 text-sm">Checking...</p>}
+      {isLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      )}
       {error && <p className="text-red-400 text-sm">Connection failed</p>}
       {health && (
         <div>

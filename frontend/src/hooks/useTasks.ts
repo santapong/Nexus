@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { api } from '../api/client'
 
 export function useTasks() {
@@ -15,6 +16,10 @@ export function useCreateTask() {
     mutationFn: (instruction: string) => api.createTask(instruction),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      toast.success('Task submitted successfully')
+    },
+    onError: () => {
+      toast.error('Failed to submit task')
     },
   })
 }
