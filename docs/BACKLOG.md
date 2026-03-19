@@ -23,6 +23,91 @@
 
 <!-- New items go here, newest first -->
 
+### BACKLOG-051 — Agent RLHF-lite feedback loop
+**Suggested phase:** Phase 5 — Track B
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** IDEA-002, Phase 5 planning
+**Description:** Feed human approval/rejection signals from QA reviews and approval gates
+back into agent semantic memory as preference data. Track approval rates per agent per task
+type. Over time agents learn what "good" looks like for this specific user/company without
+retraining the underlying LLM. Surface preference trends in dashboard.
+
+---
+
+### BACKLOG-050 — Multi-modal agent capabilities (images, PDFs, audio)
+**Suggested phase:** Phase 5 — Track B
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** IDEA-007, Phase 5 planning
+**Description:** Extend agents to process images, PDFs, and audio using Claude/Gemini
+multi-modal support. Analyst analyzes charts and data visualizations. Engineer reviews
+UI screenshots for bugs. Writer generates image descriptions. New `tool_analyze_image`
+in adapter.py. Update registry to grant multi-modal tools to relevant agents.
+
+---
+
+### BACKLOG-049 — Scheduled & recurring tasks via Temporal
+**Suggested phase:** Phase 5 — Track B
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** IDEA-009, Phase 5 planning
+**Description:** Cron-like scheduler for recurring tasks using Temporal (already deployed
+in Phase 4). New `task_schedules` table with cron expression, next_run_at, enabled flag.
+Temporal workflow handles missed runs and retry. Dashboard UI for schedule management.
+Example: "Every Monday at 9am, compile a competitive intelligence report."
+
+---
+
+### BACKLOG-048 — Agent fine-tuning pipeline (episodic → dataset → Ollama)
+**Suggested phase:** Phase 5 — Track B
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** IDEA-004, Phase 5 planning
+**Description:** Use accumulated episodic memory and eval scores to create fine-tuning
+datasets per agent role. Export high-scoring episodes as training examples. Fine-tune
+smaller models (Llama 8B / Mistral 7B) and serve via Ollama for zero API cost. New
+`fine_tuning_jobs` table tracking dataset generation, training status, and benchmark
+results. Goal: fine-tuned model matches ≥80% of cloud model quality on benchmarks.
+
+---
+
+### BACKLOG-047 — OpenTelemetry distributed tracing
+**Suggested phase:** Phase 5 — Track C
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** Phase 5 planning — observability upgrade
+**Description:** Replace structured-logs-only observability with OpenTelemetry traces
+spanning Kafka → agent → tools → LLM. Flame graphs for task execution. Trace context
+propagation via task_id/trace_id. Export to Jaeger or Grafana Tempo. Prerequisite for
+debugging at scale in production multi-tenant environment.
+
+---
+
+### BACKLOG-046 — Secrets vault migration (SOPS or HashiCorp Vault)
+**Suggested phase:** Phase 5 — Track A
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** BACKLOG-007, Phase 5 planning
+**Description:** Replace `.env` file based secrets with proper secrets management. Options:
+SOPS (simpler, git-encrypted) or HashiCorp Vault (more features, auto-rotation). Per-
+workspace secret scoping for multi-tenant. Auto-rotation for LLM API keys. Required
+before production deployment with real customer data.
+
+---
+
+### BACKLOG-045 — LLM-based prompt injection detection
+**Suggested phase:** Phase 5 — Track A
+**Added by:** claude_code
+**Date:** 2026-03-19
+**Source:** Risk 17 residual, CLAUDE.md §23
+**Description:** Current defense uses 5 regex patterns (middleware.py) which cannot catch
+novel injection techniques. Add an LLM-based classifier (small model or Haiku/Flash API
+call) that runs on every task instruction before execution. Separate from the task LLM to
+prevent recursive manipulation. Target: block 95%+ of OWASP prompt injection test cases.
+
+---
+
 ### BACKLOG-044 — Evaluate Agent Network Protocol (ANP) for decentralized federation
 **Suggested phase:** Phase 5
 **Added by:** claude_code
@@ -556,5 +641,6 @@ annotations to the MCP package before Phase 1 adapter work begins.
 ---
 
 *Last updated: 2026-03-19*
-*Next item ID: BACKLOG-045*
+*Next item ID: BACKLOG-052*
 *Phase 4 items (029-033) all resolved.*
+*Phase 5 items: BACKLOG-038–041, 043–051 + promoted BACKLOG-013,014,022,023,024,035,036,037.*

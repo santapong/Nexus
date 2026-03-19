@@ -8,9 +8,10 @@
 
 ---
 
-## Phase 5 Core Ideas (Post Phase 4)
+## Phase 5 Core Ideas — Assigned to Tracks
 
 ### IDEA-016 — Row-Level Security Enforcement in PostgreSQL
+**Status:** Assigned → Phase 5 Track A (BACKLOG-038)
 Full PostgreSQL RLS policies per workspace. Every SELECT automatically filtered by
 workspace_id via `SET LOCAL nexus.workspace_id`. Zero-trust data isolation at the database
 layer. Required before production multi-tenant deployment.
@@ -18,20 +19,58 @@ layer. Required before production multi-tenant deployment.
 ---
 
 ### IDEA-017 — Stripe Payment Integration for Marketplace
+**Status:** Assigned → Phase 5 Track A (BACKLOG-040)
 Real payment processing for cross-company A2A task billing. Stripe Connect for marketplace
 payouts to listing owners. Automatic invoice settlement. Escrow for disputed tasks.
 
 ---
 
 ### IDEA-018 — OAuth2 / SSO Integration
+**Status:** Assigned → Phase 5 Track A (BACKLOG-039)
 Replace JWT-only auth with OAuth2 providers (Google, GitHub, Microsoft). SAML for enterprise.
 Per-workspace SSO configuration. Required for enterprise adoption.
 
 ---
 
 ### IDEA-019 — Horizontal Auto-Scaling with Pod Autoscaler
+**Status:** Assigned → Phase 5 Track C (BACKLOG-047 area)
 Kubernetes HPA for backend pods based on Kafka consumer lag metrics. Scale agents independently
 based on queue depth per topic. Zero-downtime deployment with rolling updates.
+
+---
+
+### IDEA-020 — LLM-Based Prompt Injection Detection
+**Status:** NEW → Phase 5 Track A (BACKLOG-045)
+**Added:** 2026-03-19
+Move beyond regex-only defense. Run a small classifier model (or Haiku/Flash API call) on
+every task instruction before execution. Separate from the task-executing LLM to avoid
+recursive manipulation. Target: 95%+ block rate on OWASP prompt injection test cases.
+
+---
+
+### IDEA-021 — OpenTelemetry Distributed Tracing
+**Status:** NEW → Phase 5 Track C (BACKLOG-047)
+**Added:** 2026-03-19
+Replace structured-logs-only observability with proper distributed traces across Kafka →
+agent → tools → LLM. Flame graphs for task execution. Export to Jaeger or Grafana Tempo.
+Prerequisite for debugging production multi-tenant at scale.
+
+---
+
+### IDEA-022 — Secrets Vault Migration (SOPS / HashiCorp Vault)
+**Status:** NEW → Phase 5 Track A (BACKLOG-046)
+**Added:** 2026-03-19
+Replace `.env` + KeepSave with proper secrets management. Auto-rotation for LLM API keys.
+Per-workspace secret scoping. Required for enterprise multi-tenant with real customer data.
+
+---
+
+### IDEA-023 — Webhook Notifications for External Integrations
+**Status:** Promoted from BACKLOG-036 → Phase 5 Track A
+**Added:** 2026-03-19
+Users register webhook URLs for task completion/failure/approval events. Retry with
+exponential backoff. Slack/Discord integration templates. Simple but high-value for
+integrating NEXUS into existing workflows.
 
 ---
 
@@ -49,6 +88,7 @@ from a preset library or create custom ones.
 ---
 
 ### IDEA-002 — Agent Learning from Human Feedback (RLHF-lite)
+**Status:** Assigned → Phase 5 Track B (BACKLOG-051)
 
 When humans approve or reject agent outputs (QA reviews, approval gates), feed that
 signal back into the agent's semantic memory as preference data. Over time, agents
@@ -69,6 +109,7 @@ decomposition logic but with a visual editor. Exports to a workflow JSON spec.
 ---
 
 ### IDEA-004 — Agent Specialization via Fine-Tuning
+**Status:** Assigned → Phase 5 Track B (BACKLOG-048)
 
 Use collected episodic memory and eval scores to create fine-tuning datasets per agent
 role. Fine-tune smaller models (e.g., Llama 8B) to match the behavior of larger models
@@ -99,6 +140,7 @@ standup. Add ability for humans to interject mid-conversation.
 ---
 
 ### IDEA-007 — Multi-Modal Agent Capabilities
+**Status:** Assigned → Phase 5 Track B (BACKLOG-050)
 
 Extend agents to handle images, PDFs, audio, and video. Analyst can analyze charts.
 Engineer can review screenshots of UI bugs. Writer can generate image descriptions.
@@ -120,6 +162,7 @@ researched last week?"
 ---
 
 ### IDEA-009 — Scheduled & Recurring Tasks
+**Status:** Assigned → Phase 5 Track B (BACKLOG-049)
 
 Cron-like scheduler for recurring tasks. "Every Monday, have the Analyst compile a
 competitive intelligence report." "Every day at 5pm, have the Writer draft a standup
@@ -184,5 +227,5 @@ preserving aggregation. Opt-in network effect.
 
 ---
 
-*Last updated: 2026-03-17*
+*Last updated: 2026-03-19*
 *Owner: NEXUS Project*
