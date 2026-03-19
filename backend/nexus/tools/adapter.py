@@ -16,6 +16,11 @@ from pathlib import Path
 import httpx
 import structlog
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from nexus.db.models import EpisodicMemory, SemanticMemory
+
+logger = structlog.get_logger()
 
 _MAX_TOOL_OUTPUT_SIZE = 50_000  # 50KB max per tool response
 
@@ -29,11 +34,6 @@ def _sanitize_tool_output(output: str) -> str:
     if len(output) > _MAX_TOOL_OUTPUT_SIZE:
         return output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
     return output
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from nexus.db.models import EpisodicMemory, SemanticMemory
-
-logger = structlog.get_logger()
 
 
 # ─── READ-ONLY tools (no approval needed) ────────────────────────────────────

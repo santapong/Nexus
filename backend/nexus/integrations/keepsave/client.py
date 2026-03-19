@@ -220,7 +220,7 @@ class KeepSaveClient:
             },
             timeout=60.0,
         )
-        if "error" in result and result["error"]:
+        if result.get("error"):
             return {"error": result["error"].get("message", str(result["error"]))}
         return result.get("result", result)
 
@@ -248,7 +248,7 @@ _client: KeepSaveClient | None = None
 
 def get_keepsave_client() -> KeepSaveClient:
     """Get or create the singleton KeepSave client."""
-    global _client  # noqa: PLW0603
+    global _client
     if _client is None:
         _client = KeepSaveClient()
     return _client

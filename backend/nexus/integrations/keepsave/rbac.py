@@ -180,7 +180,7 @@ _ROLE_PROMOTE_TARGETS: dict[AgentRole, set[str]] = {
 # ── RBAC enforcement functions ──────────────────────────────────────────────
 
 
-class KeepSaveAccessDenied(Exception):
+class KeepSaveAccessDeniedError(Exception):
     """Raised when an agent role lacks permission for a KeepSave operation."""
 
     def __init__(self, role: AgentRole, operation: str, detail: str = "") -> None:
@@ -197,7 +197,7 @@ def check_operation(role: AgentRole, operation: KeepSaveOperation) -> None:
     """Check if a role is allowed to perform a KeepSave operation.
 
     Raises:
-        KeepSaveAccessDenied: If the role lacks permission.
+        KeepSaveAccessDeniedError: If the role lacks permission.
     """
     allowed = _ROLE_OPERATIONS.get(role, set())
     if operation not in allowed:
@@ -206,27 +206,27 @@ def check_operation(role: AgentRole, operation: KeepSaveOperation) -> None:
             role=role,
             operation=operation,
         )
-        raise KeepSaveAccessDenied(role, operation)
+        raise KeepSaveAccessDeniedError(role, operation)
 
 
 def check_secret_read(role: AgentRole, secret_key: str) -> None:
     """Check if a role can read a specific secret's metadata.
 
     Raises:
-        KeepSaveAccessDenied: If the role lacks read access to this secret's scope.
+        KeepSaveAccessDeniedError: If the role lacks read access to this secret's scope.
     """
     scope = _classify_secret(secret_key)
     if scope is None:
         # Unclassified secrets: only CEO can access
         if role != AgentRole.CEO:
-            raise KeepSaveAccessDenied(
+            raise KeepSaveAccessDeniedError(
                 role, f"read secret '{secret_key}'", "unclassified secret — CEO only"
             )
         return
 
     allowed = _ROLE_READ_SCOPES.get(role, set())
     if scope not in allowed:
-        raise KeepSaveAccessDenied(
+        raise KeepSaveAccessDeniedError(
             role, f"read secret '{secret_key}'", f"scope '{scope}' not in read permissions"
         )
 
@@ -235,19 +235,19 @@ def check_secret_write(role: AgentRole, secret_key: str) -> None:
     """Check if a role can modify a specific secret.
 
     Raises:
-        KeepSaveAccessDenied: If the role lacks write access to this secret's scope.
+        KeepSaveAccessDeniedError: If the role lacks write access to this secret's scope.
     """
     scope = _classify_secret(secret_key)
     if scope is None:
         if role != AgentRole.CEO:
-            raise KeepSaveAccessDenied(
+            raise KeepSaveAccessDeniedError(
                 role, f"write secret '{secret_key}'", "unclassified secret — CEO only"
             )
         return
 
     allowed = _ROLE_WRITE_SCOPES.get(role, set())
     if scope not in allowed:
-        raise KeepSaveAccessDenied(
+        raise KeepSaveAccessDeniedError(
             role, f"write secret '{secret_key}'", f"scope '{scope}' not in write permissions"
         )
 
@@ -256,11 +256,11 @@ def check_promote_target(role: AgentRole, target_environment: str) -> None:
     """Check if a role can promote to a target environment.
 
     Raises:
-        KeepSaveAccessDenied: If the role cannot promote to this environment.
+        KeepSaveAccessDeniedError: If the role cannot promote to this environment.
     """
     allowed = _ROLE_PROMOTE_TARGETS.get(role, set())
     if target_environment.lower() not in allowed:
-        raise KeepSaveAccessDenied(
+        raise KeepSaveAccessDeniedError(
             role, f"promote to {target_environment}", "target environment not allowed"
         )
 
