@@ -99,9 +99,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 4 build | ✅ Complete — multi-tenant, Temporal, marketplace, billing |
 | Phase 5 prep | ✅ Complete — core restructure, performance, security, CI/CD, agent tools |
 
-**Current phase:** Phase 4 COMPLETE — Multi-tenant SaaS platform ready. Phase 5 preparation done.
+**Current phase:** Phase 5 IN PROGRESS — Production hardening, platform intelligence, federation.
 
-**Next action:** Phase 5 — Advanced features, federation, fine-tuning.
+**Next action:** Phase 5, Track A — Production-ready SaaS (RLS, OAuth2, Stripe, injection defense).
 
 ---
 
@@ -1648,6 +1648,170 @@ Not starting until Phase 3 Definition of Done is fully met.
 - [x] LangFuse or Braintrust for eval tracking
 - [x] Kubernetes deployment manifests
 
+### Phase 5 — Production SaaS, Platform Intelligence, Federation (Weeks 13–20)
+
+Not starting until Phase 4 Definition of Done is fully met.
+
+Goal: make NEXUS production-ready for real paying users, add intelligence features
+that differentiate it from raw LLM wrappers, and enable multi-NEXUS federation.
+
+**Three parallel tracks:**
+
+#### Track A — Production-Ready SaaS (Weeks 1–4) — BLOCKING for launch
+
+Must-haves before any real user touches the system.
+
+**Week 1–2 — Data isolation + auth:**
+- [ ] PostgreSQL row-level security (RLS) per workspace — every SELECT filtered by
+  `workspace_id` via `SET LOCAL nexus.workspace_id`. Zero-trust tenant isolation.
+  Migration 006: RLS policies on all workspace-scoped tables.
+- [ ] OAuth2/OIDC integration (Google, GitHub, Microsoft) — add alongside JWT.
+  Per-workspace SSO configuration. Token refresh flow. Session management.
+- [ ] Secrets vault upgrade — migrate from `.env` to proper secrets management
+  (SOPS or HashiCorp Vault). Auto-rotation for LLM API keys. Per-workspace secret scoping.
+
+**Week 3–4 — Billing + security:**
+- [ ] Stripe billing integration — usage-based pricing per task, per-model token metering.
+  Stripe Connect for marketplace payouts. Invoice generation + payment webhooks.
+  Replace internal `billing_records` with Stripe-backed records.
+- [ ] LLM-based prompt injection detection — run a small classifier model on every task
+  instruction, separate from the task-executing LLM. Replaces regex-only defense (Risk 17).
+- [ ] Audit log retention + archival — 30-day hot storage, archive to cold storage.
+  Table partitioning by date. Periodic cleanup job.
+- [ ] Webhook notifications — users register URLs for task completion/failure/approval
+  events. Retry with exponential backoff. Slack/Discord integration templates.
+
+**Track A gate — production readiness test:**
+- [ ] Create tenant A and tenant B. Verify tenant A cannot access tenant B's data at
+  the SQL level (not just application layer).
+- [ ] OAuth2 login flow works end-to-end with at least one provider.
+- [ ] Stripe test-mode payment completes for a task.
+- [ ] Injection classifier blocks 95%+ of OWASP prompt injection test cases.
+
+#### Track B — Platform Intelligence (Weeks 3–6)
+
+Features that make NEXUS smarter over time — the competitive moat.
+
+**Week 3–4 — Scheduling + multi-modal:**
+- [ ] Scheduled & recurring tasks — cron-like scheduler via Temporal. "Every Monday,
+  compile a competitive intelligence report." Durable scheduling with missed-run handling.
+  New `task_schedules` table + API endpoints + dashboard UI.
+- [ ] Multi-modal agent capabilities — extend agents to handle images, PDFs, audio.
+  Analyst analyzes charts. Engineer reviews UI screenshots. Writer describes images.
+  Uses Claude/Gemini multi-modal support. Update adapter.py with `tool_analyze_image`.
+
+**Week 5–6 — Learning + optimization:**
+- [ ] Agent RLHF-lite — feed human approval/rejection signals back into semantic memory
+  as preference data. Agents learn what "good" looks like for this specific user/company.
+  Track approval rates per agent per task type. Surface trends in dashboard.
+- [ ] Agent fine-tuning pipeline — use episodic memory + eval scores to create fine-tuning
+  datasets per role. Fine-tune smaller models (Llama 8B) via Ollama for zero API cost.
+  New `fine_tuning_jobs` table + pipeline scripts.
+- [ ] Model performance benchmarking — run `prompt_benchmarks` against different models.
+  Compare quality/cost/speed per role. Recommend optimal model assignments. New
+  `model_benchmarks` table.
+- [ ] Per-agent cost alerts — configurable per-agent daily budget limits (not just per-task).
+  Dashboard shows cost trends per agent over time. Alert via webhook when threshold hit.
+- [ ] Provider health monitoring — track latency, error rates, availability per provider.
+  Dashboard status page. Feeds into automatic fallback decisions.
+
+**Track B gate — intelligence validation:**
+- [ ] A scheduled weekly task runs autonomously via Temporal for 2+ weeks.
+- [ ] An agent processes an image-based task (screenshot analysis or chart reading).
+- [ ] RLHF-lite shows measurable preference drift after 20+ human feedback signals.
+- [ ] Fine-tuned Ollama model passes benchmark at ≥80% of cloud model quality.
+
+#### Track C — Federation & Ecosystem (Weeks 5–8)
+
+Network effects — each NEXUS deployment makes the ecosystem more valuable.
+
+**Week 5–6 — Infrastructure for scale:**
+- [ ] Horizontal auto-scaling — K8s HPA based on Kafka consumer lag metrics. Scale agents
+  independently based on queue depth per topic. Zero-downtime rolling updates.
+- [ ] OpenTelemetry distributed tracing — replace structured-logs-only observability with
+  proper traces across Kafka → agent → tools → LLM. Flame graphs for task execution.
+- [ ] QA multi-round rework — configurable `max_rework_rounds` (default 2). Include
+  previous QA feedback in each rework instruction. Guard against unbounded loops.
+
+**Week 7–8 — Federation:**
+- [ ] Agent federation protocol — multi-NEXUS discovery and interop. Trust registry for
+  verified NEXUS instances. Shared billing settlement. Cross-instance task routing.
+- [ ] Evaluate ANP (Agent Network Protocol) for decentralized identity (W3C DID) and
+  discovery. Adopt if stable; design NEXUS-specific protocol if not.
+- [ ] Evaluate AP2 (Agent Payments Protocol) for standardized cross-company billing.
+  Adopt if mature and multi-provider; extend Stripe integration if not.
+- [ ] Plugin system for custom MCP tool providers — users register Python packages or
+  HTTP endpoints. Plugin manifest defines tools, parameters, approval requirements.
+  Hot-reload without restart.
+
+**Track C gate — federation test:**
+- [ ] Two NEXUS instances discover each other and complete a cross-instance task.
+- [ ] Auto-scaling responds to Kafka lag spike within 60 seconds.
+- [ ] Plugin tool is registered and used by an agent in a real task.
+
+#### Remaining backlog items promoted to Phase 5
+
+| Source | Item | Track |
+|--------|------|-------|
+| BACKLOG-038 | PostgreSQL RLS | A |
+| BACKLOG-039 | OAuth2/OIDC | A |
+| BACKLOG-040 | Stripe billing | A |
+| BACKLOG-041 | Agent federation | C |
+| BACKLOG-036 | Webhook notifications | A |
+| BACKLOG-037 | Plugin system for custom MCP tools | C |
+| BACKLOG-035 | Agent performance leaderboard | B |
+| BACKLOG-024 | Per-agent cost alerts | B |
+| BACKLOG-023 | Audit log retention | A |
+| BACKLOG-022 | QA multi-round rework | C |
+| BACKLOG-014 | Provider health monitoring | B |
+| BACKLOG-013 | Model performance benchmarking | B |
+| BACKLOG-044 | ANP evaluation | C |
+| BACKLOG-043 | AP2 evaluation | C |
+| IDEA-002 | RLHF-lite | B |
+| IDEA-004 | Agent fine-tuning | B |
+| IDEA-007 | Multi-modal capabilities | B |
+| IDEA-009 | Scheduled & recurring tasks | B |
+| IDEA-019 | Horizontal auto-scaling | C |
+
+#### New items introduced in Phase 5
+
+| ID | Item | Track |
+|----|------|-------|
+| BACKLOG-045 | LLM-based prompt injection detection | A |
+| BACKLOG-046 | Secrets vault migration (SOPS/Vault) | A |
+| BACKLOG-047 | OpenTelemetry distributed tracing | C |
+| BACKLOG-048 | Agent fine-tuning pipeline (episodic → dataset → Ollama) | B |
+| BACKLOG-049 | Scheduled & recurring tasks via Temporal | B |
+| BACKLOG-050 | Multi-modal agent capabilities | B |
+| BACKLOG-051 | Agent RLHF-lite feedback loop | B |
+
+#### Phase 5 Definition of Done
+
+A new tenant signs up via OAuth2, creates a workspace with RLS isolation, submits a
+recurring weekly task via Temporal scheduler, pays via Stripe, and the system auto-scales
+under load. Agent quality improves over time via RLHF-lite feedback loop. Two NEXUS
+instances can discover and hire each other's agents via federation protocol.
+
+---
+
+### Phase 6+ — Deferred
+
+Not planned in detail. Candidate items:
+
+- Visual workflow builder (IDEA-003) — drag-and-drop agent DAG editor
+- Agent memory graph / knowledge graph (IDEA-008) — replace flat semantic memory
+- Agent skill leveling system (IDEA-010) — gamified competency tracking
+- Natural language to workflow compiler (IDEA-013) — "describe your process" → workflow
+- Agent negotiation protocol (IDEA-014) — structured debate + consensus
+- Federated learning across deployments (IDEA-015) — privacy-preserving shared improvements
+- Self-healing infrastructure (IDEA-011) — auto-switch Kafka ↔ Redis Streams
+- Agent code review for own codebase (IDEA-012) — meta-level self-improvement
+- UCP commerce protocol (BACKLOG-042) — only if commerce becomes a task category
+- Dynamic model assignment via API (BACKLOG-018) — live A/B testing
+- Ollama local model integration testing (BACKLOG-017)
+- Shadcn/ui migration (BACKLOG-010)
+- Agent naming convention (BACKLOG-008)
+
 ---
 
 ## 25. Open Questions & Decisions Log
@@ -1673,10 +1837,12 @@ Not starting until Phase 3 Definition of Done is fully met.
 | Question | Options | Priority |
 |----------|---------|----------|
 | Agent naming | Generic roles vs named personas | Low — cosmetic |
-| Row-level security | PostgreSQL RLS vs application-layer filtering | High — before production multi-tenant |
-| OAuth2/OIDC | Add alongside JWT vs replace JWT entirely | Medium — before enterprise tenants |
-| Billing provider | Stripe vs internal-only | Medium — before paid offering |
-| Agent federation | Multi-NEXUS interop protocol | Low — Phase 5+ |
+| RLS granularity | Table-level policies vs column-level | High — Phase 5 Track A |
+| Federation identity | W3C DID (ANP) vs custom trust registry | Medium — Phase 5 Track C |
+| Fine-tuning target | Llama 8B vs Mistral 7B vs both | Medium — Phase 5 Track B |
+| Secrets backend | SOPS (simpler) vs HashiCorp Vault (more features) | Medium — Phase 5 Track A |
+| Injection classifier | Small fine-tuned model vs Haiku/Flash API call | Medium — Phase 5 Track A |
+| Scheduled task UI | Calendar view vs list view vs both | Low — Phase 5 Track B |
 
 ### Recently Decided ✅
 
@@ -1702,9 +1868,20 @@ Not starting until Phase 3 Definition of Done is fully met.
 
 ---
 
-*Last updated: 2026-03*
+*Last updated: 2026-03-19*
 *Owner: Nexus Project*
-*Document version: 0.5*
+*Document version: 0.6*
+
+*Changes in v0.6:*
+*— §2: Updated status to Phase 5 IN PROGRESS*
+*— §24: Added complete Phase 5 plan with 3 parallel tracks (A: Production SaaS,*
+*  B: Platform Intelligence, C: Federation & Ecosystem). 8 weeks, 25+ items.*
+*— §24: Added Phase 6+ deferred items list*
+*— §25: Updated open questions for Phase 5 decisions (RLS, federation, fine-tuning,*
+*  secrets, injection classifier, scheduler UI)*
+*— BACKLOG: Added BACKLOG-045 through BACKLOG-051 (7 new items)*
+*— idea.md: Added IDEA-020 through IDEA-023 (4 new ideas). Assigned 8 existing*
+*  ideas to Phase 5 tracks.*
 
 *Changes in v0.5:*
 *— Added §8: MCP Tools Integration (adapter pattern, registry, guards, full tool table)*
