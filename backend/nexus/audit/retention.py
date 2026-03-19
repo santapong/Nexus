@@ -63,7 +63,7 @@ async def archive_old_audit_records(
             """),
             {"now": now, "cutoff": cutoff, "batch_size": batch_size},
         )
-        batch_count: int = result.rowcount or 0
+        batch_count: int = int(result.rowcount or 0)
         await db_session.commit()
 
         total_archived += batch_count

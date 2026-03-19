@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
-from typing import cast
-
 import structlog
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -177,4 +175,5 @@ async def resolve_approval(
         },
     )
 
-    return cast(HumanApproval, record)
+    approval: HumanApproval = record
+    return approval
