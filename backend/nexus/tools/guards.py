@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+
 import structlog
 from pydantic import BaseModel
 from sqlalchemy import select
