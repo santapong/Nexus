@@ -40,6 +40,52 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-20] — Frontend usability overhaul: sidebar navigation, React Router, shadcn/ui components
+
+### Added
+- **React Router** (`react-router-dom@6`) — Client-side routing replaces single-page scroll of 13+
+  panels. Routes: Dashboard (`/`), Tasks (`/tasks`), Agents (`/agents`), Analytics (`/analytics`),
+  Marketplace (`/marketplace`), Settings pages (Prompts, Billing, Audit, A2A Tokens), Login (`/login`).
+- **Sidebar navigation** (`components/layout/Sidebar.tsx`) — Collapsible sidebar with grouped nav
+  items (Overview, Work, Intelligence, System), active route highlighting, pending approval count
+  badge. Mobile responsive via hamburger menu at `md` breakpoint.
+- **App layout shell** (`components/layout/AppLayout.tsx`, `AppHeader.tsx`) — Layout route with
+  sidebar + header + breadcrumb navigation + `<Outlet />` for nested pages.
+- **9 shadcn/ui-style components** (`components/ui/`) — Button, Card, Badge, Input, Textarea,
+  Select, Skeleton, Tabs, Separator. Tailwind-based with `cn()` class merging utility (`lib/utils.ts`).
+- **10 page components** (`pages/`) — DashboardPage, TasksPage, AgentsPage, AnalyticsPage,
+  MarketplacePage, LoginPage, PromptsPage, BillingPage, AuditPage, A2ATokensPage. Thin wrappers
+  around existing panel components with proper layout integration.
+- **Router configuration** (`router.tsx`) — Centralized route definitions with `AppLayout` as
+  layout route.
+- **Task search and filtering** (`TaskListPanel.tsx`) — Search by instruction text, filter by
+  status, sort order toggle (newest/oldest first).
+- **Toast notifications** (`sonner`) — Success/error toasts on all mutation hooks: task creation,
+  approval resolution, agent builder actions, eval runs, auth, marketplace, A2A token operations.
+- **Skeleton loading states** — Replaced "Loading..." text with animated Skeleton components in
+  HealthPanel, AgentStatusPanel, AgentOrgChart, TaskListPanel.
+
+### Changed
+- `App.tsx` — Replaced inline rendering of 13 panels with `<RouterProvider>` from react-router-dom.
+- `main.tsx` — Added `<Toaster>` from sonner for toast notifications.
+- `index.css` — Added custom scrollbar styling, improved light mode CSS variables.
+- `tailwind.config.js` — Extended with shadcn/ui compatible theme configuration.
+- `tsconfig.json` — Added `baseUrl` and path aliases for `@/` imports.
+- `vite.config.ts` — Added path alias resolution matching tsconfig.
+- `AuditDashboard.tsx` — Fixed theme inconsistency: replaced light theme colors (`bg-white`,
+  `text-gray-900`) with dark-theme-compatible classes matching rest of application.
+- 7 mutation hooks — Added `onSuccess`/`onError` toast callbacks: `useTasks`, `useApprovals`,
+  `useAuth`, `useAgentBuilder`, `useEval`, `useMarketplace`, `useA2ATokens`.
+
+### Dependencies
+- Added: `react-router-dom@6`, `sonner`, `clsx`, `tailwind-merge`
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-19] — Phase 5 Track B/C: Platform intelligence, scheduled tasks, QA rework, provider health
 
 ### Added
