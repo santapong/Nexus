@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { useAuditEvents } from '../../hooks/useAudit'
 import type { AuditEvent } from '../../types'
+import { Select } from '../ui/select'
+import { Button } from '../ui/button'
+import { Skeleton } from '../ui/skeleton'
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
-  task_completed: 'bg-green-100 text-green-800',
-  task_received: 'bg-blue-100 text-blue-800',
-  task_failed: 'bg-red-100 text-red-800',
-  budget_exceeded: 'bg-yellow-100 text-yellow-800',
-  tool_call_limit_reached: 'bg-yellow-100 text-yellow-800',
-  approval_requested: 'bg-purple-100 text-purple-800',
-  approval_resolved: 'bg-purple-100 text-purple-800',
-  heartbeat_silence: 'bg-red-100 text-red-800',
-  prompt_activated: 'bg-indigo-100 text-indigo-800',
-  prompt_created: 'bg-indigo-100 text-indigo-800',
+  task_completed: 'bg-green-700 text-green-100',
+  task_received: 'bg-blue-700 text-blue-100',
+  task_failed: 'bg-red-700 text-red-100',
+  budget_exceeded: 'bg-yellow-700 text-yellow-100',
+  tool_call_limit_reached: 'bg-yellow-700 text-yellow-100',
+  approval_requested: 'bg-purple-700 text-purple-100',
+  approval_resolved: 'bg-purple-700 text-purple-100',
+  heartbeat_silence: 'bg-red-700 text-red-100',
+  prompt_activated: 'bg-indigo-700 text-indigo-100',
+  prompt_created: 'bg-indigo-700 text-indigo-100',
 }
 
 const EVENT_TYPES = [
@@ -41,18 +44,18 @@ export function AuditDashboard() {
   })
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-lg font-semibold mb-4">Audit Log</h2>
+    <div className="bg-gray-900 rounded-lg border border-gray-800 p-5">
+      <h2 className="text-lg font-semibold mb-4 text-white">Audit Log</h2>
 
       {/* Filters */}
       <div className="flex gap-4 mb-4">
-        <select
-          className="border rounded px-2 py-1 text-sm"
+        <Select
           value={eventType}
           onChange={(e) => {
             setEventType(e.target.value)
             setPage(0)
           }}
+          className="w-52"
         >
           <option value="">All event types</option>
           {EVENT_TYPES.map((t) => (
@@ -60,15 +63,19 @@ export function AuditDashboard() {
               {t}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {/* Loading / Error */}
       {isLoading && (
-        <p className="text-gray-500 text-sm">Loading audit events...</p>
+        <div className="space-y-2">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+        </div>
       )}
       {error && (
-        <p className="text-red-500 text-sm">
+        <p className="text-red-400 text-sm">
           Error loading audit log: {String(error)}
         </p>
       )}
@@ -79,7 +86,7 @@ export function AuditDashboard() {
           {events.map((event: AuditEvent) => (
             <div
               key={event.id}
-              className="border rounded p-3 hover:bg-gray-50 cursor-pointer"
+              className="border border-gray-700 rounded-lg p-3 hover:bg-gray-800/50 cursor-pointer transition-colors"
               onClick={() =>
                 setExpanded(expanded === event.id ? null : event.id)
               }
@@ -88,15 +95,15 @@ export function AuditDashboard() {
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-medium ${
                     EVENT_TYPE_COLORS[event.event_type] ||
-                    'bg-gray-100 text-gray-800'
+                    'bg-gray-700 text-gray-200'
                   }`}
                 >
                   {event.event_type}
                 </span>
-                <span className="text-gray-500 font-mono text-xs">
+                <span className="text-gray-400 font-mono text-xs">
                   {event.agent_id}
                 </span>
-                <span className="text-gray-400 text-xs ml-auto">
+                <span className="text-gray-500 text-xs ml-auto">
                   {new Date(event.created_at).toLocaleString()}
                 </span>
               </div>
@@ -107,7 +114,7 @@ export function AuditDashboard() {
 
               {/* Expanded detail */}
               {expanded === event.id && (
-                <pre className="mt-2 bg-gray-50 p-2 rounded text-xs overflow-auto max-h-48">
+                <pre className="mt-2 bg-gray-950 p-3 rounded text-xs overflow-auto max-h-48 text-gray-300 border border-gray-800">
                   {JSON.stringify(event.event_data, null, 2)}
                 </pre>
               )}
@@ -121,24 +128,26 @@ export function AuditDashboard() {
       )}
 
       {/* Pagination */}
-      <div className="flex gap-2 mt-4">
-        <button
-          className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+      <div className="flex items-center gap-2 mt-4">
+        <Button
+          variant="outline"
+          size="sm"
           disabled={page === 0}
           onClick={() => setPage(page - 1)}
         >
           Previous
-        </button>
+        </Button>
         <span className="px-3 py-1 text-sm text-gray-500">
           Page {page + 1}
         </span>
-        <button
-          className="px-3 py-1 text-sm border rounded disabled:opacity-50"
+        <Button
+          variant="outline"
+          size="sm"
           disabled={!events || events.length < limit}
           onClick={() => setPage(page + 1)}
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   )

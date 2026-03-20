@@ -6,7 +6,7 @@ body {
   @apply bg-gray-950 text-gray-100;
 }
 
-/* Light mode overrides */
+/* Light mode overrides — applied via .light-mode class on <html> */
 .light-mode body,
 .light-mode {
   --tw-bg-opacity: 1;
@@ -46,4 +46,32 @@ body {
 }
 .light-mode .hover\:bg-gray-800:hover {
   background-color: #f1f5f9;
+}
+.light-mode .hover\:bg-gray-800\/50:hover {
+  background-color: rgba(241, 245, 249, 0.5);
+}
+.light-mode .hover\:bg-gray-700:hover {
+  background-color: #e2e8f0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+.light-mode ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

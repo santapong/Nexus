@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { api } from '../api/client'
 
 export function useApprovals() {
@@ -14,8 +15,12 @@ export function useResolveApproval() {
   return useMutation({
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
       api.resolveApproval(id, approved),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['approvals'] })
+      toast.success(variables.approved ? 'Approved' : 'Rejected')
+    },
+    onError: () => {
+      toast.error('Failed to resolve approval')
     },
   })
 }

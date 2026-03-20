@@ -88,13 +88,37 @@ async def tool_web_fetch(url: str) -> str:
             content_type = response.headers.get("content-type", "")
 
             if "text/html" in content_type:
-                # Simple HTML tag stripping
                 import re
+                from html.parser import HTMLParser
 
-                text = re.sub(r"<script[^>]*>.*?</script>", "", response.text, flags=re.DOTALL)
-                text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
-                text = re.sub(r"<[^>]+>", " ", text)
-                text = re.sub(r"\s+", " ", text).strip()
+                class _TextExtractor(HTMLParser):
+                    """Extract visible text from HTML, skipping script/style."""
+
+                    def __init__(self) -> None:
+                        super().__init__()
+                        self._parts: list[str] = []
+                        self._skip_depth = 0
+
+                    def handle_starttag(
+                        self, tag: str, attrs: list[tuple[str, str | None]],
+                    ) -> None:
+                        if tag.lower() in ("script", "style"):
+                            self._skip_depth += 1
+
+                    def handle_endtag(self, tag: str) -> None:
+                        if tag.lower() in ("script", "style") and self._skip_depth > 0:
+                            self._skip_depth -= 1
+
+                    def handle_data(self, data: str) -> None:
+                        if self._skip_depth == 0:
+                            self._parts.append(data)
+
+                    def get_text(self) -> str:
+                        return re.sub(r"\s+", " ", " ".join(self._parts)).strip()
+
+                parser = _TextExtractor()
+                parser.feed(response.text)
+                text = parser.get_text()
             else:
                 text = response.text
 
