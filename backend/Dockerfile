@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir --upgrade pip
+
 COPY pyproject.toml ./
 RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || true
 
@@ -25,6 +27,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir --upgrade pip
 
 COPY pyproject.toml ./
 COPY nexus/ ./nexus/

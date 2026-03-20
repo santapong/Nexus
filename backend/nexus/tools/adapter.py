@@ -91,8 +91,8 @@ async def tool_web_fetch(url: str) -> str:
                 # Simple HTML tag stripping
                 import re
 
-                text = re.sub(r"<script[^>]*>.*?</script>", "", response.text, flags=re.DOTALL)
-                text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
+                text = re.sub(r"<script[^>]*>.*?</script>", "", response.text, flags=re.DOTALL | re.IGNORECASE)
+                text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL | re.IGNORECASE)
                 text = re.sub(r"<[^>]+>", " ", text)
                 text = re.sub(r"\s+", " ", text).strip()
             else:
