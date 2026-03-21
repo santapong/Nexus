@@ -10,21 +10,27 @@ Endpoints:
 
 from __future__ import annotations
 
+import re
+from typing import Any
+
 import structlog
-from litestar import Controller, get, post
+from litestar import Controller, Request, get, post
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.api.auth import (
     AuthUser,
     create_access_token,
+    get_auth_user_from_request,
     hash_password,
     verify_password,
 )
 from nexus.db.models import User, Workspace, WorkspaceMember
 
 logger = structlog.get_logger()
+
+_SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$")
 
 
 # ─── Request/Response schemas ────────────────────────────────────────────────
@@ -78,6 +84,55 @@ class CreateWorkspaceRequest(BaseModel):
     slug: str
 
 
+# ─── Helpers ────────────────────────────────────────────────────────────────
+
+
+async def _generate_unique_slug(base: str, db_session: AsyncSession) -> str:
+    """Generate a unique slug, appending -N suffix on collision.
+
+    Args:
+        base: Base slug string (already sanitized).
+        db_session: Async database session.
+
+    Returns:
+        A unique slug string.
+    """
+    slug = base
+    counter = 1
+    while True:
+        stmt = select(
+            exists().where(Workspace.slug == slug)
+        )
+        result = await db_session.execute(stmt)
+        if not result.scalar():
+            return slug
+        slug = f"{base}-{counter}"
+        counter += 1
+        if counter > 100:
+            # Safety valve — use UUID suffix
+            import uuid
+
+            return f"{base}-{uuid.uuid4().hex[:8]}"
+
+
+def _sanitize_slug(raw: str) -> str:
+    """Sanitize a raw string into a valid slug.
+
+    Args:
+        raw: Raw input (e.g. email prefix).
+
+    Returns:
+        Lowercase alphanumeric slug with hyphens.
+    """
+    slug = re.sub(r"[^a-z0-9-]", "-", raw.lower().strip())
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    if len(slug) < 3:
+        slug = slug + "-workspace"
+    if len(slug) > 50:
+        slug = slug[:50].rstrip("-")
+    return slug
+
+
 # ─── Auth Controller ─────────────────────────────────────────────────────────
 
 
@@ -116,8 +171,9 @@ class AuthController(Controller):
         db_session.add(user)
         await db_session.flush()
 
-        # Create default workspace
-        slug = data.email.split("@")[0].lower().replace(".", "-")
+        # Create default workspace with unique slug
+        base_slug = _sanitize_slug(data.email.split("@")[0])
+        slug = await _generate_unique_slug(base_slug, db_session)
         workspace = Workspace(
             name=f"{data.display_name}'s Company",
             slug=slug,
@@ -211,9 +267,24 @@ class WorkspaceController(Controller):
     path = "/workspaces"
 
     @get()
-    async def list_workspaces(self, db_session: AsyncSession) -> list[WorkspaceResponse]:
-        """List all workspaces (for the current user in multi-tenant mode)."""
-        stmt = select(Workspace).where(Workspace.is_active.is_(True))
+    async def list_workspaces(
+        self,
+        request: Request[Any, Any, Any],
+        db_session: AsyncSession,
+    ) -> list[WorkspaceResponse]:
+        """List workspaces the authenticated user is a member of."""
+        auth_user = get_auth_user_from_request(request)
+        if auth_user is None:
+            return []
+
+        stmt = (
+            select(Workspace)
+            .join(WorkspaceMember, Workspace.id == WorkspaceMember.workspace_id)
+            .where(
+                WorkspaceMember.user_id == auth_user.user_id,
+                Workspace.is_active.is_(True),
+            )
+        )
         result = await db_session.execute(stmt)
         workspaces = result.scalars().all()
 
@@ -233,19 +304,43 @@ class WorkspaceController(Controller):
     async def create_workspace(
         self,
         data: CreateWorkspaceRequest,
+        request: Request[Any, Any, Any],
         db_session: AsyncSession,
-    ) -> WorkspaceResponse:
-        """Create a new workspace."""
+    ) -> WorkspaceResponse | dict[str, str]:
+        """Create a new workspace for the authenticated user."""
+        auth_user = get_auth_user_from_request(request)
+        if auth_user is None:
+            return {"error": "Authentication required"}
+
+        # Validate slug
+        sanitized_slug = _sanitize_slug(data.slug)
+        if not _SLUG_PATTERN.match(sanitized_slug):
+            return {"error": "Invalid slug. Use 3-50 lowercase alphanumeric chars and hyphens."}
+
+        slug = await _generate_unique_slug(sanitized_slug, db_session)
+
         workspace = Workspace(
             name=data.name,
-            slug=data.slug,
-            owner_id="system",  # Will be set from JWT in production
+            slug=slug,
+            owner_id=auth_user.user_id,
         )
         db_session.add(workspace)
         await db_session.flush()
+
+        # Add creator as owner
+        member = WorkspaceMember(
+            workspace_id=str(workspace.id),
+            user_id=auth_user.user_id,
+            role="owner",
+        )
+        db_session.add(member)
         await db_session.commit()
 
-        logger.info("workspace_created", workspace_id=str(workspace.id))
+        logger.info(
+            "workspace_created",
+            workspace_id=str(workspace.id),
+            owner_id=auth_user.user_id,
+        )
 
         return WorkspaceResponse(
             id=str(workspace.id),
@@ -257,21 +352,32 @@ class WorkspaceController(Controller):
         )
 
     @get("/{workspace_id:str}")
-    async def get_workspace(self, workspace_id: str, db_session: AsyncSession) -> WorkspaceResponse:
-        """Get workspace details by ID."""
+    async def get_workspace(
+        self,
+        workspace_id: str,
+        request: Request[Any, Any, Any],
+        db_session: AsyncSession,
+    ) -> WorkspaceResponse | dict[str, str]:
+        """Get workspace details by ID. User must be a member."""
+        auth_user = get_auth_user_from_request(request)
+        if auth_user is None:
+            return {"error": "Authentication required"}
+
+        # Verify membership
+        member_stmt = select(WorkspaceMember).where(
+            WorkspaceMember.workspace_id == workspace_id,
+            WorkspaceMember.user_id == auth_user.user_id,
+        )
+        member_result = await db_session.execute(member_stmt)
+        if member_result.scalar_one_or_none() is None:
+            return {"error": "Workspace not found"}
+
         stmt = select(Workspace).where(Workspace.id == workspace_id)
         result = await db_session.execute(stmt)
         ws = result.scalar_one_or_none()
 
         if ws is None:
-            return WorkspaceResponse(
-                id=workspace_id,
-                name="Not Found",
-                slug="",
-                owner_id="",
-                is_active=False,
-                daily_spend_limit_usd=0,
-            )
+            return {"error": "Workspace not found"}
 
         return WorkspaceResponse(
             id=str(ws.id),

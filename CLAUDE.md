@@ -99,10 +99,11 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 4 build | ✅ Complete — multi-tenant, Temporal, marketplace, billing |
 | Phase 5 prep | ✅ Complete — core restructure, performance, security, CI/CD, agent tools |
 | Phase 5 build | ✅ Complete — all 3 tracks delivered (SaaS, intelligence, ecosystem) |
+| Phase 6 build | ✅ Complete — security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
 
-**Current phase:** Phase 5 COMPLETE — All three tracks delivered. Three protocol evaluation items (ANP, AP2, federation protocol) deferred to Phase 6+ pending external protocol maturity.
+**Current phase:** Phase 6 COMPLETE — All security issues resolved (ERROR-019 through ERROR-025). Federation registry implemented. ANP/AP2 evaluated (ADR-058/059). 8 new research-backed ideas added.
 
-**Next action:** Phase 6 planning — federation protocol evaluation when ANP/AP2 reach stable release.
+**Next action:** Phase 7 planning — knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
 
 ---
 

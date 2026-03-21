@@ -84,8 +84,8 @@ services:
       TEMPORAL_HOST: temporal:7233
       TEMPORAL_NAMESPACE: nexus
       TEMPORAL_TASK_QUEUE: nexus-tasks
-      # JWT Auth
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-nexus-dev-secret-change-in-production}
+      # JWT Auth — generate a strong secret: python -c "import secrets; print(secrets.token_urlsafe(32))"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-nexus-local-dev-only-not-for-production-use}
       # LangFuse
       LANGFUSE_HOST: ${LANGFUSE_HOST:-}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}

@@ -139,11 +139,43 @@ async def tool_file_read(path: str) -> str:
     Returns:
         File contents as string, or an error message if file not found.
     """
-    file_path = Path(path)
+    from nexus.settings import settings
+
+    file_path = Path(path).resolve()
+
+    # Path traversal prevention — restrict to allowed directories
+    if settings.tool_allowed_dirs:
+        allowed = [
+            Path(d.strip()).resolve()
+            for d in settings.tool_allowed_dirs.split(",")
+            if d.strip()
+        ]
+        if allowed and not any(
+            file_path == a or file_path.is_relative_to(a) for a in allowed
+        ):
+            logger.warning(
+                "file_read_denied",
+                path=str(file_path),
+                allowed_dirs=settings.tool_allowed_dirs,
+            )
+            return f"Error: Access denied — file outside allowed directories: {path}"
+
     if not file_path.exists():
         return f"Error: File not found: {path}"
     if not file_path.is_file():
         return f"Error: Not a file: {path}"
+
+    # File size check
+    try:
+        file_size = file_path.stat().st_size
+        if file_size > settings.tool_file_read_max_bytes:
+            return (
+                f"Error: File too large ({file_size:,} bytes, "
+                f"max {settings.tool_file_read_max_bytes:,} bytes): {path}"
+            )
+    except OSError as exc:
+        return f"Error checking file size: {exc}"
+
     try:
         return _sanitize_tool_output(file_path.read_text(encoding="utf-8"))
     except Exception as exc:
@@ -152,6 +184,9 @@ async def tool_file_read(path: str) -> str:
 
 async def tool_code_execute(code: str, language: str = "python") -> str:
     """Execute code in a sandboxed subprocess with a 30-second timeout.
+
+    Resource limits: 256MB memory, 30s wall clock timeout.
+    Note: Full network isolation requires Docker/nsjail sandbox (see §8).
 
     Args:
         code: The code to execute.
@@ -167,13 +202,30 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
     else:
         return f"Unsupported language: {language}. Use 'python' or 'bash'."
 
+    logger.info(
+        "code_execute_start",
+        language=language,
+        code_length=len(code),
+        code_preview=code[:200],
+    )
+
     try:
+        import resource
+
+        def _set_resource_limits() -> None:
+            """Set memory and CPU limits for the child process."""
+            # 256MB memory limit
+            resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
+            # 30s CPU time limit
+            resource.setrlimit(resource.RLIMIT_CPU, (30, 30))
+
         result = await asyncio.to_thread(
             subprocess.run,
             cmd,
             capture_output=True,
             text=True,
             timeout=30,
+            preexec_fn=_set_resource_limits,
         )
         output = result.stdout
         if result.stderr:
@@ -621,7 +673,10 @@ async def tool_analyze_image(
                 return "No response from Gemini vision model."
 
         else:
-            return "Error: No vision-capable LLM API key configured (need ANTHROPIC_API_KEY or GOOGLE_API_KEY)"
+            return (
+                "Error: No vision-capable LLM API key configured "
+                "(need ANTHROPIC_API_KEY or GOOGLE_API_KEY)"
+            )
 
     except Exception as exc:
         logger.error("analyze_image_failed", image_path=image_path, error=str(exc))

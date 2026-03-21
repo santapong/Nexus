@@ -23,14 +23,35 @@ _agent_tasks: list[asyncio.Task[None]] = []
 async def _security_checks() -> None:
     """Verify critical security settings on startup.
 
-    Blocks startup in production if dangerous defaults are detected.
+    Blocks startup if JWT secret is missing or weak. Additional checks
+    for production environments.
     """
-    if not settings.is_development:
-        if settings.jwt_secret_key == "nexus-dev-secret-change-in-production":
-            raise RuntimeError(
-                "FATAL: JWT_SECRET_KEY must be changed from default for production. "
-                "Set a strong random secret via environment variable."
+    known_weak_secrets = {
+        "nexus-dev-secret-change-in-production",
+        "secret",
+        "changeme",
+        "test",
+        "",
+    }
+
+    if settings.jwt_secret_key in known_weak_secrets:
+        if settings.is_development:
+            logger.warning(
+                "jwt_secret_weak",
+                hint="JWT_SECRET_KEY is missing or weak. Set a strong random secret.",
             )
+        else:
+            raise RuntimeError(
+                "FATAL: JWT_SECRET_KEY is missing or uses a known weak value. "
+                "Set a strong random secret (32+ chars) via environment variable."
+            )
+
+    if len(settings.jwt_secret_key) < 16 and not settings.is_development:
+        raise RuntimeError(
+            "FATAL: JWT_SECRET_KEY must be at least 16 characters for production."
+        )
+
+    if not settings.is_development:
         if not settings.anthropic_api_key and not settings.google_api_key:
             logger.warning(
                 "no_llm_api_keys_configured",
@@ -44,7 +65,7 @@ async def _security_checks() -> None:
     logger.info(
         "security_checks_passed",
         env=settings.app_env,
-        jwt_default=settings.jwt_secret_key == "nexus-dev-secret-change-in-production",
+        jwt_configured=bool(settings.jwt_secret_key),
         oauth_google=bool(settings.oauth_google_client_id),
         oauth_github=bool(settings.oauth_github_client_id),
         stripe=bool(settings.stripe_api_key),

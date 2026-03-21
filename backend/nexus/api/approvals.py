@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 import structlog
-from litestar import Controller, get, post
+from litestar import Controller, Request, get, post
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.api.auth import get_auth_user_from_request
 from nexus.db.models import ApprovalStatus, HumanApproval
 from nexus.tools.guards import resolve_approval
 
@@ -28,7 +29,6 @@ class ApprovalResponse(BaseModel):
 
 class ResolveApprovalRequest(BaseModel):
     approved: bool
-    resolved_by: str = "human"
 
 
 class ApprovalController(Controller):
@@ -37,14 +37,26 @@ class ApprovalController(Controller):
     @get()
     async def list_pending_approvals(
         self,
+        request: Request[Any, Any, Any],
         db_session: AsyncSession,
     ) -> list[ApprovalResponse]:
-        """List all pending approval requests."""
+        """List pending approval requests for the current workspace."""
+        auth_user = get_auth_user_from_request(request)
+
         stmt = (
             select(HumanApproval)
             .where(HumanApproval.status == ApprovalStatus.PENDING.value)
             .order_by(HumanApproval.requested_at.desc())
         )
+
+        # Scope to workspace if authenticated (via task's workspace_id)
+        if auth_user is not None and auth_user.workspace_id:
+            from nexus.db.models import Task
+
+            stmt = stmt.join(Task, HumanApproval.task_id == Task.id).where(
+                Task.workspace_id == auth_user.workspace_id
+            )
+
         result = await db_session.execute(stmt)
         approvals = result.scalars().all()
 
@@ -68,14 +80,25 @@ class ApprovalController(Controller):
         self,
         approval_id: str,
         data: ResolveApprovalRequest,
+        request: Request[Any, Any, Any],
         db_session: AsyncSession,
     ) -> dict[str, Any]:
-        """Approve or reject a pending approval request."""
+        """Approve or reject a pending approval request.
+
+        The resolved_by field is set from the authenticated JWT user,
+        not from the request body.
+        """
+        auth_user = get_auth_user_from_request(request)
+        if auth_user is None:
+            return {"error": "Authentication required"}
+
+        resolved_by = auth_user.email or auth_user.user_id
+
         record = await resolve_approval(
             session=db_session,
             approval_id=approval_id,
             approved=data.approved,
-            resolved_by=data.resolved_by,
+            resolved_by=resolved_by,
         )
 
         if record is None:
@@ -85,7 +108,7 @@ class ApprovalController(Controller):
             "approval_resolved",
             approval_id=approval_id,
             approved=data.approved,
-            resolved_by=data.resolved_by,
+            resolved_by=resolved_by,
         )
 
         return {

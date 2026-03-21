@@ -77,6 +77,9 @@
 | ADR-055 | Model benchmarking reusing prompt_benchmarks test cases | accepted | 2026-03-19 |
 | ADR-056 | Cron-based task scheduling via croniter | accepted | 2026-03-19 |
 | ADR-057 | QA multi-round rework with escalation guard | accepted | 2026-03-19 |
+| ADR-058 | ANP evaluation — defer adoption until IETF RFC published | accepted | 2026-03-21 |
+| ADR-059 | AP2 evaluation — adopt only if paid A2A marketplace launches | accepted | 2026-03-21 |
+| ADR-060 | Federation registry — centralized first, DID-based later | accepted | 2026-03-21 |
 
 ---
 
@@ -1659,11 +1662,134 @@ Add configurable `qa_max_rework_rounds` (default 2). Track round in payload. Acc
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-058 -->
+## ADR-058 — ANP evaluation — defer adoption until IETF RFC published
+
+**Date:** 2026-03-21
+**Status:** accepted
+**Decided by:** claude
+**Relates to:** CLAUDE.md §9, BACKLOG-044
+**Supersedes:** n/a
+
+### Context
+
+The Agent Network Protocol (ANP) aims to be "the HTTP of the Agentic Web" with three layers:
+identity (W3C DID), meta-protocol (negotiation), and application (semantic web). NEXUS currently
+uses bearer tokens for A2A authentication. ANP's DID-based identity could provide stronger,
+decentralized agent identity for federation. However, ANP's application layer is still in development.
+The W3C AI Agent Protocol Community Group formed June 2025, IETF draft submitted October 2025
+(draft-zyyhl-agent-networks-framework-01, expires April 2026). NIST CAISI launched February 2026
+with AI agent identity as a focus area.
+
+### Decision
+
+Monitor ANP development. Do NOT adopt until IETF RFC is published (target 2026-2027).
+Plan migration path from bearer tokens to DIDs as a future enhancement.
+Current A2A bearer token authentication is sufficient for Phase 6 federation.
+
+### Alternatives considered
+
+**Option A: Adopt ANP now**
+- Pros: Early mover advantage, future-proof identity layer
+- Cons: Application layer incomplete, no production SDKs, spec may change
+- Why rejected: Risk of building on unstable foundation
+
+**Option B: Build custom DID layer**
+- Pros: Full control, tailored to NEXUS needs
+- Cons: Reinventing the wheel, won't interop with emerging standard
+- Why rejected: ANP will provide this; wait for stability
+
+### Consequences
+
+**Positive:** Avoid building on unstable protocol. NEXUS federation works with bearer tokens today.
+**Negative:** No decentralized identity until ANP matures. Bearer tokens require centralized trust.
 
 ---
 
-*Last updated: 2026-03-19*
-*Next ADR ID: ADR-058*
-*Decision count: 48 accepted, 3 superseded*
+## ADR-059 — AP2 evaluation — adopt only if paid A2A marketplace launches
+
+**Date:** 2026-03-21
+**Status:** accepted
+**Decided by:** claude
+**Relates to:** CLAUDE.md §9, BACKLOG-043
+**Supersedes:** n/a
+
+### Context
+
+Google's Agent Payments Protocol (AP2) has matured significantly since Phase 5 assessment.
+Full specification released September 2025 with 60+ supporting organizations (Adyen, Mastercard,
+PayPal, American Express, Revolut, Salesforce). No longer Google-centric. Uses cryptographically-
+signed "Mandates" as the trust primitive for agent-to-agent payments. Supports credit/debit,
+stablecoins, real-time bank transfers, and crypto (A2A x402 extension). NEXUS currently uses
+Stripe for user-to-NEXUS billing. AP2 would add agent-to-agent payment settlement.
+
+### Decision
+
+Do NOT adopt AP2 now. Evaluate only if NEXUS launches a paid A2A marketplace where external
+agents charge for services. Current Stripe-based billing handles user-to-NEXUS payments.
+AP2's Mandates pattern is interesting — study for potential `human_approvals` enhancement.
+
+### Alternatives considered
+
+**Option A: Integrate AP2 now**
+- Pros: Ready for paid marketplace, industry-standard payment protocol
+- Cons: No paid marketplace exists yet, adds complexity for unused feature
+- Why rejected: YAGNI — build when needed
+
+### Consequences
+
+**Positive:** Simpler system. Stripe handles current billing needs. No unnecessary integration.
+**Negative:** If paid marketplace launches, AP2 integration will be needed retroactively.
+
+---
+
+## ADR-060 — Federation registry — centralized first, DID-based later
+
+**Date:** 2026-03-21
+**Status:** accepted
+**Decided by:** claude
+**Relates to:** CLAUDE.md §9, BACKLOG-041, ADR-058
+**Supersedes:** n/a
+
+### Context
+
+NEXUS needs multi-instance federation — multiple NEXUS deployments discovering each other's
+capabilities and delegating tasks. Two approaches: (1) centralized registry where instances
+register their Agent Cards, or (2) decentralized discovery via DID-based identity (ANP).
+The A2A gateway infrastructure is fully operational (inbound + outbound) from Phase 2-3.
+ANP is not yet stable (see ADR-058).
+
+### Decision
+
+Build a centralized federation registry (Phase 6). Each NEXUS instance registers its
+Agent Card URL. The registry periodically refreshes cards and indexes capabilities.
+New table: `federation_registry`. New service: `a2a/federation.py`. New API: `/api/federation/`.
+When ANP matures (ADR-058), migrate to DID-based discovery as the identity layer,
+keeping the centralized registry as a bootstrap/fallback mechanism.
+
+### Alternatives considered
+
+**Option A: Wait for ANP and skip centralized registry**
+- Pros: Only build once (DID-based from the start)
+- Cons: Federation blocked for 1+ years waiting for protocol stability
+- Why rejected: Federation has immediate value; centralized registry ships now
+
+**Option B: Full mesh (every instance knows every other)**
+- Pros: No central point of failure
+- Cons: Doesn't scale, requires gossip protocol
+- Why rejected: Premature complexity
+
+### Consequences
+
+**Positive:** Federation available now. Simple HTTP-based discovery. Easy to operate.
+**Negative:** Centralized registry is a single point of failure. Will need migration to DIDs later.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-061 -->
+
+---
+
+*Last updated: 2026-03-21*
+*Next ADR ID: ADR-061*
+*Decision count: 51 accepted, 3 superseded*
