@@ -642,5 +642,198 @@ auto-remediation actions are bounded and auditable.
 
 ---
 
-*Last updated: 2026-03-19*
-*Next item ID: IDEA-027*
+### IDEA-027 — Knowledge Graph Memory (GraphRAG)
+**Category:** Self-Improvement / Architecture
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** Microsoft GraphRAG (batch-based entity extraction), Graphiti by Neo4j (real-time
+incremental updates, 5x faster queries than traditional RAG, 90% fewer hallucinations),
+MAGMA paper (arxiv 2601.03236 — multi-graph agentic memory: procedural + semantic + episodic
+as separate graph layers). Cognee (open-source memory engine turning unstructured data into
+concept graphs).
+**Description:** Replace NEXUS's flat vector-based episodic/semantic memory with a knowledge
+graph that captures entity-relationship structure. Agents would query "What do we know about
+Client X?" and get all projects, interactions, budget impact, and related agents — not just
+cosine-similar text chunks. CEO task decomposition would improve by seeing the context graph
+instead of flat vector search results. Estimated 5x improvement in recall quality for complex
+multi-step tasks.
+**Key questions:**
+- Neo4j (dedicated graph DB) vs PostgreSQL AGE extension (stay on single DB)?
+- Migration strategy: how to backfill existing episodic/semantic records into graph?
+- Performance at scale: when does graph query outperform vector search (>100 tasks? >1000?)?
+- How to handle agent-specific vs shared knowledge graph partitions?
+
+---
+
+### IDEA-028 — Agent Negotiation & Consensus Protocol
+**Category:** Self-Improvement / Platform
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** AutoGen (Microsoft) designed for multi-agent negotiation/debate. Supply chain
+consensus-seeking research shows agents balancing selfish goals with systemic outcomes through
+structured conversation (Tandfonline 2025). Dynamic negotiation protocols enable propose/accept/
+counter-offer workflows at machine speed. Agentic Commerce Protocol (ACP) by OpenAI + Stripe
+adds payment negotiation to agent interactions.
+**Description:** Currently NEXUS CEO determines task decomposition top-down. Specialists execute
+without push-back. Implement a structured negotiation protocol where specialists can estimate
+effort, propose scope changes, and negotiate with CEO before committing. Example flow:
+CEO: "Implement feature X by Friday for $100" → Engineer: "That's tight, can we cut Y?" →
+CEO: "Approved, write scope doc." Uses existing Kafka meeting room pattern with new
+negotiation message types (propose, counter, accept, reject).
+**Key questions:**
+- How to prevent negotiation from becoming an infinite token sink?
+- Should negotiation be opt-in per task type or always-on?
+- How does QA interact with negotiated scope (review against original or negotiated scope)?
+- What's the fallback if agents can't reach consensus (CEO decides unilaterally)?
+
+---
+
+### IDEA-029 — NIST CAISI Compliance Framework
+**Category:** Security / Platform
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** NIST launched the Collaborative AI Standards Initiative (CAISI) in February 2026
+with three pillars: (1) industry-led standards via W3C/IETF, (2) open-source protocol maintenance,
+(3) AI agent security & identity research. RFI on AI Agent Security due March 2026. Concept paper
+on AI Agent Identity & Authorization due April 2026. Sector-specific listening sessions starting
+April 2026. Focus areas: security controls, risk management, safeguards against misuse, privilege
+escalation prevention, and unintended autonomous action prevention.
+**Description:** Proactively align NEXUS with emerging NIST standards for AI agent security.
+NEXUS already implements many anticipated requirements (human_approvals, require_approval() guard,
+audit_log, tool_access control, token budget enforcement). Build a compliance dashboard that
+maps NEXUS security controls to NIST CAISI requirements. Generate compliance reports for
+enterprise customers. This becomes a competitive differentiator for regulated industries.
+**Key questions:**
+- Which NIST requirements will NEXUS already satisfy vs need new work?
+- How to structure compliance reporting (automated vs manual review)?
+- Should compliance checks run as a CI pipeline or runtime validation?
+- Timeline: when will NIST publish actionable requirements (late 2026)?
+
+---
+
+### IDEA-030 — A2A v0.3 gRPC Transport Layer
+**Category:** Platform / Performance
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** A2A protocol v0.3 (July 2025, Linux Foundation governance) added gRPC support
+alongside HTTP+SSE. 150+ organizations now supporting. gRPC provides lower latency, bidirectional
+streaming, and stronger typing than HTTP+SSE. Real-world adoption: Tyson Foods + Gordon Food
+Service running production multi-agent A2A systems. Security card signing replaces simple
+bearer tokens for stronger external authentication.
+**Description:** Add gRPC as an alternative transport for NEXUS's A2A gateway alongside the
+existing HTTP+SSE implementation. External agents can choose their preferred transport.
+gRPC's bidirectional streaming is a natural fit for the meeting room pattern (multi-turn
+agent conversations). Implement security card signing as an upgrade from bearer tokens.
+Keep HTTP+SSE as default (backward compatible), gRPC as opt-in for performance-sensitive callers.
+**Key questions:**
+- gRPC framework: grpcio (Google) vs grpclib (pure Python async)?
+- How to serve HTTP and gRPC on the same port (or separate ports)?
+- Security card format: use A2A v0.3 spec or custom NEXUS extension?
+- Performance baseline: measure latency improvement of gRPC vs HTTP+SSE for typical tasks
+
+---
+
+### IDEA-031 — Agent Control Plane Dashboard
+**Category:** DevOps / Observability
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** AGNTCY (Linux Foundation) provides multi-agent collaboration infrastructure with
+built-in observability. The "agent control plane" concept (2026 trend) treats AI agents like
+microservices — each needs health checks, resource monitoring, and lifecycle management.
+NEXUS already has OpenTelemetry tracing, provider health monitoring, and agent heartbeats.
+The missing piece is a unified cross-instance view.
+**Description:** Build a control plane dashboard that monitors multiple NEXUS instances
+(leveraging the federation registry). Show: agent health across instances, task throughput,
+error rates, cost trends, provider status, federation connectivity. Think "Kubernetes dashboard
+for AI agents." Aggregate OTel traces from multiple instances. Alert on: instance unreachable,
+agent failure rate spike, cost anomaly, provider outage. This transforms NEXUS from a
+single-instance tool to a fleet management platform.
+**Key questions:**
+- Centralized dashboard (one instance aggregates from all) or per-instance with links?
+- Data collection: pull (dashboard queries instances) or push (instances report to dashboard)?
+- Storage: time-series DB (Prometheus/InfluxDB) or existing PostgreSQL?
+- Access control: who can see cross-instance data?
+
+---
+
+### IDEA-032 — Agentic Commerce via AP2 Mandates
+**Category:** Platform / Billing
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** AP2 (Agent Payments Protocol, Google, September 2025) uses cryptographically-signed
+"Mandates" as the trust primitive. Mandates are digital contracts that specify: who can spend,
+how much, for what, until when. Two transaction models: real-time purchases (Intent → Cart →
+approval) and delegated tasks (pre-signed Intent Mandate). 60+ organizations including Adyen,
+Mastercard, PayPal support the spec. A2A x402 extension adds crypto payments (Ethereum,
+Coinbase, MetaMask).
+**Description:** When NEXUS's A2A marketplace matures, implement AP2 Mandates for agent-to-agent
+payment settlement. A user pre-authorizes a spending budget (Mandate) → NEXUS CEO can hire
+external agents up to that budget → payment settles via AP2 → invoice generated automatically.
+This replaces manual approval for each external hire with pre-authorized, auditable, bounded
+spending. Aligns with NEXUS's existing `human_approvals` pattern (Mandates are essentially
+machine-readable approvals with payment terms).
+**Key questions:**
+- Integration with existing Stripe billing (AP2 alongside or replacing Stripe for A2A)?
+- Mandate storage: extend `human_approvals` table or new `mandates` table?
+- Crypto payments: add or defer (regulatory complexity)?
+- Trust model: how to verify external agent AP2 credentials?
+
+---
+
+### IDEA-033 — Federated Learning Across NEXUS Instances
+**Category:** Self-Improvement / Federation
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** Federated learning enables multiple deployments to improve model quality without
+sharing raw data. Privacy-preserving techniques (differential privacy, secure aggregation)
+allow sharing model gradients or prompt improvements without exposing tenant data. NEXUS
+already has RLHF-lite (feedback signals) and fine-tuning pipeline (episodic → dataset → Ollama).
+The missing link: sharing learned improvements across instances.
+**Description:** Enable NEXUS instances in a federation to share prompt improvements and model
+weights without sharing raw task data. Instance A learns "Engineer agent works better with
+step-by-step instructions" → shares this as a prompt delta → Instance B applies it. Uses
+differential privacy to prevent reconstruction of source data from shared gradients. Requires
+federation registry (Phase 6) as prerequisite. Each instance opts in/out of federated learning.
+Shared improvements go through Prompt Creator Agent approval flow (never auto-deployed).
+**Key questions:**
+- What exactly is shared: prompt deltas, model gradients, or aggregated feedback signals?
+- Privacy guarantees: differential privacy epsilon budget per sharing round?
+- Trust: how to prevent adversarial instances from poisoning shared improvements?
+- Performance: minimum number of instances needed for federated learning to add value?
+
+---
+
+### IDEA-034 — Natural Language Workflow Compiler
+**Category:** UX / Platform
+**Added by:** claude
+**Date:** 2026-03-21
+**Status:** OPEN
+**Research:** Dify (130K+ GitHub stars), Langflow, Flowise prove massive demand for visual/natural
+language workflow builders. But all are standalone products — integrating into an existing
+multi-agent system with CEO decomposition, QA review, and meeting rooms is architecturally
+complex. React Flow library makes UI fast to build, but workflow-to-Kafka compilation is the
+hard part.
+**Description:** Users describe a business process in natural language: "Every Monday, research
+competitors, draft an email summary, get my approval, then send it." NEXUS compiles this into
+an executable agent DAG: scheduled trigger → Analyst (research) → Writer (draft) → human
+approval → Writer (send email). The compiler maps process steps to agent roles, identifies
+dependencies, and generates Kafka message flows. Builds on scheduled tasks (Phase 5) and
+meeting room pattern (Phase 2). Start with template-based workflows, evolve to LLM-compiled
+workflows as reliability improves.
+**Key questions:**
+- Compilation strategy: LLM-based (flexible but unreliable) vs template-based (rigid but safe)?
+- How to handle ambiguous steps ("process the data" — which agent? which tools?)?
+- Validation: how to verify a compiled workflow before execution?
+- Version control: how to track workflow changes and rollback?
+
+---
+
+*Last updated: 2026-03-21*
+*Next item ID: IDEA-035*

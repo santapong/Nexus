@@ -901,7 +901,19 @@ See ERROR-018 for the original incident.
 
 ---
 
-*Last updated: 2026-03-18*
+*Last updated: 2026-03-21*
 *Next error ID: ERROR-026*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
-*Security audit findings (ERROR-019 through ERROR-025): 7 OPEN — require fixes before production deployment.*
+*Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
+
+### Phase 6 Security RCA Resolution Summary (2026-03-21)
+
+| Error | Severity | Fix | File |
+|-------|----------|-----|------|
+| ERROR-019 | MEDIUM | Added 10MB file size limit, `Path.resolve()` traversal prevention, allowed dir whitelist, 256MB memory + 30s CPU limits on code execution | `tools/adapter.py` |
+| ERROR-020 | CRITICAL | Removed default JWT secret. Required via env var. Startup blocks on weak secrets. | `settings.py`, `app.py` |
+| ERROR-021 | CRITICAL | Removed hardcoded `"nexus-dev-a2a-token-2026"`. Dynamic generation via `secrets.token_urlsafe(32)`. Dev-only gating. | `a2a/auth.py` |
+| ERROR-022 | HIGH | `list_workspaces` filtered by user via WorkspaceMember join. `create_workspace` uses JWT owner_id. `get_workspace` verifies membership. | `api/workspaces.py` |
+| ERROR-023 | HIGH | All 5 task endpoints now extract `workspace_id` from JWT and scope queries. `create_task` sets workspace_id on new tasks. | `api/tasks.py` |
+| ERROR-024 | HIGH | Slug sanitized via regex, collision detection with `-N` suffix, `_generate_unique_slug()` helper. | `api/workspaces.py` |
+| ERROR-025 | HIGH | Removed `resolved_by` from request body. Extracted from JWT. Unauthenticated callers rejected. Approvals scoped to workspace. | `api/approvals.py` |

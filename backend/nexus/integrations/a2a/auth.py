@@ -243,34 +243,43 @@ async def revoke_token(
 async def seed_dev_token(db_session: AsyncSession) -> str:
     """Seed a development token for testing.
 
-    Inserts into the DB if not already present.
+    Only runs in development environment. Generates a unique random
+    token each time if no dev token exists yet.
 
     Args:
         db_session: Async database session.
 
     Returns:
-        The raw token string (for logging/testing only).
+        The raw token string (for logging in dev only).
     """
-    dev_token = "nexus-dev-a2a-token-2026"
-    token_hash = _hash_token(dev_token)
+    import secrets
 
-    # Check if already exists
-    stmt = select(A2ATokenRecord).where(A2ATokenRecord.token_hash == token_hash)
+    from nexus.settings import settings
+
+    if not settings.is_development:
+        logger.info("a2a_dev_token_skipped", reason="not in development environment")
+        return ""
+
+    # Check if a dev token already exists
+    stmt = select(A2ATokenRecord).where(A2ATokenRecord.name == "dev-token")
     result = await db_session.execute(stmt)
     existing = result.scalar_one_or_none()
 
-    if existing is None:
-        await create_token(
-            raw_token=dev_token,
-            name="dev-token",
-            allowed_skills=["*"],
-            rate_limit_rpm=100,
-            expires_at=None,
-            db_session=db_session,
-        )
-        logger.info("a2a_dev_token_seeded", token=dev_token)
-    else:
-        logger.info("a2a_dev_token_exists", hash_prefix=token_hash[:8])
+    if existing is not None:
+        logger.info("a2a_dev_token_exists", name="dev-token")
+        return "(existing dev token — hash only in DB)"
+
+    # Generate a unique random token
+    dev_token = secrets.token_urlsafe(32)
+    await create_token(
+        raw_token=dev_token,
+        name="dev-token",
+        allowed_skills=["*"],
+        rate_limit_rpm=100,
+        expires_at=None,
+        db_session=db_session,
+    )
+    logger.info("a2a_dev_token_seeded", token_preview=dev_token[:8] + "...")
 
     return dev_token
 

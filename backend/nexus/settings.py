@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     default_token_budget_per_task: int = 50_000
 
     # Multi-tenant / Auth
-    jwt_secret_key: str = "nexus-dev-secret-change-in-production"
+    jwt_secret_key: str = ""  # REQUIRED — set via JWT_SECRET_KEY env var
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440  # 24 hours
 
@@ -140,6 +140,10 @@ class Settings(BaseSettings):
 
     # ─── Phase 5 Track C: Plugin System ───────────────────────────────
     plugin_auto_load: bool = True  # Load plugins from DB on startup
+
+    # ─── Phase 6: Tool Safety ───────────────────────────────────────
+    tool_file_read_max_bytes: int = 10 * 1024 * 1024  # 10MB
+    tool_allowed_dirs: str = ""  # Comma-separated allowed directories for file_read
 
     @property
     def is_development(self) -> bool:

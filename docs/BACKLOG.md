@@ -118,6 +118,7 @@ Graceful degradation on failure.
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-19
+**Status:** ✅ RESOLVED — 2026-03-21 (ADR-058: defer adoption until IETF RFC published 2026-2027)
 **Source:** Protocol evaluation — https://github.com/agent-network-protocol/AgentNetworkProtocol
 **Description:** ANP aims to be "the HTTP of the Agentic Web" with three layers: identity
 (W3C DID), meta-protocol (negotiation), and application (semantic web). Its decentralized
@@ -131,6 +132,7 @@ it reaches stable release. Best fit for multi-NEXUS interop.
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-19
+**Status:** ✅ RESOLVED — 2026-03-21 (ADR-059: adopt only if paid A2A marketplace launches)
 **Source:** Protocol evaluation — https://github.com/google-agentic-commerce/AP2
 **Description:** Google's open protocol for AI agent payment transactions. Could standardize
 cross-company task billing (BACKLOG-032) with typed payment data structures. Currently
@@ -155,6 +157,7 @@ not a general agent protocol. Evaluate only if commerce becomes a NEXUS task cat
 **Suggested phase:** Phase 5
 **Added by:** claude_code
 **Date:** 2026-03-18
+**Status:** ✅ RESOLVED — 2026-03-21 (ADR-060: centralized registry implemented in Phase 6)
 **Description:** Enable multiple NEXUS instances to discover and hire each other's agents.
 Extends A2A with trust registry, shared billing, and cross-instance task routing. Foundation
 for a decentralized agent marketplace.

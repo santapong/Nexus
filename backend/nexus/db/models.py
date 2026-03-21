@@ -538,7 +538,7 @@ class FeedbackSignal(UUIDBase):
     signal_type: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # approval | rating | rework | escalation
-    signal_value: Mapped[float] = mapped_column(Float, nullable=False)  # 0.0–1.0
+    signal_value: Mapped[float] = mapped_column(Float, nullable=False)  # 0.0-1.0
     context: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
@@ -586,3 +586,21 @@ class PluginRegistration(UUIDBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+
+
+# ─── Table 28: federation_registry (Phase 6) ──────────────────────────────
+
+
+class FederationInstance(UUIDBase):
+    __tablename__ = "federation_registry"
+
+    instance_url: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
+    instance_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    agent_card: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    trust_level: Mapped[str] = mapped_column(String(20), nullable=False, default="untrusted")
+    capabilities: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    registered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)

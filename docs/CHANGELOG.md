@@ -40,6 +40,35 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-21] — Phase 6: Security RCA fixes, federation registry, A2A v0.3, new ideas
+
+### Fixed (Security RCA — 7 issues resolved)
+- **ERROR-020 (CRITICAL):** Removed hardcoded JWT secret default from `settings.py`. JWT_SECRET_KEY is now required via env var. Startup blocks on weak/missing secrets in all environments.
+- **ERROR-021 (CRITICAL):** Removed hardcoded A2A dev token `"nexus-dev-a2a-token-2026"` from source code. `seed_dev_token()` now generates random tokens via `secrets.token_urlsafe(32)` and only runs in development.
+- **ERROR-022 (HIGH):** `list_workspaces` now filters by authenticated user via `WorkspaceMember` join. `create_workspace` sets `owner_id` from JWT. `get_workspace` verifies membership.
+- **ERROR-023 (HIGH):** All task endpoints (`create_task`, `list_tasks`, `get_task`, `get_task_trace`, `get_task_replay`) now extract `workspace_id` from JWT and scope queries to current tenant.
+- **ERROR-024 (HIGH):** Slug generation sanitized with regex validation (`^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$`), collision detection with `-N` suffix, and `_generate_unique_slug()` helper.
+- **ERROR-025 (HIGH):** Removed `resolved_by` from `ResolveApprovalRequest` body. Approval resolution now extracts authenticated user from JWT. Unauthenticated callers are rejected.
+- **ERROR-019 (MEDIUM):** `tool_file_read` now has 10MB size limit, `Path.resolve()` for traversal prevention, configurable allowed directory whitelist. `tool_code_execute` now sets 256MB memory and 30s CPU limits via `resource.setrlimit()`.
+
+### Added
+- **Federation registry** (`integrations/a2a/federation.py`) — Service for multi-NEXUS instance discovery. `register_instance()` fetches Agent Cards, `discover_instances()` queries by capability, `refresh_registry()` updates all entries.
+- **Federation API** (`api/federation.py`) — Endpoints: `POST /api/federation/register`, `GET /api/federation/instances`, `DELETE /api/federation/instances/{id}`, `POST /api/federation/refresh`.
+- **FederationInstance model** (`db/models.py`) — New table `federation_registry` with instance_url, agent_card (JSONB), trust_level, capabilities.
+- **Migration 009** — `federation_registry` table, index on `tasks(workspace_id, created_at)`.
+- **8 new ideas** (IDEA-027 through IDEA-034) — Knowledge Graph Memory, Agent Negotiation, NIST CAISI Compliance, A2A gRPC, Agent Control Plane, AP2 Mandates, Federated Learning, NL Workflow Compiler.
+- **3 new ADRs** — ADR-058 (ANP evaluation), ADR-059 (AP2 evaluation), ADR-060 (Federation registry approach).
+
+### Changed
+- **A2A Agent Card** updated to v0.3 format (`protocolVersion: "0.3"`, `capabilities` object with `interactions: true`).
+- **Settings** — `jwt_secret_key` no longer has a default value. New settings: `tool_file_read_max_bytes`, `tool_allowed_dirs`.
+- **Docker Compose** — JWT_SECRET_KEY env var updated with dev-only default and generation instructions.
+
+**Commits:** Phase 6 security + federation + ideas
+**PR:** n/a
+
+---
+
 ## [2026-03-20] — Frontend usability overhaul: sidebar navigation, React Router, shadcn/ui components
 
 ### Added

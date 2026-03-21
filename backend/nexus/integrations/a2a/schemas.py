@@ -23,10 +23,21 @@ class AgentSkill(BaseModel):
     input_schema: dict[str, Any] = Field(default_factory=dict)
 
 
+class AgentCapabilities(BaseModel):
+    """A2A v0.3 capabilities declaration."""
+
+    model_config = {"populate_by_name": True}
+
+    streaming: bool = True
+    state_transition_history: bool = Field(True, alias="stateTransitionHistory")
+    interactions: bool = True  # v0.3: multi-turn stateful workflows
+
+
 class AgentCard(BaseModel):
     """Public Agent Card served at /.well-known/agent.json.
 
     Describes the agent's identity, capabilities, and API endpoint.
+    Updated to A2A protocol v0.3 format.
     """
 
     name: str = "NEXUS"
@@ -35,7 +46,9 @@ class AgentCard(BaseModel):
         "writing, engineering, and analysis tasks."
     )
     url: str = ""
-    version: str = "0.2.0"
+    version: str = "0.3.0"
+    protocol_version: str = Field("0.3", alias="protocolVersion")
+    capabilities: AgentCapabilities = Field(default_factory=AgentCapabilities)
     skills: list[AgentSkill] = Field(
         default_factory=lambda: [
             AgentSkill(
