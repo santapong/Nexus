@@ -25,7 +25,7 @@ A platform where every department of a digital company is staffed by an AI agent
            │
 ┌──────────▼──────────────────────────────────────────────────────────┐
 │  Agent Runtime — Pydantic AI                                        │
-│  CEO · Engineer · Analyst · Writer · QA · Prompt Creator           │
+│  CEO · Director · Engineer · Analyst · Writer · QA · Prompt Creator │
 └──────────┬──────────────────────────────────────────────────────────┘
            │
 ┌──────────▼──────────────────────────────────────────────────────────┐
@@ -61,7 +61,8 @@ A platform where every department of a digital company is staffed by an AI agent
 
 | Agent | Role | Default Model |
 |-------|------|---------------|
-| CEO | Orchestrator — decomposes tasks, delegates, aggregates results | Configurable (any provider) |
+| CEO | Orchestrator — plans, decomposes tasks, delegates, aggregates | Configurable (any provider) |
+| Director | Synthesizer — loop prevention, security review, result synthesis | Configurable (any provider) |
 | Engineer | Code generation, debugging, architecture | Configurable (any provider) |
 | Analyst | Research, data analysis, reports | Configurable (any provider) |
 | Writer | Content, emails, documentation | Configurable (any provider) |
@@ -90,11 +91,15 @@ nexus/
 │   ├── alembic/                   # DB migrations
 │   └── nexus/
 │       ├── api/                   # Litestar REST + WebSocket endpoints
-│       ├── agents/                # Agent implementations (base, ceo, engineer, ...)
+│       ├── agents/                # Agent implementations (base, ceo, director, engineer, ...)
 │       ├── core/                  # Core infrastructure (system breaks without these)
-│       │   ├── kafka/             # Topics, schemas, producer, consumer, meeting
+│       │   ├── kafka/             # Topics, schemas, producer, consumer, meeting, signing
 │       │   ├── redis/             # 4-role client abstraction
-│       │   └── llm/              # ModelFactory, usage tracking, circuit breaker
+│       │   ├── llm/              # ModelFactory, usage tracking, circuit breaker
+│       │   ├── sanitization.py   # PII detection + output redaction
+│       │   ├── recovery.py       # Crash recovery for orphaned tasks
+│       │   ├── shutdown.py       # Graceful shutdown + task draining
+│       │   └── retry.py          # Configurable retry policies
 │       ├── tools/                 # MCP adapter (13 tools), per-role registry, approval guards
 │       ├── integrations/          # Pluggable services (degrade gracefully)
 │       │   ├── a2a/              # A2A protocol gateway
@@ -134,14 +139,15 @@ nexus/
 | Phase 4 — Scale to Service | **Complete** — Multi-tenant, Temporal, marketplace, billing, agent builder, LangFuse |
 | Phase 5 Track A — Production SaaS | **Complete** — RLS, OAuth2, Stripe, injection defense, webhooks, audit retention |
 | Phase 5 Track B — Platform Intelligence | **Complete** — Cost alerts, provider health, model benchmarks, scheduled tasks |
-| Phase 5 Track C — Federation & Ecosystem | **In Progress** — QA multi-round rework done; federation, auto-scaling pending |
+| Phase 5 Track C — Federation & Ecosystem | **Complete** — QA multi-round rework, auto-scaling, plugin system |
+| Phase 7 — Enterprise Architecture | **In Progress** — Director agent, HMAC signing, PII sanitization, crash recovery |
 
 ### What works today
 
 - All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
-- **Multi-agent task flow:** `POST /api/tasks` -> CEO decomposes -> specialist agents execute -> CEO aggregates -> QA reviews -> result delivered
-- **6 agent roles operational:** CEO (orchestrator), Engineer, Analyst, Writer, QA, Prompt Creator
+- **Multi-agent task flow:** `POST /api/tasks` -> CEO plans -> CEO decomposes -> specialists execute -> Director synthesizes -> QA reviews -> result delivered
+- **7 agent roles operational:** CEO (orchestrator), Director (synthesizer), Engineer, Analyst, Writer, QA, Prompt Creator
 - **CEO LLM-based task decomposition** with dependency tracking and subtask dispatch
 - **QA review pipeline** with approve/reject routing and rework commands
 - **Meeting room pattern** — Kafka-based multi-agent debates with Redis-backed state
@@ -190,6 +196,14 @@ nexus/
 - **Model performance benchmarking** — compare quality/cost/speed across models per role
 - **Scheduled & recurring tasks** — cron-based task scheduler with croniter
 - **QA multi-round rework** — configurable max rework rounds with feedback accumulation
+- **Director agent** — synthesizes best result from multi-agent outputs, prevents meeting room loops via convergence detection
+- **CEO planning-first pipeline** — creates execution plan with risk assessment before task decomposition
+- **Kafka message signing** — HMAC-SHA256 integrity verification on all messages
+- **PII sanitization** — scans agent outputs for 18 categories of sensitive data (API keys, emails, SSNs, credit cards, JWTs, etc.)
+- **Crash recovery** — orphaned task detection and re-queuing on startup
+- **Graceful shutdown** — 30-second task drain on SIGINT/SIGTERM with checkpoint for recovery
+- **Enhanced circuit breaker** — sliding window failure tracking, health scores, latency monitoring per LLM provider
+- **Configurable retry policies** — exponential backoff with jitter for LLM, Kafka, DB, and Redis operations
 
 ## Getting Started
 

@@ -40,6 +40,46 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-03-28] — Phase 7: Director agent, enterprise security, performance, fault tolerance
+
+### Added
+- **Director Agent** (`agents/director.py`) — New agent sitting between CEO aggregation and QA review. Synthesizes the best result from multi-agent contributions using LLM evaluation. Performs security review of outputs against the CEO's execution plan.
+- **Meeting room convergence detection** (`core/kafka/meeting.py`) — `check_convergence()` measures inter-round similarity via SequenceMatcher. Detects loops (>75% similarity), stagnation (no new ideas), and convergence (agents agreeing). Returns recommendation: continue/synthesize/terminate.
+- **`get_best_contributions()`** — Extracts and deduplicates the most substantive meeting responses for Director synthesis.
+- **CEO planning-first pipeline** (`agents/ceo.py`) — CEO now creates an execution plan with risk level (low/medium/high), security concerns, and complexity assessment BEFORE decomposing tasks. Plan is passed to Director for security validation.
+- **Kafka message signing** (`core/kafka/signing.py`) — HMAC-SHA256 signs every message before publishing. Consumer validates signatures. Rejects unsigned/tampered messages in production. Uses JWT secret as HMAC key with canonical JSON serialization.
+- **PII sanitization** (`core/sanitization.py`) — Scans all agent outputs for 18 pattern categories: API keys (AWS, GitHub, Slack, Anthropic, OpenAI), emails, phone numbers, SSNs, credit cards, JWT tokens, DB connection strings, Redis URLs, private IPs, private/SSH keys. Recursive scanning for string/dict/list outputs.
+- **Crash recovery service** (`core/recovery.py`) — On startup, scans for orphaned tasks (status=running, older than 30 min). Re-queues retryable tasks, fails exhausted ones, cleans stale Redis locks, notifies humans of unrecoverable tasks.
+- **Graceful shutdown** (`core/shutdown.py`) — SIGINT/SIGTERM triggers 30-second task drain. Active tasks tracked via register/unregister. Tasks that can't finish are checkpointed for recovery on restart.
+- **Configurable retry policies** (`core/retry.py`) — Framework with exponential backoff + jitter. Pre-configured for LLM (5 retries, 2-45s), Kafka (3, 1-30s), DB (3, 0.5-10s), Redis (3, 0.2-5s). Prevents thundering herds.
+- **Director security review** — Validates agent outputs against CEO execution plan. Flags dangerous patterns (`rm -rf`, `eval()`, `exec()`, `os.system()`, SQL injection).
+- **New Kafka topic:** `director.review` — Director receives aggregated output from CEO for synthesis.
+- **New AgentRole:** `DIRECTOR` — Claude Sonnet default, read-only tools (web_search, file_read).
+
+### Changed
+- **Task execution flow:** `Plan → Decompose → Execute → Director Security Review → Synthesize → QA` (was: `Decompose → Execute → QA`)
+- **CEO routing:** Aggregated results now go to `director.review` instead of `task.review_queue`. Director synthesizes and forwards to QA.
+- **Circuit breaker** (`core/llm/circuit_breaker.py`) — Enhanced with sliding window (20 calls), health scores (0.0-1.0), latency tracking, slow call detection (>10s), failure rate threshold (>50%), comprehensive stats for monitoring.
+- **Agent base class** (`agents/base.py`) — Added PII sanitization step, shutdown awareness (rejects new tasks during shutdown), active task tracking for graceful drain.
+- **Kafka producer** (`core/kafka/producer.py`) — Now signs all messages with HMAC before publishing.
+- **Kafka consumer** (`core/kafka/consumer.py`) — Added `validate_message_signature()` for integrity verification.
+- **Agent runner** (`agents/runner.py`) — Startup: recovery + stale lock cleanup. Shutdown: signal handlers + task draining + connection cleanup.
+- **Result consumer** — Recognizes Director orchestration actions (`aggregated_and_sent_to_director`, `director_synthesized_and_sent_to_qa`).
+- **LLM factory** — Added Director to model map and fallback chain.
+- **Tool registry** — Added Director role with read-only access (web_search, file_read, KeepSave read).
+- **DB seed** — Added Director agent seed data + system prompt + prompt version.
+
+### Documentation
+- **CLAUDE.md** updated to v0.8 — Director agent spec, enterprise architecture principles, updated task flow, new file listings.
+- **ARCHITECTURE.md** — Added Director to agent roster, updated task lifecycle, added sections for convergence detection, crash recovery, graceful shutdown, circuit breaker enterprise edition, Kafka signing, PII sanitization.
+- **README.md** — Updated architecture diagram, agent roster, status, feature list.
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** #18
+
+---
+
 ## [2026-03-21] — Phase 6: Security RCA fixes, federation registry, A2A v0.3, new ideas
 
 ### Fixed (Security RCA — 7 issues resolved)
