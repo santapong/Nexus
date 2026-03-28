@@ -56,8 +56,11 @@ class CEOAgent(AgentBase):
             instruction=message.instruction[:200],
         )
 
-        # Use LLM to decompose the task into subtasks
-        subtasks = await self._decompose_task(message, session)
+        # Phase 1: Plan — create execution plan with security assessment
+        plan = await self._create_plan(message, session)
+
+        # Phase 2: Decompose — convert plan into executable subtasks
+        subtasks = await self._decompose_task(message, session, plan=plan)
 
         if not subtasks:
             # BACKLOG-021: Track decomposition failure in episodic memory
@@ -109,6 +112,7 @@ class CEOAgent(AgentBase):
         tracking: dict[str, Any] = {
             "parent_task_id": task_id,
             "original_instruction": message.instruction,
+            "plan": plan,
             "subtasks": {
                 str(sid): {
                     "role": st["role"],
@@ -162,15 +166,118 @@ class CEOAgent(AgentBase):
             tokens_used=0,
         )
 
-    async def _decompose_task(
+    async def _create_plan(
         self, message: AgentCommand, session: AsyncSession
+    ) -> dict[str, Any]:
+        """Create an execution plan with security and architecture assessment.
+
+        The planning phase happens BEFORE task decomposition. It evaluates:
+        - What the task requires and potential approaches
+        - Security implications (irreversible actions, external calls, data access)
+        - Required tools and their risk levels
+        - Dependencies and execution order
+
+        Args:
+            message: The incoming task command.
+            session: Database session.
+
+        Returns:
+            Plan dict with approach, security assessment, and risk level.
+        """
+        task_id = str(message.task_id)
+
+        plan_prompt = (
+            "You are the CEO planning an execution strategy. Analyze this task and create a plan.\n\n"
+            f"Task: {message.instruction}\n\n"
+            "Respond ONLY with a JSON object containing:\n"
+            '- "approach": brief description of how to approach this task\n'
+            '- "risk_level": "low" | "medium" | "high"\n'
+            '- "security_concerns": list of security concerns (empty if none)\n'
+            '- "requires_approval": true if task involves irreversible actions (file writes, emails, external API calls)\n'
+            '- "estimated_complexity": "simple" | "moderate" | "complex"\n'
+            '- "parallel_possible": true if subtasks can run in parallel\n\n'
+            "Risk level guidelines:\n"
+            '- "low": read-only operations, research, analysis\n'
+            '- "medium": code generation, file creation, content writing\n'
+            '- "high": external API calls, email sending, code execution, data modification\n'
+        )
+
+        try:
+            result = await self._run_with_retry(plan_prompt, task_id)
+
+            # Record planning LLM usage
+            try:
+                usage = result.usage()
+                input_tokens = usage.request_tokens or 0
+                output_tokens = usage.response_tokens or 0
+                model_obj = self.llm_agent.model
+                model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
+                await record_usage(
+                    session=session,
+                    task_id=task_id,
+                    agent_id=self.agent_id,
+                    model_name=model_name,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cost_usd=calculate_cost(model_name, input_tokens, output_tokens),
+                )
+            except Exception as exc:
+                logger.warning("ceo_plan_usage_tracking_failed", task_id=task_id, error=str(exc))
+
+            raw = result.output.strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
+                raw = raw.rsplit("```", 1)[0]
+
+            plan = json.loads(raw)
+
+            logger.info(
+                "ceo_plan_created",
+                task_id=task_id,
+                risk_level=plan.get("risk_level", "unknown"),
+                requires_approval=plan.get("requires_approval", False),
+                complexity=plan.get("estimated_complexity", "unknown"),
+                security_concerns=len(plan.get("security_concerns", [])),
+            )
+
+            return plan
+
+        except Exception as exc:
+            logger.warning("ceo_planning_failed", task_id=task_id, error=str(exc))
+            # Fallback: assume moderate risk
+            return {
+                "approach": "Direct execution — planning phase failed",
+                "risk_level": "medium",
+                "security_concerns": [],
+                "requires_approval": False,
+                "estimated_complexity": "moderate",
+                "parallel_possible": False,
+            }
+
+    async def _decompose_task(
+        self, message: AgentCommand, session: AsyncSession,
+        *, plan: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """Use LLM to analyze the task and produce a decomposition plan."""
         task_id = str(message.task_id)
 
+        plan_context = ""
+        if plan:
+            plan_context = (
+                f"\n\nExecution plan:\n"
+                f"- Approach: {plan.get('approach', 'N/A')}\n"
+                f"- Risk level: {plan.get('risk_level', 'medium')}\n"
+                f"- Complexity: {plan.get('estimated_complexity', 'moderate')}\n"
+                f"- Security concerns: {plan.get('security_concerns', [])}\n"
+                f"- Parallel execution possible: {plan.get('parallel_possible', False)}\n"
+                f"\nUse this plan to guide your decomposition. "
+                f"If risk is 'high', ensure irreversible actions are explicit.\n"
+            )
+
         decompose_prompt = (
             f"Decompose the following task into subtasks.\n\n"
-            f"Task: {message.instruction}\n\n"
+            f"Task: {message.instruction}\n"
+            f"{plan_context}\n"
             f"Available specialist agents:\n"
             f"- engineer: code, debugging, technical tasks\n"
             f"- analyst: research, data analysis, reports\n"
@@ -357,7 +464,7 @@ class CEOAgent(AgentBase):
 
         # Check if all subtasks are complete
         if tracking["completed"] >= tracking["total"]:
-            return await self._aggregate_and_route_to_qa(parent_task_id, tracking, message, session)
+            return await self._aggregate_and_route_to_director(parent_task_id, tracking, message, session)
 
         logger.info(
             "ceo_subtask_completed",
@@ -418,14 +525,20 @@ class CEOAgent(AgentBase):
 
         await set_working_memory(self.agent_id, parent_task_id, tracking)
 
-    async def _aggregate_and_route_to_qa(
+    async def _aggregate_and_route_to_director(
         self,
         parent_task_id: str,
         tracking: dict[str, Any],
         message: AgentCommand,
         session: AsyncSession,
     ) -> AgentResponse:
-        """Aggregate all subtask outputs and send to QA for review."""
+        """Aggregate all subtask outputs and send to Director for synthesis.
+
+        The Director evaluates contributions, resolves contradictions,
+        removes redundancy, and produces the best consolidated output
+        before forwarding to QA. This prevents infinite loops by having
+        a dedicated agent control the quality gate.
+        """
         # Collect all outputs
         outputs: list[str] = []
         for _sid, st in tracking["subtasks"].items():
@@ -440,8 +553,8 @@ class CEOAgent(AgentBase):
             subtask_count=tracking["total"],
         )
 
-        # Route to QA for review
-        qa_command = AgentCommand(
+        # Route to Director for synthesis (Director then forwards to QA)
+        director_command = AgentCommand(
             task_id=UUID(parent_task_id),
             trace_id=message.trace_id,
             agent_id=self.agent_id,
@@ -450,16 +563,19 @@ class CEOAgent(AgentBase):
                 "original_instruction": tracking.get("original_instruction", ""),
                 "subtask_count": tracking["total"],
                 "original_role": "ceo",
+                "execution_plan": tracking.get("plan", {}),
             },
-            target_role=AgentRole.QA.value,
-            instruction=f"Review the following aggregated output for the task:\n\n"
-            f"Original request: {tracking.get('original_instruction', '')}\n\n"
-            f"Aggregated output:\n{aggregated}",
+            target_role=AgentRole.DIRECTOR.value,
+            instruction=(
+                f"Synthesize the best result from agent contributions:\n\n"
+                f"Original request: {tracking.get('original_instruction', '')}\n\n"
+                f"Agent contributions:\n{aggregated}"
+            ),
         )
-        await publish(Topics.TASK_REVIEW_QUEUE, qa_command, key=parent_task_id)
+        await publish(Topics.DIRECTOR_REVIEW, director_command, key=parent_task_id)
 
         logger.info(
-            "ceo_routed_to_qa",
+            "ceo_routed_to_director",
             parent_task_id=parent_task_id,
         )
 
@@ -470,7 +586,7 @@ class CEOAgent(AgentBase):
             payload={},
             status="success",
             output={
-                "action": "aggregated_and_sent_to_qa",
+                "action": "aggregated_and_sent_to_director",
                 "parent_task_id": parent_task_id,
                 "subtask_count": tracking["total"],
             },

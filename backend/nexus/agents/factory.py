@@ -21,6 +21,7 @@ from nexus.tools.registry import get_tools_for_role
 # Kafka topic subscriptions per role
 ROLE_TOPICS: dict[AgentRole, list[str]] = {
     AgentRole.CEO: [Topics.TASK_QUEUE, Topics.AGENT_RESPONSES, Topics.A2A_INBOUND],
+    AgentRole.DIRECTOR: [Topics.DIRECTOR_REVIEW],
     AgentRole.ENGINEER: [Topics.AGENT_COMMANDS],
     AgentRole.ANALYST: [Topics.AGENT_COMMANDS],
     AgentRole.WRITER: [Topics.AGENT_COMMANDS],
@@ -105,6 +106,10 @@ def build_agent(
         from nexus.agents.ceo import CEOAgent
 
         agent = CEOAgent(**kwargs)  # type: ignore[arg-type]
+    elif role == AgentRole.DIRECTOR:
+        from nexus.agents.director import DirectorAgent
+
+        agent = DirectorAgent(**kwargs)  # type: ignore[arg-type]
     elif role == AgentRole.ENGINEER:
         from nexus.agents.engineer import EngineerAgent
 

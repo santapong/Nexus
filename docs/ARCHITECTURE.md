@@ -63,7 +63,8 @@ tools via MCP, and are callable by external systems via the A2A protocol.
 │  AGENT RUNTIME — Pydantic AI                                             │
 │                                                                          │
 │  AgentBase (guard chain + lifecycle)                                      │
-│    ├── CEO         — Orchestrator, decomposes & aggregates               │
+│    ├── CEO         — Orchestrator, plans & decomposes & aggregates       │
+│    ├── Director    — Synthesizer, loop prevention & security review      │
 │    ├── Engineer    — Code generation, debugging                          │
 │    ├── Analyst     — Research, data analysis                             │
 │    ├── Writer      — Content, emails, docs                               │
@@ -93,6 +94,10 @@ tools via MCP, and are callable by external systems via the A2A protocol.
 3. **Humans in the loop** — Irreversible actions always require explicit human approval
 4. **Protocol separation** — Kafka (internal), MCP (tools), A2A (external) never overlap
 5. **Fail safely** — Budget caps, round limits, timeouts, and auto-fail on silence
+6. **Plan before execute** — CEO creates risk-assessed execution plan before decomposing tasks
+7. **Enterprise security** — HMAC-signed Kafka messages, PII sanitization, Director security review
+8. **Crash-consistent** — Orphaned task recovery on startup, graceful shutdown with task draining
+9. **Circuit-broken** — Sliding window health scoring per LLM provider, automatic failover
 
 ---
 
@@ -147,6 +152,8 @@ Message arrives from Kafka
 │
 ├─ Validate output ──→ Secret detection, size limit, empty check
 │
+├─ PII sanitization ──→ Redact API keys, emails, SSNs, JWTs, etc.
+│
 ├─ Write episodic memory ──→ Store what happened
 │
 ├─ Audit: task_completed ──→ Write duration, tokens, status
@@ -162,7 +169,8 @@ Message arrives from Kafka
 
 | Agent | Role | Kafka Topics | Tools |
 |-------|------|-------------|-------|
-| **CEO** | Orchestrator | `task.queue`, `a2a.inbound` | memory_read |
+| **CEO** | Orchestrator — plans, decomposes, aggregates | `task.queue`, `a2a.inbound` | planning tools |
+| **Director** | Synthesizer — loop prevention, security review | `director.review` | web_search, file_read |
 | **Engineer** | Code & debugging | `agent.commands` | web_search, file_read, file_write⚠, code_execute, git_push⚠ |
 | **Analyst** | Research & analysis | `agent.commands` | web_search, web_fetch, file_write |
 | **Writer** | Content & docs | `agent.commands` | web_search, file_read, send_email⚠ |
@@ -205,19 +213,22 @@ User → POST /api/tasks → DB insert → Kafka task.queue
 
 ```
 User → POST /api/tasks → Kafka task.queue
-    → CEO consumes → LLM analyzes → creates subtask plan
-    → DB: creates subtask records with dependencies
-    → Redis: stores tracking state (working memory)
+    → CEO consumes → creates EXECUTION PLAN (risk assessment, security concerns)
+    → CEO decomposes (guided by plan) → creates subtask records with dependencies
+    → Redis: stores tracking state + plan (working memory)
     → Kafka agent.commands × N (parallel where no dependencies)
 
 For each subtask:
-    → Specialist processes → Kafka agent.responses
+    → Specialist processes → Kafka agent.responses (HMAC-signed, PII-sanitized)
     → Result consumer detects subtask → forwards to CEO
     → CEO updates tracking → dispatches unblocked dependents
 
 When all subtasks complete:
-    → CEO aggregates outputs → Kafka task.review_queue
-    → QA reviews → approved → Kafka task.results
+    → CEO aggregates outputs → Kafka director.review (includes execution plan)
+    → Director: security review against plan (flags dangerous patterns)
+    → Director: synthesizes best result from all contributions
+    → Director → Kafka task.review_queue
+    → QA reviews synthesized output → approved → Kafka task.results
     → QA rejected → Kafka agent.commands (rework with feedback)
 ```
 
@@ -246,7 +257,8 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 | `agent.commands` | CEO | Specialists | agent_id | Task assignments |
 | `agent.responses` | Agents | Result consumer | task_id | Task outputs |
 | `task.results` | QA | API/dashboard | task_id | Final results |
-| `task.review_queue` | Result consumer | QA | task_id | QA review queue |
+| `task.review_queue` | Director | QA | task_id | QA review queue |
+| `director.review` | CEO | Director | task_id | Aggregated output for synthesis |
 | `meeting.room` | Meeting room | CEO + agents | meeting_id | Multi-agent debates |
 | `agent.heartbeat` | All agents | Health monitor | agent_id | Liveness signals |
 | `human.input_needed` | Guards | Dashboard | task_id | Approval requests |
@@ -484,7 +496,7 @@ POST /api/prompts/{id}/activate
 - Counter resets to 0 at the start of each task
 - Exceeding limit raises `ToolCallLimitExceeded` → escalates to `human.input_needed`
 
-### Output Validation
+### Output Validation & PII Sanitization
 
 Applied after `handle_task()`, before memory write or publishing:
 
@@ -492,6 +504,11 @@ Applied after `handle_task()`, before memory write or publishing:
 - **Secret pattern redaction:** Scans for 9 patterns (`sk-`, `AKIA`, `Bearer`, `ghp_`, `gho_`,
   `github_pat_`, `xoxb-`, `xoxp-`, `-----BEGIN PRIVATE KEY`) and replaces with `[REDACTED]`
 - **Size limit:** Outputs > 100KB get `_truncated: true` flag
+- **PII sanitization** (`core/sanitization.py`): Scans for 18 pattern categories including
+  API keys (AWS, GitHub, Slack, Anthropic, OpenAI), emails, phone numbers, SSNs, credit cards,
+  JWT tokens, database connection strings, private IPs, and private keys. Detected patterns
+  are replaced with typed redaction markers (e.g., `[REDACTED:EMAIL]`, `[REDACTED:AWS_KEY]`).
+  Applied recursively to string, dict, and list outputs.
 
 ### Audit Logging
 
@@ -516,11 +533,19 @@ Centralized audit trail via `audit/service.py`:
 - Scans every 60 seconds for agents silent > 5 minutes
 - Auto-fails active tasks for stale agents (DB update + audit log)
 
-### Meeting Room Guards
+### Meeting Room Guards & Convergence Detection
 
 - **Timeout:** 300 seconds default (configurable per meeting)
 - **Max rounds:** 10 default (configurable per meeting)
 - **Transcript:** Generated on termination for auditability
+- **Convergence detection:** Director's `check_convergence()` measures inter-round similarity
+  via SequenceMatcher. Rounds with >75% similarity are flagged as looping.
+- **Stagnation detection:** Tracks unique ideas per round. If last 2 rounds have ≤1 unique
+  idea each, discussion is stagnating.
+- **Loop prevention:** Recommends `terminate` (looping), `synthesize` (stagnating/converging),
+  or `continue` (productive). Director uses this to decide meeting fate.
+- **Best contribution extraction:** `get_best_contributions()` deduplicates and ranks responses
+  by depth, giving the Director the strongest material for synthesis.
 
 ### Dead Letter Handling
 
@@ -551,6 +576,46 @@ Centralized audit trail via `audit/service.py`:
 - Rate limit errors (429): exponential backoff, 5 retries, 5s→45s
 - Tool use failures: retry without tools (fallback to text-only)
 - Kafka publish failures: logged and re-raised (fail fast)
+- **Configurable retry policies** (`core/retry.py`): Pre-configured policies for LLM (5 retries,
+  2-45s), Kafka (3, 1-30s), DB (3, 0.5-10s), Redis (3, 0.2-5s). All use exponential backoff
+  with jitter to prevent thundering herds. Non-retryable exceptions (e.g., auth failures) fail
+  immediately.
+
+### Kafka Message Integrity
+
+- **HMAC-SHA256 signing** (`core/kafka/signing.py`): Every message is signed before publishing
+  using the JWT secret as the HMAC key. Canonical JSON serialization ensures deterministic
+  signatures regardless of dict ordering.
+- **Signature validation on consume:** Consumer rejects unsigned messages in production.
+  Development mode accepts unsigned messages for backwards compatibility.
+- **Constant-time comparison:** Uses `hmac.compare_digest()` to prevent timing attacks.
+
+### Crash Recovery
+
+- **Orphaned task detection** (`core/recovery.py`): On startup, scans for tasks with
+  `status=running` older than 30 minutes. Re-queues tasks with <2 recovery attempts,
+  fails tasks that have been retried too many times.
+- **Stale lock cleanup:** Scans Redis db:3 for `task_lock:*` keys with no TTL (indicating
+  a dead process held the lock). Removes them to unblock task processing.
+- **Human notification:** Failed recovery tasks are published to `human.input_needed`.
+
+### Graceful Shutdown
+
+- **Signal handling:** `SIGINT` and `SIGTERM` trigger `request_shutdown()` in the runner.
+- **Task draining:** In-flight tasks get 30 seconds to complete. Progress logged every 5s.
+- **Checkpointing:** Tasks that can't finish are marked in DB for recovery on next startup.
+- **Shutdown awareness:** Agents check `is_shutting_down()` before accepting new tasks.
+  Active tasks are tracked via `register_active_task()`/`unregister_active_task()`.
+
+### Circuit Breaker (Enterprise Edition)
+
+- **Sliding window:** Tracks last 20 calls per provider (not just consecutive failures).
+  Opens circuit when failure rate exceeds 50% in the window OR after 5 consecutive failures.
+- **Health scores:** 0.0 (dead) to 1.0 (healthy), combining failure rate (60% weight),
+  slow call rate (30% weight), and circuit state (10% weight).
+- **Latency tracking:** Records per-call latency. Calls >10s are classified as "slow."
+- **System health:** `get_system_health_score()` averages all provider health scores.
+- **Stats dashboard:** `get_all_breaker_stats()` returns comprehensive metrics per provider.
 
 ---
 
@@ -571,12 +636,28 @@ Centralized audit trail via `audit/service.py`:
 - **A2A tokens:** Skill-level access control (token can only access allowed skills)
 - **Agent isolation:** Agents can only access their own working memory namespace
 
+### Planning & Security Review (Phase 7)
+
+- **CEO execution plan:** Before decomposing tasks, CEO creates a plan with:
+  risk level (low/medium/high), security concerns, required approvals, estimated complexity
+- **Director security review:** After specialists finish, the Director validates outputs
+  against the execution plan. Checks for dangerous patterns (`rm -rf`, `eval()`, `exec()`,
+  `os.system()`, SQL injection), unauthorized external references, and risk level alignment.
+- **End-to-end flow:** Plan → Decompose → Execute → Security Review → Synthesize → QA
+
+### Message Integrity
+
+- **Kafka signing:** All messages HMAC-SHA256 signed at the producer (`core/kafka/signing.py`).
+  Consumers validate signatures before processing. Unsigned or tampered messages rejected in production.
+- **PII sanitization:** All agent outputs scanned for 18 PII pattern categories before publishing.
+  Detected patterns replaced with typed redaction markers.
+
 ### Secrets Management
 
 - All API keys via environment variables (never hardcoded)
 - `.env` file in `.gitignore`
 - Docker Compose passes env vars to containers
-- Phase 3: migrate to Docker secrets or Vault
+- SOPS-based encrypted secrets + KeepSave integration for API-based secrets
 
 ---
 

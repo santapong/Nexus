@@ -4,6 +4,9 @@ Provides a MeetingRoom abstraction for agents to exchange messages in
 a structured debate. CEO creates and moderates meetings, poses questions,
 reads agent responses, and decides when to close the meeting.
 
+The Director agent monitors meetings for convergence and loop detection,
+ensuring discussions terminate productively rather than cycling endlessly.
+
 The meeting uses the existing `meeting.room` topic with a keyed partition
 scheme: all messages for one meeting share the same key (meeting_id).
 """
@@ -12,6 +15,7 @@ from __future__ import annotations
 
 import json
 import time
+from difflib import SequenceMatcher
 from uuid import UUID, uuid4
 
 import structlog
@@ -28,6 +32,8 @@ logger = structlog.get_logger()
 
 DEFAULT_TIMEOUT_SECONDS = 300  # 5 minutes
 MAX_ROUNDS = 10
+SIMILARITY_THRESHOLD = 0.75  # Above this, responses are considered repetitive
+STAGNATION_WINDOW = 2  # Consecutive rounds with no new ideas = stagnation
 
 
 # ─── Meeting room models ────────────────────────────────────────────────────
@@ -64,7 +70,20 @@ class MeetingResult(BaseModel):
     rounds_completed: int
     messages: list[MeetingMessage]
     conclusion: str
-    terminated_by: str  # "ceo" | "timeout" | "max_rounds"
+    terminated_by: str  # "ceo" | "timeout" | "max_rounds" | "director_convergence" | "director_loop"
+
+
+class ConvergenceReport(BaseModel):
+    """Director's analysis of meeting discussion health."""
+
+    meeting_id: str
+    is_converging: bool = False
+    is_looping: bool = False
+    is_stagnating: bool = False
+    similarity_scores: list[float] = Field(default_factory=list)
+    unique_ideas_per_round: list[int] = Field(default_factory=list)
+    recommendation: str = ""  # "continue" | "synthesize" | "terminate"
+    reason: str = ""
 
 
 # ─── Meeting room manager ───────────────────────────────────────────────────
@@ -234,6 +253,143 @@ class MeetingRoom:
         return [
             m for m in self.messages if m.round_number == round_num and m.message_type == "response"
         ]
+
+    def check_convergence(self) -> ConvergenceReport:
+        """Analyze the meeting for convergence, loops, and stagnation.
+
+        The Director agent calls this to decide whether to continue,
+        synthesize a result, or terminate the meeting.
+
+        Returns:
+            ConvergenceReport with analysis and recommendation.
+        """
+        report = ConvergenceReport(meeting_id=self.meeting_id)
+
+        if self.current_round < 2:
+            report.recommendation = "continue"
+            report.reason = "Too few rounds to assess convergence"
+            return report
+
+        # Compute per-round similarity to detect repetition
+        round_texts: list[str] = []
+        for r in range(1, self.current_round + 1):
+            responses = self.get_responses_for_round(r)
+            combined = " ".join(m.content for m in responses)
+            round_texts.append(combined)
+
+        # Compare consecutive rounds for similarity
+        for i in range(1, len(round_texts)):
+            sim = SequenceMatcher(None, round_texts[i - 1], round_texts[i]).ratio()
+            report.similarity_scores.append(round(sim, 3))
+
+        # Detect looping: high similarity across consecutive rounds
+        recent_sims = report.similarity_scores[-STAGNATION_WINDOW:]
+        if recent_sims and all(s >= SIMILARITY_THRESHOLD for s in recent_sims):
+            report.is_looping = True
+
+        # Detect stagnation: agents repeating their own arguments
+        for r in range(1, self.current_round + 1):
+            responses = self.get_responses_for_round(r)
+            unique_contents: set[str] = set()
+            for resp in responses:
+                # Check if this response is substantially different from existing ones
+                is_unique = True
+                for existing in unique_contents:
+                    if SequenceMatcher(None, existing, resp.content).ratio() >= SIMILARITY_THRESHOLD:
+                        is_unique = False
+                        break
+                if is_unique:
+                    unique_contents.add(resp.content)
+            report.unique_ideas_per_round.append(len(unique_contents))
+
+        # Check if unique ideas are declining
+        if len(report.unique_ideas_per_round) >= STAGNATION_WINDOW:
+            recent_ideas = report.unique_ideas_per_round[-STAGNATION_WINDOW:]
+            if all(c <= 1 for c in recent_ideas):
+                report.is_stagnating = True
+
+        # Detect convergence: agents are agreeing (high intra-round similarity)
+        if self.current_round >= 2:
+            last_responses = self.get_responses_for_round(self.current_round)
+            if len(last_responses) >= 2:
+                contents = [m.content for m in last_responses]
+                intra_sims: list[float] = []
+                for i in range(len(contents)):
+                    for j in range(i + 1, len(contents)):
+                        intra_sims.append(
+                            SequenceMatcher(None, contents[i], contents[j]).ratio()
+                        )
+                avg_intra = sum(intra_sims) / len(intra_sims) if intra_sims else 0.0
+                if avg_intra >= SIMILARITY_THRESHOLD:
+                    report.is_converging = True
+
+        # Determine recommendation
+        if report.is_looping:
+            report.recommendation = "terminate"
+            report.reason = (
+                f"Discussion is looping — last {STAGNATION_WINDOW} rounds have "
+                f">={SIMILARITY_THRESHOLD:.0%} similarity. No new insights being generated."
+            )
+        elif report.is_stagnating:
+            report.recommendation = "synthesize"
+            report.reason = (
+                "Discussion is stagnating — agents are repeating arguments "
+                "without adding new perspectives."
+            )
+        elif report.is_converging:
+            report.recommendation = "synthesize"
+            report.reason = "Agents are converging on a consensus. Ready for synthesis."
+        elif self.is_max_rounds:
+            report.recommendation = "terminate"
+            report.reason = f"Maximum rounds ({self.config.max_rounds}) reached."
+        elif self.is_timed_out:
+            report.recommendation = "terminate"
+            report.reason = f"Meeting timed out after {self.config.timeout_seconds}s."
+        else:
+            report.recommendation = "continue"
+            report.reason = "Discussion is productive — new ideas emerging."
+
+        logger.info(
+            "meeting_convergence_checked",
+            meeting_id=self.meeting_id,
+            round=self.current_round,
+            recommendation=report.recommendation,
+            is_looping=report.is_looping,
+            is_stagnating=report.is_stagnating,
+            is_converging=report.is_converging,
+        )
+
+        return report
+
+    def get_best_contributions(self) -> list[MeetingMessage]:
+        """Extract the most substantive contributions from the meeting.
+
+        Returns responses sorted by content length (as a proxy for depth),
+        deduplicated to remove near-identical responses. The Director uses
+        this to synthesize the best final output.
+
+        Returns:
+            List of the most unique and substantive meeting messages.
+        """
+        all_responses = [m for m in self.messages if m.message_type == "response"]
+        if not all_responses:
+            return []
+
+        # Sort by content length descending (longer = more detailed)
+        all_responses.sort(key=lambda m: len(m.content), reverse=True)
+
+        # Deduplicate: keep only responses that are sufficiently different
+        best: list[MeetingMessage] = []
+        for resp in all_responses:
+            is_unique = True
+            for kept in best:
+                if SequenceMatcher(None, kept.content, resp.content).ratio() >= SIMILARITY_THRESHOLD:
+                    is_unique = False
+                    break
+            if is_unique:
+                best.append(resp)
+
+        return best
 
 
 # ─── Meeting registry — Redis db:0 backed ───────────────────────────────────

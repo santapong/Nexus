@@ -139,6 +139,12 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_hire_external_agent,
         # Writer: no KeepSave access
     ],
+    AgentRole.DIRECTOR: [
+        tool_web_search,
+        tool_file_read,
+        # Director: read-only KeepSave for visibility
+        *_KEEPSAVE_READ_TOOLS,
+    ],
     AgentRole.QA: [
         tool_file_read,
         tool_web_search,

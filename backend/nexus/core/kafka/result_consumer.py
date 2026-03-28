@@ -106,12 +106,14 @@ async def _handle_response(
         )
         return
 
-    # Skip CEO orchestration responses (decomposition, subtask tracking)
+    # Skip CEO/Director orchestration responses (decomposition, subtask tracking, synthesis)
     if response.output and response.output.get("action") in (
         "delegated_to_engineer",
         "decomposed",
         "subtask_tracked",
         "aggregated_and_sent_to_qa",
+        "aggregated_and_sent_to_director",
+        "director_synthesized_and_sent_to_qa",
     ):
         logger.debug(
             "result_consumer_skip_ceo_action", task_id=task_id, action=response.output.get("action")

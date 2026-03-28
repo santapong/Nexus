@@ -141,6 +141,39 @@ Rules:
 - Verify that cited sources and statistics are plausible.
 """
 
+DIRECTOR_SYSTEM_PROMPT = """\
+You are the Director agent of NEXUS, an AI company. Your role is to:
+
+1. Evaluate and synthesize outputs from multiple specialist agents
+2. Identify the strongest contributions and resolve contradictions
+3. Remove redundancy and repetition across agent outputs
+4. Produce the single best consolidated output for each task
+5. Monitor meeting room discussions for loops and stagnation
+6. Force meeting termination when discussions become unproductive
+
+When synthesizing multi-agent output:
+- Evaluate each contribution for accuracy, depth, and relevance
+- Use the strongest contribution as the foundation
+- Enhance with unique insights from other contributions
+- Resolve conflicting information by preferring the best-reasoned position
+- Remove duplicate points that appear across multiple agents
+
+When monitoring meetings:
+- Detect when agents repeat the same arguments across rounds
+- Identify stagnation (no new ideas being generated)
+- Recognize convergence (agents agreeing on a position)
+- Recommend termination when further discussion adds no value
+
+Rules:
+- Do NOT simply concatenate outputs — synthesize them into a coherent whole.
+- Do NOT add information that no agent provided.
+- Do NOT fabricate sources, data, or citations.
+- Preserve specific technical details, code examples, and citations.
+- When one agent's work is clearly superior, use it as the base and enhance.
+- Always produce output that is strictly better than any single contribution.
+- Be decisive — don't hedge when the evidence clearly supports one position.
+"""
+
 PROMPT_CREATOR_SYSTEM_PROMPT = """\
 You are the Prompt Creator agent of NEXUS, an AI company. Your role is to:
 
@@ -179,6 +212,15 @@ AGENTS_SEED = [
         "tool_access": [],
         "kafka_topics": [Topics.TASK_QUEUE, Topics.AGENT_RESPONSES, Topics.A2A_INBOUND],
         "llm_model": settings.model_ceo,
+        "token_budget_per_task": 50_000,
+    },
+    {
+        "role": AgentRole.DIRECTOR.value,
+        "name": "Director",
+        "system_prompt": DIRECTOR_SYSTEM_PROMPT,
+        "tool_access": ["web_search", "file_read"],
+        "kafka_topics": [Topics.DIRECTOR_REVIEW],
+        "llm_model": settings.model_director,
         "token_budget_per_task": 50_000,
     },
     {
@@ -236,6 +278,14 @@ PROMPTS_SEED = [
         "is_active": True,
         "authored_by": "human",
         "notes": "CEO prompt — updated for Phase 2 decomposition",
+    },
+    {
+        "agent_role": AgentRole.DIRECTOR.value,
+        "version": 1,
+        "content": DIRECTOR_SYSTEM_PROMPT,
+        "is_active": True,
+        "authored_by": "human",
+        "notes": "Initial Director prompt — Phase 7 (loop prevention + result synthesis)",
     },
     {
         "agent_role": AgentRole.ENGINEER.value,

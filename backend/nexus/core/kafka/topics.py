@@ -23,6 +23,7 @@ class Topics:
     PROMPT_IMPROVEMENT = "prompt.improvement_requests"
     PROMPT_BENCHMARK = "prompt.benchmark_requests"
     PROMPT_PROPOSALS = "prompt.proposals"
+    DIRECTOR_REVIEW = "director.review"
 
     # Dead letter topics — failed messages after max retries
     DEAD_LETTER_SUFFIX = ".dead_letter"

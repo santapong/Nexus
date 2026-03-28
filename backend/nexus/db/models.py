@@ -23,6 +23,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class AgentRole(enum.StrEnum):
     CEO = "ceo"
+    DIRECTOR = "director"
     ENGINEER = "engineer"
     ANALYST = "analyst"
     WRITER = "writer"
