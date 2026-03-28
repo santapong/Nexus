@@ -101,7 +101,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 5 build | ✅ Complete — all 3 tracks delivered (SaaS, intelligence, ecosystem) |
 | Phase 6 build | ✅ Complete — security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
 
-**Current phase:** Phase 7 IN PROGRESS — Director agent added (loop prevention + result synthesis). Meeting room convergence detection implemented.
+**Current phase:** Phase 7 IN PROGRESS — Director agent added (loop prevention + result synthesis). Meeting room convergence detection implemented. Enterprise-grade security, performance, and fault tolerance upgrades deployed.
 
 **Next action:** Phase 7 continued — knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
 
@@ -172,6 +172,21 @@ These three protocols never compete. Confusing their roles is the #1 integration
 
 7. **Humans stay in the loop.** Irreversible actions require an explicit `HumanApproval`
    record before execution. Enforced in `tools/guards.py` — agents cannot bypass it.
+
+8. **Enterprise security by default.** Kafka messages are HMAC-signed for integrity.
+   All agent outputs pass through PII sanitization before publishing. The Director
+   performs security review of execution plans before synthesis.
+
+9. **Crash-consistent recovery.** On startup, the recovery service scans for orphaned
+   tasks (status=running but no heartbeat) and re-queues or fails them. No task is
+   silently lost due to crashes.
+
+10. **Graceful shutdown.** SIGINT/SIGTERM triggers task draining — in-flight tasks
+    get 30 seconds to complete before being checkpointed for recovery on restart.
+
+11. **Planning before execution.** CEO creates an execution plan with risk assessment
+    and security concerns BEFORE decomposing tasks. Plans are passed to the Director
+    for security validation during synthesis.
 
 ---
 
@@ -664,19 +679,22 @@ class KafkaMessage(BaseModel):
 ### Task execution flow — human
 
 ```
-1. POST /tasks → task created in DB (status: queued)
-2. API → Kafka: task.queue
-3. CEO consumes task.queue, decomposes goal
-4. CEO → Kafka: agent.commands (with role routing key per subtask)
-5. Specialist agents consume agent.commands, filter by role
-6. Agents load episodic + semantic memory context
-7. Agents execute: LLM calls → tool calls via MCP adapter
-8. Agents → Kafka: agent.responses
-9. CEO aggregates → Kafka: director.review
-10. Director synthesizes best result → Kafka: task.review_queue
-11. QA reviews synthesized output → Kafka: task.results
-12. API updates task in DB (status: completed)
-13. Redis pub/sub → WebSocket → dashboard shows result
+ 1. POST /tasks → task created in DB (status: queued)
+ 2. API → Kafka: task.queue
+ 3. CEO consumes task.queue
+ 4. CEO creates execution plan (risk assessment + security concerns)  ← NEW
+ 5. CEO decomposes task into subtasks (guided by plan)
+ 6. CEO → Kafka: agent.commands (with role routing key per subtask)
+ 7. Specialist agents consume agent.commands, filter by role
+ 8. Agents load episodic + semantic memory context
+ 9. Agents execute: LLM calls → tool calls via MCP adapter
+10. Agents → Kafka: agent.responses (HMAC-signed, PII-sanitized)
+11. CEO aggregates → Kafka: director.review (includes execution plan)
+12. Director performs security review against plan                      ← NEW
+13. Director synthesizes best result → Kafka: task.review_queue
+14. QA reviews synthesized output → Kafka: task.results
+15. API updates task in DB (status: completed)
+16. Redis pub/sub → WebSocket → dashboard shows result
 ```
 
 **Director loop prevention:** The Director sits between CEO aggregation (step 9)
@@ -980,15 +998,21 @@ nexus/
 │       │   ├── kafka/
 │       │   │   ├── topics.py            ← ALL topic constants — single source of truth
 │       │   │   ├── schemas.py           ← KafkaMessage base + per-topic models
-│       │   │   ├── producer.py
-│       │   │   ├── consumer.py
-│       │   │   ├── meeting.py           ← meeting room pattern
+│       │   │   ├── producer.py          ← HMAC-signed message publishing
+│       │   │   ├── consumer.py          ← signature validation on consume
+│       │   │   ├── signing.py           ← HMAC-SHA256 message integrity (Phase 7)
+│       │   │   ├── meeting.py           ← meeting room + convergence detection
 │       │   │   ├── dead_letter.py       ← dead letter queue routing
 │       │   │   ├── result_consumer.py   ← task result consumer
 │       │   │   └── health_check.py
 │       │   │
 │       │   ├── redis/
 │       │   │   └── clients.py           ← 4 clients, one per db role
+│       │   │
+│       │   ├── sanitization.py          ← PII detection + output redaction (Phase 7)
+│       │   ├── retry.py                 ← configurable retry policies (Phase 7)
+│       │   ├── recovery.py              ← crash recovery for orphaned tasks (Phase 7)
+│       │   ├── shutdown.py              ← graceful shutdown + task draining (Phase 7)
 │       │   │
 │       │   └── llm/
 │       │       ├── factory.py           ← ModelFactory (7+ providers)
@@ -1933,16 +1957,22 @@ Not planned in detail. Candidate items:
 
 *Changes in v0.8:*
 *— §2: Updated status to Phase 7 IN PROGRESS*
-*— §3: Added Director to architecture diagram*
+*— §3: Added Director to architecture diagram, added enterprise architecture principles*
 *— §6: Added Director to default model assignment table (Claude Sonnet)*
 *— §7: Added Director Agent to roster with full spec (loop prevention + result synthesis)*
-*— §10: Updated task execution flow: CEO now routes through Director before QA*
+*— §10: Updated task execution flow with planning phase and security review*
 *— §10: Added director.review topic to Kafka topic registry*
-*— §15: Added director.py to project structure*
+*— §15: Added director.py, signing.py, sanitization.py, retry.py, recovery.py, shutdown.py*
 *— New agent: Director — sits between CEO aggregation and QA review*
 *— New topic: director.review — Director receives aggregated output for synthesis*
 *— New meeting room features: convergence detection, loop detection, stagnation detection*
-*— Flow change: CEO → Director → QA (was: CEO → QA directly)*
+*— Flow change: Plan → Decompose → Execute → Director Security Review → Synthesize → QA*
+*— Enterprise security: HMAC-SHA256 Kafka message signing + PII detection/redaction*
+*— Enterprise resilience: crash recovery service, graceful shutdown with task draining*
+*— Enterprise performance: sliding window circuit breaker with health scores*
+*— Enterprise fault tolerance: configurable retry policies with jitter + backoff*
+*— CEO planning-first pipeline: risk assessment before task decomposition*
+*— Director security review: validates outputs against execution plan*
 
 *Changes in v0.7:*
 *— §2: Updated status to Phase 5 COMPLETE*

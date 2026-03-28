@@ -1,5 +1,11 @@
 """Agent runner — starts all active agents as async tasks.
 
+Enterprise-grade startup with:
+- Crash recovery: recovers orphaned tasks from previous run
+- Stale lock cleanup: removes dead process locks
+- Graceful shutdown: drains in-flight tasks before stopping
+- Signal handling: SIGINT/SIGTERM trigger clean shutdown
+
 Run standalone with: python -m nexus.agents.runner
 Or import start_all_agents() for Litestar startup integration.
 """
@@ -8,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import signal
 from typing import Any
 
 import structlog
@@ -17,7 +24,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from nexus.agents.factory import build_agent
 from nexus.agents.health_monitor import run_health_monitor
 from nexus.core.kafka.result_consumer import run_result_consumer
+from nexus.core.recovery import cleanup_stale_locks, recover_orphaned_tasks
 from nexus.core.scheduler import run_scheduler_tick
+from nexus.core.shutdown import drain_and_shutdown, request_shutdown
 from nexus.db.models import Agent, AgentRole
 from nexus.settings import settings
 
@@ -48,6 +57,24 @@ async def start_all_agents(
     if not agents_db:
         logger.warning("no_active_agents_found")
         return []
+
+    # ── Startup recovery: recover orphaned tasks from previous crash ──
+    try:
+        async with db_session_factory() as session:
+            recovery_summary = await recover_orphaned_tasks(session)
+            if recovery_summary["recovered"] > 0 or recovery_summary["failed"] > 0:
+                logger.info("startup_recovery_complete", **recovery_summary)
+    except Exception as exc:
+        logger.warning("startup_recovery_failed", error=str(exc))
+
+    # ── Cleanup stale distributed locks ──
+    try:
+        async with db_session_factory() as session:
+            cleaned = await cleanup_stale_locks(session)
+            if cleaned > 0:
+                logger.info("stale_locks_cleaned", count=cleaned)
+    except Exception as exc:
+        logger.warning("stale_lock_cleanup_failed", error=str(exc))
 
     logger.info("starting_agents", count=len(agents_db))
 
@@ -132,7 +159,15 @@ async def _run_scheduler_loop(
 
 
 async def main() -> None:
-    """Standalone entry point for running all agents."""
+    """Standalone entry point for running all agents.
+
+    Enterprise-grade lifecycle:
+    1. Configure structured logging
+    2. Run startup recovery (orphaned tasks + stale locks)
+    3. Start all agents, result consumer, health monitor, scheduler
+    4. Handle SIGINT/SIGTERM with graceful shutdown + task draining
+    5. Clean up connections
+    """
     structlog.configure(
         processors=[
             structlog.contextvars.merge_contextvars,
@@ -155,15 +190,44 @@ async def main() -> None:
         await engine.dispose()
         return
 
+    # Register signal handlers for graceful shutdown
+    shutdown_event = asyncio.Event()
+
+    def _signal_handler() -> None:
+        logger.info("shutdown_signal_received")
+        request_shutdown()
+        shutdown_event.set()
+
+    loop = asyncio.get_event_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, _signal_handler)
+
     try:
-        await asyncio.gather(*tasks)
-    except KeyboardInterrupt:
-        logger.info("shutting_down")
+        # Wait until shutdown is requested
+        await shutdown_event.wait()
+
+        # Drain in-flight tasks gracefully
+        logger.info("graceful_shutdown_starting")
+        drain_summary = await drain_and_shutdown(session_factory)
+        logger.info("graceful_shutdown_drain_complete", **drain_summary)
+
+        # Cancel all agent tasks
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    except Exception as exc:
+        logger.error("shutdown_error", error=str(exc))
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
     finally:
+        # Clean up Kafka producer
+        from nexus.core.kafka.producer import close_producer
+
+        await close_producer()
         await engine.dispose()
+        logger.info("shutdown_complete")
 
 
 if __name__ == "__main__":

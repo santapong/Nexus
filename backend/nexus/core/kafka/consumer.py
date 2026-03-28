@@ -76,3 +76,20 @@ async def check_idempotency(message_id: str) -> bool:
     # SET NX returns True if key was set (new message)
     was_set = await redis_locks.set(key, "1", nx=True, ex=86400)  # 24h TTL
     return bool(was_set)
+
+
+def validate_message_signature(raw: dict[str, object]) -> bool:
+    """Validate the HMAC signature of a consumed Kafka message.
+
+    Rejects unsigned or tampered messages in production mode.
+    Accepts unsigned messages in development mode for backwards compatibility.
+
+    Args:
+        raw: Raw deserialized message dict.
+
+    Returns:
+        True if the message is valid, False if rejected.
+    """
+    from nexus.core.kafka.signing import validate_signed_message
+
+    return validate_signed_message(raw)

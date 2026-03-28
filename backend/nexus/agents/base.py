@@ -103,7 +103,12 @@ class AgentBase(ABC):
     # ─── Main loop ───────────────────────────────────────────────────────────
 
     async def run(self) -> None:
-        """Main Kafka consumer loop. Runs indefinitely until stopped."""
+        """Main Kafka consumer loop. Runs indefinitely until stopped.
+
+        Shutdown-aware: checks for graceful shutdown signal before
+        processing new messages. In-flight tasks are tracked for
+        clean draining during shutdown.
+        """
         consumer = await create_consumer(*self.subscribe_topics, group_id=self.group_id)
         self._running = True
         heartbeat_task = asyncio.create_task(self._heartbeat_loop())
@@ -117,6 +122,27 @@ class AgentBase(ABC):
 
         try:
             async for msg in consumer:
+                # Check for graceful shutdown before processing new messages
+                from nexus.core.shutdown import is_shutting_down
+
+                if is_shutting_down():
+                    logger.info(
+                        "agent_rejecting_new_task_shutdown",
+                        agent_id=self.agent_id,
+                    )
+                    break
+
+                # Validate message signature
+                from nexus.core.kafka.consumer import validate_message_signature
+
+                if not validate_message_signature(msg.value):
+                    logger.warning(
+                        "invalid_message_signature_rejected",
+                        agent_id=self.agent_id,
+                        topic=msg.topic,
+                    )
+                    continue
+
                 try:
                     await self._process_message(msg.value)
                 except Exception as exc:
@@ -171,6 +197,11 @@ class AgentBase(ABC):
         task_id = str(command.task_id)
         trace_id = str(command.trace_id)
 
+        # Track active task for graceful shutdown draining
+        from nexus.core.shutdown import register_active_task, unregister_active_task
+
+        register_active_task(task_id)
+
         # 1. Idempotency
         is_new = await check_idempotency(msg_id)
         if not is_new:
@@ -214,8 +245,9 @@ class AgentBase(ABC):
                 # 4. Execute task
                 response = await self.handle_task(command, session)
 
-                # 4.5 Validate output
+                # 4.5 Validate output + PII sanitization
                 response = self._validate_output(response)
+                response = self._sanitize_output_pii(response, task_id)
 
                 # 5. Write memory BEFORE publishing result (Pattern A)
                 duration = int(time.monotonic() - start_time)
@@ -255,6 +287,9 @@ class AgentBase(ABC):
             #    that need tracking state to persist across subtasks)
             if not self._is_orchestration_response(response):
                 await clear_working_memory(self.agent_id, task_id)
+
+            # Unregister from active tasks for graceful shutdown
+            unregister_active_task(task_id)
 
             logger.info(
                 "task_completed",
@@ -327,6 +362,9 @@ class AgentBase(ABC):
                     "error": str(exc),
                 }
             )
+
+            # Unregister from active tasks on failure
+            unregister_active_task(task_id)
 
     # ─── Budget enforcement ──────────────────────────────────────────────────
 
@@ -558,6 +596,35 @@ class AgentBase(ABC):
                     response.output["_truncated"] = True
                     response.output["_original_size"] = len(output_str)
 
+        return response
+
+    # ─── PII sanitization ──────────────────────────────────────────────────
+
+    def _sanitize_output_pii(self, response: AgentResponse, task_id: str) -> AgentResponse:
+        """Sanitize agent output by redacting PII patterns.
+
+        Enterprise-grade data protection: scans for API keys, emails,
+        phone numbers, SSNs, credit cards, JWTs, and other sensitive
+        data before the output leaves the agent boundary.
+        """
+        if response.output is None:
+            return response
+
+        try:
+            from nexus.core.sanitization import sanitize_output
+
+            response.output = sanitize_output(
+                response.output,
+                task_id=task_id,
+                agent_id=self.agent_id,
+            )
+        except Exception as exc:
+            logger.warning(
+                "pii_sanitization_failed",
+                agent_id=self.agent_id,
+                task_id=task_id,
+                error=str(exc),
+            )
         return response
 
     # ─── Orchestration detection ─────────────────────────────────────────────

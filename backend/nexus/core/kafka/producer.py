@@ -116,6 +116,9 @@ async def _reconnect() -> None:
 async def publish(topic: str, message: KafkaMessage, key: str | None = None) -> None:
     """Publish a message to a Kafka topic with automatic reconnection.
 
+    Signs messages with HMAC-SHA256 before publishing for integrity
+    verification on the consumer side.
+
     Args:
         topic: Topic name (must be from Topics constants).
         message: The KafkaMessage to publish.
@@ -124,8 +127,13 @@ async def publish(topic: str, message: KafkaMessage, key: str | None = None) -> 
     Raises:
         Exception: If publish fails after reconnection attempts.
     """
+    from nexus.core.kafka.signing import inject_signature
+
     producer = await get_producer()
     value = message.model_dump(mode="json")
+
+    # Sign message for integrity verification
+    value = inject_signature(value)
 
     try:
         await producer.send_and_wait(topic, value=value, key=key)

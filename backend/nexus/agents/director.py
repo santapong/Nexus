@@ -71,6 +71,7 @@ class DirectorAgent(AgentBase):
         original_instruction = message.payload.get("original_instruction", "")
         subtask_count = message.payload.get("subtask_count", 0)
         convergence_data = message.payload.get("convergence_report")
+        execution_plan = message.payload.get("execution_plan", {})
 
         # If convergence data exists, log and include in synthesis context
         convergence_context = ""
@@ -86,12 +87,20 @@ class DirectorAgent(AgentBase):
                 recommendation=report.recommendation,
             )
 
+        # Security review: validate output against execution plan
+        security_context = self._security_review(
+            task_id=task_id,
+            aggregated_output=aggregated_output,
+            execution_plan=execution_plan,
+        )
+
         # Use LLM to synthesize the best result
         synthesized = await self._synthesize_result(
             task_id=task_id,
             original_instruction=original_instruction,
             aggregated_output=aggregated_output,
             convergence_context=convergence_context,
+            security_context=security_context,
             session=session,
         )
 
@@ -136,6 +145,71 @@ class DirectorAgent(AgentBase):
             tokens_used=0,
         )
 
+    def _security_review(
+        self,
+        *,
+        task_id: str,
+        aggregated_output: str,
+        execution_plan: dict[str, Any],
+    ) -> str:
+        """Review agent outputs for security concerns against the execution plan.
+
+        Checks:
+        1. Outputs don't contain executable code that wasn't requested
+        2. No unauthorized external references or URLs
+        3. Risk level alignment — high-risk plan outputs get extra scrutiny
+        4. PII leakage detection (delegated to sanitization layer)
+
+        Args:
+            task_id: For logging context.
+            aggregated_output: The combined agent outputs.
+            execution_plan: The CEO's execution plan.
+
+        Returns:
+            Security context string for the synthesis prompt.
+        """
+        concerns: list[str] = []
+        risk_level = execution_plan.get("risk_level", "medium")
+        plan_concerns = execution_plan.get("security_concerns", [])
+
+        # Check if plan flagged security concerns
+        if plan_concerns:
+            concerns.append(
+                f"CEO planning phase identified these security concerns: {plan_concerns}. "
+                "Verify the output addresses these appropriately."
+            )
+
+        # High-risk tasks get extra scrutiny
+        if risk_level == "high":
+            concerns.append(
+                "This is a HIGH-RISK task. Verify that all irreversible actions "
+                "(file writes, emails, external API calls) are clearly documented "
+                "and the output doesn't suggest bypassing approval flows."
+            )
+
+        # Check for shell injection patterns in output
+        _DANGEROUS_PATTERNS = [
+            "rm -rf", "sudo ", "; DROP TABLE", "eval(", "exec(",
+            "os.system(", "subprocess.call(", "__import__(",
+        ]
+        for pattern in _DANGEROUS_PATTERNS:
+            if pattern in aggregated_output:
+                concerns.append(
+                    f"WARNING: Output contains potentially dangerous pattern: '{pattern}'. "
+                    "Review carefully before including in final synthesis."
+                )
+
+        if concerns:
+            logger.info(
+                "director_security_review",
+                task_id=task_id,
+                risk_level=risk_level,
+                concern_count=len(concerns),
+            )
+            return "## Security Review\n" + "\n".join(f"- {c}" for c in concerns)
+
+        return ""
+
     async def _synthesize_result(
         self,
         *,
@@ -143,6 +217,7 @@ class DirectorAgent(AgentBase):
         original_instruction: str,
         aggregated_output: str,
         convergence_context: str,
+        security_context: str = "",
         session: AsyncSession,
     ) -> str:
         """Use LLM to evaluate contributions and produce the best output.
@@ -174,6 +249,9 @@ class DirectorAgent(AgentBase):
 
         if convergence_context:
             synthesis_prompt += f"\n## Meeting Analysis\n{convergence_context}\n"
+
+        if security_context:
+            synthesis_prompt += f"\n{security_context}\n"
 
         user_message = (
             f"Original task: {original_instruction}\n\n"
