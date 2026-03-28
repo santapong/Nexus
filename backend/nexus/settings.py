@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     model_analyst: str = "gemini-2.0-flash"
     model_writer: str = "claude-haiku-4-5-20251001"
     model_qa: str = "claude-haiku-4-5-20251001"
+    model_director: str = "claude-sonnet-4-20250514"
     model_prompt_creator: str = "claude-sonnet-4-20250514"
 
     # Fallback model chains per role (comma-separated, tried in order after primary fails)
@@ -88,6 +89,7 @@ class Settings(BaseSettings):
     model_analyst_fallbacks: str = "groq:llama-3.3-70b-versatile"
     model_writer_fallbacks: str = "groq:llama-3.3-70b-versatile"
     model_qa_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_director_fallbacks: str = "groq:llama-3.3-70b-versatile"
     model_prompt_creator_fallbacks: str = "groq:llama-3.3-70b-versatile"
 
     # ─── Phase 5: OAuth2/OIDC ────────────────────────────────────────────

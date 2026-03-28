@@ -101,9 +101,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 5 build | ✅ Complete — all 3 tracks delivered (SaaS, intelligence, ecosystem) |
 | Phase 6 build | ✅ Complete — security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
 
-**Current phase:** Phase 6 COMPLETE — All security issues resolved (ERROR-019 through ERROR-025). Federation registry implemented. ANP/AP2 evaluated (ADR-058/059). 8 new research-backed ideas added.
+**Current phase:** Phase 7 IN PROGRESS — Director agent added (loop prevention + result synthesis). Meeting room convergence detection implemented.
 
-**Next action:** Phase 7 planning — knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
+**Next action:** Phase 7 continued — knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
 
 ---
 
@@ -130,7 +130,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
            │
 ┌──────────▼──────────────────────────────────────────────────────────┐
 │  Agent Runtime — Pydantic AI                                        │
-│  CEO · Engineer · Analyst · Writer · QA · Prompt Creator           │
+│  CEO · Director · Engineer · Analyst · Writer · QA · Prompt Creator │
 │  (all extend AgentBase — stateless, Kafka-driven)                   │
 └──────────┬──────────────────────────────────────────────────────────┘
            │ Pydantic AI tool calls
@@ -266,6 +266,7 @@ All LLM calls go through `llm/factory.py → ModelFactory`.
 | Agent | Primary | Fallback | Reason |
 |-------|---------|----------|--------|
 | CEO | Claude Sonnet | Gemini Pro | Best reasoning for orchestration |
+| Director | Claude Sonnet | Gemini Pro | Synthesis requires strong reasoning |
 | Engineer | Claude Sonnet | Gemini Pro | Best code generation |
 | Analyst | Gemini Pro | Claude Haiku | Long-document analysis, cost-effective |
 | Writer | Claude Haiku | Gemini Flash | Fast, structured writing |
@@ -305,6 +306,7 @@ class ModelFactory:
 | Agent | Phase | Role | Model |
 |-------|-------|------|-------|
 | CEO | 1 | Orchestrator, task decomposer, delegator | Claude Sonnet |
+| Director | 7 | Meeting moderator, loop preventer, result synthesizer | Claude Sonnet |
 | Engineer | 1 | Code generation, debugging, architecture | Claude Sonnet |
 | Analyst | 2 | Research, data analysis, reports | Gemini Pro |
 | Writer | 2 | Content, emails, documentation | Claude Haiku |
@@ -318,6 +320,26 @@ class ModelFactory:
   — publishes `agent.commands`, `task.results`
 - **Tools:** None — CEO delegates tool use to specialists
 - **Memory:** `episodic.ceo`, `semantic.strategy`
+
+#### Director Agent *(Phase 7 — loop prevention + result synthesis)*
+- **Role:** Sits between CEO aggregation and QA review. Monitors meeting room
+  discussions for convergence, stagnation, and infinite loops. When agents finish
+  their work, the Director evaluates all contributions and synthesizes the best
+  possible output before forwarding to QA. Prevents the CEO→Specialist→QA→Rework
+  cycle from looping endlessly by ensuring only high-quality synthesized output
+  reaches QA.
+- **Kafka:** subscribes `director.review`
+  — publishes `task.review_queue` (forwards synthesized result to QA)
+- **Tools:** `web_search`, `file_read` (read-only for context)
+- **Memory:** `episodic.director`, `semantic.synthesis_patterns`
+- **Loop prevention mechanisms:**
+  - Convergence detection: measures inter-round similarity of meeting responses
+  - Stagnation detection: tracks unique ideas per round, flags when no new ideas emerge
+  - Loop detection: identifies when consecutive rounds have >75% similarity
+  - Forced termination: recommends meeting termination when further discussion adds no value
+- **Result synthesis:** Evaluates each agent's contribution, resolves contradictions,
+  removes redundancy, and produces a single coherent output that is better than any
+  individual contribution.
 
 #### Engineer Agent *(Phase 1 — first built)*
 - **Kafka:** subscribes `agent.commands` (role=engineer) — publishes `agent.responses`
@@ -622,6 +644,7 @@ class Topics:
     PROMPT_IMPROVEMENT        = "prompt.improvement_requests" # NEW
     PROMPT_BENCHMARK          = "prompt.benchmark_requests"   # NEW
     PROMPT_PROPOSALS          = "prompt.proposals"            # NEW
+    DIRECTOR_REVIEW           = "director.review"             # NEW — Phase 7
 ```
 
 ### Standard message envelope — mandatory on every message
@@ -649,11 +672,20 @@ class KafkaMessage(BaseModel):
 6. Agents load episodic + semantic memory context
 7. Agents execute: LLM calls → tool calls via MCP adapter
 8. Agents → Kafka: agent.responses
-9. CEO aggregates → Kafka: task.review_queue
-10. QA → Kafka: task.results
-11. API updates task in DB (status: completed)
-12. Redis pub/sub → WebSocket → dashboard shows result
+9. CEO aggregates → Kafka: director.review
+10. Director synthesizes best result → Kafka: task.review_queue
+11. QA reviews synthesized output → Kafka: task.results
+12. API updates task in DB (status: completed)
+13. Redis pub/sub → WebSocket → dashboard shows result
 ```
+
+**Director loop prevention:** The Director sits between CEO aggregation (step 9)
+and QA review (step 11). It evaluates all agent contributions, resolves
+contradictions, removes redundancy, and produces the single best output. This
+prevents the QA→Rework cycle from looping because the Director's synthesis is
+strictly higher quality than raw aggregation. Meeting room discussions are also
+monitored for convergence, stagnation, and repetition loops via similarity
+detection — the Director forces termination when discussion becomes unproductive.
 
 ### Task execution flow — A2A inbound
 
@@ -989,6 +1021,7 @@ nexus/
 │       │   ├── runner.py                ← agent startup orchestration
 │       │   ├── health_monitor.py        ← heartbeat + auto-fail
 │       │   ├── ceo.py
+│       │   ├── director.py              ← loop prevention + result synthesis
 │       │   ├── engineer.py
 │       │   ├── analyst.py
 │       │   ├── writer.py
@@ -1894,9 +1927,22 @@ Not planned in detail. Candidate items:
 
 ---
 
-*Last updated: 2026-03-19*
+*Last updated: 2026-03-28*
 *Owner: Nexus Project*
-*Document version: 0.7*
+*Document version: 0.8*
+
+*Changes in v0.8:*
+*— §2: Updated status to Phase 7 IN PROGRESS*
+*— §3: Added Director to architecture diagram*
+*— §6: Added Director to default model assignment table (Claude Sonnet)*
+*— §7: Added Director Agent to roster with full spec (loop prevention + result synthesis)*
+*— §10: Updated task execution flow: CEO now routes through Director before QA*
+*— §10: Added director.review topic to Kafka topic registry*
+*— §15: Added director.py to project structure*
+*— New agent: Director — sits between CEO aggregation and QA review*
+*— New topic: director.review — Director receives aggregated output for synthesis*
+*— New meeting room features: convergence detection, loop detection, stagnation detection*
+*— Flow change: CEO → Director → QA (was: CEO → QA directly)*
 
 *Changes in v0.7:*
 *— §2: Updated status to Phase 5 COMPLETE*

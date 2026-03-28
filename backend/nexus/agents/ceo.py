@@ -357,7 +357,7 @@ class CEOAgent(AgentBase):
 
         # Check if all subtasks are complete
         if tracking["completed"] >= tracking["total"]:
-            return await self._aggregate_and_route_to_qa(parent_task_id, tracking, message, session)
+            return await self._aggregate_and_route_to_director(parent_task_id, tracking, message, session)
 
         logger.info(
             "ceo_subtask_completed",
@@ -418,14 +418,20 @@ class CEOAgent(AgentBase):
 
         await set_working_memory(self.agent_id, parent_task_id, tracking)
 
-    async def _aggregate_and_route_to_qa(
+    async def _aggregate_and_route_to_director(
         self,
         parent_task_id: str,
         tracking: dict[str, Any],
         message: AgentCommand,
         session: AsyncSession,
     ) -> AgentResponse:
-        """Aggregate all subtask outputs and send to QA for review."""
+        """Aggregate all subtask outputs and send to Director for synthesis.
+
+        The Director evaluates contributions, resolves contradictions,
+        removes redundancy, and produces the best consolidated output
+        before forwarding to QA. This prevents infinite loops by having
+        a dedicated agent control the quality gate.
+        """
         # Collect all outputs
         outputs: list[str] = []
         for _sid, st in tracking["subtasks"].items():
@@ -440,8 +446,8 @@ class CEOAgent(AgentBase):
             subtask_count=tracking["total"],
         )
 
-        # Route to QA for review
-        qa_command = AgentCommand(
+        # Route to Director for synthesis (Director then forwards to QA)
+        director_command = AgentCommand(
             task_id=UUID(parent_task_id),
             trace_id=message.trace_id,
             agent_id=self.agent_id,
@@ -451,15 +457,17 @@ class CEOAgent(AgentBase):
                 "subtask_count": tracking["total"],
                 "original_role": "ceo",
             },
-            target_role=AgentRole.QA.value,
-            instruction=f"Review the following aggregated output for the task:\n\n"
-            f"Original request: {tracking.get('original_instruction', '')}\n\n"
-            f"Aggregated output:\n{aggregated}",
+            target_role=AgentRole.DIRECTOR.value,
+            instruction=(
+                f"Synthesize the best result from agent contributions:\n\n"
+                f"Original request: {tracking.get('original_instruction', '')}\n\n"
+                f"Agent contributions:\n{aggregated}"
+            ),
         )
-        await publish(Topics.TASK_REVIEW_QUEUE, qa_command, key=parent_task_id)
+        await publish(Topics.DIRECTOR_REVIEW, director_command, key=parent_task_id)
 
         logger.info(
-            "ceo_routed_to_qa",
+            "ceo_routed_to_director",
             parent_task_id=parent_task_id,
         )
 
@@ -470,7 +478,7 @@ class CEOAgent(AgentBase):
             payload={},
             status="success",
             output={
-                "action": "aggregated_and_sent_to_qa",
+                "action": "aggregated_and_sent_to_director",
                 "parent_task_id": parent_task_id,
                 "subtask_count": tracking["total"],
             },

@@ -567,6 +567,8 @@ class AgentBase(ABC):
             "decomposed",
             "subtask_tracked",
             "aggregated_and_sent_to_qa",
+            "aggregated_and_sent_to_director",
+            "director_synthesized_and_sent_to_qa",
         }
     )
 

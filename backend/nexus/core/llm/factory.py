@@ -24,6 +24,7 @@ logger = structlog.get_logger()
 # Role -> model name mapping from settings
 _AGENT_MODEL_MAP: dict[AgentRole, str] = {
     AgentRole.CEO: settings.model_ceo,
+    AgentRole.DIRECTOR: settings.model_director,
     AgentRole.ENGINEER: settings.model_engineer,
     AgentRole.ANALYST: settings.model_analyst,
     AgentRole.WRITER: settings.model_writer,
@@ -34,6 +35,7 @@ _AGENT_MODEL_MAP: dict[AgentRole, str] = {
 # Role -> fallback chain (comma-separated model names from settings)
 _AGENT_FALLBACK_MAP: dict[AgentRole, str] = {
     AgentRole.CEO: settings.model_ceo_fallbacks,
+    AgentRole.DIRECTOR: settings.model_director_fallbacks,
     AgentRole.ENGINEER: settings.model_engineer_fallbacks,
     AgentRole.ANALYST: settings.model_analyst_fallbacks,
     AgentRole.WRITER: settings.model_writer_fallbacks,
