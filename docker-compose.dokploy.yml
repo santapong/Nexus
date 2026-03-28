@@ -1,0 +1,193 @@
+# NEXUS — Dokploy Production Deployment
+# Compatible with: AWS EC2, GCP Compute Engine, Raspberry Pi, any VPS
+#
+# Usage with Dokploy:
+#   1. Create a "Compose" project in Dokploy
+#   2. Point to this file (or paste contents)
+#   3. Set environment variables in Dokploy UI
+#   4. Deploy
+#
+# For manual use: docker compose -f docker-compose.dokploy.yml up -d
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexus}
+      POSTGRES_USER: ${POSTGRES_USER:-nexus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in Dokploy environment}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY_LIMIT:-1g}
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory ${REDIS_MAXMEMORY:-256mb}
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEMORY_LIMIT:-512m}
+
+  kafka:
+    image: apache/kafka:3.7.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      CLUSTER_ID: "nexus-kafka-cluster-001"
+      # Memory tuning — critical for Raspberry Pi
+      KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS:--Xmx512m -Xms256m}
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${KAFKA_MEMORY_LIMIT:-1g}
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/santapong/nexus-backend:latest}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: prod
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-nexus}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # LLM API Keys
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      # Local model endpoints (useful for Raspberry Pi with Ollama)
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-}
+      OPENAI_COMPAT_BASE_URL: ${OPENAI_COMPAT_BASE_URL:-}
+      OPENAI_COMPAT_API_KEY: ${OPENAI_COMPAT_API_KEY:-}
+      # Agent model assignments
+      MODEL_CEO: ${MODEL_CEO:-claude-sonnet-4-20250514}
+      MODEL_ENGINEER: ${MODEL_ENGINEER:-claude-sonnet-4-20250514}
+      MODEL_ANALYST: ${MODEL_ANALYST:-gemini-2.0-flash}
+      MODEL_WRITER: ${MODEL_WRITER:-claude-haiku-4-5-20251001}
+      MODEL_QA: ${MODEL_QA:-claude-haiku-4-5-20251001}
+      MODEL_PROMPT_CREATOR: ${MODEL_PROMPT_CREATOR:-claude-sonnet-4-20250514}
+      # Cost controls
+      DAILY_SPEND_LIMIT_USD: ${DAILY_SPEND_LIMIT_USD:-5.00}
+      DEFAULT_TOKEN_BUDGET_PER_TASK: ${DEFAULT_TOKEN_BUDGET_PER_TASK:-50000}
+      # Application
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Temporal
+      TEMPORAL_HOST: ${TEMPORAL_HOST:-temporal:7233}
+      TEMPORAL_NAMESPACE: ${TEMPORAL_NAMESPACE:-nexus}
+      TEMPORAL_TASK_QUEUE: ${TEMPORAL_TASK_QUEUE:-nexus-tasks}
+      # JWT Auth
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in Dokploy environment}
+      # LangFuse (optional)
+      LANGFUSE_HOST: ${LANGFUSE_HOST:-}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${BACKEND_MEMORY_LIMIT:-1g}
+
+  temporal:
+    image: temporalio/auto-setup:1.24
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-nexus}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - temporal
+    deploy:
+      resources:
+        limits:
+          memory: ${TEMPORAL_MEMORY_LIMIT:-512m}
+
+  temporal-ui:
+    image: temporalio/ui:2.26.2
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "${TEMPORAL_UI_PORT:-8088}:8080"
+    depends_on:
+      - temporal
+    restart: unless-stopped
+    profiles:
+      - temporal
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/santapong/nexus-frontend:latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: prod
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${FRONTEND_MEMORY_LIMIT:-256m}
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
