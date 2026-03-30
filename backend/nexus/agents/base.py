@@ -28,7 +28,13 @@ from nexus.audit.service import AuditEventType, log_event
 from nexus.core.kafka.consumer import check_idempotency, create_consumer
 from nexus.core.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
 from nexus.core.kafka.producer import get_producer, publish
-from nexus.core.kafka.schemas import AgentCommand, AgentResponse, HeartbeatMessage, KafkaMessage
+from nexus.core.kafka.schemas import (
+    AgentCommand,
+    AgentResponse,
+    HeartbeatMessage,
+    KafkaMessage,
+    MeetingCommand,
+)
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import check_daily_spend, check_task_budget
 from nexus.core.redis.clients import redis_pubsub
@@ -154,7 +160,40 @@ class AgentBase(ABC):
             logger.info("agent_stopped", agent_id=self.agent_id)
 
     async def _process_message(self, raw: dict[str, Any]) -> None:
-        """Deserialize message and execute with guards if targeted at this role."""
+        """Deserialize message and execute with guards if targeted at this role.
+
+        Handles two message types:
+        1. MeetingCommand — conference room messages (has meeting_id + participants)
+        2. AgentCommand — standard task commands (has target_role)
+        """
+        # Check if this is a meeting room message
+        if "meeting_id" in raw and "participants" in raw:
+            try:
+                meeting_cmd = MeetingCommand.model_validate(raw)
+            except Exception:
+                logger.warning(
+                    "invalid_meeting_message_format",
+                    agent_id=self.agent_id,
+                    raw_keys=list(raw.keys()),
+                )
+                return
+
+            # Only process if this agent's role is in the participants list
+            if self.role.value not in meeting_cmd.participants:
+                return
+
+            logger.info(
+                "meeting_message_received",
+                agent_id=self.agent_id,
+                meeting_id=meeting_cmd.meeting_id,
+                task_id=str(meeting_cmd.task_id),
+                round=meeting_cmd.round_number,
+            )
+
+            await self._handle_meeting_message(meeting_cmd)
+            return
+
+        # Standard AgentCommand flow
         try:
             command = AgentCommand.model_validate(raw)
         except Exception:
@@ -636,6 +675,10 @@ class AgentBase(ABC):
             "aggregated_and_sent_to_qa",
             "aggregated_and_sent_to_director",
             "director_synthesized_and_sent_to_qa",
+            "conference_in_progress",
+            "awaiting_plan_approval",
+            "evaluation_passed",
+            "evaluation_rework",
         }
     )
 
@@ -648,6 +691,78 @@ class AgentBase(ABC):
         if response.output and isinstance(response.output, dict):
             return response.output.get("action") in self._ORCHESTRATION_ACTIONS
         return False
+
+    # ─── Meeting room participation ─────────────────────────────────────────
+
+    async def _handle_meeting_message(self, meeting_cmd: MeetingCommand) -> None:
+        """Respond to a conference room question using this agent's LLM.
+
+        Loads the meeting from Redis, generates a response via the LLM,
+        submits the response to the meeting room, and saves state.
+
+        Args:
+            meeting_cmd: The meeting command with question and participants.
+        """
+        from nexus.core.kafka.meeting import get_meeting, save_meeting
+
+        task_id = str(meeting_cmd.task_id)
+        meeting_id = meeting_cmd.meeting_id
+
+        room = await get_meeting(meeting_id)
+        if room is None:
+            logger.warning(
+                "meeting_not_found_for_response",
+                agent_id=self.agent_id,
+                meeting_id=meeting_id,
+                task_id=task_id,
+            )
+            return
+
+        # Build context for the LLM
+        transcript = room.get_transcript()
+        meeting_prompt = (
+            f"You are in a conference room meeting as the {self.role.value} agent.\n\n"
+            f"Meeting topic: {room.config.topic}\n\n"
+        )
+        if transcript:
+            meeting_prompt += f"Discussion so far:\n{transcript}\n\n"
+        meeting_prompt += (
+            f"Current question (Round {meeting_cmd.round_number}):\n"
+            f"{meeting_cmd.question}\n\n"
+            f"Provide your expert perspective as a {self.role.value}. "
+            f"Be specific, concise, and constructive. "
+            f"If you agree with another agent, say so and add new insights. "
+            f"If you disagree, explain why with reasoning."
+        )
+
+        try:
+            result = await self.llm_agent.run(meeting_prompt)
+            response_text = result.output
+
+            await room.submit_response(
+                response=response_text,
+                sender_role=self.role.value,
+                sender_id=self.agent_id,
+            )
+            await save_meeting(room)
+
+            logger.info(
+                "meeting_response_submitted",
+                agent_id=self.agent_id,
+                meeting_id=meeting_id,
+                task_id=task_id,
+                round=meeting_cmd.round_number,
+                response_length=len(response_text),
+            )
+
+        except Exception as exc:
+            logger.error(
+                "meeting_response_failed",
+                agent_id=self.agent_id,
+                meeting_id=meeting_id,
+                task_id=task_id,
+                error=str(exc),
+            )
 
     # ─── Broadcasting ────────────────────────────────────────────────────────
 

@@ -114,6 +114,10 @@ async def _handle_response(
         "aggregated_and_sent_to_qa",
         "aggregated_and_sent_to_director",
         "director_synthesized_and_sent_to_qa",
+        "conference_in_progress",
+        "awaiting_plan_approval",
+        "evaluation_passed",
+        "evaluation_rework",
     ):
         logger.debug(
             "result_consumer_skip_ceo_action", task_id=task_id, action=response.output.get("action")

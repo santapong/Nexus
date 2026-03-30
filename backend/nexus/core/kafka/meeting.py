@@ -361,6 +361,90 @@ class MeetingRoom:
 
         return report
 
+    async def run_meeting_round(
+        self,
+        question: str,
+        sender_id: str,
+        *,
+        wait_seconds: float = 30.0,
+        poll_interval: float = 2.0,
+    ) -> list[MeetingMessage]:
+        """Orchestrate a full meeting round: pose question, wait for responses.
+
+        The CEO calls this to run one round of discussion. It publishes a
+        MeetingCommand to the meeting.room topic and then polls Redis for
+        responses from all participants until either all respond or
+        wait_seconds expires.
+
+        Args:
+            question: The question to pose for this round.
+            sender_id: The CEO agent's ID.
+            wait_seconds: Max seconds to wait for all participant responses.
+            poll_interval: Seconds between checking for new responses.
+
+        Returns:
+            List of response MeetingMessages received during this round.
+        """
+        await self.pose_question(question, sender_id)
+
+        # Publish MeetingCommand so agents' consumer loops receive it
+        from nexus.core.kafka.schemas import MeetingCommand as MeetingCmd
+
+        meeting_cmd = MeetingCmd(
+            task_id=UUID(self.config.parent_task_id),
+            trace_id=UUID(self.config.trace_id),
+            agent_id=sender_id,
+            payload={"meeting_id": self.config.meeting_id},
+            meeting_id=self.config.meeting_id,
+            question=question,
+            participants=self.config.participants,
+            round_number=self.current_round,
+        )
+        await publish(Topics.MEETING_ROOM, meeting_cmd, key=self.meeting_id)
+
+        # Wait for participant responses by polling Redis meeting state
+        expected = len(self.config.participants)
+        elapsed = 0.0
+        import asyncio
+
+        while elapsed < wait_seconds:
+            await asyncio.sleep(poll_interval)
+            elapsed += poll_interval
+
+            # Re-load meeting state from Redis to check for new responses
+            updated = await get_meeting(self.meeting_id)
+            if updated is None:
+                break
+
+            responses = updated.get_responses_for_round(self.current_round)
+            # Sync our local state with Redis
+            self.messages = updated.messages
+
+            if len(responses) >= expected:
+                logger.info(
+                    "meeting_round_all_responded",
+                    meeting_id=self.meeting_id,
+                    round=self.current_round,
+                    responses=len(responses),
+                    expected=expected,
+                )
+                break
+
+        responses = self.get_responses_for_round(self.current_round)
+        logger.info(
+            "meeting_round_completed",
+            meeting_id=self.meeting_id,
+            round=self.current_round,
+            responses=len(responses),
+            expected=expected,
+            timed_out=elapsed >= wait_seconds,
+        )
+
+        # Save updated state
+        await save_meeting(self)
+
+        return responses
+
     def get_best_contributions(self) -> list[MeetingMessage]:
         """Extract the most substantive contributions from the meeting.
 

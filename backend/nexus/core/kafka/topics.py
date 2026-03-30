@@ -24,6 +24,7 @@ class Topics:
     PROMPT_BENCHMARK = "prompt.benchmark_requests"
     PROMPT_PROPOSALS = "prompt.proposals"
     DIRECTOR_REVIEW = "director.review"
+    PLAN_APPROVAL = "plan.approval"
 
     # Dead letter topics — failed messages after max retries
     DEAD_LETTER_SUFFIX = ".dead_letter"

@@ -35,6 +35,7 @@ class TaskStatus(enum.StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
     PAUSED = "paused"
+    AWAITING_APPROVAL = "awaiting_approval"
     COMPLETED = "completed"
     FAILED = "failed"
     ESCALATED = "escalated"
@@ -107,6 +108,8 @@ class Task(UUIDAuditBase):
         ForeignKey("task_schedules.id"), nullable=True, index=True
     )
     rework_round: Mapped[int] = mapped_column(Integer, default=0)
+    requirements: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    meeting_transcript: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     assigned_agent: Mapped[Agent | None] = relationship(back_populates="tasks", lazy="raise")
