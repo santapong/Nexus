@@ -20,12 +20,15 @@ from nexus.tools.registry import get_tools_for_role
 
 # Kafka topic subscriptions per role
 ROLE_TOPICS: dict[AgentRole, list[str]] = {
-    AgentRole.CEO: [Topics.TASK_QUEUE, Topics.AGENT_RESPONSES, Topics.A2A_INBOUND],
+    AgentRole.CEO: [
+        Topics.TASK_QUEUE, Topics.AGENT_RESPONSES, Topics.A2A_INBOUND,
+        Topics.PLAN_APPROVAL, Topics.MEETING_ROOM,
+    ],
     AgentRole.DIRECTOR: [Topics.DIRECTOR_REVIEW],
-    AgentRole.ENGINEER: [Topics.AGENT_COMMANDS],
-    AgentRole.ANALYST: [Topics.AGENT_COMMANDS],
-    AgentRole.WRITER: [Topics.AGENT_COMMANDS],
-    AgentRole.QA: [Topics.TASK_REVIEW_QUEUE],
+    AgentRole.ENGINEER: [Topics.AGENT_COMMANDS, Topics.MEETING_ROOM],
+    AgentRole.ANALYST: [Topics.AGENT_COMMANDS, Topics.MEETING_ROOM],
+    AgentRole.WRITER: [Topics.AGENT_COMMANDS, Topics.MEETING_ROOM],
+    AgentRole.QA: [Topics.TASK_REVIEW_QUEUE, Topics.MEETING_ROOM],
     AgentRole.PROMPT_CREATOR: [Topics.PROMPT_IMPROVEMENT, Topics.PROMPT_BENCHMARK],
 }
 

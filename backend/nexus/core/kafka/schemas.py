@@ -44,6 +44,27 @@ class TaskResult(KafkaMessage):
     error: str | None = None
 
 
+class MeetingCommand(KafkaMessage):
+    """Command sent to agents for conference room participation.
+
+    Used instead of AgentCommand for meeting room messages because
+    meetings target multiple roles via a participants list rather
+    than a single target_role.
+    """
+
+    meeting_id: str
+    question: str
+    participants: list[str]  # Agent roles invited to this meeting
+    round_number: int = 1
+
+
+class PlanApprovalMessage(KafkaMessage):
+    """Message from API when user approves or rejects a task plan."""
+
+    approved: bool
+    feedback: str = ""
+
+
 class HeartbeatMessage(BaseModel):
     """Lightweight heartbeat — does not require task_id."""
 

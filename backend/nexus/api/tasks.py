@@ -12,9 +12,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.api.auth import get_auth_user_from_request
 from nexus.core.kafka.producer import publish
-from nexus.core.kafka.schemas import AgentCommand
+from nexus.core.kafka.schemas import AgentCommand, PlanApprovalMessage
 from nexus.core.kafka.topics import Topics
-from nexus.db.models import AgentRole, EpisodicMemory, LLMUsage, Task, TaskSource, TaskStatus
+from nexus.db.models import (
+    AgentRole,
+    ApprovalStatus,
+    EpisodicMemory,
+    HumanApproval,
+    LLMUsage,
+    Task,
+    TaskSource,
+    TaskStatus,
+)
 
 logger = structlog.get_logger()
 
@@ -22,6 +31,14 @@ logger = structlog.get_logger()
 class CreateTaskRequest(BaseModel):
     instruction: str
     source: str = TaskSource.HUMAN.value
+    require_meeting: bool | None = None  # Override meeting auto-detection
+
+
+class ApprovePlanRequest(BaseModel):
+    """Request body for approving or rejecting a task plan."""
+
+    approved: bool
+    feedback: str = ""
 
 
 class TaskResponse(BaseModel):
@@ -92,11 +109,15 @@ class TaskController(Controller):
         )
 
         # Publish to Kafka task.queue — CEO will pick this up
+        task_payload: dict[str, Any] = {"instruction": data.instruction, "source": data.source}
+        if data.require_meeting is not None:
+            task_payload["require_meeting"] = data.require_meeting
+
         kafka_msg = AgentCommand(
             task_id=task.id,
             trace_id=UUID(trace_id),
             agent_id="api",
-            payload={"instruction": data.instruction, "source": data.source},
+            payload=task_payload,
             target_role=AgentRole.CEO.value,
             instruction=data.instruction,
         )
@@ -378,4 +399,89 @@ class TaskController(Controller):
             "subtask_llm_calls": subtask_usages,
             "total_episodes": len(memories) + len(subtask_memories),
             "total_llm_calls": len(usages) + len(subtask_usages),
+        }
+
+    @post("/{task_id:str}/approve-plan")
+    async def approve_plan(
+        self,
+        task_id: str,
+        data: ApprovePlanRequest,
+        request: Request[Any, Any, Any],
+        db_session: AsyncSession,
+    ) -> dict[str, Any]:
+        """Approve or reject a task's execution plan.
+
+        After agents extract requirements and discuss in the conference room,
+        the plan is presented to the user. This endpoint lets the user approve
+        (proceed to execution) or reject (re-plan with feedback).
+        """
+        workspace_id = _get_workspace_id(request)
+
+        # Verify task exists and is awaiting approval
+        stmt = select(Task).where(Task.id == task_id)
+        if workspace_id:
+            stmt = stmt.where(Task.workspace_id == workspace_id)
+        result = await db_session.execute(stmt)
+        task = result.scalar_one_or_none()
+
+        if task is None:
+            return {"error": "Task not found"}
+
+        if task.status != TaskStatus.AWAITING_APPROVAL.value:
+            return {
+                "error": f"Task is not awaiting approval (current status: {task.status})",
+            }
+
+        # Resolve the pending plan approval record
+        approval_stmt = (
+            select(HumanApproval)
+            .where(HumanApproval.task_id == task_id)
+            .where(HumanApproval.tool_name == "plan_approval")
+            .where(HumanApproval.status == ApprovalStatus.PENDING.value)
+        )
+        approval_result = await db_session.execute(approval_stmt)
+        approval = approval_result.scalar_one_or_none()
+
+        if approval:
+            from nexus.tools.guards import resolve_approval
+
+            auth_user = get_auth_user_from_request(request)
+            resolved_by = auth_user.email if auth_user else "anonymous"
+
+            await resolve_approval(
+                session=db_session,
+                approval_id=str(approval.id),
+                approved=data.approved,
+                resolved_by=resolved_by,
+            )
+
+        # Publish plan approval to Kafka for CEO to consume
+        approval_msg = AgentCommand(
+            task_id=UUID(task_id),
+            trace_id=UUID(task.trace_id),
+            agent_id="api",
+            payload={
+                "_plan_approval": True,
+                "approved": data.approved,
+                "feedback": data.feedback,
+            },
+            target_role=AgentRole.CEO.value,
+            instruction=f"Plan {'approved' if data.approved else 'rejected'}: {data.feedback}",
+        )
+        await publish(Topics.PLAN_APPROVAL, approval_msg, key=task_id)
+
+        await db_session.commit()
+
+        status = "approved" if data.approved else "rejected"
+        logger.info(
+            "task_plan_approval",
+            task_id=task_id,
+            approved=data.approved,
+            feedback=data.feedback[:200] if data.feedback else "",
+        )
+
+        return {
+            "task_id": task_id,
+            "status": status,
+            "message": f"Plan {status}. {'Execution will begin shortly.' if data.approved else 'CEO will re-plan with your feedback.'}",
         }
