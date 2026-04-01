@@ -5,6 +5,9 @@ to understand when to call it. Keep docstrings clear and specific.
 
 These implementations are standalone for Phase 1-2. They will be replaced
 by the full MCP package adapter when that package is ready.
+
+All tool executions are wrapped with OpenTelemetry trace spans when OTel is
+configured. Traces are no-ops when OTel is disabled (zero overhead).
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import EpisodicMemory, SemanticMemory
+from nexus.integrations.otel.tracing import traced
 
 logger = structlog.get_logger()
 
@@ -39,6 +43,7 @@ def _sanitize_tool_output(output: str) -> str:
 # ─── READ-ONLY tools (no approval needed) ────────────────────────────────────
 
 
+@traced("tool.web_search")
 async def tool_web_search(query: str) -> str:
     """Search the web and return relevant results.
 
@@ -69,6 +74,7 @@ async def tool_web_search(query: str) -> str:
         return f"Search failed: {exc}"
 
 
+@traced("tool.web_fetch")
 async def tool_web_fetch(url: str) -> str:
     """Fetch a web page and return its text content.
 
@@ -130,6 +136,7 @@ async def tool_web_fetch(url: str) -> str:
         return f"Fetch failed: {exc}"
 
 
+@traced("tool.file_read")
 async def tool_file_read(path: str) -> str:
     """Read the contents of a file.
 
@@ -182,6 +189,7 @@ async def tool_file_read(path: str) -> str:
         return f"Error reading file: {exc}"
 
 
+@traced("tool.code_execute")
 async def tool_code_execute(code: str, language: str = "python") -> str:
     """Execute code in a sandboxed subprocess with a 30-second timeout.
 
@@ -237,6 +245,7 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
         return f"Error executing code: {exc}"
 
 
+@traced("tool.memory_read")
 async def tool_memory_read(
     agent_role: str,
     memory_type: str = "episodic",
@@ -332,6 +341,7 @@ async def tool_memory_read(
 # ─── LLM-POWERED planning & design tools ─────────────────────────────────────
 
 
+@traced("tool.create_plan")
 async def tool_create_plan(
     goal: str,
     constraints: str = "",
@@ -368,6 +378,7 @@ Format as clean markdown. Be specific and actionable — no vague tasks."""
     return _sanitize_tool_output(prompt)
 
 
+@traced("tool.design_system")
 async def tool_design_system(
     requirements: str,
     components: str = "",
@@ -404,6 +415,7 @@ Use ```mermaid code blocks for diagrams."""
     return _sanitize_tool_output(prompt)
 
 
+@traced("tool.design_database")
 async def tool_design_database(
     entities: str,
     relationships: str = "",
@@ -438,6 +450,7 @@ Use ```mermaid code blocks for diagrams and ```sql for DDL."""
     return _sanitize_tool_output(prompt)
 
 
+@traced("tool.design_api")
 async def tool_design_api(
     resources: str,
     operations: str = "",
@@ -478,6 +491,7 @@ Follow REST best practices. Use consistent naming conventions."""
 # These are only called AFTER approval has been granted.
 
 
+@traced("tool.file_write")
 async def tool_file_write(path: str, content: str) -> str:
     """Write content to a file. This action requires human approval.
 
@@ -495,6 +509,7 @@ async def tool_file_write(path: str, content: str) -> str:
     return f"Written {len(content)} chars to {path}"
 
 
+@traced("tool.send_email")
 async def tool_send_email(to: str, subject: str, body: str) -> str:
     """Send an email. This action requires human approval and cannot be undone.
 
@@ -511,6 +526,7 @@ async def tool_send_email(to: str, subject: str, body: str) -> str:
     return f"Email sent to {to} with subject '{subject}' ({len(body)} chars)"
 
 
+@traced("tool.hire_external_agent")
 async def tool_hire_external_agent(
     agent_url: str,
     instruction: str,
@@ -555,6 +571,7 @@ async def tool_hire_external_agent(
         return f"Failed to hire external agent: {exc}"
 
 
+@traced("tool.analyze_image")
 async def tool_analyze_image(
     image_path: str,
     instruction: str = "Describe this image in detail.",
@@ -683,6 +700,7 @@ async def tool_analyze_image(
         return f"Image analysis failed: {exc}"
 
 
+@traced("tool.git_push")
 async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
     """Push code changes to a git repository. This action requires human approval.
 
@@ -737,3 +755,62 @@ async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
         return "Error: Git operation timed out"
     except Exception as exc:
         return f"Git push failed: {exc}"
+
+
+# ─── SANDBOX tools (E2B Firecracker microVM isolation) ────────────────────────
+
+
+@traced("tool.sandbox_execute")
+async def tool_sandbox_execute(code: str, language: str = "python") -> str:
+    """Execute code in an isolated Firecracker microVM sandbox.
+
+    The sandbox provides hardware-level isolation (same technology as AWS Lambda).
+    Each execution creates a fresh environment — no state persists between calls.
+    Supports Python, Bash, Node.js, and other languages.
+
+    Args:
+        code: The code to execute.
+        language: Programming language (python, bash, node). Defaults to python.
+
+    Returns:
+        The execution output (stdout + stderr).
+    """
+    from nexus.tools.sandbox.client import execute_code
+
+    result = await execute_code(code=code, language=language)
+    output = result.output
+    if not result.success:
+        output = f"[Exit code: {result.exit_code}]\n{output}"
+    return _sanitize_tool_output(output)
+
+
+@traced("tool.sandbox_project")
+async def tool_sandbox_project(repo_url: str, commands: str) -> str:
+    """Clone a git repository into an isolated sandbox and run commands.
+
+    Creates a Firecracker microVM, clones the repository, and executes
+    the specified commands sequentially. Useful for running test suites,
+    building projects, or verifying code changes.
+
+    This action requires human approval as it involves network access
+    and compute costs.
+
+    Args:
+        repo_url: Git repository URL to clone (e.g. https://github.com/user/repo).
+        commands: Semicolon-separated commands to run (e.g. "pip install -r requirements.txt;pytest").
+
+    Returns:
+        Combined output from all commands.
+    """
+    from nexus.tools.sandbox.client import execute_project
+
+    cmd_list = [cmd.strip() for cmd in commands.split(";") if cmd.strip()]
+    if not cmd_list:
+        return "Error: No commands provided. Separate commands with semicolons."
+
+    result = await execute_project(repo_url=repo_url, commands=cmd_list)
+    output = result.output
+    if not result.success:
+        output = f"[Failed at exit code: {result.exit_code}]\n{output}"
+    output += f"\n\n[Duration: {result.duration_seconds:.1f}s]"
+    return _sanitize_tool_output(output)

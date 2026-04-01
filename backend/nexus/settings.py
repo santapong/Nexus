@@ -143,6 +143,11 @@ class Settings(BaseSettings):
     # ─── Phase 5 Track C: Plugin System ───────────────────────────────
     plugin_auto_load: bool = True  # Load plugins from DB on startup
 
+    # ─── Phase 8: E2B Sandbox (Firecracker microVM) ──────────────────
+    e2b_api_key: str = ""  # E2B API key — set to enable sandbox execution
+    sandbox_timeout_seconds: int = 300  # Default sandbox timeout (5 min)
+    sandbox_budget_per_task: int = 300  # Max sandbox seconds per task
+
     # ─── Phase 6: Tool Safety ───────────────────────────────────────
     tool_file_read_max_bytes: int = 10 * 1024 * 1024  # 10MB
     tool_allowed_dirs: str = ""  # Comma-separated allowed directories for file_read

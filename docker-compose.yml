@@ -90,6 +90,9 @@ services:
       LANGFUSE_HOST: ${LANGFUSE_HOST:-}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      # OpenTelemetry — traces to Jaeger (set empty to disable)
+      OTEL_EXPORTER_ENDPOINT: ${OTEL_EXPORTER_ENDPOINT:-http://jaeger:4318/v1/traces}
+      OTEL_SERVICE_NAME: nexus-backend
     ports:
       - "8000:8000"
     depends_on:
@@ -138,6 +141,24 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
 
+  # ─── Observability ──────────────────────────────────────────────────────────
+
+  jaeger:
+    image: jaegertracing/jaeger:2
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4318:4318"     # OTLP HTTP receiver
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+
 volumes:
   postgres_data:
   frontend_node_modules:
+  uptime_kuma_data:

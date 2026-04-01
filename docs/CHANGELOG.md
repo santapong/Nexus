@@ -40,6 +40,40 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-04-01] — Phase 8: Business-grade platform, Temporal deep integration, observability
+
+### Added
+- **OpenTelemetry wiring** — Connected existing OTel decorators (`@traced`, `trace_agent_task`, `trace_llm_call`, `trace_tool_call`, `trace_kafka_consume`) to production code in `agents/base.py` and `tools/adapter.py`. All 14 tool functions now have `@traced()` decorators. Added Kafka trace context propagator (`otel/kafka_propagator.py`) for W3C traceparent/tracestate across agent boundaries.
+- **Jaeger** — Added to docker-compose.yml for distributed trace visualization (port 16686 UI, 4318 OTLP receiver). Backend auto-connects via `OTEL_EXPORTER_ENDPOINT`.
+- **Uptime Kuma** — Added to docker-compose.yml for external platform monitoring (port 3001). Monitors health endpoint, PostgreSQL, Redis, Kafka, Temporal, Frontend.
+- **SLA engine** (`core/sla/`) — Three new files: `definitions.py` (4 tiers: free/starter/pro/enterprise with uptime/wait/error thresholds), `collector.py` (5-minute periodic metric snapshots), `evaluator.py` (rolling 30-day compliance calculation). New `SLASnapshot` DB model. New API: `GET /api/sla/tiers`, `GET /api/sla/status`, `GET /api/sla/history`.
+- **E2B sandbox integration** (`tools/sandbox/`) — Firecracker microVM isolation for agent code execution. `client.py` wraps E2B SDK with `execute_code()` and `execute_project()`. Two new tools: `tool_sandbox_execute` (read-only) and `tool_sandbox_project` (irreversible, requires approval). Added to Engineer agent's tool registry.
+- **Temporal deep rewrite** — Complete rewrite of `task_workflow.py` with `AgentTaskWorkflow` class: 5-phase orchestration (CEO planning → parallel execution → Director synthesis → security review → QA review). New files: `signals.py` (human approval via Redis pub/sub bridge), `queries.py` (real-time task status), `sagas.py` (compensation for failed subtasks). Expanded `schemas.py` with plan/synthesis/review/signal/query models.
+- **Team invitations** (`api/invitations.py`) — Workspace invitation flow with email-based tokens (7-day expiry). Endpoints: `POST /workspaces/{id}/invitations`, `GET /workspaces/{id}/invitations`, `POST /invitations/accept`. Added `invite_token`, `invite_email`, `invited_at`, `expires_at` fields to `WorkspaceMember` model.
+- **API key management** (`api/api_keys.py`) — Workspace API keys for programmatic access. CRUD endpoints with SHA-256 hashing, scope levels (read/submit/admin), soft-delete revocation. New `ApiKey` DB model.
+
+### Changed
+- `agents/base.py` — `_execute_with_guards` now wraps execution in OTel `trace_agent_task()` span via new inner method `_execute_guarded_inner`
+- `tools/adapter.py` — All 14 tool functions decorated with `@traced()` for OTel
+- `tools/registry.py` — Added `tool_sandbox_execute` and `tool_sandbox_project` to Engineer role. Added `tool_sandbox_project` to `IRREVERSIBLE_TOOLS`
+- `docker-compose.yml` — Added Jaeger, Uptime Kuma services. Added `OTEL_EXPORTER_ENDPOINT` env var to backend
+- `settings.py` — Added `e2b_api_key`, `sandbox_timeout_seconds`, `sandbox_budget_per_task`
+- `api/router.py` — Registered SLAController, InvitationController, InvitationAcceptController, ApiKeyController
+
+### Database
+- New model: `SLASnapshot` — periodic platform health metrics (tasks queued/completed, wait time, error rate, uptime %)
+- New model: `ApiKey` — workspace API keys with hash, prefix, scope, active flag
+- Changed model: `WorkspaceMember` — added invitation fields (invite_token, invite_email, invited_at, expires_at), user_id now nullable for pending invitations
+
+### Documentation
+- `docs/DECISIONS.md` — Added ADR-061 through ADR-067 (Pydantic AI reaffirmation, E2B sandbox, Uptime Kuma + SLA, OTel wiring, Temporal deep integration, API keys, team invitations)
+
+**Authored by:** claude_code
+**Task ID:** n/a
+**PR:** n/a
+
+---
+
 ## [2026-03-28] — Phase 7: Director agent, enterprise security, performance, fault tolerance
 
 ### Added

@@ -42,6 +42,8 @@ from nexus.tools.adapter import (
     tool_git_push,
     tool_hire_external_agent,
     tool_memory_read,
+    tool_sandbox_execute,
+    tool_sandbox_project,
     tool_send_email,
     tool_web_fetch,
     tool_web_search,
@@ -53,6 +55,7 @@ IRREVERSIBLE_TOOLS: set[str] = {
     "tool_git_push",
     "tool_send_email",
     "tool_hire_external_agent",
+    "tool_sandbox_project",  # Costs money + network access
     # KeepSave irreversible tools — modify secrets or trigger promotions
     "tool_keepsave_update_secret",
     "tool_keepsave_create_secret",
@@ -109,6 +112,9 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_git_push,
         tool_hire_external_agent,
         tool_analyze_image,
+        # Sandbox tools (E2B Firecracker microVM isolation)
+        tool_sandbox_execute,   # Read-only: execute code snippets
+        tool_sandbox_project,   # Irreversible: clone repos + run commands
         # Planning & design tools
         tool_create_plan,
         tool_design_system,

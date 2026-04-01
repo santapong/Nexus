@@ -231,11 +231,27 @@ class AgentBase(ABC):
         6. Publish result to Kafka
         7. Broadcast to Redis pub/sub for dashboard
         8. Clear working memory
+
+        Wrapped with OpenTelemetry trace span when OTel is configured.
         """
+        from nexus.integrations.otel.tracing import trace_agent_task
+
         msg_id = str(command.message_id)
         task_id = str(command.task_id)
         trace_id = str(command.trace_id)
 
+        async with trace_agent_task(self.role.value, task_id, trace_id) as span:
+            await self._execute_guarded_inner(command, span, msg_id, task_id, trace_id)
+
+    async def _execute_guarded_inner(
+        self,
+        command: AgentCommand,
+        span: Any,
+        msg_id: str,
+        task_id: str,
+        trace_id: str,
+    ) -> None:
+        """Inner guard chain wrapped by OTel trace span."""
         # Track active task for graceful shutdown draining
         from nexus.core.shutdown import register_active_task, unregister_active_task
 
