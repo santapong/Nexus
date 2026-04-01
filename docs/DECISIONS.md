@@ -80,6 +80,13 @@
 | ADR-058 | ANP evaluation — defer adoption until IETF RFC published | accepted | 2026-03-21 |
 | ADR-059 | AP2 evaluation — adopt only if paid A2A marketplace launches | accepted | 2026-03-21 |
 | ADR-060 | Federation registry — centralized first, DID-based later | accepted | 2026-03-21 |
+| ADR-061 | Reaffirm Pydantic AI over LangChain/LangGraph | accepted | 2026-04-01 |
+| ADR-062 | E2B Firecracker microVM for agent sandbox execution | accepted | 2026-04-01 |
+| ADR-063 | Uptime Kuma + SLA engine for platform monitoring | accepted | 2026-04-01 |
+| ADR-064 | Wire existing OTel stub into agent/LLM/Kafka code | accepted | 2026-04-01 |
+| ADR-065 | Temporal deep integration — child workflows, signals, sagas | accepted | 2026-04-01 |
+| ADR-066 | Workspace API keys for programmatic access | accepted | 2026-04-01 |
+| ADR-067 | Team invitations and RBAC enforcement | accepted | 2026-04-01 |
 
 ---
 
@@ -1785,8 +1792,183 @@ keeping the centralized registry as a bootstrap/fallback mechanism.
 
 ---
 
+## ADR-061 — Reaffirm Pydantic AI over LangChain/LangGraph
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | Phase 8 planning evaluated whether to switch from Pydantic AI to LangChain/LangGraph |
+
+### Decision
+
+Stay with Pydantic AI. Do NOT migrate to LangChain or LangGraph.
+
+### Rationale
+
+1. LangGraph would compete with Kafka for orchestration control — two orchestrators in one codebase fight each other
+2. Pydantic AI is isolated inside `AgentBase` — if it ever needs replacing, nothing else changes
+3. Pydantic AI v1.74 (March 2026) is classified "Production/Stable" on PyPI
+4. ~75% less code than LangGraph for equivalent functionality
+5. Switching = 2-3 weeks rewriting all agents for zero new features
+6. Clear separation: Kafka (orchestration) + Temporal (durability) + Pydantic AI (structured LLM calls)
+
+### Consequences
+
+**Positive:** No migration cost. Architecture stays clean. Each layer has one job.
+**Negative:** Smaller ecosystem than LangChain. Must build some utilities ourselves.
+**Future:** Monitor Pydantic Deep Agents for checkpoint/rewind and native budget enforcement.
+
+---
+
+## ADR-062 — E2B Firecracker microVM for agent sandbox execution
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | Agent Engineer needs isolated environments to clone repos, install deps, run tests |
+
+### Decision
+
+Integrate E2B (Firecracker microVMs) for agent code execution sandboxes.
+
+### Alternatives considered
+
+- Docker containers: weaker isolation (shared kernel), kernel escape risk
+- Daytona: AGPL-3.0 license (restrictive for SaaS), Docker-based by default
+- Docker Sandboxes: requires Docker Desktop 4.60+, not self-hostable
+
+### Rationale
+
+- Firecracker = same isolation as AWS Lambda (hardware-level)
+- Apache-2.0 license — no SaaS restrictions, self-hostable for enterprise
+- Python SDK integrates naturally as Pydantic AI tool
+- ~$0.05/hour per sandbox — cost-effective, bill back to tenants
+
+### Consequences
+
+**Positive:** Agents can safely execute untrusted code, run test suites, build projects.
+**Negative:** Requires E2B API key or self-hosted infrastructure. Adds latency (~200ms cold start).
+
+---
+
+## ADR-063 — Uptime Kuma + SLA engine for platform monitoring
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | No platform-level uptime tracking exists; can't answer "what was our uptime last month?" |
+
+### Decision
+
+Two-layer approach: (1) Uptime Kuma for external monitoring, (2) custom SLA engine for per-tenant compliance.
+
+### Rationale
+
+- Uptime Kuma: MIT license, 60k+ stars, self-hosted, built-in status page
+- SLA engine: 5-minute metric snapshots, rolling 30-day compliance, per-tier thresholds
+- Separated because external monitoring should be independent of the platform itself
+
+### Consequences
+
+**Positive:** Can offer SLA guarantees per pricing tier. Status page for customers.
+**Negative:** Additional Docker service. SLA snapshots grow over time (need retention policy).
+
+---
+
+## ADR-064 — Wire existing OTel stub into agent/LLM/Kafka code
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | OTel decorators exist in tracing.py but were never called from production code |
+
+### Decision
+
+Wire existing OTel context managers into base.py (agents), adapter.py (tools), and consumer.py (Kafka). Add Kafka trace context propagation. Keep opt-in via `OTEL_EXPORTER_ENDPOINT`.
+
+### Rationale
+
+- OTel adds distributed traces (CEO→Engineer→QA as one trace with latency breakdown)
+- Existing structlog logging is NOT replaced — OTel traces complement logs
+- Zero overhead when disabled (no-op spans)
+- Enterprise customers expect Jaeger/Datadog integration
+
+### Consequences
+
+**Positive:** Full distributed tracing when enabled. Enterprise-ready observability.
+**Negative:** OTel SDK adds dependency weight. Kafka headers grow slightly with trace context.
+
+---
+
+## ADR-065 — Temporal deep integration — child workflows, signals, sagas
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | Temporal integration was ~20% done — polling-based, no retries, no compensation |
+
+### Decision
+
+Rewrite Temporal integration with proper patterns: child workflows for CEO/subtask/QA phases, fan-out/fan-in for parallel execution, signals for human approval, queries for dashboard status, saga compensation for failure cleanup.
+
+### Rationale
+
+- Temporal is NEXUS's key differentiator vs CrewAI/AutoGen — durable, crash-recoverable workflows
+- Polling-based approach was a PoC; production needs heartbeats, retry policies, compensation
+- Signals enable proper human-in-the-loop without blocking worker threads
+
+### Consequences
+
+**Positive:** Crash-recoverable multi-agent workflows. Real-time status via queries.
+**Negative:** More complex workflow code. Requires Temporal server infrastructure.
+
+---
+
+## ADR-066 — Workspace API keys for programmatic access
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | No way to submit tasks programmatically — only dashboard UI |
+
+### Decision
+
+Add API key management: CRUD for per-workspace keys with scoping (read, submit, admin). Keys are hashed (SHA-256) in DB, raw key shown once on creation.
+
+### Consequences
+
+**Positive:** Enables CI/CD integration, webhooks, third-party tool access.
+**Negative:** Must implement rate limiting per key. Key rotation needs UX.
+
+---
+
+## ADR-067 — Team invitations and RBAC enforcement
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-04-01 |
+| Context | Workspaces exist but can't invite members; role field in workspace_members is never enforced |
+
+### Decision
+
+Add invitation flow (email-based with token, 7-day expiry) and enforce RBAC roles: owner, admin, member, viewer.
+
+### Consequences
+
+**Positive:** Teams can collaborate. Proper access control per role.
+**Negative:** Email delivery infrastructure needed for invitations at scale.
+
+---
+
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-061 -->
+<!-- Next ID: ADR-068 -->
 
 ---
 

@@ -350,11 +350,18 @@ class WorkspaceMember(UUIDBase):
     workspace_id: Mapped[str] = mapped_column(
         ForeignKey("workspaces.id"), nullable=False, index=True
     )
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[Any | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True, index=True
+    )
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
+    # Invitation fields (for pending invitations)
+    invite_token: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    invite_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    invited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 # ─── Table 16: agent_listings (Marketplace) ─────────────────────────────
@@ -593,6 +600,44 @@ class PluginRegistration(UUIDBase):
 
 
 # ─── Table 28: federation_registry (Phase 6) ──────────────────────────────
+
+
+class ApiKey(UUIDBase):
+    """Workspace API keys for programmatic access."""
+
+    __tablename__ = "api_keys"
+
+    workspace_id: Mapped[Any] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    key_prefix: Mapped[str] = mapped_column(String(20), nullable=False)
+    scope: Mapped[str] = mapped_column(String(20), nullable=False, default="submit")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SLASnapshot(UUIDBase):
+    """Periodic SLA metrics snapshot for uptime and performance tracking."""
+
+    __tablename__ = "sla_snapshots"
+
+    workspace_id: Mapped[Any | None] = mapped_column(
+        ForeignKey("workspace.id"), nullable=True
+    )  # None = platform-wide
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    tasks_queued: Mapped[int] = mapped_column(Integer, default=0)
+    tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
+    avg_wait_seconds: Mapped[float] = mapped_column(Float, default=0.0)
+    error_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    agents_available: Mapped[int] = mapped_column(Integer, default=0)
+    uptime_pct: Mapped[float] = mapped_column(Float, default=100.0)
 
 
 class FederationInstance(UUIDBase):

@@ -4,6 +4,8 @@ from litestar import Router
 
 from nexus.api.a2a_tokens import A2ATokenController
 from nexus.api.agent_builder import AgentBuilderController
+from nexus.api.api_keys import ApiKeyController
+from nexus.api.invitations import InvitationAcceptController, InvitationController
 from nexus.api.agents import AgentController
 from nexus.api.analytics import AnalyticsController
 from nexus.api.approvals import ApprovalController
@@ -16,6 +18,7 @@ from nexus.api.marketplace import MarketplaceController
 from nexus.api.oauth import OAuthController
 from nexus.api.prompts import PromptController
 from nexus.api.schedules import ScheduleController
+from nexus.api.sla import SLAController
 from nexus.api.tasks import TaskController
 from nexus.api.webhooks import WebhookController
 from nexus.api.websocket import agent_activity_ws
@@ -43,6 +46,10 @@ api_router = Router(
         WebhookController,
         ScheduleController,
         FederationController,
+        SLAController,
+        InvitationController,
+        InvitationAcceptController,
+        ApiKeyController,
     ],
 )
 
