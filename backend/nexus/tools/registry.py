@@ -30,6 +30,12 @@ from nexus.integrations.keepsave.tools import (
     tool_keepsave_promote_environment,
     tool_keepsave_update_secret,
 )
+from nexus.tools.workspace import (
+    tool_workspace_list,
+    tool_workspace_read,
+    tool_workspace_search,
+    tool_workspace_write,
+)
 from nexus.tools.adapter import (
     tool_analyze_image,
     tool_code_execute,
@@ -56,6 +62,7 @@ IRREVERSIBLE_TOOLS: set[str] = {
     "tool_send_email",
     "tool_hire_external_agent",
     "tool_sandbox_project",  # Costs money + network access
+    "tool_workspace_write",  # Modifies persistent workspace files
     # KeepSave irreversible tools — modify secrets or trigger promotions
     "tool_keepsave_update_secret",
     "tool_keepsave_create_secret",
@@ -100,6 +107,11 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_design_system,
         tool_design_database,
         tool_design_api,
+        # Workspace storage tools
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_write,
+        tool_workspace_search,
         # CEO: full KeepSave access (read + write all scopes)
         *_KEEPSAVE_READ_TOOLS,
         *_KEEPSAVE_CEO_WRITE_TOOLS,
@@ -120,6 +132,11 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_design_system,
         tool_design_database,
         tool_design_api,
+        # Workspace storage tools
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_write,
+        tool_workspace_search,
         # Engineer: read all visible scopes + write LLM keys/cost only (RBAC enforced)
         *_KEEPSAVE_READ_TOOLS,
         *_KEEPSAVE_ENGINEER_WRITE_TOOLS,
@@ -133,6 +150,11 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_analyze_image,
         # Planning tool only (no design tools)
         tool_create_plan,
+        # Workspace storage tools
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_write,
+        tool_workspace_search,
         # Analyst: read-only secrets + MCP gateway (no secret writes)
         *_KEEPSAVE_READ_TOOLS,
         tool_keepsave_mcp_call,
@@ -143,11 +165,20 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_write,
         tool_send_email,
         tool_hire_external_agent,
+        # Workspace storage tools
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_write,
+        tool_workspace_search,
         # Writer: no KeepSave access
     ],
     AgentRole.DIRECTOR: [
         tool_web_search,
         tool_file_read,
+        # Workspace storage tools (read-only)
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_search,
         # Director: read-only KeepSave for visibility
         *_KEEPSAVE_READ_TOOLS,
     ],
@@ -155,6 +186,10 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_file_read,
         tool_web_search,
         tool_hire_external_agent,
+        # Workspace storage tools (read-only)
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_search,
         # QA: read-only KeepSave for verification
         *_KEEPSAVE_READ_TOOLS,
     ],
@@ -162,6 +197,10 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_web_search,
         tool_file_read,
         tool_memory_read,
+        # Workspace storage tools (read-only)
+        tool_workspace_list,
+        tool_workspace_read,
+        tool_workspace_search,
         # Prompt Creator: no KeepSave access
     ],
 }

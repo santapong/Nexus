@@ -22,6 +22,7 @@ from nexus.api.sla import SLAController
 from nexus.api.tasks import TaskController
 from nexus.api.webhooks import WebhookController
 from nexus.api.websocket import agent_activity_ws
+from nexus.api.workspace_files import WorkspaceFileController
 from nexus.api.workspaces import AuthController, WorkspaceController
 from nexus.integrations.a2a.routes import A2AGatewayController, AgentCardController
 from nexus.integrations.stripe.webhooks import StripeWebhookController
@@ -50,6 +51,7 @@ api_router = Router(
         InvitationController,
         InvitationAcceptController,
         ApiKeyController,
+        WorkspaceFileController,
     ],
 )
 

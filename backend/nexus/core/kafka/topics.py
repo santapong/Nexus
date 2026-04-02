@@ -25,6 +25,7 @@ class Topics:
     PROMPT_PROPOSALS = "prompt.proposals"
     DIRECTOR_REVIEW = "director.review"
     PLAN_APPROVAL = "plan.approval"
+    WORKSPACE_FILE_INDEXED = "workspace.file_indexed"
 
     # Dead letter topics — failed messages after max retries
     DEAD_LETTER_SUFFIX = ".dead_letter"

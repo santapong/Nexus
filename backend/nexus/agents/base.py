@@ -544,7 +544,7 @@ class AgentBase(ABC):
     # ─── Memory operations ───────────────────────────────────────────────────
 
     async def _load_memory(self, session: AsyncSession, command: AgentCommand) -> dict[str, Any]:
-        """Load episodic + working memory context for the task."""
+        """Load episodic + working + workspace memory context for the task."""
         # Generate embedding for similarity search
         embedding = await generate_embedding(command.instruction)
 
@@ -560,10 +560,62 @@ class AgentBase(ABC):
         # Load working memory from Redis
         working = await get_working_memory(self.agent_id, str(command.task_id))
 
-        return {
+        result: dict[str, Any] = {
             "similar_episodes": [e.summary for e in episodes],
             "working_memory": working,
         }
+
+        # Load workspace files via smart context (if embedding available)
+        if embedding:
+            try:
+                workspace_id = await self._resolve_workspace_id(session, command)
+                if workspace_id:
+                    from nexus.core.workspace.service import load_context_for_task
+
+                    ws_context = await load_context_for_task(
+                        session,
+                        workspace_id=workspace_id,
+                        instruction_embedding=embedding,
+                        agent_id=self.agent_id,
+                    )
+                    if ws_context.files:
+                        result["workspace_files"] = [
+                            {
+                                "path": f.file_path,
+                                "content": f.content,
+                                "summary": f.content_summary,
+                            }
+                            for f in ws_context.files
+                        ]
+            except Exception:
+                logger.warning(
+                    "workspace_context_load_failed",
+                    task_id=str(command.task_id),
+                    agent_id=self.agent_id,
+                    exc_info=True,
+                )
+
+        return result
+
+    async def _resolve_workspace_id(
+        self, session: AsyncSession, command: AgentCommand
+    ) -> str | None:
+        """Resolve workspace_id from the task record.
+
+        Args:
+            session: Database session.
+            command: The agent command containing task_id.
+
+        Returns:
+            Workspace ID string or None if not found.
+        """
+        from sqlalchemy import select
+        from nexus.db.models import Task
+
+        stmt = select(Task.workspace_id).where(Task.id == str(command.task_id))
+        result = await session.execute(stmt)
+        row = result.scalar_one_or_none()
+        return row
 
     async def _write_memory(
         self,
