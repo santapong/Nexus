@@ -104,6 +104,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - workspace_repos:/data/workspace-repos
 
   temporal:
     image: temporalio/auto-setup:1.24
@@ -162,3 +163,4 @@ volumes:
   postgres_data:
   frontend_node_modules:
   uptime_kuma_data:
+  workspace_repos:

@@ -148,6 +148,12 @@ class Settings(BaseSettings):
     sandbox_timeout_seconds: int = 300  # Default sandbox timeout (5 min)
     sandbox_budget_per_task: int = 300  # Max sandbox seconds per task
 
+    # ─── Workspace Storage ──────────────────────────────────────────
+    workspace_repos_base_path: str = "/data/workspace-repos"
+    workspace_context_token_budget: int = 8000
+    workspace_max_file_size_bytes: int = 10 * 1024 * 1024  # 10MB
+    workspace_max_files_per_project: int = 1000
+
     # ─── Phase 6: Tool Safety ───────────────────────────────────────
     tool_file_read_max_bytes: int = 10 * 1024 * 1024  # 10MB
     tool_allowed_dirs: str = ""  # Comma-separated allowed directories for file_read

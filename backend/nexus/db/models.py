@@ -7,6 +7,7 @@ from typing import Any
 from advanced_alchemy.base import UUIDAuditBase, UUIDBase
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -638,6 +639,89 @@ class SLASnapshot(UUIDBase):
     error_rate: Mapped[float] = mapped_column(Float, default=0.0)
     agents_available: Mapped[int] = mapped_column(Integer, default=0)
     uptime_pct: Mapped[float] = mapped_column(Float, default=100.0)
+
+
+# ─── Table 29: workspace_projects (Workspace Storage) ──────────────────────
+
+
+class WorkspaceProject(UUIDAuditBase):
+    __tablename__ = "workspace_projects"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "slug", name="uq_workspace_project_slug"),
+    )
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    repo_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    default_branch: Mapped[str] = mapped_column(String(100), nullable=False, default="main")
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+# ─── Table 30: workspace_files (Workspace Storage) ─────────────────────────
+
+
+class WorkspaceFile(UUIDBase):
+    __tablename__ = "workspace_files"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("workspace_projects.id"), nullable=False, index=True
+    )
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    file_path: Mapped[str] = mapped_column(String(1000), nullable=False)
+    mime_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    is_binary: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_commit_sha: Mapped[str] = mapped_column(String(40), nullable=False)
+    last_modified_by_agent_id: Mapped[str | None] = mapped_column(
+        ForeignKey("agents.id"), nullable=True
+    )
+    last_modified_by_task_id: Mapped[str | None] = mapped_column(
+        ForeignKey("tasks.id"), nullable=True
+    )
+    content_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    embedding = Column(Vector(1536), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+
+# ─── Table 31: workspace_file_versions (Workspace Storage) ─────────────────
+
+
+class WorkspaceFileVersion(UUIDBase):
+    __tablename__ = "workspace_file_versions"
+
+    file_id: Mapped[str] = mapped_column(
+        ForeignKey("workspace_files.id"), nullable=False, index=True
+    )
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("workspace_projects.id"), nullable=False
+    )
+    commit_sha: Mapped[str] = mapped_column(String(40), nullable=False)
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    operation: Mapped[str] = mapped_column(String(20), nullable=False)  # create | update | delete
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    diff_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
+    task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    commit_message: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
 
 class FederationInstance(UUIDBase):
