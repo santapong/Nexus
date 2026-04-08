@@ -1108,7 +1108,7 @@ nexus/
 │       │   └── embeddings.py            ← Google embedding-001
 │       │
 │       ├── db/
-│       │   ├── models.py                ← SQLAlchemy models for all 18 tables
+│       │   ├── models.py                ← SQLAlchemy models for all 34 tables
 │       │   ├── session.py               ← configurable pool settings
 │       │   └── seed.py
 │       │
@@ -1502,7 +1502,7 @@ run a migration, but the running agent has the old model loaded. Or embedding di
 is wrong. Schema changes mid-phase are expensive.
 
 **Prevention:**
-- Full schema (all 18 tables, all indexes) deployed in Phase 0.
+- Full schema (all 34 tables, all indexes) deployed across Phases 0-8.
 - Populate with synthetic test data. Test embedding recall query with real embeddings.
 
 **Gate:** Full schema deployed and tested before Phase 1 starts.
