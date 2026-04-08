@@ -140,11 +140,13 @@ nexus/
 | Phase 5 Track A — Production SaaS | **Complete** — RLS, OAuth2, Stripe, injection defense, webhooks, audit retention |
 | Phase 5 Track B — Platform Intelligence | **Complete** — Cost alerts, provider health, model benchmarks, scheduled tasks |
 | Phase 5 Track C — Federation & Ecosystem | **Complete** — QA multi-round rework, auto-scaling, plugin system |
-| Phase 7 — Enterprise Architecture | **In Progress** — Director agent, HMAC signing, PII sanitization, crash recovery |
+| Phase 6 — Security & Federation | **Complete** — Security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
+| Phase 7 — Enterprise Architecture | **Complete** — Director agent, HMAC signing, PII sanitization, crash recovery, graceful shutdown, configurable retry, 5-phase conference room |
+| Phase 8 — Business Platform | **In Progress** — Temporal deep integration, observability (OTel + Jaeger), SLA engine, E2B sandbox, workspace storage, team invitations, API key management |
 
 ### What works today
 
-- All 5 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend)
+- All 9 Docker services start and report healthy (PostgreSQL, Redis, Kafka, backend, frontend, Temporal, Temporal UI, Jaeger, Uptime Kuma)
 - `GET /health` returns all green checks (postgres, 4x redis, kafka)
 - **Multi-agent task flow:** `POST /api/tasks` -> CEO plans -> CEO decomposes -> specialists execute -> Director synthesizes -> QA reviews -> result delivered
 - **7 agent roles operational:** CEO (orchestrator), Director (synthesizer), Engineer, Analyst, Writer, QA, Prompt Creator
@@ -154,7 +156,7 @@ nexus/
 - **Prompt Creator Agent** — meta-agent that analyzes failures and proposes improved prompts
 - **Health monitor** — auto-fails tasks for agents silent >5 minutes
 - **A2A Gateway (inbound + outbound)** — external agents can hire NEXUS and vice versa
-- **9 MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read, hire_external_agent
+- **16 core MCP tools** with per-role access control: web_search, web_fetch, file_read, file_write, code_execute, git_push, send_email, memory_read, hire_external_agent, analyze_image, sandbox_execute, sandbox_project, create_plan, design_system, design_database, design_api. Plus 15 integration tools (4 workspace + 11 KeepSave) for 31 total registered tools
 - **A2A token management:** DB-backed with CRUD API, per-token rate limiting, rotation
 - **Dead letter queue:** failed messages tracked in DB with retry counters and dashboard monitoring
 - **Chaos tested:** 8 failure scenarios verified (Kafka down, Redis wiped, LLM timeout, budget exceeded, duplicates, invalid auth, DB exhaustion, agent silence)
@@ -168,7 +170,7 @@ nexus/
 - Frontend dashboard with all panels (health, tasks, approvals, agents, prompts, analytics, audit, eval, A2A tokens)
 - LLM retry logic: rate limit backoff (5 retries) + tool call fallback + model fallback chains
 - `test:` model provider for infrastructure testing at zero API cost
-- Database schema deployed: 18 tables with pgvector extension
+- Database schema deployed: 34 tables with pgvector extension
 - **Multi-tenant support** — Users, workspaces, JWT auth, per-tenant isolation
 - **Per-tenant Agent Cards** — Workspace-scoped A2A discovery at `/.well-known/agent.json?workspace=`
 - **Temporal workflows** — Durable long-running task execution with auto-retry
