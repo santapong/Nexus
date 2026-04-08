@@ -82,7 +82,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Architecture design | ✅ Complete |
 | Tech stack decisions | ✅ Finalized |
 | AI framework decision | ✅ Pydantic AI (see §5) |
-| Database schema design | ✅ Deployed — all 18 tables (see §12) |
+| Database schema design | ✅ Deployed — 34 tables (see §12) |
 | Coding policy | ✅ Defined + CI enforced (see §16–21) |
 | MCP integration | ✅ Complete — adapter + registry + guards (see §8) |
 | A2A gateway | ✅ Complete — inbound + outbound with SSE streaming (see §9) |
@@ -90,7 +90,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Prevention guide | ✅ Defined (see §23) |
 | MCP tools project | ✅ Integrated (Python package, direct import) |
 | Codebase scaffolding | ✅ Complete |
-| Docker Compose setup | ✅ Complete (7 services) |
+| Docker Compose setup | ✅ Complete (9 services) |
 | Agent base class | ✅ Complete |
 | Phase 0 build | ✅ Complete |
 | Phase 1 build | ✅ Complete — 50-task stress test: 100% pass rate |
@@ -1108,7 +1108,7 @@ nexus/
 │       │   └── embeddings.py            ← Google embedding-001
 │       │
 │       ├── db/
-│       │   ├── models.py                ← SQLAlchemy models for all 18 tables
+│       │   ├── models.py                ← SQLAlchemy models for all 34 tables
 │       │   ├── session.py               ← configurable pool settings
 │       │   └── seed.py
 │       │
@@ -1502,7 +1502,7 @@ run a migration, but the running agent has the old model loaded. Or embedding di
 is wrong. Schema changes mid-phase are expensive.
 
 **Prevention:**
-- Full schema (all 18 tables, all indexes) deployed in Phase 0.
+- Full schema (all 34 tables, all indexes) deployed across Phases 0-8.
 - Populate with synthetic test data. Test embedding recall query with real embeddings.
 
 **Gate:** Full schema deployed and tested before Phase 1 starts.
