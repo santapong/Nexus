@@ -59,7 +59,7 @@ export interface AgentEvent {
   error?: string
 }
 
-// ─── Analytics Types ────────────────────────────────────────────────────────
+// ─── Analytics Types ──────────────────────────────────────────────
 
 export interface AgentPerformance {
   role: string
@@ -152,6 +152,47 @@ export interface DeadLetterData {
   total_dead_letters: number
   unresolved: number
   by_topic: DeadLetterStats[]
+}
+
+// --- Phase 9 Track 1: Task Feedback + Approval Rates -------------------------
+
+export interface SubmitTaskFeedbackRequest {
+  helpful_score: number  // 1–5
+  safe_score: number     // 1–5
+  comment?: string | null
+}
+
+export interface SubmitTaskFeedbackResponse {
+  task_id: string
+  submitted: boolean
+  signals_written: number
+  preference_recorded: boolean
+}
+
+export interface FeedbackSignalRecord {
+  id: string
+  task_id: string
+  agent_id: string
+  signal_type: string  // 'helpful' | 'safe' | ...
+  signal_value: number // 0.0–1.0
+  context: Record<string, unknown>
+  created_at: string
+}
+
+export interface RoleApprovalMetric {
+  role: string
+  mean_helpful: number  // 0.0–1.0
+  mean_safe: number     // 0.0–1.0
+  n_helpful: number
+  n_safe: number
+}
+
+export interface ApprovalRatesData {
+  period: string
+  by_role: RoleApprovalMetric[]
+  overall_helpful: number
+  overall_safe: number
+  total_submissions: number
 }
 
 // --- Audit Types ---

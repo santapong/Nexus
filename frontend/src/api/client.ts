@@ -3,6 +3,7 @@ import type {
   AgentConfig,
   AgentInfo,
   Approval,
+  ApprovalRatesData,
   AuditEvent,
   AuditTimelineEntry,
   BillingRecord,
@@ -15,6 +16,7 @@ import type {
   DeadLetterData,
   EvalRunResponse,
   EvalScoresResponse,
+  FeedbackSignalRecord,
   HealthCheck,
   Invoice,
   LoginResponse,
@@ -23,6 +25,8 @@ import type {
   RegisterResponse,
   ResolveApprovalResponse,
   RotateA2ATokenResponse,
+  SubmitTaskFeedbackRequest,
+  SubmitTaskFeedbackResponse,
   Task,
   TaskReplay,
   Workspace,
@@ -71,6 +75,20 @@ export const api = {
 
   getDeadLetters: () =>
     apiFetch<DeadLetterData>('/api/analytics/dead-letters'),
+
+  // Phase 9 Track 1 — approval rates from task_feedback
+  getApprovalRates: (period = '30d') =>
+    apiFetch<ApprovalRatesData>(`/api/analytics/approval-rates?period=${period}`),
+
+  // Phase 9 Track 1 — dual-score feedback on tasks
+  submitTaskFeedback: (taskId: string, payload: SubmitTaskFeedbackRequest) =>
+    apiFetch<SubmitTaskFeedbackResponse>(`/api/feedback/tasks/${taskId}`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  listTaskFeedback: (taskId: string) =>
+    apiFetch<FeedbackSignalRecord[]>(`/api/feedback/tasks/${taskId}`),
 
   // Task replay
   getTaskReplay: (taskId: string) =>
