@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { usePerformance, useCosts, useDeadLetters } from '../../hooks/useAnalytics'
+import {
+  useApprovalRates,
+  useCosts,
+  useDeadLetters,
+  usePerformance,
+} from '../../hooks/useAnalytics'
 import { api } from '../../api/client'
 
 const PERIODS = ['7d', '30d', '90d', 'all'] as const
@@ -9,6 +14,7 @@ export function AnalyticsDashboard() {
   const [period, setPeriod] = useState<string>('30d')
   const { data: perf, isLoading: perfLoading } = usePerformance(period)
   const { data: costs, isLoading: costLoading } = useCosts(period)
+  const { data: approvals } = useApprovalRates(period)
   const { data: deadLetters } = useDeadLetters()
 
   return (
@@ -117,6 +123,55 @@ export function AnalyticsDashboard() {
         </div>
       ) : (
         <div className="text-gray-500 text-sm">No performance data available yet.</div>
+      )}
+
+      {/* Approval Rates (Phase 9 Track 1) */}
+      {approvals && approvals.total_submissions > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+              🗣️ Approval Rates <span className="text-xs text-gray-500">(user feedback)</span>
+            </h3>
+            <div className="text-xs text-gray-500">
+              {approvals.total_submissions} submission{approvals.total_submissions === 1 ? '' : 's'}
+              {' · '}helpful <span className="text-indigo-300">{pct(approvals.overall_helpful)}</span>
+              {' · '}safe <span className="text-indigo-300">{pct(approvals.overall_safe)}</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                  <th className="text-left px-4 py-2">Role</th>
+                  <th className="text-right px-4 py-2">Helpful</th>
+                  <th className="text-right px-4 py-2">Safe</th>
+                  <th className="text-right px-4 py-2">N</th>
+                </tr>
+              </thead>
+              <tbody>
+                {approvals.by_role.map((row) => (
+                  <tr key={row.role} className="border-t border-gray-800 hover:bg-gray-800/50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{roleEmoji(row.role)}</span>
+                        <span className="text-white font-medium">{row.role}</span>
+                      </div>
+                    </td>
+                    <td className="text-right px-4 py-3">
+                      <span className={scoreColor(row.mean_helpful)}>{pct(row.mean_helpful)}</span>
+                    </td>
+                    <td className="text-right px-4 py-3">
+                      <span className={scoreColor(row.mean_safe)}>{pct(row.mean_safe)}</span>
+                    </td>
+                    <td className="text-right px-4 py-3 text-gray-500">
+                      {row.n_helpful}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {/* Cost by Model */}
@@ -236,6 +291,7 @@ function DeadLetterSection({ deadLetters }: { deadLetters: { total_dead_letters:
 function roleEmoji(role: string): string {
   const map: Record<string, string> = {
     ceo: '👔',
+    director: '🎬',
     engineer: '💻',
     analyst: '🔍',
     writer: '✍️',
@@ -243,4 +299,14 @@ function roleEmoji(role: string): string {
     prompt_creator: '🧪',
   }
   return map[role] || '🤖'
+}
+
+function pct(v: number): string {
+  return `${Math.round(v * 100)}%`
+}
+
+function scoreColor(v: number): string {
+  if (v >= 0.8) return 'text-green-400'
+  if (v >= 0.6) return 'text-yellow-400'
+  return 'text-red-400'
 }

@@ -7,15 +7,17 @@ observability into agent performance, cost trends, and system health.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
-from litestar import Controller, get, post
+from litestar import Controller, Request, get, post
 from litestar.params import Parameter
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.db.models import Agent, DeadLetter, LLMUsage, Task, TaskStatus
+from nexus.api.auth import get_auth_user_from_request
+from nexus.db.models import Agent, DeadLetter, FeedbackSignal, LLMUsage, Task, TaskStatus
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -100,32 +102,20 @@ class DeadLetterResolveResponse(BaseModel):
     resolved: bool
 
 
-# ── BACKLOG-020: Quota monitoring ────────────────────────────────────────────
-
-
 class ProviderQuota(BaseModel):
-    """Daily token quota status for a single LLM provider."""
-
     provider: str
     tokens_used_today: int
     daily_limit: int
     utilization_pct: float
-    status: str  # 'ok' | 'warning' | 'critical'
+    status: str
 
 
 class QuotaResponse(BaseModel):
-    """Quota status for all tracked providers."""
-
     date: str
     providers: list[ProviderQuota]
 
 
-# ── Per-agent cost detail ────────────────────────────────────────────────────
-
-
 class RecentLLMCall(BaseModel):
-    """A single recent LLM call for an agent."""
-
     task_id: str
     model_name: str
     input_tokens: int
@@ -135,8 +125,6 @@ class RecentLLMCall(BaseModel):
 
 
 class AgentCostDetailResponse(BaseModel):
-    """Detailed cost breakdown for a single agent."""
-
     agent_id: str
     agent_role: str
     agent_name: str
@@ -150,22 +138,38 @@ class AgentCostDetailResponse(BaseModel):
     recent_calls: list[RecentLLMCall]
 
 
-# ── BACKLOG-021: Prompt review trigger ───────────────────────────────────────
-
-
 class TriggerPromptReviewRequest(BaseModel):
-    """Request body for triggering a prompt review."""
-
     agent_role: str
     reason: str = "manual_trigger"
 
 
 class TriggerPromptReviewResponse(BaseModel):
-    """Response for a prompt review trigger request."""
-
     triggered: bool
     agent_role: str
     message: str
+
+
+# ── Phase 9 Track 1: approval-rate metric from feedback_signals ────────────
+
+
+class RoleApprovalMetric(BaseModel):
+    """Mean dual-score approval rate for a single agent role."""
+
+    role: str
+    mean_helpful: float  # 0.0–1.0
+    mean_safe: float  # 0.0–1.0
+    n_helpful: int
+    n_safe: int
+
+
+class ApprovalRatesResponse(BaseModel):
+    """Per-role approval rates computed from the feedback_signals table."""
+
+    period: str
+    by_role: list[RoleApprovalMetric]
+    overall_helpful: float
+    overall_safe: float
+    total_submissions: int  # distinct (task_id, user) pairs approximated by helpful count
 
 
 # ─── Helper ──────────────────────────────────────────────────────────────────
@@ -190,6 +194,11 @@ def _parse_period(period: str) -> datetime | None:
     return None
 
 
+def _get_workspace_id(request: Request[Any, Any, Any]) -> str | None:
+    auth_user = get_auth_user_from_request(request)
+    return auth_user.workspace_id if auth_user is not None else None
+
+
 # ─── Controller ──────────────────────────────────────────────────────────────
 
 
@@ -204,28 +213,14 @@ class AnalyticsController(Controller):
         db_session: AsyncSession,
         period: str = Parameter(query="period", default="30d"),
     ) -> PerformanceResponse:
-        """Get per-agent performance metrics.
-
-        Aggregates task outcomes, token usage, and duration from the tasks
-        and llm_usage tables. Grouped by agent role.
-
-        Args:
-            db_session: Async database session.
-            period: Time period filter ('7d', '30d', '90d', 'all').
-
-        Returns:
-            PerformanceResponse with per-agent and aggregate metrics.
-        """
         cutoff = _parse_period(period)
 
-        # Get all agents
         agent_result = await db_session.execute(
             select(Agent).where(Agent.is_active.is_(True)).order_by(Agent.role)
         )
         agents = agent_result.scalars().all()
         agent_map = {str(a.id): a for a in agents}
 
-        # Batch task stats for all agents (fixes N+1: was 3 queries per agent)
         task_query = (
             select(
                 Task.assigned_agent_id,
@@ -249,7 +244,6 @@ class AnalyticsController(Controller):
         task_rows = (await db_session.execute(task_query)).all()
         task_stats = {row.assigned_agent_id: row for row in task_rows}
 
-        # Batch cost stats for all agents
         cost_query = (
             select(
                 LLMUsage.agent_id,
@@ -315,21 +309,8 @@ class AnalyticsController(Controller):
         db_session: AsyncSession,
         period: str = Parameter(query="period", default="30d"),
     ) -> CostBreakdownResponse:
-        """Get cost breakdown by model and agent role.
-
-        Aggregates from llm_usage table. Shows which models and agents
-        consume the most tokens and cost.
-
-        Args:
-            db_session: Async database session.
-            period: Time period filter ('7d', '30d', '90d', 'all').
-
-        Returns:
-            CostBreakdownResponse with per-model and per-role breakdowns.
-        """
         cutoff = _parse_period(period)
 
-        # By model
         model_query = (
             select(
                 LLMUsage.model_name,
@@ -358,7 +339,6 @@ class AnalyticsController(Controller):
             for row in model_rows
         ]
 
-        # By role (join with agents table)
         role_query = (
             select(
                 Agent.role,
@@ -403,25 +383,13 @@ class AnalyticsController(Controller):
         db_session: AsyncSession,
         period: str = Parameter(query="period", default="30d"),
     ) -> AgentCostDetailResponse | dict[str, str]:
-        """Get detailed cost breakdown for a specific agent.
-
-        Args:
-            agent_id: Agent UUID string.
-            db_session: Async database session.
-            period: Time period filter ('7d', '30d', '90d', 'all').
-
-        Returns:
-            Detailed cost breakdown with per-model and recent calls.
-        """
         cutoff = _parse_period(period)
 
-        # Get agent info
         agent_result = await db_session.execute(select(Agent).where(Agent.id == agent_id))
         agent = agent_result.scalar_one_or_none()
         if agent is None:
             return {"error": f"Agent {agent_id} not found"}
 
-        # Aggregate costs by model
         model_query = (
             select(
                 LLMUsage.model_name,
@@ -456,14 +424,12 @@ class AnalyticsController(Controller):
         total_input = sum(m.total_input_tokens for m in by_model)
         total_output = sum(m.total_output_tokens for m in by_model)
 
-        # Count tasks for average
         task_count_query = select(func.count(Task.id)).where(Task.assigned_agent_id == agent_id)
         if cutoff:
             task_count_query = task_count_query.where(Task.created_at >= cutoff)
         task_count = (await db_session.execute(task_count_query)).scalar() or 0
         cost_per_task = total_cost / task_count if task_count > 0 else 0.0
 
-        # Recent LLM calls (last 20)
         recent_query = (
             select(LLMUsage)
             .where(LLMUsage.agent_id == agent_id)
@@ -499,28 +465,104 @@ class AnalyticsController(Controller):
             recent_calls=recent_calls,
         )
 
+    @get("/approval-rates")
+    async def get_approval_rates(
+        self,
+        request: Request[Any, Any, Any],
+        db_session: AsyncSession,
+        period: str = Parameter(query="period", default="30d"),
+    ) -> ApprovalRatesResponse:
+        """Per-role mean approval rates from the feedback_signals table.
+
+        Joins feedback_signals → tasks → agents so rows are filtered by the
+        caller's workspace (via tasks.workspace_id) and grouped by agent role.
+        Returns one RoleApprovalMetric per role that has any feedback, plus
+        overall helpful/safe means weighted by submission count.
+
+        Args:
+            request: Litestar request (for workspace extraction).
+            db_session: Async database session.
+            period: Time window filter ('7d', '30d', '90d', 'all').
+        """
+        workspace_id = _get_workspace_id(request)
+        cutoff = _parse_period(period)
+
+        query = (
+            select(
+                Agent.role,
+                FeedbackSignal.signal_type,
+                func.count(FeedbackSignal.id).label("n"),
+                func.avg(FeedbackSignal.signal_value).label("mean"),
+            )
+            .join(Task, Task.id == FeedbackSignal.task_id)
+            .join(Agent, Agent.id == FeedbackSignal.agent_id)
+            .where(FeedbackSignal.signal_type.in_(["helpful", "safe"]))
+            .group_by(Agent.role, FeedbackSignal.signal_type)
+        )
+        if workspace_id:
+            query = query.where(Task.workspace_id == workspace_id)
+        if cutoff:
+            query = query.where(FeedbackSignal.created_at >= cutoff)
+
+        rows = (await db_session.execute(query)).all()
+
+        by_role: dict[str, dict[str, float | int]] = {}
+        for row in rows:
+            bucket = by_role.setdefault(
+                row.role,
+                {"mean_helpful": 0.0, "mean_safe": 0.0, "n_helpful": 0, "n_safe": 0},
+            )
+            if row.signal_type == "helpful":
+                bucket["mean_helpful"] = round(float(row.mean or 0.0), 3)
+                bucket["n_helpful"] = int(row.n)
+            elif row.signal_type == "safe":
+                bucket["mean_safe"] = round(float(row.mean or 0.0), 3)
+                bucket["n_safe"] = int(row.n)
+
+        role_metrics = [
+            RoleApprovalMetric(
+                role=role,
+                mean_helpful=float(data["mean_helpful"]),
+                mean_safe=float(data["mean_safe"]),
+                n_helpful=int(data["n_helpful"]),
+                n_safe=int(data["n_safe"]),
+            )
+            for role, data in sorted(by_role.items())
+        ]
+
+        total_helpful_n = sum(r.n_helpful for r in role_metrics)
+        total_safe_n = sum(r.n_safe for r in role_metrics)
+        overall_helpful = (
+            sum(r.mean_helpful * r.n_helpful for r in role_metrics) / total_helpful_n
+            if total_helpful_n > 0
+            else 0.0
+        )
+        overall_safe = (
+            sum(r.mean_safe * r.n_safe for r in role_metrics) / total_safe_n
+            if total_safe_n > 0
+            else 0.0
+        )
+
+        return ApprovalRatesResponse(
+            period=period,
+            by_role=role_metrics,
+            overall_helpful=round(overall_helpful, 3),
+            overall_safe=round(overall_safe, 3),
+            total_submissions=total_helpful_n,
+        )
+
     @get("/dead-letters")
     async def get_dead_letters(
         self,
         db_session: AsyncSession,
         resolved: bool | None = Parameter(query="resolved", default=None, required=False),
     ) -> DeadLetterResponse:
-        """Get dead letter queue statistics from the dead_letters table.
-
-        Args:
-            db_session: Async database session.
-            resolved: Filter by resolution status (True/False/None for all).
-
-        Returns:
-            DeadLetterResponse with per-topic dead letter counts.
-        """
         base_filter = []
         if resolved is True:
             base_filter.append(DeadLetter.resolved_at.isnot(None))
         elif resolved is False:
             base_filter.append(DeadLetter.resolved_at.is_(None))
 
-        # Aggregate by source_topic
         stats_query = (
             select(
                 DeadLetter.source_topic,
@@ -546,7 +588,6 @@ class AnalyticsController(Controller):
 
         total = sum(s.count for s in by_topic)
 
-        # Count unresolved
         unresolved_query = select(func.count(DeadLetter.id)).where(DeadLetter.resolved_at.is_(None))
         unresolved = (await db_session.execute(unresolved_query)).scalar() or 0
 
@@ -562,17 +603,6 @@ class AnalyticsController(Controller):
         dead_letter_id: str,
         db_session: AsyncSession,
     ) -> DeadLetterResolveResponse:
-        """Mark a dead letter as resolved.
-
-        Args:
-            dead_letter_id: UUID of the dead letter record.
-            db_session: Async database session.
-
-        Returns:
-            Confirmation of resolution.
-        """
-        from datetime import UTC, datetime
-
         stmt = select(DeadLetter).where(DeadLetter.id == dead_letter_id)
         result = await db_session.execute(stmt)
         record = result.scalar_one_or_none()
@@ -588,17 +618,6 @@ class AnalyticsController(Controller):
 
     @get("/quota")
     async def get_quota(self, db_session: AsyncSession) -> QuotaResponse:
-        """Get today's token usage vs. daily quota per LLM provider.
-
-        Reads from llm_usage for today's window, detects provider by model
-        name prefix, and compares against limits from settings.
-
-        Args:
-            db_session: Async database session.
-
-        Returns:
-            QuotaResponse with per-provider quota status.
-        """
         today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
         usage_rows = await db_session.execute(
@@ -610,7 +629,6 @@ class AnalyticsController(Controller):
             .group_by(LLMUsage.model_name)
         )
 
-        # Aggregate by provider prefix
         provider_tokens: dict[str, int] = {}
         for row in usage_rows.all():
             name: str = row.model_name or ""
@@ -633,7 +651,6 @@ class AnalyticsController(Controller):
                 provider = "other"
             provider_tokens[provider] = provider_tokens.get(provider, 0) + int(row.tokens or 0)
 
-        # Provider limits (daily tokens). Groq free tier: ~500k/day.
         limits: dict[str, int] = {
             "groq": getattr(settings, "groq_daily_token_limit", 500_000),
             "anthropic": getattr(settings, "anthropic_daily_token_limit", 1_000_000),
@@ -643,7 +660,6 @@ class AnalyticsController(Controller):
         }
 
         quotas: list[ProviderQuota] = []
-        # Always include groq in the list (even at 0).
         for provider, limit in limits.items():
             used = provider_tokens.get(provider, 0)
             pct = round(used / limit * 100, 1) if limit > 0 else 0.0
@@ -674,19 +690,6 @@ class AnalyticsController(Controller):
         data: TriggerPromptReviewRequest,
         db_session: AsyncSession,
     ) -> TriggerPromptReviewResponse:
-        """Trigger a Prompt Creator review for a specific agent role.
-
-        Finds the most recent failed task for the given role and publishes
-        an analysis command to the Prompt Creator agent via Kafka.
-
-        Args:
-            data: Contains the agent_role to review and optional reason.
-            db_session: Async database session.
-
-        Returns:
-            TriggerPromptReviewResponse indicating whether a task was found.
-        """
-        # Find the most recent failed task involving this role's agent
         failed_task_query = (
             select(Task)
             .join(Agent, Agent.id == Task.assigned_agent_id, isouter=True)
@@ -766,10 +769,6 @@ class AnalyticsController(Controller):
         self,
         db_session: AsyncSession,
     ) -> dict[str, object]:
-        """Get cost alert status for all agents with configured alerts.
-
-        Returns current spend vs limit for each agent.
-        """
         from nexus.core.llm.cost_alerts import get_all_agent_cost_status
 
         statuses = await get_all_agent_cost_status(db_session)
@@ -780,10 +779,6 @@ class AnalyticsController(Controller):
         self,
         db_session: AsyncSession,
     ) -> dict[str, object]:
-        """Get health status for all LLM providers.
-
-        Returns latency, error rates, and circuit breaker state.
-        """
         from nexus.core.llm.provider_health import get_all_provider_health
 
         providers = await get_all_provider_health()
@@ -796,16 +791,6 @@ class AnalyticsController(Controller):
         db_session: AsyncSession,
         model_name: str | None = Parameter(query="model", default=None, required=False),
     ) -> dict[str, object]:
-        """Get benchmark history for a role, optionally filtered by model.
-
-        Args:
-            agent_role: Agent role to query benchmarks for.
-            db_session: Async database session.
-            model_name: Optional model name filter.
-
-        Returns:
-            List of benchmark results.
-        """
         from nexus.core.llm.benchmarking import get_benchmark_history
 
         results = await get_benchmark_history(db_session, agent_role, model_name=model_name)

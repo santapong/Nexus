@@ -13,6 +13,7 @@ from nexus.api.audit import AuditController
 from nexus.api.billing import BillingController
 from nexus.api.eval import EvalController
 from nexus.api.federation import FederationController
+from nexus.api.feedback import FeedbackController
 from nexus.api.health import HealthController
 from nexus.api.marketplace import MarketplaceController
 from nexus.api.oauth import OAuthController
@@ -38,6 +39,7 @@ api_router = Router(
         AuditController,
         A2ATokenController,
         EvalController,
+        FeedbackController,
         MarketplaceController,
         BillingController,
         AgentBuilderController,

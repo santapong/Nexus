@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTaskReplay } from '../../hooks/useAnalytics'
 import { StatusBadge } from '../dashboard/StatusBadge'
+import { TaskFeedbackModal } from './TaskFeedbackModal'
 
 export function TaskReplayView({
   taskId,
@@ -11,6 +12,7 @@ export function TaskReplayView({
 }) {
   const { data: replay, isLoading, error } = useTaskReplay(taskId)
   const [activeTab, setActiveTab] = useState<'timeline' | 'llm' | 'subtasks'>('timeline')
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -34,6 +36,8 @@ export function TaskReplayView({
     )
   }
 
+  const isCompleted = replay.task.status === 'completed'
+
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
       {/* Header */}
@@ -47,12 +51,23 @@ export function TaskReplayView({
             </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-white text-sm transition-colors"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          {isCompleted && (
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="rounded-md border border-indigo-700 bg-indigo-600/30 px-2.5 py-1 text-xs font-medium text-indigo-200 transition-colors hover:bg-indigo-600/50"
+            >
+              🗣️ Rate task
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-white text-sm transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -164,6 +179,10 @@ export function TaskReplayView({
           </div>
         )}
       </div>
+
+      {feedbackOpen && (
+        <TaskFeedbackModal taskId={taskId} onClose={() => setFeedbackOpen(false)} />
+      )}
     </div>
   )
 }
