@@ -15,6 +15,7 @@ from typing import Any
 import jwt
 import structlog
 from litestar import Request
+from litestar.exceptions import NotAuthorizedException
 from pydantic import BaseModel
 
 from nexus.settings import settings
@@ -141,3 +142,25 @@ def get_auth_user_from_request(request: Request[Any, Any, Any]) -> AuthUser | No
     except (jwt.InvalidTokenError, KeyError) as exc:
         logger.debug("auth_token_invalid", error=str(exc))
         return None
+
+
+def require_auth_user(request: Request[Any, Any, Any]) -> AuthUser:
+    """Extract authenticated user, raising 401 if unauthenticated.
+
+    Use this on endpoints that must never serve anonymous traffic — task
+    and approval endpoints in particular, where falling through to
+    "no workspace filter" leaks data across tenants.
+
+    Args:
+        request: Litestar request object.
+
+    Returns:
+        AuthUser populated from the request's JWT.
+
+    Raises:
+        NotAuthorizedException: When no valid Bearer token is present.
+    """
+    user = get_auth_user_from_request(request)
+    if user is None:
+        raise NotAuthorizedException(detail="Authentication required")
+    return user
