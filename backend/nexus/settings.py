@@ -29,11 +29,28 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     groq_api_key: str = ""
     mistral_api_key: str = ""
+    cerebras_api_key: str = ""
+    openrouter_api_key: str = ""
 
     # Local / custom model endpoints
     ollama_base_url: str = "http://localhost:11434/v1"
     openai_compat_base_url: str = "http://localhost:8080/v1"
     openai_compat_api_key: str = ""
+    cerebras_base_url: str = "https://api.cerebras.ai/v1"
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_app_name: str = "NEXUS"
+    openrouter_app_url: str = ""
+
+    # OpenRouter tool-calling allowlist — comma-separated list of free :free
+    # SKUs verified to support function calling with Pydantic AI.
+    # Off-allowlist :free models often advertise tools but silently break
+    # structured output (Pydantic AI #2976: Gemma, Phi, etc.). Setting this
+    # narrows which :free models the role-fallback logic prefers.
+    openrouter_tool_calling_allowlist: str = (
+        "openrouter:deepseek/deepseek-chat-v3:free,"
+        "openrouter:qwen/qwen3-235b-a22b:free,"
+        "openrouter:meta-llama/llama-4-maverick:free"
+    )
 
     # Cost Controls
     daily_spend_limit_usd: Decimal = Decimal("5.00")
@@ -72,25 +89,45 @@ class Settings(BaseSettings):
     db_pool_recycle: int = 3600
     db_pool_timeout: int = 30
 
-    # Agent Model Map (role -> model name)
+    # Agent Model Map (role -> model name).
+    # Defaults assume paid Anthropic/Google access. For free-tier UAT, override
+    # via env vars (e.g. MODEL_CEO=cerebras:llama-3.3-70b). The fallback chains
+    # below already prefer free providers and are spread across 3+ vendors so
+    # a single RPD limit cannot halt the whole company.
     model_ceo: str = "claude-sonnet-4-20250514"
     model_engineer: str = "claude-sonnet-4-20250514"
-    model_analyst: str = "gemini-2.0-flash"
+    model_analyst: str = "gemini-2.5-flash"
     model_writer: str = "claude-haiku-4-5-20251001"
     model_qa: str = "claude-haiku-4-5-20251001"
     model_director: str = "claude-sonnet-4-20250514"
     model_prompt_creator: str = "claude-sonnet-4-20250514"
 
-    # Fallback model chains per role (comma-separated, tried in order after primary fails)
-    # Defaults to Groq llama — fast, free tier, good general coverage.
+    # Fallback model chains per role (comma-separated, tried in order after primary fails).
+    # Spread across Cerebras (1M tok/day), Groq (1K RPD on 70B / 14.4K RPD on 8B),
+    # Gemini Flash (250 RPD), and Ollama (local, unlimited) so any single
+    # provider's quota wall can't take the whole company offline.
     # Set to "" to disable fallback for a role.
-    model_ceo_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_engineer_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_analyst_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_writer_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_qa_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_director_fallbacks: str = "groq:llama-3.3-70b-versatile"
-    model_prompt_creator_fallbacks: str = "groq:llama-3.3-70b-versatile"
+    model_ceo_fallbacks: str = (
+        "cerebras:llama-3.3-70b,groq:llama-3.3-70b-versatile,gemini-2.5-flash"
+    )
+    model_engineer_fallbacks: str = (
+        "groq:llama-3.3-70b-versatile,cerebras:llama-3.3-70b,ollama:qwen2.5-coder:7b"
+    )
+    model_analyst_fallbacks: str = (
+        "gemini-2.5-flash,cerebras:llama-3.3-70b,groq:llama-3.3-70b-versatile"
+    )
+    model_writer_fallbacks: str = (
+        "groq:llama-3.1-8b-instant,gemini-2.5-flash,groq:llama-3.3-70b-versatile"
+    )
+    model_qa_fallbacks: str = (
+        "groq:llama-3.1-8b-instant,gemini-2.5-flash,groq:llama-3.3-70b-versatile"
+    )
+    model_director_fallbacks: str = (
+        "gemini-2.5-pro,cerebras:llama-3.3-70b,groq:llama-3.3-70b-versatile"
+    )
+    model_prompt_creator_fallbacks: str = (
+        "gemini-2.5-flash,groq:llama-3.3-70b-versatile,cerebras:llama-3.3-70b"
+    )
 
     # ─── Phase 5: OAuth2/OIDC ────────────────────────────────────────────
     oauth_google_client_id: str = ""

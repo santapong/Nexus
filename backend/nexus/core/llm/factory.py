@@ -132,6 +132,88 @@ def _resolve_ollama(model_name: str) -> Model:
     return OpenAIModel(name, provider=provider)
 
 
+def _resolve_cerebras(model_name: str) -> Model:
+    """Cerebras Inference via OpenAI-compatible endpoint.
+
+    Free tier (as of 2026-04): 1M tokens/day, 30 RPM, 60-100K TPM. Tool
+    calling is supported on the OpenAI-compatible chat completions API.
+    Free tier caps context at 8,192 tokens, so avoid this provider for
+    long meeting room synthesis.
+
+    Format: ``cerebras:<model_name>`` (e.g. ``cerebras:llama-3.3-70b``).
+    """
+    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+
+    name = model_name.removeprefix("cerebras:")
+    api_key = settings.cerebras_api_key
+    if not api_key:
+        msg = (
+            f"CEREBRAS_API_KEY required to use model '{model_name}'. "
+            "Sign up at cloud.cerebras.ai (no card required) and set the key in .env."
+        )
+        raise ValueError(msg)
+    provider = OpenAIProvider(
+        base_url=settings.cerebras_base_url,
+        api_key=api_key,
+    )
+    return OpenAIModel(name, provider=provider)
+
+
+def _resolve_openrouter(model_name: str) -> Model:
+    """OpenRouter via OpenAI-compatible endpoint.
+
+    Free :free SKUs share a 50 RPD quota across all of them, so OpenRouter
+    is best used as a tertiary fallback rather than a primary. Many :free
+    models advertise tool calling but silently break Pydantic AI structured
+    output (issue #2976) — see ``settings.openrouter_tool_calling_allowlist``
+    for SKUs verified to work with this stack.
+
+    Format: ``openrouter:<vendor>/<model_name>[:free]``.
+    """
+    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+
+    name = model_name.removeprefix("openrouter:")
+    api_key = settings.openrouter_api_key
+    if not api_key:
+        msg = (
+            f"OPENROUTER_API_KEY required to use model '{model_name}'. "
+            "Get a key at openrouter.ai/keys and set it in .env."
+        )
+        raise ValueError(msg)
+
+    # Warn (don't block) if a :free SKU is used that isn't on the verified
+    # tool-calling allowlist. Off-allowlist :free models often look fine
+    # in chat but fail at function calling — caller should opt-in deliberately.
+    if model_name.endswith(":free"):
+        allowlist = {
+            m.strip() for m in settings.openrouter_tool_calling_allowlist.split(",") if m.strip()
+        }
+        if model_name not in allowlist:
+            logger.warning(
+                "openrouter_free_model_off_allowlist",
+                model_name=model_name,
+                hint="Tool calling may be unreliable; consider a model on the allowlist.",
+            )
+
+    headers = {}
+    if settings.openrouter_app_url:
+        headers["HTTP-Referer"] = settings.openrouter_app_url
+    if settings.openrouter_app_name:
+        headers["X-Title"] = settings.openrouter_app_name
+
+    # OpenAIProvider wraps an httpx client we don't control directly, so the
+    # default headers apply only when explicitly forwarded by pydantic-ai.
+    # Most use cases work without these headers; they're only used for
+    # OpenRouter analytics/leaderboards.
+    provider = OpenAIProvider(
+        base_url=settings.openrouter_base_url,
+        api_key=api_key,
+    )
+    return OpenAIModel(name, provider=provider)
+
+
 def _resolve_test(model_name: str) -> Model:
     """Test model for stress testing and CI — no API calls, deterministic output."""
     from pydantic_ai.models.test import TestModel
@@ -168,6 +250,8 @@ _PROVIDER_RESOLVERS: list[tuple[str, Any]] = [
     ("o3-", _resolve_openai),
     ("groq:", _resolve_groq),
     ("mistral:", _resolve_mistral),
+    ("cerebras:", _resolve_cerebras),
+    ("openrouter:", _resolve_openrouter),
     ("ollama:", _resolve_ollama),
 ]
 

@@ -24,7 +24,13 @@ logger = structlog.get_logger()
 
 
 def _extract_provider(model_name: str) -> str:
-    """Extract provider name from a model name string."""
+    """Extract provider name from a model name string.
+
+    Handles bare model names (claude-*, gemini-*, gpt-*) and prefixed ones
+    (groq:, ollama:, cerebras:, openrouter:, etc.). Returns 'unknown' for
+    anything that doesn't match a known pattern so health metrics still
+    record without crashing.
+    """
     if model_name.startswith("claude"):
         return "anthropic"
     if model_name.startswith("gemini"):
