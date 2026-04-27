@@ -294,6 +294,29 @@ class AgentBase(ABC):
                     },
                 )
 
+                # 2b. Broadcast task_started for the live UX. Doing this after
+                # budget check + audit ensures we never tell the dashboard a
+                # task started that immediately got bounced for budget. A
+                # broadcast failure must never abort the task — best effort.
+                try:
+                    await self._broadcast(
+                        {
+                            "event": "task_started",
+                            "agent_id": self.agent_id,
+                            "task_id": task_id,
+                            "trace_id": trace_id,
+                            "role": self.role.value,
+                            "instruction_snippet": command.instruction[:140],
+                        }
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(
+                        "task_started_broadcast_failed",
+                        agent_id=self.agent_id,
+                        task_id=task_id,
+                        error=str(exc),
+                    )
+
                 # 3. Load memory context (available to handle_task via self)
                 self._memory_context = await self._load_memory(session, command)
 
