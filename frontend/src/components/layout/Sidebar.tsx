@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
+  Activity,
   ListTodo,
   Users,
   BarChart3,
@@ -35,6 +36,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={18} /> },
+  { label: 'Live Ops', path: '/live', icon: <Activity size={18} /> },
   { label: 'Tasks', path: '/tasks', icon: <ListTodo size={18} /> },
   { label: 'Agents', path: '/agents', icon: <Users size={18} /> },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 size={18} /> },
@@ -105,8 +107,10 @@ export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
                 <div key={item.label}>
                   <button
                     onClick={() => setSettingsOpen(!settingsOpen)}
+                    aria-expanded={settingsOpen || isSettingsActive}
+                    aria-controls={`submenu-${item.label}`}
                     className={cn(
-                      'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
                       isSettingsActive
                         ? 'text-white bg-gray-800/50'
                         : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50',
@@ -115,13 +119,13 @@ export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
                     {item.icon}
                     <span className="flex-1 text-left">{item.label}</span>
                     {settingsOpen || isSettingsActive ? (
-                      <ChevronDown size={14} />
+                      <ChevronDown size={14} aria-hidden="true" />
                     ) : (
-                      <ChevronRight size={14} />
+                      <ChevronRight size={14} aria-hidden="true" />
                     )}
                   </button>
                   {(settingsOpen || isSettingsActive) && (
-                    <div className="ml-4 mt-1 space-y-1">
+                    <div id={`submenu-${item.label}`} className="ml-4 mt-1 space-y-1">
                       {item.children.map((child) => (
                         <NavLink
                           key={child.path}

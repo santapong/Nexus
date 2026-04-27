@@ -5,7 +5,8 @@ import { Input } from '../ui/input'
 import { Select } from '../ui/select'
 import { Button } from '../ui/button'
 import { Skeleton } from '../ui/skeleton'
-import { Search, X } from 'lucide-react'
+import { EmptyState } from '../ui/empty-state'
+import { Inbox, Search, X } from 'lucide-react'
 
 const STATUS_OPTIONS = ['all', 'queued', 'running', 'completed', 'failed', 'paused', 'escalated'] as const
 
@@ -104,9 +105,30 @@ export function TaskListPanel() {
         </div>
       )}
       {!isLoading && filtered.length === 0 && (
-        <p className="text-gray-500 text-sm py-4 text-center">
-          {hasFilters ? 'No tasks match your filters.' : 'No tasks yet. Submit one above.'}
-        </p>
+        <EmptyState
+          icon={<Inbox size={28} strokeWidth={1.5} />}
+          title={hasFilters ? 'No tasks match your filters' : 'No tasks yet'}
+          description={
+            hasFilters
+              ? 'Try clearing filters or broadening your search.'
+              : 'Use the “Submit task” form above to dispatch your first instruction to the agents.'
+          }
+          action={
+            hasFilters ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearch('')
+                  setStatusFilter('all')
+                }}
+              >
+                <X size={14} />
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+        />
       )}
       <div className="space-y-2">
         {filtered.map((t) => (
