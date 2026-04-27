@@ -4,12 +4,13 @@ from typing import Any
 
 import structlog
 from litestar import Controller, Request, get, post
+from litestar.exceptions import NotAuthorizedException, NotFoundException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.api.auth import get_auth_user_from_request
-from nexus.db.models import ApprovalStatus, HumanApproval
+from nexus.api.auth import require_auth_user
+from nexus.db.models import ApprovalStatus, HumanApproval, Task
 from nexus.tools.guards import resolve_approval
 
 logger = structlog.get_logger()
@@ -40,22 +41,24 @@ class ApprovalController(Controller):
         request: Request[Any, Any, Any],
         db_session: AsyncSession,
     ) -> list[ApprovalResponse]:
-        """List pending approval requests for the current workspace."""
-        auth_user = get_auth_user_from_request(request)
+        """List pending approval requests for the current workspace.
+
+        Requires authentication — listing approvals across all workspaces
+        would leak which agents are pending what tool calls in other tenants.
+        """
+        auth_user = require_auth_user(request)
+        if not auth_user.workspace_id:
+            raise NotAuthorizedException(detail="No workspace associated with this user")
 
         stmt = (
             select(HumanApproval)
-            .where(HumanApproval.status == ApprovalStatus.PENDING.value)
+            .join(Task, HumanApproval.task_id == Task.id)
+            .where(
+                HumanApproval.status == ApprovalStatus.PENDING.value,
+                Task.workspace_id == auth_user.workspace_id,
+            )
             .order_by(HumanApproval.requested_at.desc())
         )
-
-        # Scope to workspace if authenticated (via task's workspace_id)
-        if auth_user is not None and auth_user.workspace_id:
-            from nexus.db.models import Task
-
-            stmt = stmt.join(Task, HumanApproval.task_id == Task.id).where(
-                Task.workspace_id == auth_user.workspace_id
-            )
 
         result = await db_session.execute(stmt)
         approvals = result.scalars().all()
@@ -86,11 +89,27 @@ class ApprovalController(Controller):
         """Approve or reject a pending approval request.
 
         The resolved_by field is set from the authenticated JWT user,
-        not from the request body.
+        not from the request body. The approval must belong to a task
+        in the caller's workspace.
         """
-        auth_user = get_auth_user_from_request(request)
-        if auth_user is None:
-            return {"error": "Authentication required"}
+        auth_user = require_auth_user(request)
+        if not auth_user.workspace_id:
+            raise NotAuthorizedException(detail="No workspace associated with this user")
+
+        # Confirm the approval belongs to the caller's workspace before
+        # resolving — otherwise a token holder could approve any tenant's
+        # irreversible actions just by guessing approval IDs.
+        ownership_stmt = (
+            select(HumanApproval.id)
+            .join(Task, HumanApproval.task_id == Task.id)
+            .where(
+                HumanApproval.id == approval_id,
+                Task.workspace_id == auth_user.workspace_id,
+            )
+        )
+        ownership_result = await db_session.execute(ownership_stmt)
+        if ownership_result.scalar_one_or_none() is None:
+            raise NotFoundException(detail="Approval not found")
 
         resolved_by = auth_user.email or auth_user.user_id
 
@@ -102,13 +121,14 @@ class ApprovalController(Controller):
         )
 
         if record is None:
-            return {"error": "Approval not found"}
+            raise NotFoundException(detail="Approval not found")
 
         logger.info(
             "approval_resolved",
             approval_id=approval_id,
             approved=data.approved,
             resolved_by=resolved_by,
+            workspace_id=auth_user.workspace_id,
         )
 
         return {

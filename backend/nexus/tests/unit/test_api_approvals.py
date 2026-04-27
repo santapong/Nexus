@@ -47,15 +47,35 @@ async def test_approval_response_resolved() -> None:
 
 @pytest.mark.asyncio
 async def test_resolve_request_approve() -> None:
-    """ResolveApprovalRequest should handle approve action."""
+    """ResolveApprovalRequest accepts a single 'approved' boolean."""
     req = ResolveApprovalRequest(approved=True)
     assert req.approved is True
-    assert req.resolved_by == "human"
 
 
 @pytest.mark.asyncio
 async def test_resolve_request_reject() -> None:
-    """ResolveApprovalRequest should handle reject action."""
-    req = ResolveApprovalRequest(approved=False, resolved_by="admin")
+    """ResolveApprovalRequest accepts approved=False for rejection."""
+    req = ResolveApprovalRequest(approved=False)
     assert req.approved is False
-    assert req.resolved_by == "admin"
+
+
+@pytest.mark.asyncio
+async def test_resolve_request_rejects_resolved_by_in_body() -> None:
+    """The resolved_by field must be sourced from the JWT, not the body.
+
+    Allowing client-supplied resolved_by would let unauthenticated callers
+    impersonate humans on irreversible action approvals. The model should
+    reject any extra fields including 'resolved_by'.
+    """
+    from pydantic import ValidationError
+
+    # Pydantic v2 default is to ignore extras, so 'resolved_by' is silently
+    # dropped. We assert it never lands on the parsed model.
+    raw = {"approved": True, "resolved_by": "attacker"}
+    req = ResolveApprovalRequest.model_validate(raw)
+    assert not hasattr(req, "resolved_by")
+    # Sanity: 'approved' still parsed.
+    assert req.approved is True
+    # Validation must still fire on completely invalid payloads.
+    with pytest.raises(ValidationError):
+        ResolveApprovalRequest.model_validate({"approved": "not-a-bool"})
