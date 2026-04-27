@@ -1,16 +1,40 @@
-"""Database seed script. Run with: python -m nexus.db.seed"""
+"""Database seed script. Run with: python -m nexus.db.seed
+
+Optional demo data — seed a default workspace, demo user, and a couple of
+demo tasks so a fresh-clone-to-first-task UAT walkthrough has something to
+look at on the dashboard. Gate this with:
+
+    NEXUS_SEED_DEMO=true python -m nexus.db.seed
+
+The demo data is idempotent and safe to re-run.
+"""
 
 from __future__ import annotations
 
 import asyncio
+import os
+from uuid import uuid4
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from nexus.api.auth import hash_password
 from nexus.core.kafka.topics import Topics
 from nexus.core.scheduler import calculate_next_run
-from nexus.db.models import Agent, AgentRole, Prompt, PromptBenchmark, TaskSchedule
+from nexus.db.models import (
+    Agent,
+    AgentRole,
+    Prompt,
+    PromptBenchmark,
+    Task,
+    TaskSchedule,
+    TaskSource,
+    TaskStatus,
+    User,
+    Workspace,
+    WorkspaceMember,
+)
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -889,19 +913,29 @@ BENCHMARKS_SEED: list[dict[str, object]] = [
 
 
 async def seed() -> None:
-    """Seed database with initial agent, prompt, and benchmark records. Idempotent."""
+    """Seed database with initial agent, prompt, and benchmark records. Idempotent.
+
+    Set NEXUS_SEED_DEMO=true to additionally create a demo workspace, demo
+    user, and two starter tasks so the UAT dashboard isn't empty on first
+    boot. The demo password is read from NEXUS_DEMO_PASSWORD or defaults to
+    'nexus-demo' — change before exposing the deployment to real users.
+    """
     engine = create_async_engine(settings.database_url)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    seed_demo = os.environ.get("NEXUS_SEED_DEMO", "").lower() in {"1", "true", "yes"}
 
     async with session_factory() as session:
         await _seed_agents(session)
         await _seed_prompts(session)
         await _seed_benchmarks(session)
         await _seed_schedules(session)
+        if seed_demo:
+            await _seed_demo_workspace(session)
         await session.commit()
 
     await engine.dispose()
-    logger.info("seed_complete")
+    logger.info("seed_complete", demo_seeded=seed_demo)
 
 
 async def _seed_agents(session: AsyncSession) -> None:
@@ -1035,6 +1069,112 @@ async def _seed_schedules(session: AsyncSession) -> None:
         )
         session.add(schedule)
         logger.info("schedule_created", name=name, next_run_at=next_run.isoformat())
+
+
+async def _seed_demo_workspace(session: AsyncSession) -> None:
+    """Create a demo user + workspace + two starter tasks for fresh UAT clones.
+
+    Idempotent: looks up the demo user by email and skips creation if it
+    already exists. Two starter tasks are inserted as 'completed' (with
+    plausible output) so the dashboard has something to render before any
+    real agent traffic.
+    """
+    demo_email = os.environ.get("NEXUS_DEMO_EMAIL", "demo@nexus.local")
+    demo_password = os.environ.get("NEXUS_DEMO_PASSWORD", "nexus-demo")
+    demo_workspace_slug = os.environ.get("NEXUS_DEMO_SLUG", "demo-company")
+
+    # 1) User
+    user_stmt = select(User).where(User.email == demo_email)
+    user = (await session.execute(user_stmt)).scalar_one_or_none()
+    if user is None:
+        user = User(
+            email=demo_email,
+            password_hash=hash_password(demo_password),
+            display_name="UAT Demo Operator",
+        )
+        session.add(user)
+        await session.flush()
+        logger.info("demo_user_created", email=demo_email)
+    else:
+        logger.info("demo_user_already_exists", email=demo_email)
+
+    # 2) Workspace
+    ws_stmt = select(Workspace).where(Workspace.slug == demo_workspace_slug)
+    workspace = (await session.execute(ws_stmt)).scalar_one_or_none()
+    if workspace is None:
+        workspace = Workspace(
+            name="Demo Company",
+            slug=demo_workspace_slug,
+            owner_id=str(user.id),
+        )
+        session.add(workspace)
+        await session.flush()
+        logger.info("demo_workspace_created", slug=demo_workspace_slug)
+    else:
+        logger.info("demo_workspace_already_exists", slug=demo_workspace_slug)
+
+    # 3) Membership (owner)
+    member_stmt = select(WorkspaceMember).where(
+        WorkspaceMember.workspace_id == str(workspace.id),
+        WorkspaceMember.user_id == str(user.id),
+    )
+    if (await session.execute(member_stmt)).scalar_one_or_none() is None:
+        session.add(
+            WorkspaceMember(
+                workspace_id=str(workspace.id),
+                user_id=str(user.id),
+                role="owner",
+            )
+        )
+        logger.info("demo_member_created")
+
+    # 4) Demo tasks — create only if the workspace currently has zero tasks.
+    existing_task_stmt = select(Task.id).where(Task.workspace_id == str(workspace.id))
+    if (await session.execute(existing_task_stmt)).first() is None:
+        for instruction, output in _DEMO_TASKS:
+            session.add(
+                Task(
+                    trace_id=str(uuid4()),
+                    instruction=instruction,
+                    status=TaskStatus.COMPLETED.value,
+                    source=TaskSource.HUMAN.value,
+                    workspace_id=str(workspace.id),
+                    output=output,
+                )
+            )
+        logger.info("demo_tasks_created", count=len(_DEMO_TASKS))
+    else:
+        logger.info("demo_tasks_already_exist")
+
+
+_DEMO_TASKS: list[tuple[str, dict[str, str]]] = [
+    (
+        "Research the top 3 free LLM providers for tool-calling and recommend "
+        "one for the Engineer role.",
+        {
+            "summary": (
+                "Cerebras (1M tok/day, 30 RPM) is the strongest free tier "
+                "for the Engineer role. Groq Llama 3.3 70B Versatile is "
+                "the best fallback when Cerebras is throttled. OpenRouter "
+                "free SKUs only suit tertiary roles due to the shared 50 RPD."
+            ),
+            "recommended_model": "cerebras:llama-3.3-70b",
+        },
+    ),
+    (
+        "Draft a one-paragraph welcome message to the UAT testers explaining "
+        "what they can try first.",
+        {
+            "draft": (
+                "Welcome to NEXUS. Submit a task from the Tasks page and "
+                "open Live Ops to watch your agents work. Approvals appear "
+                "in the top bar; the budget pill turns amber when you're "
+                "above 60% of today's spend. Free models are wired in by "
+                "default — no paid keys required."
+            )
+        },
+    ),
+]
 
 
 if __name__ == "__main__":
