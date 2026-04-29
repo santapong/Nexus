@@ -15,6 +15,12 @@ from typing import Any
 
 import structlog
 from litestar import Controller, Request, get, post
+from litestar.exceptions import (
+    ClientException,
+    NotAuthorizedException,
+    NotFoundException,
+)
+from litestar.status_codes import HTTP_409_CONFLICT
 from pydantic import BaseModel
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,8 +28,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.api.auth import (
     AuthUser,
     create_access_token,
-    get_auth_user_from_request,
     hash_password,
+    require_auth_user,
     verify_password,
 )
 from nexus.db.models import User, Workspace, WorkspaceMember
@@ -156,11 +162,17 @@ class AuthController(Controller):
         Returns:
             RegisterResponse with user_id, workspace_id, and JWT token.
         """
-        # Check if email already exists
+        # Check if email already exists. Returning a clear 409 prevents the
+        # caller from confusing "duplicate email" with "registration succeeded
+        # with empty fields" — the prior behaviour silently shipped an empty
+        # JWT-less RegisterResponse on conflict.
         stmt = select(User).where(User.email == data.email)
         result = await db_session.execute(stmt)
         if result.scalar_one_or_none() is not None:
-            return RegisterResponse(user_id="", workspace_id="", access_token="")
+            raise ClientException(
+                detail="A user with this email already exists",
+                status_code=HTTP_409_CONFLICT,
+            )
 
         # Create user
         user = User(
@@ -228,11 +240,12 @@ class AuthController(Controller):
         result = await db_session.execute(stmt)
         user = result.scalar_one_or_none()
 
+        # Use a uniform error for both "user not found" and "wrong password"
+        # to prevent username enumeration. Previously the endpoint returned
+        # HTTP 200 with an empty token, which clients could not distinguish
+        # from a successful login.
         if user is None or not verify_password(data.password, user.password_hash):
-            return LoginResponse(
-                access_token="",
-                user=AuthUser(user_id="", workspace_id="", email=""),
-            )
+            raise NotAuthorizedException(detail="Invalid email or password")
 
         # Get first workspace
         ws_stmt = select(Workspace).where(Workspace.owner_id == str(user.id))
@@ -273,9 +286,7 @@ class WorkspaceController(Controller):
         db_session: AsyncSession,
     ) -> list[WorkspaceResponse]:
         """List workspaces the authenticated user is a member of."""
-        auth_user = get_auth_user_from_request(request)
-        if auth_user is None:
-            return []
+        auth_user = require_auth_user(request)
 
         stmt = (
             select(Workspace)
@@ -306,16 +317,16 @@ class WorkspaceController(Controller):
         data: CreateWorkspaceRequest,
         request: Request[Any, Any, Any],
         db_session: AsyncSession,
-    ) -> WorkspaceResponse | dict[str, str]:
+    ) -> WorkspaceResponse:
         """Create a new workspace for the authenticated user."""
-        auth_user = get_auth_user_from_request(request)
-        if auth_user is None:
-            return {"error": "Authentication required"}
+        auth_user = require_auth_user(request)
 
         # Validate slug
         sanitized_slug = _sanitize_slug(data.slug)
         if not _SLUG_PATTERN.match(sanitized_slug):
-            return {"error": "Invalid slug. Use 3-50 lowercase alphanumeric chars and hyphens."}
+            raise ClientException(
+                detail="Invalid slug. Use 3-50 lowercase alphanumeric chars and hyphens.",
+            )
 
         slug = await _generate_unique_slug(sanitized_slug, db_session)
 
@@ -357,11 +368,9 @@ class WorkspaceController(Controller):
         workspace_id: str,
         request: Request[Any, Any, Any],
         db_session: AsyncSession,
-    ) -> WorkspaceResponse | dict[str, str]:
+    ) -> WorkspaceResponse:
         """Get workspace details by ID. User must be a member."""
-        auth_user = get_auth_user_from_request(request)
-        if auth_user is None:
-            return {"error": "Authentication required"}
+        auth_user = require_auth_user(request)
 
         # Verify membership
         member_stmt = select(WorkspaceMember).where(
@@ -370,14 +379,14 @@ class WorkspaceController(Controller):
         )
         member_result = await db_session.execute(member_stmt)
         if member_result.scalar_one_or_none() is None:
-            return {"error": "Workspace not found"}
+            raise NotFoundException(detail="Workspace not found")
 
         stmt = select(Workspace).where(Workspace.id == workspace_id)
         result = await db_session.execute(stmt)
         ws = result.scalar_one_or_none()
 
         if ws is None:
-            return {"error": "Workspace not found"}
+            raise NotFoundException(detail="Workspace not found")
 
         return WorkspaceResponse(
             id=str(ws.id),

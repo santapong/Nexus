@@ -11,6 +11,7 @@ from litestar.config.cors import CORSConfig
 from nexus.api.middleware import RLSMiddleware
 from nexus.api.router import a2a_router, api_router, health_router, stripe_router
 from nexus.core.kafka.producer import close_producer
+from nexus.core.startup import detect_llm_providers
 from nexus.db.session import sqlalchemy_config
 from nexus.settings import settings
 
@@ -51,12 +52,20 @@ async def _security_checks() -> None:
             "FATAL: JWT_SECRET_KEY must be at least 16 characters for production."
         )
 
+    available_providers = detect_llm_providers()
+    if not available_providers:
+        # Without any LLM provider the system can't run a single task. Fail
+        # fast at startup so operators see a clear error instead of every
+        # task failing with a confusing ValueError when an agent first runs.
+        raise RuntimeError(
+            "FATAL: No LLM provider configured. Set at least one of: "
+            "ANTHROPIC_API_KEY, GOOGLE_API_KEY, GROQ_API_KEY, OPENAI_API_KEY, "
+            "MISTRAL_API_KEY, CEREBRAS_API_KEY, OPENROUTER_API_KEY, or run "
+            "Ollama locally and point OLLAMA_BASE_URL at it."
+        )
+    logger.info("llm_providers_available", providers=available_providers)
+
     if not settings.is_development:
-        if not settings.anthropic_api_key and not settings.google_api_key:
-            logger.warning(
-                "no_llm_api_keys_configured",
-                hint="Set ANTHROPIC_API_KEY or GOOGLE_API_KEY for LLM functionality",
-            )
         if settings.stripe_api_key and not settings.stripe_webhook_secret:
             logger.warning(
                 "stripe_webhook_secret_missing",
