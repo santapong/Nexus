@@ -34,8 +34,9 @@ frontend/dist/
 # Docker
 postgres_data/
 
-# Claude Code
-.claude/
+# Claude Code (keep team-shared skills, ignore personal settings)
+.claude/*
+!.claude/skills/
 
 # OS
 .DS_Store
