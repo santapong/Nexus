@@ -74,7 +74,7 @@ from alembic import op
 
 # revision identifiers
 revision: str = "015"
-down_revision: str | None = "011"
+down_revision: str | None = "014"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
