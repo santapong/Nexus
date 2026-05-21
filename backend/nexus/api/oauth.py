@@ -5,25 +5,95 @@ Implements the authorization code flow:
 2. GET  /api/auth/oauth/{provider}/callback    → exchange code → upsert user → JWT
 
 Supported providers: google, github.
+
+Security:
+- Anti-CSRF: a random `state` parameter is generated on /oauth/{provider},
+  persisted in Redis db:1 with a 10-minute TTL, and validated on
+  /oauth/{provider}/callback before the authorization code is redeemed.
+- At-rest token encryption: access and refresh tokens are Fernet-encrypted
+  (`nexus.api.auth.encrypt_token`) before being written to OAuthAccount and
+  decrypted on read.
+- Logging: provider error bodies are NEVER logged whole — only the
+  `error` / `error_description` fields are surfaced.
 """
 
 from __future__ import annotations
 
+import secrets
 from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlencode
 
 import structlog
-from litestar import Controller, get
+from litestar import Controller, Request, get
+from litestar.exceptions import ClientException, NotAuthorizedException
 from litestar.response import Redirect
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.api.auth import AuthUser, create_access_token
+from nexus.api.auth import AuthUser, create_access_token, encrypt_token
+from nexus.core.redis.clients import redis_cache
 from nexus.db.models import OAuthAccount, User, Workspace, WorkspaceMember
 from nexus.settings import settings
 
 logger = structlog.get_logger()
+
+# ─── CSRF state token constants ─────────────────────────────────────────────
+
+_OAUTH_STATE_TTL_SECONDS = 600  # 10 minutes
+_OAUTH_STATE_KEY_PREFIX = "oauth:state:"
+
+
+def _state_key(provider: str, state: str) -> str:
+    """Build the Redis key for an OAuth CSRF state token."""
+    return f"{_OAUTH_STATE_KEY_PREFIX}{provider}:{state}"
+
+
+async def _issue_oauth_state(provider: str) -> str:
+    """Generate and persist a CSRF state token for the OAuth redirect.
+
+    Args:
+        provider: OAuth provider name (used to scope the Redis key).
+
+    Returns:
+        URL-safe random token to embed as the `state` query parameter.
+    """
+    state = secrets.token_urlsafe(32)
+    try:
+        await redis_cache.set(
+            _state_key(provider, state),
+            "1",
+            ex=_OAUTH_STATE_TTL_SECONDS,
+        )
+    except Exception as exc:
+        # If Redis is unavailable we still issue the state, but callback
+        # validation will reject it — fail closed for security.
+        logger.warning("oauth_state_persist_failed", provider=provider, error=str(exc))
+    return state
+
+
+async def _consume_oauth_state(provider: str, state: str | None) -> bool:
+    """Atomically validate and delete a CSRF state token.
+
+    Args:
+        provider: OAuth provider name.
+        state: State value echoed back by the provider, or None.
+
+    Returns:
+        True only when the state was present in Redis and successfully
+        deleted (single-use). False on any failure, missing/empty state,
+        or Redis outage — callers must reject in that case.
+    """
+    if not state:
+        return False
+    try:
+        # DEL returns the number of keys removed (1 if it existed, 0 if not).
+        removed = await redis_cache.delete(_state_key(provider, state))
+        return int(removed) == 1
+    except Exception as exc:
+        logger.warning("oauth_state_validate_failed", provider=provider, error=str(exc))
+        return False
 
 
 # ─── Provider configuration ─────────────────────────────────────────────────
@@ -99,6 +169,11 @@ class OAuthController(Controller):
     async def oauth_redirect(self, provider: str) -> Redirect:
         """Redirect user to OAuth provider consent screen.
 
+        Generates a single-use CSRF `state` token (32 url-safe bytes),
+        persists it in Redis db:1 with a 10-minute TTL, and embeds it in
+        the provider URL so the callback can verify the response was
+        triggered by this server.
+
         Args:
             provider: OAuth provider name (google, github).
 
@@ -111,11 +186,14 @@ class OAuthController(Controller):
         config = _PROVIDER_CONFIG[provider]
         client_id, _ = _get_client_credentials(provider)
 
-        params = {
+        state = await _issue_oauth_state(provider)
+
+        params: dict[str, Any] = {
             "client_id": client_id,
             "redirect_uri": _get_redirect_uri(provider),
             "response_type": "code",
             "scope": config["scopes"],
+            "state": state,
         }
 
         if provider == "google":
@@ -131,28 +209,45 @@ class OAuthController(Controller):
         provider: str,
         code: str,
         db_session: AsyncSession,
+        request: Request[Any, Any, Any],
+        state: str | None = None,
     ) -> OAuthLoginResponse:
         """Handle OAuth callback after user authorizes.
 
-        Exchanges the authorization code for tokens, fetches user info,
-        and creates or links the user account.
+        Validates the CSRF `state` token (single-use, Redis-backed),
+        exchanges the authorization code for tokens, fetches user info,
+        and creates or links the user account. OAuth access and refresh
+        tokens are Fernet-encrypted before being persisted.
 
         Args:
             provider: OAuth provider name.
             code: Authorization code from provider.
             db_session: Async database session.
+            request: Litestar request — used for diagnostic logging only.
+            state: CSRF state echoed by the provider. Must match the value
+                issued by /oauth/{provider} or the request is rejected.
 
         Returns:
             OAuthLoginResponse with JWT token and user info.
+
+        Raises:
+            ClientException: 400 — provider unknown or CSRF state invalid.
         """
         import httpx
 
         if provider not in _PROVIDER_CONFIG:
-            return OAuthLoginResponse(
-                access_token="",
-                user=AuthUser(user_id="", workspace_id="", email=""),
-                is_new_user=False,
+            raise ClientException(detail="Unsupported OAuth provider")
+
+        # CSRF defense — reject any callback without a matching, single-use
+        # state token issued by /oauth/{provider}. Failing closed here
+        # blocks attacker-initiated code injection ("login CSRF").
+        if not await _consume_oauth_state(provider, state):
+            logger.warning(
+                "oauth_state_invalid",
+                provider=provider,
+                client=request.client.host if request.client else "unknown",
             )
+            raise ClientException(detail="Invalid or expired OAuth state")
 
         config = _PROVIDER_CONFIG[provider]
         client_id, client_secret = _get_client_credentials(provider)
@@ -169,20 +264,33 @@ class OAuthController(Controller):
 
             headers = {"Accept": "application/json"}
             token_resp = await client.post(config["token_url"], data=token_data, headers=headers)
-            token_json = token_resp.json()
-            access_token = token_json.get("access_token", "")
+            try:
+                token_json = token_resp.json()
+            except ValueError:
+                token_json = {}
+            access_token = (
+                token_json.get("access_token", "") if isinstance(token_json, dict) else ""
+            )
 
             if not access_token:
+                # Never log the full provider response body — it may carry
+                # tokens or PII. Surface only well-known error fields.
                 logger.warning(
                     "oauth_token_exchange_failed",
                     provider=provider,
-                    error=token_json.get("error", "unknown"),
+                    status_code=token_resp.status_code,
+                    error_code=(
+                        token_json.get("error", "unknown")
+                        if isinstance(token_json, dict)
+                        else "unknown"
+                    ),
+                    error_description=(
+                        token_json.get("error_description", "")
+                        if isinstance(token_json, dict)
+                        else ""
+                    ),
                 )
-                return OAuthLoginResponse(
-                    access_token="",
-                    user=AuthUser(user_id="", workspace_id="", email=""),
-                    is_new_user=False,
-                )
+                raise NotAuthorizedException(detail="OAuth token exchange failed")
 
             # Fetch user info
             auth_header = {"Authorization": f"Bearer {access_token}"}
@@ -251,9 +359,9 @@ class OAuthController(Controller):
             user_result = await db_session.execute(user_stmt)
             user = user_result.scalar_one()
 
-            # Update tokens
-            oauth_account.access_token_encrypted = access_token
-            oauth_account.refresh_token_encrypted = token_json.get("refresh_token")
+            # Update tokens (Fernet-encrypt before write — never store plaintext).
+            oauth_account.access_token_encrypted = encrypt_token(access_token)
+            oauth_account.refresh_token_encrypted = encrypt_token(token_json.get("refresh_token"))
             if token_json.get("expires_in"):
                 from datetime import timedelta
 
@@ -308,8 +416,9 @@ class OAuthController(Controller):
                 email=email,
                 display_name=display_name,
                 avatar_url=avatar_url,
-                access_token_encrypted=access_token,
-                refresh_token_encrypted=token_json.get("refresh_token"),
+                # Fernet-encrypt before persisting — never store plaintext.
+                access_token_encrypted=encrypt_token(access_token),
+                refresh_token_encrypted=encrypt_token(token_json.get("refresh_token")),
                 token_expires_at=expires_at,
             )
             db_session.add(oauth_account)
