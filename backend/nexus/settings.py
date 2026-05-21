@@ -78,6 +78,12 @@ class Settings(BaseSettings):
     keepsave_project_id: str = ""
     nexus_env: str = "alpha"
 
+    # A2A Gateway — pepper used to derive deterministic token lookup IDs
+    # (HMAC of the raw token). Treat like a secret: leak of the DB alone
+    # does not let an attacker forge a lookup ID without also knowing this.
+    # In production set via A2A_TOKEN_PEPPER. Empty -> dev fallback in auth.py.
+    a2a_token_pepper: str = ""
+
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
