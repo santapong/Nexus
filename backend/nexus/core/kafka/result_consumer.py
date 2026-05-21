@@ -16,13 +16,22 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.core.kafka.consumer import check_idempotency, create_consumer
+from nexus.core.kafka.consumer import (
+    check_idempotency,
+    create_consumer,
+    validate_message_signature,
+)
 from nexus.core.kafka.dead_letter import MAX_RETRIES, increment_retry, publish_dead_letter
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentResponse, TaskResult
 from nexus.core.kafka.topics import Topics
 from nexus.core.redis.clients import redis_pubsub
 from nexus.db.models import Task, TaskStatus
+
+# Note: `validate_message_signature` is defined in ``core/kafka/consumer.py``
+# (shared base consumer module). It wraps ``validate_signed_message`` from
+# ``core/kafka/signing.py``. We import the consumer-level helper so the same
+# HMAC validation policy applies uniformly across every consumer.
 
 logger = structlog.get_logger()
 
@@ -83,7 +92,55 @@ async def _handle_response(
     raw: dict[str, Any],
     db_session_factory: Callable[..., Any],
 ) -> None:
-    """Process a single AgentResponse message."""
+    """Process a single AgentResponse message.
+
+    Security & correctness invariants enforced here, in order:
+
+    1. **HMAC signature validation** — reject unsigned/forged messages
+       and route them to ``agent.responses.dead_letter``. Without this,
+       any actor with write access to Kafka could mark arbitrary tasks
+       complete with attacker-controlled output.
+    2. **Idempotency check** — Kafka delivers at-least-once. Re-processing
+       a redelivered ``AgentResponse`` would double-complete the task
+       (double DB write, double ``task.results`` publish, double WebSocket
+       event). We claim the message-id once via Redis db:3 with 24h TTL
+       BEFORE any side effects.
+    """
+    # Peek at identifiers for logging even if validation fails below
+    pre_message_id = raw.get("message_id", "unknown")
+    pre_task_id = raw.get("task_id")
+    pre_trace_id = raw.get("trace_id")
+
+    # 1. HMAC signature validation — reject forged / tampered messages
+    if not validate_message_signature(raw):
+        logger.warning(
+            "result_consumer_signature_invalid",
+            message_id=pre_message_id,
+            task_id=pre_task_id,
+            trace_id=pre_trace_id,
+        )
+        await publish_dead_letter(
+            source_topic=Topics.AGENT_RESPONSES,
+            raw_message=raw,
+            error="invalid_or_missing_hmac_signature",
+            task_id=str(pre_task_id) if pre_task_id else None,
+            db_session_factory=db_session_factory,
+        )
+        return
+
+    # 2. Early idempotency check — claim the message-id before doing any work.
+    # Kafka delivers at-least-once; a redelivered message must not be processed
+    # twice. We key on the raw message_id so duplicates are caught even if
+    # Pydantic validation below would otherwise re-run.
+    is_new = await check_idempotency(f"result:{pre_message_id}")
+    if not is_new:
+        logger.info(
+            "result_consumer_duplicate_skipped",
+            message_id=pre_message_id,
+            task_id=pre_task_id,
+        )
+        return
+
     try:
         response = AgentResponse.model_validate(raw)
     except Exception:
@@ -93,18 +150,7 @@ async def _handle_response(
         )
         return
 
-    msg_id = str(response.message_id)
     task_id = str(response.task_id)
-
-    # Idempotency: skip already-processed responses
-    is_new = await check_idempotency(f"result:{msg_id}")
-    if not is_new:
-        logger.info(
-            "result_consumer_duplicate_skipped",
-            message_id=msg_id,
-            task_id=task_id,
-        )
-        return
 
     # Skip CEO/Director orchestration responses (decomposition, subtask tracking, synthesis)
     if response.output and response.output.get("action") in (
