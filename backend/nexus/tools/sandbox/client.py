@@ -8,7 +8,11 @@ Provides isolated Firecracker microVM environments for agents to:
 Each sandbox is ephemeral — created per task, destroyed after completion.
 Uses E2B's Python SDK with session management and cost tracking.
 
-Gracefully degrades when E2B is not configured (returns error message).
+When E2B is not configured (``E2B_API_KEY`` missing) the client raises
+``ToolNotConfigured`` instead of returning a string-shaped "error" — agents
+were previously interpreting the literal string ``"E2B sandbox not
+configured"`` as a successful response and proceeding as if their code had
+run.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ from dataclasses import dataclass, field
 import structlog
 
 from nexus.settings import settings
+from nexus.tools.adapter import ToolNotConfigured
 
 logger = structlog.get_logger()
 
@@ -89,9 +94,12 @@ async def execute_code(
         SandboxResult with stdout, stderr, and exit code.
     """
     if not _check_configured():
-        return SandboxResult(
-            error="E2B sandbox not configured. Set E2B_API_KEY in environment.",
-            exit_code=1,
+        # FAIL LOUDLY. Previously this returned a SandboxResult with a string
+        # error and exit_code=1 — agents inspected the .output property and
+        # treated the message as if the code had executed. That silently
+        # let LLM agents believe their actions succeeded when nothing ran.
+        raise ToolNotConfigured(
+            "E2B sandbox not configured. Set E2B_API_KEY in environment to enable sandbox tools.",
         )
 
     start = time.monotonic()
@@ -105,7 +113,11 @@ async def execute_code(
         try:
             if language == "python":
                 execution = sandbox.run_code(code)
-                stdout = "\n".join(str(r.text) for r in execution.results if r.text) if execution.results else ""
+                stdout = (
+                    "\n".join(str(r.text) for r in execution.results if r.text)
+                    if execution.results
+                    else ""
+                )
                 stderr = "\n".join(execution.logs.stderr) if execution.logs.stderr else ""
                 stdout_logs = "\n".join(execution.logs.stdout) if execution.logs.stdout else ""
                 if stdout_logs and not stdout:
@@ -171,9 +183,9 @@ async def execute_project(
         SandboxResult with combined output from all commands.
     """
     if not _check_configured():
-        return SandboxResult(
-            error="E2B sandbox not configured. Set E2B_API_KEY in environment.",
-            exit_code=1,
+        # FAIL LOUDLY (see execute_code for rationale).
+        raise ToolNotConfigured(
+            "E2B sandbox not configured. Set E2B_API_KEY in environment to enable sandbox tools.",
         )
 
     start = time.monotonic()

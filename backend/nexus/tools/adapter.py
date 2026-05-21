@@ -8,36 +8,219 @@ by the full MCP package adapter when that package is ready.
 
 All tool executions are wrapped with OpenTelemetry trace spans when OTel is
 configured. Traces are no-ops when OTel is disabled (zero overhead).
+
+Security model
+--------------
+All irreversible tools (file_write, send_email, git_push, hire_external_agent)
+MUST call ``require_approval()`` from ``nexus.tools.guards`` as the first line
+of their function body. Approval is enforced HERE in the adapter — there is no
+"guard chain" at the agent layer that does this automatically.
+
+Irreversible tools obtain the per-call ``task_id``, ``agent_id``, and DB session
+via the ``_tool_context`` ``ContextVar`` defined in this module. The agent
+runtime (``nexus/agents/base.py``) is responsible for calling
+``set_tool_context(...)`` before invoking the LLM for each task. If the
+context is unset when an irreversible tool runs, the tool raises
+``ToolContextUnsetError`` and refuses to execute.
+
+All tool outputs are passed through ``sanitize_output()`` (PII detection +
+redaction) AFTER size truncation. This is defense in depth — even if a tool
+returns sensitive data, it is redacted before reaching the LLM context.
 """
 
 from __future__ import annotations
 
 import asyncio
+import re
 import subprocess
+from collections.abc import Callable
+from contextvars import ContextVar
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Literal
 
 import httpx
 import structlog
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.core.sanitization import sanitize_output
 from nexus.db.models import EpisodicMemory, SemanticMemory
 from nexus.integrations.otel.tracing import traced
+from nexus.tools.guards import IrreversibleAction, require_approval
 
 logger = structlog.get_logger()
 
 _MAX_TOOL_OUTPUT_SIZE = 50_000  # 50KB max per tool response
 
 
-def _sanitize_tool_output(output: str) -> str:
-    """Truncate tool output if it exceeds the size limit.
+# ─── Tool execution context ──────────────────────────────────────────────────
+# Irreversible tools need task_id, agent_id, and a DB session to create
+# HumanApproval records. Pydantic AI tools are plain functions called by the
+# LLM runtime, so we use a ContextVar to thread per-task context into them.
+# The agent runtime is responsible for setting this before invoking the LLM.
 
-    Prevents agents from processing excessively large tool responses
-    that could consume excessive tokens or cause context overflow.
+
+class ToolContextUnsetError(RuntimeError):
+    """Raised when an irreversible tool runs without a tool execution context.
+
+    This is a FAIL-LOUD safety mechanism. If the context isn't set, we cannot
+    create a HumanApproval record, and the action MUST NOT proceed.
+    """
+
+
+class ToolNotConfigured(RuntimeError):  # noqa: N818 — public API name; renaming would break sandbox/client.py imports
+    """Raised when a tool's integration is not configured in the environment.
+
+    Examples:
+      - send_email called but SMTP is not wired
+      - sandbox tools called but E2B_API_KEY is missing
+    """
+
+
+@dataclass
+class ToolExecutionContext:
+    """Per-task context for tool execution.
+
+    Attributes:
+        task_id: The task this tool call belongs to.
+        agent_id: The agent making the tool call.
+        session_factory: Async DB session factory for creating sessions.
+            We use a factory (not a session) because ``require_approval``
+            polls for up to an hour — we don't want to hold a single session
+            open that long.
+    """
+
+    task_id: str
+    agent_id: str
+    session_factory: Callable[..., Any]
+
+
+_tool_context: ContextVar[ToolExecutionContext | None] = ContextVar(
+    "nexus_tool_context",
+    default=None,
+)
+
+
+def set_tool_context(
+    *,
+    task_id: str,
+    agent_id: str,
+    session_factory: Callable[..., Any],
+) -> Any:
+    """Set the per-task tool execution context.
+
+    Called by the agent runtime (``nexus/agents/base.py``) before invoking the
+    LLM. Returns a token that should be passed to ``reset_tool_context()`` in
+    a ``finally`` block to restore the previous context.
+
+    Args:
+        task_id: The current task UUID.
+        agent_id: The current agent UUID.
+        session_factory: Callable returning an async session context manager.
+
+    Returns:
+        A token from ``ContextVar.set()`` for later reset.
+    """
+    return _tool_context.set(
+        ToolExecutionContext(
+            task_id=task_id,
+            agent_id=agent_id,
+            session_factory=session_factory,
+        ),
+    )
+
+
+def reset_tool_context(token: Any) -> None:
+    """Reset the tool execution context to its previous value.
+
+    Args:
+        token: The token returned by ``set_tool_context()``.
+    """
+    _tool_context.reset(token)
+
+
+def _require_tool_context(tool_name: str) -> ToolExecutionContext:
+    """Fetch the current tool execution context or fail loudly.
+
+    Args:
+        tool_name: Name of the calling tool (for error messages).
+
+    Returns:
+        The active ``ToolExecutionContext``.
+
+    Raises:
+        ToolContextUnsetError: If no context is set. Irreversible tools cannot
+            proceed without this — there's no way to create the approval record.
+    """
+    ctx = _tool_context.get()
+    if ctx is None:
+        msg = (
+            f"Irreversible tool {tool_name!r} was invoked without a tool "
+            "execution context. The agent runtime must call "
+            "nexus.tools.adapter.set_tool_context(...) before the LLM is "
+            "given access to irreversible tools."
+        )
+        raise ToolContextUnsetError(msg)
+    return ctx
+
+
+async def _approve_or_raise(
+    *,
+    tool_name: str,
+    description: str,
+) -> ToolExecutionContext:
+    """Call ``require_approval`` and commit the approval record.
+
+    Centralizes the approval flow used by every irreversible tool.
+    Opens a fresh DB session from the context's session factory, creates the
+    HumanApproval record, and blocks until a human approves or rejects.
+
+    Args:
+        tool_name: The tool name (used as ``IrreversibleAction.action``).
+        description: Human-readable summary of what will happen.
+
+    Returns:
+        The active ``ToolExecutionContext`` (so callers can reuse task_id).
+
+    Raises:
+        ToolContextUnsetError: If no tool context is set.
+        ApprovalDeniedError: If the human rejected the action.
+        ApprovalTimeoutError: If no response within the timeout.
+    """
+    ctx = _require_tool_context(tool_name)
+    async with ctx.session_factory() as session:
+        await require_approval(
+            session=session,
+            agent_id=ctx.agent_id,
+            action=IrreversibleAction(
+                action=tool_name,
+                description=description,
+                task_id=ctx.task_id,
+            ),
+        )
+        await session.commit()
+    return ctx
+
+
+def _sanitize_tool_output(output: str) -> str:
+    """Truncate then PII-sanitize tool output.
+
+    Order matters: truncate first (cheap) so the PII scan runs over a bounded
+    string. ``sanitize_output`` redacts API keys, tokens, emails, JWTs,
+    private keys, etc. — defense in depth against tools leaking secrets back
+    into the LLM context window.
     """
     if len(output) > _MAX_TOOL_OUTPUT_SIZE:
-        return output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
-    return output
+        output = output[:_MAX_TOOL_OUTPUT_SIZE] + "\n\n[OUTPUT TRUNCATED — exceeded 50KB limit]"
+
+    ctx = _tool_context.get()
+    task_id = ctx.task_id if ctx is not None else ""
+    agent_id = ctx.agent_id if ctx is not None else ""
+    sanitized = sanitize_output(output, task_id=task_id, agent_id=agent_id)
+    # ``sanitize_output`` preserves string inputs as strings.
+    return sanitized if isinstance(sanitized, str) else str(sanitized)
 
 
 # ─── READ-ONLY tools (no approval needed) ────────────────────────────────────
@@ -71,7 +254,7 @@ async def tool_web_search(query: str) -> str:
             return _sanitize_tool_output(output)
     except Exception as exc:
         logger.error("web_search_failed", query=query, error=str(exc))
-        return f"Search failed: {exc}"
+        return _sanitize_tool_output(f"Search failed: {exc}")
 
 
 @traced("tool.web_fetch")
@@ -106,7 +289,9 @@ async def tool_web_fetch(url: str) -> str:
                         self._skip_depth = 0
 
                     def handle_starttag(
-                        self, tag: str, attrs: list[tuple[str, str | None]],
+                        self,
+                        tag: str,
+                        attrs: list[tuple[str, str | None]],
                     ) -> None:
                         if tag.lower() in ("script", "style"):
                             self._skip_depth += 1
@@ -133,7 +318,7 @@ async def tool_web_fetch(url: str) -> str:
             return _sanitize_tool_output(text)
     except Exception as exc:
         logger.error("web_fetch_failed", url=url, error=str(exc))
-        return f"Fetch failed: {exc}"
+        return _sanitize_tool_output(f"Fetch failed: {exc}")
 
 
 @traced("tool.file_read")
@@ -153,40 +338,38 @@ async def tool_file_read(path: str) -> str:
     # Path traversal prevention — restrict to allowed directories
     if settings.tool_allowed_dirs:
         allowed = [
-            Path(d.strip()).resolve()
-            for d in settings.tool_allowed_dirs.split(",")
-            if d.strip()
+            Path(d.strip()).resolve() for d in settings.tool_allowed_dirs.split(",") if d.strip()
         ]
-        if allowed and not any(
-            file_path == a or file_path.is_relative_to(a) for a in allowed
-        ):
+        if allowed and not any(file_path == a or file_path.is_relative_to(a) for a in allowed):
             logger.warning(
                 "file_read_denied",
                 path=str(file_path),
                 allowed_dirs=settings.tool_allowed_dirs,
             )
-            return f"Error: Access denied — file outside allowed directories: {path}"
+            return _sanitize_tool_output(
+                f"Error: Access denied — file outside allowed directories: {path}",
+            )
 
     if not file_path.exists():
-        return f"Error: File not found: {path}"
+        return _sanitize_tool_output(f"Error: File not found: {path}")
     if not file_path.is_file():
-        return f"Error: Not a file: {path}"
+        return _sanitize_tool_output(f"Error: Not a file: {path}")
 
     # File size check
     try:
         file_size = file_path.stat().st_size
         if file_size > settings.tool_file_read_max_bytes:
-            return (
+            return _sanitize_tool_output(
                 f"Error: File too large ({file_size:,} bytes, "
-                f"max {settings.tool_file_read_max_bytes:,} bytes): {path}"
+                f"max {settings.tool_file_read_max_bytes:,} bytes): {path}",
             )
     except OSError as exc:
-        return f"Error checking file size: {exc}"
+        return _sanitize_tool_output(f"Error checking file size: {exc}")
 
     try:
         return _sanitize_tool_output(file_path.read_text(encoding="utf-8"))
     except Exception as exc:
-        return f"Error reading file: {exc}"
+        return _sanitize_tool_output(f"Error reading file: {exc}")
 
 
 @traced("tool.code_execute")
@@ -208,7 +391,9 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
     elif language == "bash":
         cmd = ["bash", "-c", code]
     else:
-        return f"Unsupported language: {language}. Use 'python' or 'bash'."
+        return _sanitize_tool_output(
+            f"Unsupported language: {language}. Use 'python' or 'bash'.",
+        )
 
     logger.info(
         "code_execute_start",
@@ -240,9 +425,9 @@ async def tool_code_execute(code: str, language: str = "python") -> str:
             output += f"\nSTDERR:\n{result.stderr}"
         return _sanitize_tool_output(output or "(no output)")
     except subprocess.TimeoutExpired:
-        return "Error: Code execution timed out (30s limit)"
+        return _sanitize_tool_output("Error: Code execution timed out (30s limit)")
     except Exception as exc:
-        return f"Error executing code: {exc}"
+        return _sanitize_tool_output(f"Error executing code: {exc}")
 
 
 @traced("tool.memory_read")
@@ -269,7 +454,9 @@ async def tool_memory_read(
         Formatted memory records as text.
     """
     if _session is None:
-        return "Error: No database session available for memory_read."
+        return _sanitize_tool_output(
+            "Error: No database session available for memory_read.",
+        )
 
     try:
         if memory_type == "episodic":
@@ -280,7 +467,9 @@ async def tool_memory_read(
             agent_result = await _session.execute(agent_stmt)
             agent = agent_result.scalar_one_or_none()
             if not agent:
-                return f"Error: No agent found with role '{agent_role}'"
+                return _sanitize_tool_output(
+                    f"Error: No agent found with role '{agent_role}'",
+                )
 
             stmt = (
                 select(EpisodicMemory)
@@ -292,7 +481,9 @@ async def tool_memory_read(
             episodes = result.scalars().all()
 
             if not episodes:
-                return f"No episodic memories found for {agent_role} agent."
+                return _sanitize_tool_output(
+                    f"No episodic memories found for {agent_role} agent.",
+                )
 
             lines = [f"Episodic memories for {agent_role} (last {limit}):"]
             for ep in episodes:
@@ -300,7 +491,7 @@ async def tool_memory_read(
                     f"- [{ep.outcome}] {ep.summary[:200]} "
                     f"(tokens: {ep.tokens_used}, duration: {ep.duration_seconds}s)"
                 )
-            return "\n".join(lines)
+            return _sanitize_tool_output("\n".join(lines))
 
         elif memory_type == "semantic":
             from nexus.db.models import Agent
@@ -309,7 +500,9 @@ async def tool_memory_read(
             agent_result = await _session.execute(agent_stmt)
             agent = agent_result.scalar_one_or_none()
             if not agent:
-                return f"Error: No agent found with role '{agent_role}'"
+                return _sanitize_tool_output(
+                    f"Error: No agent found with role '{agent_role}'",
+                )
 
             sem_stmt = select(SemanticMemory).where(
                 SemanticMemory.agent_id == str(agent.id),
@@ -321,7 +514,9 @@ async def tool_memory_read(
             facts = result.scalars().all()
 
             if not facts:
-                return f"No semantic memories found for {agent_role} agent."
+                return _sanitize_tool_output(
+                    f"No semantic memories found for {agent_role} agent.",
+                )
 
             lines = [f"Semantic memories for {agent_role}:"]
             for fact in facts:
@@ -329,13 +524,15 @@ async def tool_memory_read(
                     f"- [{fact.namespace}] {fact.key}: {fact.value[:200]} "
                     f"(confidence: {fact.confidence})"
                 )
-            return "\n".join(lines)
+            return _sanitize_tool_output("\n".join(lines))
 
         else:
-            return f"Error: Unknown memory_type '{memory_type}'. Use 'episodic' or 'semantic'."
+            return _sanitize_tool_output(
+                f"Error: Unknown memory_type '{memory_type}'. Use 'episodic' or 'semantic'.",
+            )
     except Exception as exc:
         logger.error("memory_read_failed", agent_role=agent_role, error=str(exc))
-        return f"Memory read failed: {exc}"
+        return _sanitize_tool_output(f"Memory read failed: {exc}")
 
 
 # ─── LLM-POWERED planning & design tools ─────────────────────────────────────
@@ -487,8 +684,8 @@ Follow REST best practices. Use consistent naming conventions."""
 
 
 # ─── IRREVERSIBLE tools (require human approval) ─────────────────────────────
-# Approval is enforced by the agent guard chain, not in these functions.
-# These are only called AFTER approval has been granted.
+# Each irreversible tool calls ``_approve_or_raise(...)`` as its FIRST line.
+# The approval blocks until a human approves or rejects via the dashboard.
 
 
 @traced("tool.file_write")
@@ -502,11 +699,16 @@ async def tool_file_write(path: str, content: str) -> str:
     Returns:
         Confirmation message with bytes written.
     """
+    await _approve_or_raise(
+        tool_name="file_write",
+        description=f"Write {len(content)} chars to {path}",
+    )
+
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(content, encoding="utf-8")
     logger.info("file_written", path=path, size=len(content))
-    return f"Written {len(content)} chars to {path}"
+    return _sanitize_tool_output(f"Written {len(content)} chars to {path}")
 
 
 @traced("tool.send_email")
@@ -520,10 +722,261 @@ async def tool_send_email(to: str, subject: str, body: str) -> str:
 
     Returns:
         Confirmation message with recipient and subject.
+
+    Raises:
+        ToolNotConfigured: SMTP integration is not wired. Set the SMTP_* env
+            vars and implement ``nexus.integrations.smtp`` before using this.
     """
-    # Phase 2 stub — actual email sending will be integrated with MCP package
-    logger.info("email_sent", to=to, subject=subject, body_length=len(body))
-    return f"Email sent to {to} with subject '{subject}' ({len(body)} chars)"
+    await _approve_or_raise(
+        tool_name="send_email",
+        description=f"Send email to {to}: {subject}",
+    )
+
+    # The actual SMTP integration is not yet wired. Failing loudly is much
+    # safer than returning a fake confirmation — agents would otherwise
+    # believe the email was delivered when in fact nothing was sent.
+    logger.error(
+        "send_email_not_configured",
+        to=to,
+        subject=subject,
+        body_length=len(body),
+    )
+    raise ToolNotConfigured(
+        "send_email integration is not wired — set SMTP_* env vars and "
+        "implement nexus.integrations.smtp",
+    )
+
+
+# Patterns for files that must never be committed via tool_git_push.
+# Matching is case-insensitive where appropriate; we test each staged path
+# against every pattern before allowing the commit to proceed.
+_GIT_PUSH_SECRET_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\.env(\..+)?$"),
+    re.compile(r"(?i)key"),
+    re.compile(r"(?i)secret"),
+    re.compile(r"(?i)token"),
+    re.compile(r"\.pem$"),
+    re.compile(r"id_rsa"),
+    re.compile(r"\.p12$"),
+]
+
+
+def _scan_staged_files_for_secrets(repo_path: str) -> list[str]:
+    """Return list of staged file paths that match secret-leak patterns.
+
+    Runs ``git diff --cached --name-only`` (no network, no side effects) to
+    enumerate what would be committed, then checks each filename against the
+    forbidden-pattern list.
+
+    Args:
+        repo_path: Path to the git repository.
+
+    Returns:
+        List of offending file paths (empty list if all-clear).
+    """
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=repo_path,
+        check=False,
+    )
+    if result.returncode != 0:
+        # Non-zero from git here means we couldn't inspect the index. Refuse
+        # the push rather than silently committing.
+        raise RuntimeError(
+            f"git diff --cached failed (rc={result.returncode}): {result.stderr.strip()}",
+        )
+
+    staged = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    offenders: list[str] = []
+    for path in staged:
+        for pattern in _GIT_PUSH_SECRET_PATTERNS:
+            if pattern.search(path):
+                offenders.append(path)
+                break
+    return offenders
+
+
+@traced("tool.git_push")
+async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
+    """Push code changes to a git repository. This action requires human approval.
+
+    Args:
+        repo_path: Path to the git repository.
+        branch: Branch name to push to.
+        message: Commit message for the changes.
+
+    Returns:
+        Git push result or error message.
+    """
+    await _approve_or_raise(
+        tool_name="git_push",
+        description=f"git push {branch} from {repo_path}: {message}",
+    )
+
+    try:
+        # Stage all changes first so the secret-leak scan can see what's
+        # about to be committed.
+        add_result = await asyncio.to_thread(
+            subprocess.run,
+            ["git", "add", "-A"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=repo_path,
+            check=False,
+        )
+        if add_result.returncode != 0:
+            return _sanitize_tool_output(
+                f"git add failed: {add_result.stderr.strip()}",
+            )
+
+        # Pre-flight: refuse to commit files whose names look like secrets.
+        # This is a guard against the LLM accidentally adding .env, *.pem,
+        # id_rsa, or anything matching key/secret/token in its name.
+        try:
+            offenders = await asyncio.to_thread(_scan_staged_files_for_secrets, repo_path)
+        except RuntimeError as exc:
+            # Reset the index before bailing so we don't leave the repo
+            # in a half-staged state.
+            await asyncio.to_thread(
+                subprocess.run,
+                ["git", "reset", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=repo_path,
+                check=False,
+            )
+            logger.error(
+                "git_push_preflight_failed",
+                repo=repo_path,
+                error=str(exc),
+            )
+            raise RuntimeError(f"git_push pre-flight scan failed: {exc}") from exc
+
+        if offenders:
+            # Reset the staged changes so a follow-up call doesn't quietly
+            # inherit the dangerous staging area.
+            await asyncio.to_thread(
+                subprocess.run,
+                ["git", "reset", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=repo_path,
+                check=False,
+            )
+            logger.error(
+                "git_push_blocked_secret_leak",
+                repo=repo_path,
+                branch=branch,
+                offenders=offenders,
+            )
+            raise RuntimeError(
+                "git_push refused: staged files match secret-leak patterns "
+                f"(.env / key / secret / token / .pem / id_rsa / .p12): "
+                f"{offenders}",
+            )
+
+        # Commit
+        commit_result = await asyncio.to_thread(
+            subprocess.run,
+            ["git", "commit", "-m", message],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=repo_path,
+            check=False,
+        )
+        if commit_result.returncode != 0:
+            err = commit_result.stderr.strip() or commit_result.stdout.strip()
+            return _sanitize_tool_output(f"git commit failed: {err}")
+
+        # Push
+        push_result = await asyncio.to_thread(
+            subprocess.run,
+            ["git", "push", "origin", branch],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=repo_path,
+            check=False,
+        )
+
+        output = push_result.stdout
+        if push_result.stderr:
+            output += f"\n{push_result.stderr}"
+        if push_result.returncode != 0:
+            return _sanitize_tool_output(f"Git push failed: {output}")
+
+        logger.info("git_pushed", repo=repo_path, branch=branch)
+        return _sanitize_tool_output(f"Pushed to {branch}: {message}\n{output}")
+    except subprocess.TimeoutExpired:
+        return _sanitize_tool_output("Error: Git operation timed out")
+
+
+# ─── External agent response validation ──────────────────────────────────────
+
+
+class HiredAgentResponse(BaseModel):
+    """Strict schema for what we accept back from an external A2A agent.
+
+    Used to defend the calling agent's context window from prompt-injection
+    attacks delivered via ``result.output`` from an untrusted external party.
+    """
+
+    status: Literal["success", "failure"]
+    output: str = Field(default="", max_length=10_000)
+    error: str | None = Field(default=None, max_length=2_000)
+
+
+def _coerce_hired_agent_response(result: Any) -> HiredAgentResponse:
+    """Coerce a raw outbound A2A result into the strict response schema.
+
+    The outbound helper returns an ``ExternalAgentResult`` with an arbitrary
+    ``output: dict | None`` and a free-form ``status: str``. We squeeze that
+    into our hardened ``HiredAgentResponse`` model so any extra fields are
+    discarded and the ``output`` is bounded.
+
+    Args:
+        result: An ``ExternalAgentResult`` (or anything with ``status``,
+            ``output``, ``error`` attributes).
+
+    Returns:
+        A validated ``HiredAgentResponse``.
+    """
+    raw_status = str(getattr(result, "status", "")).lower()
+    status: Literal["success", "failure"] = (
+        "success" if raw_status in {"success", "completed", "ok", "done"} else "failure"
+    )
+
+    raw_output = getattr(result, "output", None)
+    if raw_output is None:
+        output_text = ""
+    elif isinstance(raw_output, dict):
+        # Prefer the conventional "result" key, fall back to the whole dict.
+        output_text = str(raw_output.get("result", raw_output))
+    else:
+        output_text = str(raw_output)
+
+    # Hard length cap before pydantic validation; defensive belt-and-braces.
+    if len(output_text) > 10_000:
+        output_text = output_text[:10_000]
+
+    error_text = getattr(result, "error", None)
+    if error_text is not None:
+        error_text = str(error_text)
+        if len(error_text) > 2_000:
+            error_text = error_text[:2_000]
+
+    return HiredAgentResponse(
+        status=status,
+        output=output_text,
+        error=error_text,
+    )
 
 
 @traced("tool.hire_external_agent")
@@ -547,28 +1000,55 @@ async def tool_hire_external_agent(
     Returns:
         The external agent's result as formatted text.
     """
+    await _approve_or_raise(
+        tool_name="hire_external_agent",
+        description=f"Hire external agent at {agent_url} (skill={skill_id}): {instruction[:200]}",
+    )
+
     from nexus.integrations.a2a.outbound import hire_external_agent
 
     try:
-        result = await hire_external_agent(
+        raw_result = await hire_external_agent(
             agent_url=agent_url,
             instruction=instruction,
             skill_id=skill_id,
             bearer_token=bearer_token,
         )
-        if result.error:
-            return f"External agent error: {result.error}"
-        if result.output:
-            output_text = result.output.get("result", str(result.output))
-            return f"External agent result ({result.status}):\n{output_text}"
-        return f"External agent completed with status: {result.status}"
     except Exception as exc:
         logger.error(
             "hire_external_agent_failed",
             agent_url=agent_url,
             error=str(exc),
         )
-        return f"Failed to hire external agent: {exc}"
+        return _sanitize_tool_output(f"Failed to hire external agent: {exc}")
+
+    # Validate the external response against our hardened schema. This is the
+    # prompt-injection boundary — anything from outside NEXUS must be
+    # length-capped, typed, and PII-sanitized before it touches the LLM.
+    try:
+        validated = _coerce_hired_agent_response(raw_result)
+    except ValidationError as exc:
+        logger.error(
+            "hire_external_agent_invalid_response",
+            agent_url=agent_url,
+            errors=exc.errors(),
+        )
+        return _sanitize_tool_output(
+            "External agent returned a response that failed schema validation; "
+            "result discarded for safety.",
+        )
+
+    if validated.error:
+        return _sanitize_tool_output(
+            f"External agent error: {validated.error}",
+        )
+    if validated.output:
+        return _sanitize_tool_output(
+            f"External agent result ({validated.status}):\n{validated.output}",
+        )
+    return _sanitize_tool_output(
+        f"External agent completed with status: {validated.status}",
+    )
 
 
 @traced("tool.analyze_image")
@@ -595,24 +1075,29 @@ async def tool_analyze_image(
 
     file_path = Path(image_path)
     if not file_path.exists():
-        return f"Error: Image not found: {image_path}"
+        return _sanitize_tool_output(f"Error: Image not found: {image_path}")
 
     mime_type, _ = mimetypes.guess_type(image_path)
     supported = {
-        "image/png", "image/jpeg", "image/webp", "image/gif",
+        "image/png",
+        "image/jpeg",
+        "image/webp",
+        "image/gif",
         "application/pdf",
     }
     if mime_type not in supported:
-        return f"Error: Unsupported file type '{mime_type}'. Supported: {', '.join(supported)}"
+        return _sanitize_tool_output(
+            f"Error: Unsupported file type '{mime_type}'. Supported: {', '.join(supported)}",
+        )
 
     # Read and encode the image
     try:
         image_data = file_path.read_bytes()
         if len(image_data) > 20 * 1024 * 1024:  # 20MB limit
-            return "Error: Image file exceeds 20MB size limit"
+            return _sanitize_tool_output("Error: Image file exceeds 20MB size limit")
         b64_data = base64.b64encode(image_data).decode("utf-8")
     except Exception as exc:
-        return f"Error reading image: {exc}"
+        return _sanitize_tool_output(f"Error reading image: {exc}")
 
     # Call vision-capable model via httpx (provider-agnostic)
     try:
@@ -687,74 +1172,17 @@ async def tool_analyze_image(
                     parts = candidates[0].get("content", {}).get("parts", [])
                     result_text = parts[0].get("text", "") if parts else ""
                     return _sanitize_tool_output(result_text)
-                return "No response from Gemini vision model."
+                return _sanitize_tool_output("No response from Gemini vision model.")
 
         else:
-            return (
+            return _sanitize_tool_output(
                 "Error: No vision-capable LLM API key configured "
-                "(need ANTHROPIC_API_KEY or GOOGLE_API_KEY)"
+                "(need ANTHROPIC_API_KEY or GOOGLE_API_KEY)",
             )
 
     except Exception as exc:
         logger.error("analyze_image_failed", image_path=image_path, error=str(exc))
-        return f"Image analysis failed: {exc}"
-
-
-@traced("tool.git_push")
-async def tool_git_push(repo_path: str, branch: str, message: str) -> str:
-    """Push code changes to a git repository. This action requires human approval.
-
-    Args:
-        repo_path: Path to the git repository.
-        branch: Branch name to push to.
-        message: Commit message for the changes.
-
-    Returns:
-        Git push result or error message.
-    """
-    try:
-        # Stage all changes
-        await asyncio.to_thread(
-            subprocess.run,
-            ["git", "add", "-A"],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=repo_path,
-        )
-
-        # Commit
-        await asyncio.to_thread(
-            subprocess.run,
-            ["git", "commit", "-m", message],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=repo_path,
-        )
-
-        # Push
-        push_result = await asyncio.to_thread(
-            subprocess.run,
-            ["git", "push", "origin", branch],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            cwd=repo_path,
-        )
-
-        output = push_result.stdout
-        if push_result.stderr:
-            output += f"\n{push_result.stderr}"
-        if push_result.returncode != 0:
-            return f"Git push failed: {output}"
-
-        logger.info("git_pushed", repo=repo_path, branch=branch)
-        return f"Pushed to {branch}: {message}\n{output}"
-    except subprocess.TimeoutExpired:
-        return "Error: Git operation timed out"
-    except Exception as exc:
-        return f"Git push failed: {exc}"
+        return _sanitize_tool_output(f"Image analysis failed: {exc}")
 
 
 # ─── SANDBOX tools (E2B Firecracker microVM isolation) ────────────────────────
@@ -797,7 +1225,8 @@ async def tool_sandbox_project(repo_url: str, commands: str) -> str:
 
     Args:
         repo_url: Git repository URL to clone (e.g. https://github.com/user/repo).
-        commands: Semicolon-separated commands to run (e.g. "pip install -r requirements.txt;pytest").
+        commands: Semicolon-separated commands to run
+            (e.g. "pip install -r requirements.txt;pytest").
 
     Returns:
         Combined output from all commands.
@@ -806,7 +1235,9 @@ async def tool_sandbox_project(repo_url: str, commands: str) -> str:
 
     cmd_list = [cmd.strip() for cmd in commands.split(";") if cmd.strip()]
     if not cmd_list:
-        return "Error: No commands provided. Separate commands with semicolons."
+        return _sanitize_tool_output(
+            "Error: No commands provided. Separate commands with semicolons.",
+        )
 
     result = await execute_project(repo_url=repo_url, commands=cmd_list)
     output = result.output
