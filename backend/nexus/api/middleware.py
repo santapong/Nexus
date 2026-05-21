@@ -8,10 +8,14 @@ Rate limits:
 RLS:
 - Extracts workspace_id from JWT and sets PostgreSQL session variable
 - All queries are automatically filtered by RLS policies
+- Workspace context is stored in a ContextVar so the SQLAlchemy
+  `after_begin` event listener can issue `SET LOCAL nexus.workspace_id`
+  on every per-request session as soon as its transaction opens.
 """
 
 from __future__ import annotations
 
+import contextvars
 import re
 import time
 from typing import Any
@@ -21,6 +25,8 @@ from litestar import Request
 from litestar.middleware import AbstractMiddleware
 from litestar.types import Receive, Scope, Send
 from pydantic import BaseModel
+from sqlalchemy import event, text
+from sqlalchemy.orm import Session as SyncSession
 
 from nexus.core.redis.clients import redis_cache
 from nexus.settings import settings
@@ -30,13 +36,54 @@ logger = structlog.get_logger()
 
 # ─── RLS Middleware ──────────────────────────────────────────────────────────
 
+# Per-request workspace id, populated by RLSMiddleware. The SQLAlchemy
+# `after_begin` listener below reads it whenever the request-scoped session
+# opens a transaction and issues `SET LOCAL nexus.workspace_id = '<uuid>'`
+# so every query made by that session is filtered by RLS policies.
+_workspace_id_ctx: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "nexus_workspace_id", default=None
+)
+
+
+def get_current_workspace_id() -> str | None:
+    """Return the workspace id captured for the active request, if any."""
+    return _workspace_id_ctx.get()
+
+
+@event.listens_for(SyncSession, "after_begin")
+def _inject_rls_workspace(
+    session: SyncSession,
+    transaction: Any,
+    connection: Any,
+) -> None:
+    """SQLAlchemy hook — apply `SET LOCAL nexus.workspace_id` per request.
+
+    Fires inside the freshly-opened transaction so the setting is scoped
+    to that transaction and rolled back at commit/rollback. When no
+    workspace id is present (anonymous routes, background tasks), no
+    setting is applied and RLS policies will deny workspace-scoped reads
+    by default.
+    """
+    workspace_id = _workspace_id_ctx.get()
+    if not workspace_id:
+        return
+    try:
+        connection.execute(
+            text("SET LOCAL nexus.workspace_id = :ws_id"),
+            {"ws_id": workspace_id},
+        )
+    except Exception as exc:
+        logger.warning("rls_set_local_failed", error=str(exc))
+
 
 class RLSMiddleware(AbstractMiddleware):
     """Sets PostgreSQL RLS context from JWT workspace_id on every request.
 
-    Extracts the workspace_id from the Authorization header JWT and calls
-    SET LOCAL nexus.workspace_id on the database session. This ensures
-    all RLS policies filter by the correct tenant automatically.
+    Extracts the workspace_id from the Authorization header JWT, stores it
+    in scope state and in the `_workspace_id_ctx` ContextVar. The
+    SQLAlchemy `after_begin` listener picks it up the moment the
+    request-scoped session opens a transaction and issues
+    `SET LOCAL nexus.workspace_id` so every query is RLS-filtered.
     """
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -48,6 +95,7 @@ class RLSMiddleware(AbstractMiddleware):
         request: Request[Any, Any, Any] = Request(scope)
         auth_header = request.headers.get("authorization", "")
 
+        token_var = None
         if auth_header.startswith("Bearer "):
             try:
                 from nexus.api.auth import decode_access_token
@@ -60,10 +108,15 @@ class RLSMiddleware(AbstractMiddleware):
                     scope["state"] = scope.get("state", {})
                     scope["state"]["workspace_id"] = workspace_id
                     scope["state"]["user_id"] = payload.get("sub", "")
+                    token_var = _workspace_id_ctx.set(workspace_id)
             except Exception:
                 pass  # Invalid token — RLS defaults to no access
 
-        await self.app(scope, receive, send)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            if token_var is not None:
+                _workspace_id_ctx.reset(token_var)
 
 
 _RATE_LIMITS = {
