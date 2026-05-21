@@ -101,8 +101,9 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 5 build | ✅ Complete — all 3 tracks delivered (SaaS, intelligence, ecosystem) |
 | Phase 6 build | ✅ Complete — security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
 | Phase 7 build | ✅ Complete — Director agent, conference room 5-phase workflow, enterprise security/performance/fault tolerance |
+| Audit & hardening (2026-05-19 war room) | ✅ Complete — 4-agent doc-refresh + audit pass: ASCII diagrams converted to Mermaid, ER + sequence diagrams added, tech-stack logos, security/db/backend/tools-mcp audits archived |
 
-**Current phase:** Phase 7 COMPLETE. All objectives delivered: Director agent (loop prevention + result synthesis), meeting room convergence detection, HMAC-SHA256 Kafka signing, PII sanitization, crash recovery, graceful shutdown, configurable retry policies, CEO planning-first pipeline, enhanced circuit breaker, 5-phase conference room workflow.
+**Current phase:** Phase 7 COMPLETE + post-Phase 7 audit war room (2026-05-19) shipped. All Phase 7 objectives delivered: Director agent (loop prevention + result synthesis), meeting room convergence detection, HMAC-SHA256 Kafka signing, PII sanitization, crash recovery, graceful shutdown, configurable retry policies, CEO planning-first pipeline, enhanced circuit breaker, 5-phase conference room workflow. Docs hardened with Mermaid diagrams, ER schema, sequence flows, and shields.io tech-stack logos.
 
 **Next action:** Phase 8 planning — Temporal deep integration, knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
 
@@ -110,44 +111,90 @@ These three protocols never compete. Confusing their roles is the #1 integration
 
 ## 3. Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  External World                                                     │
-│  Other AI Agents ←── A2A Protocol ──→     User / Dashboard         │
-└──────────────────┬──────────────────────────────┬───────────────────┘
-                   │ HTTP + SSE                   │ HTTP + WebSocket
-┌──────────────────▼──────────────┐  ┌────────────▼────────────────── ┐
-│  A2A Gateway Service  [NEW §9]  │  │  Litestar API                  │
-│  /.well-known/agent.json        │  │  REST + WebSocket + Auth        │
-│  POST /a2a  GET /a2a/{id}/stream│  │  Rate limiting                  │
-└──────────────────┬──────────────┘  └────────────┬────────────────────┘
-                   │ Kafka: a2a.inbound            │ Kafka: task.queue
-┌──────────────────▼──────────────────────────────▼───────────────────┐
-│  Apache Kafka — Event Bus  (The Conference Room)  [unchanged]       │
-│  task.queue · agent.commands · agent.responses · task.results       │
-│  meeting.room · memory.updates · audit.log · agent.heartbeat        │
-│  human.input_needed · tools.* · a2a.inbound · prompt.*             │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Agent Runtime — Pydantic AI                                        │
-│  CEO · Director · Engineer · Analyst · Writer · QA · Prompt Creator │
-│  (all extend AgentBase — stateless, Kafka-driven)                   │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │ Pydantic AI tool calls
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Tools Layer — MCP Adapter  [NEW §8]                                │
-│  nexus/tools/adapter.py  ← wraps your MCP Python package           │
-│  nexus/tools/registry.py ← per-role access map                     │
-│  nexus/tools/guards.py   ← require_approval() irreversibility gate  │
-│  web_search · file_read · code_execute · file_write⚠ · email⚠      │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Persistence                                                        │
-│  PostgreSQL 16 + pgvector  ← source of truth                       │
-│  Redis 7 (4 roles)         ← speed layer / working memory          │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph EXT["**External World**"]
+        USER[User / Dashboard]
+        EXTAGENT[Other AI Agents]
+    end
+
+    subgraph EDGE["**Edge / Gateway Layer**"]
+        A2AGW[A2A Gateway Service<br/>/.well-known/agent.json<br/>POST /a2a · SSE stream]
+        API[Litestar API<br/>REST + WebSocket + Auth<br/>Rate limiting]
+    end
+
+    subgraph KAFKA["**Apache Kafka — Conference Room (Event Bus)**"]
+        TOPICS[task.queue · agent.commands · agent.responses<br/>task.results · task.review_queue · meeting.room<br/>memory.updates · audit.log · agent.heartbeat<br/>human.input_needed · a2a.inbound · prompt.*<br/>director.review · tools.*]
+    end
+
+    subgraph RUNTIME["**Agent Runtime — Pydantic AI (extends AgentBase)**"]
+        CEO[CEO<br/>plan + decompose]
+        DIRECTOR[Director<br/>synthesize + loop guard]
+        ENGINEER[Engineer]
+        ANALYST[Analyst]
+        WRITER[Writer]
+        QA[QA]
+        PROMPT[Prompt Creator]
+    end
+
+    subgraph TOOLS["**Tools Layer — MCP Adapter**"]
+        ADAPTER[adapter.py<br/>wraps MCP package]
+        REGISTRY[registry.py<br/>per-role access map]
+        GUARDS[guards.py<br/>require_approval gate]
+        TOOLNODES[web_search · file_read · code_execute<br/>file_write⚠ · git_push⚠ · send_email⚠<br/>analyze_image · memory_read]
+    end
+
+    subgraph STORE["**Persistence**"]
+        PG[(PostgreSQL 16 + pgvector<br/>source of truth · 34 tables)]
+        REDIS0[(Redis db:0<br/>working memory)]
+        REDIS1[(Redis db:1<br/>budget · cache · rate-limit)]
+        REDIS2[(Redis db:2<br/>pub/sub · SSE)]
+        REDIS3[(Redis db:3<br/>locks · idempotency)]
+    end
+
+    USER -->|HTTP + WebSocket| API
+    EXTAGENT -->|HTTP + SSE| A2AGW
+
+    A2AGW ==>|Kafka: a2a.inbound| KAFKA
+    API ==>|Kafka: task.queue| KAFKA
+
+    KAFKA <==> CEO
+    KAFKA <==> DIRECTOR
+    KAFKA <==> ENGINEER
+    KAFKA <==> ANALYST
+    KAFKA <==> WRITER
+    KAFKA <==> QA
+    KAFKA <==> PROMPT
+
+    CEO --> ADAPTER
+    DIRECTOR --> ADAPTER
+    ENGINEER --> ADAPTER
+    ANALYST --> ADAPTER
+    WRITER --> ADAPTER
+    QA --> ADAPTER
+    PROMPT --> ADAPTER
+    ADAPTER --> REGISTRY
+    ADAPTER --> GUARDS
+    ADAPTER --> TOOLNODES
+
+    RUNTIME --> PG
+    RUNTIME -.-> REDIS0
+    RUNTIME -.-> REDIS1
+    RUNTIME -.-> REDIS2
+    RUNTIME -.-> REDIS3
+    A2AGW -.->|subscribe SSE| REDIS2
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+
+    class USER,EXTAGENT ext
+    class API,CEO,DIRECTOR,ENGINEER,ANALYST,WRITER,QA,PROMPT,TOPICS core
+    class A2AGW,ADAPTER,REGISTRY integ
+    class GUARDS,TOOLNODES danger
+    class PG,REDIS0,REDIS1,REDIS2,REDIS3 store
 ```
 
 ### Key architectural principles
@@ -195,45 +242,50 @@ These three protocols never compete. Confusing their roles is the #1 integration
 
 ### Backend
 
-| Component | Choice | Reason |
-|-----------|--------|--------|
-| Language | Python 3.12+ | Async-native, best AI/ML ecosystem |
-| API Framework | **Litestar** | Async-first, type-safe, excellent OpenAPI |
-| ORM | **Advanced Alchemy** | Type-safe async ORM, pairs with Litestar |
-| DB Migrations | **Alembic** | Standard, works with Advanced Alchemy |
-| AI Agent Runtime | **Pydantic AI** | See §5 |
-| Task Queue | **Taskiq** | Async-native, Kafka broker backend |
-| Kafka Client | **aiokafka** | Async Kafka consumer/producer |
-| Redis Client | **redis-py (async)** | Full async support |
-| Validation | **Pydantic v2** | Used throughout by Pydantic AI + Litestar |
-| Linting | **Ruff** | Fast, replaces flake8 + isort |
-| Type Checking | **mypy (strict)** | Enforced in CI |
-| Testing | **pytest + pytest-asyncio** | Async test support |
-| Logging | Structured JSON logger | task_id on every log line |
+| Component | Choice | Logo | Reason |
+|-----------|--------|------|--------|
+| Language | Python 3.12+ | ![python](https://img.shields.io/badge/-3776AB?logo=python&logoColor=fff) | Async-native, best AI/ML ecosystem |
+| API Framework | **Litestar** | ![litestar](https://img.shields.io/badge/-EDB641?logo=litestar&logoColor=000) | Async-first, type-safe, excellent OpenAPI |
+| ORM | **Advanced Alchemy** | ![sqlalchemy](https://img.shields.io/badge/-D71F00?logo=sqlalchemy&logoColor=fff) | Type-safe async ORM, pairs with Litestar |
+| DB Migrations | **Alembic** | ![sqlalchemy](https://img.shields.io/badge/-D71F00?logo=sqlalchemy&logoColor=fff) | Standard, works with Advanced Alchemy |
+| AI Agent Runtime | **Pydantic AI** | ![pydantic](https://img.shields.io/badge/-E92063?logo=pydantic&logoColor=fff) | See §5 |
+| Task Queue | **Taskiq** | ![apachekafka](https://img.shields.io/badge/-231F20?logo=apachekafka&logoColor=fff) | Async-native, Kafka broker backend |
+| Kafka Client | **aiokafka** | ![apachekafka](https://img.shields.io/badge/-231F20?logo=apachekafka&logoColor=fff) | Async Kafka consumer/producer |
+| Redis Client | **redis-py (async)** | ![redis](https://img.shields.io/badge/-DC382D?logo=redis&logoColor=fff) | Full async support |
+| Validation | **Pydantic v2** | ![pydantic](https://img.shields.io/badge/-E92063?logo=pydantic&logoColor=fff) | Used throughout by Pydantic AI + Litestar |
+| Linting | **Ruff** | ![ruff](https://img.shields.io/badge/-D7FF64?logo=ruff&logoColor=000) | Fast, replaces flake8 + isort |
+| Type Checking | **mypy (strict)** | ![python](https://img.shields.io/badge/-3776AB?logo=python&logoColor=fff) | Enforced in CI |
+| Testing | **pytest + pytest-asyncio** | ![pytest](https://img.shields.io/badge/-0A9EDC?logo=pytest&logoColor=fff) | Async test support |
+| Logging | Structured JSON logger | ![json](https://img.shields.io/badge/-000?logo=json&logoColor=fff) | task_id on every log line |
 
 ### Frontend
 
-| Component | Choice | Reason |
-|-----------|--------|--------|
-| Language | TypeScript (strict) | Type safety, matches backend Pydantic models |
-| Framework | **Vite + React 18** | Fast dev, no Next.js overhead for v1 |
-| State (server) | **TanStack Query v5** | All API calls, caching, invalidation |
-| State (UI) | **Zustand** | Lightweight global UI state only |
-| Styling | **Tailwind CSS** | Utility-first, consistent |
-| Components | **Shadcn/ui** | ✅ Decided — Composable, Tailwind-based |
-| Real-time | **Native WebSocket** | Streaming Kafka events to dashboard |
-| API client | **Generated from OpenAPI** | Always matches backend types |
+| Component | Choice | Logo | Reason |
+|-----------|--------|------|--------|
+| Language | TypeScript (strict) | ![typescript](https://img.shields.io/badge/-3178C6?logo=typescript&logoColor=fff) | Type safety, matches backend Pydantic models |
+| Framework | **Vite + React 18** | ![vite](https://img.shields.io/badge/-646CFF?logo=vite&logoColor=fff) ![react](https://img.shields.io/badge/-61DAFB?logo=react&logoColor=000) | Fast dev, no Next.js overhead for v1 |
+| State (server) | **TanStack Query v5** | ![reactquery](https://img.shields.io/badge/-FF4154?logo=reactquery&logoColor=fff) | All API calls, caching, invalidation |
+| State (UI) | **Zustand** | ![react](https://img.shields.io/badge/-61DAFB?logo=react&logoColor=000) | Lightweight global UI state only |
+| Styling | **Tailwind CSS** | ![tailwindcss](https://img.shields.io/badge/-06B6D4?logo=tailwindcss&logoColor=fff) | Utility-first, consistent |
+| Components | **Shadcn/ui** | ![shadcnui](https://img.shields.io/badge/-000?logo=shadcnui&logoColor=fff) | ✅ Decided — Composable, Tailwind-based |
+| Real-time | **Native WebSocket** | ![socketdotio](https://img.shields.io/badge/-010101?logo=socketdotio&logoColor=fff) | Streaming Kafka events to dashboard |
+| API client | **Generated from OpenAPI** | ![openapiinitiative](https://img.shields.io/badge/-6BA539?logo=openapiinitiative&logoColor=fff) | Always matches backend types |
 
 ### Infrastructure
 
-| Component | Choice | Reason |
-|-----------|--------|--------|
-| Containerization | **Docker + Docker Compose** | v1 local dev target |
-| Database | **PostgreSQL 16 + pgvector** | Vector memory support |
-| Cache / Speed | **Redis 7** | 4 roles (see §11) |
-| Message Bus | **Apache Kafka KRaft** | No ZooKeeper dependency |
-| Embedding Model | **Google embedding-001** | ✅ Decided — already using Gemini, no third provider |
-| Observability | Structured logs + audit table | Custom, no external tools in v1 |
+| Component | Choice | Logo | Reason |
+|-----------|--------|------|--------|
+| Containerization | **Docker + Docker Compose** | ![docker](https://img.shields.io/badge/-2496ED?logo=docker&logoColor=fff) | v1 local dev target |
+| Database | **PostgreSQL 16 + pgvector** | ![postgresql](https://img.shields.io/badge/-336791?logo=postgresql&logoColor=fff) | Vector memory support |
+| Cache / Speed | **Redis 7** | ![redis](https://img.shields.io/badge/-DC382D?logo=redis&logoColor=fff) | 4 roles (see §11) |
+| Message Bus | **Apache Kafka KRaft** | ![apachekafka](https://img.shields.io/badge/-231F20?logo=apachekafka&logoColor=fff) | No ZooKeeper dependency |
+| Embedding Model | **Google embedding-001** | ![google](https://img.shields.io/badge/-4285F4?logo=google&logoColor=fff) | ✅ Decided — already using Gemini |
+| Orchestration | **Kubernetes (Phase 4+)** | ![kubernetes](https://img.shields.io/badge/-326CE5?logo=kubernetes&logoColor=fff) | HPA-driven autoscaling, manifests in `k8s/` |
+| Observability | Structured logs + OpenTelemetry | ![opentelemetry](https://img.shields.io/badge/-425CC7?logo=opentelemetry&logoColor=fff) | OTel OTLP HTTP exporter wired in Phase 5 |
+| Long workflows | **Temporal (Phase 4+)** | ![temporal](https://img.shields.io/badge/-141414?logo=temporal&logoColor=fff) | Durable workflows >1 hour |
+| Billing | **Stripe** | ![stripe](https://img.shields.io/badge/-635BFF?logo=stripe&logoColor=fff) | Usage-based, Stripe Connect for marketplace |
+| LLM (cloud) | **Anthropic Claude · Google Gemini** | ![anthropic](https://img.shields.io/badge/-191717?logo=anthropic&logoColor=fff) ![google](https://img.shields.io/badge/-4285F4?logo=google&logoColor=fff) | Primary providers via ModelFactory |
+| LLM (local) | **Ollama** | ![ollama](https://img.shields.io/badge/-000?logo=ollama&logoColor=fff) | Offline fallback + fine-tuned Llama 3.1 |
 
 ### Intentionally excluded from v1
 
@@ -679,23 +731,42 @@ class KafkaMessage(BaseModel):
 
 ### Task execution flow — human
 
-```
- 1. POST /tasks → task created in DB (status: queued)
- 2. API → Kafka: task.queue
- 3. CEO consumes task.queue
- 4. CEO creates execution plan (risk assessment + security concerns)  ← NEW
- 5. CEO decomposes task into subtasks (guided by plan)
- 6. CEO → Kafka: agent.commands (with role routing key per subtask)
- 7. Specialist agents consume agent.commands, filter by role
- 8. Agents load episodic + semantic memory context
- 9. Agents execute: LLM calls → tool calls via MCP adapter
-10. Agents → Kafka: agent.responses (HMAC-signed, PII-sanitized)
-11. CEO aggregates → Kafka: director.review (includes execution plan)
-12. Director performs security review against plan                      ← NEW
-13. Director synthesizes best result → Kafka: task.review_queue
-14. QA reviews synthesized output → Kafka: task.results
-15. API updates task in DB (status: completed)
-16. Redis pub/sub → WebSocket → dashboard shows result
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Human as Human / Dashboard
+    participant API as Litestar API
+    participant K as Kafka (Event Bus)
+    participant CEO
+    participant Spec as Specialists<br/>(Engineer/Analyst/Writer)
+    participant DIR as Director
+    participant QA
+    participant PG as PostgreSQL
+    participant R as Redis pub/sub
+
+    Human->>API: POST /tasks
+    API->>PG: INSERT task (status=queued)
+    API->>K: publish task.queue
+    K->>CEO: consume task.queue
+    CEO->>CEO: create execution plan<br/>(risk + security concerns)
+    CEO->>CEO: decompose into subtasks
+    CEO->>K: publish agent.commands × N
+    K->>Spec: consume (role routing key)
+    Spec->>PG: load episodic + semantic memory
+    Spec->>Spec: LLM calls + tool calls (MCP)
+    Spec->>K: publish agent.responses<br/>(HMAC-signed, PII-sanitized)
+    K->>CEO: aggregate responses
+    CEO->>K: publish director.review<br/>(includes execution plan)
+    K->>DIR: consume director.review
+    DIR->>DIR: security review against plan
+    DIR->>DIR: synthesize best result
+    DIR->>K: publish task.review_queue
+    K->>QA: consume task.review_queue
+    QA->>K: publish task.results
+    K->>API: consume task.results
+    API->>PG: UPDATE task (status=completed)
+    API->>R: pub agent_activity:{task_id}
+    R-->>Human: WebSocket → dashboard
 ```
 
 **Director loop prevention:** The Director sits between CEO aggregation (step 9)
@@ -1952,9 +2023,26 @@ Not planned in detail. Candidate items:
 
 ---
 
-*Last updated: 2026-03-28*
+*Last updated: 2026-05-21*
 *Owner: Nexus Project*
-*Document version: 0.8*
+*Document version: 0.9*
+
+*Changes in v0.9:*
+*— §2: Added audit-and-hardening war room (2026-05-19) row*
+*— §3: Converted box-drawing architecture diagram to a Mermaid `flowchart TD`*
+*  with subgraphs (External / Edge / Kafka / Runtime / Tools / Persistence) and the*
+*  shared class palette (core, integ, ext, danger, store)*
+*— §4: Added shields.io logo columns to Backend, Frontend, and Infrastructure*
+*  tech-stack tables (Python, Litestar, Pydantic, Kafka, Redis, PostgreSQL, Docker,*
+*  Kubernetes, OTel, Temporal, Stripe, Anthropic, Google, Ollama, etc.)*
+*— §10: Converted numbered task-execution flow to a Mermaid `sequenceDiagram`*
+*  spanning Human → API → Kafka → CEO → Specialists → Director → QA → Postgres → WS*
+*— docs/ARCHITECTURE.md: Converted every ASCII / box-drawing diagram to Mermaid*
+*  (system overview flowchart, AgentBase guard chain, tool & MCP layers, A2A flow,*
+*  prompt evolution loop, KeepSave integration, deployment topology). Added a new*
+*  `erDiagram` for core tables, an architectural-principles `mindmap`, and a*
+*  canonical task-lifecycle `sequenceDiagram`.*
+*— No CHANGELOG.md entry here — D1 owns docs/CHANGELOG.md*
 
 *Changes in v0.8:*
 *— §2: Updated status to Phase 7 IN PROGRESS*

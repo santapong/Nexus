@@ -31,60 +31,124 @@ NEXUS is an **Agentic AI Company-as-a-Service** — a platform where every depar
 digital company is staffed by an AI agent. Agents communicate through Apache Kafka, access
 tools via MCP, and are callable by external systems via the A2A protocol.
 
+```mermaid
+flowchart TD
+    subgraph EXT["**External Boundary**"]
+        USER[Users / Dashboard - React]
+        EXTAGENT[External Agents]
+    end
+
+    subgraph APILAYER["**API Layer — Litestar**"]
+        REST[/api/tasks · /api/agents<br/>/api/approvals · /api/prompts/]
+        A2AROUTES[/.well-known/agent.json<br/>/a2a/tasks · SSE/]
+    end
+
+    subgraph BUS["**Event Bus — Apache Kafka (KRaft)**"]
+        TQ[task.queue]
+        AC[agent.commands]
+        AR[agent.responses]
+        TR[task.results]
+        TRQ[task.review_queue]
+        DR[director.review]
+        MR[meeting.room]
+        HB[agent.heartbeat]
+        HIN[human.input_needed]
+        A2A[a2a.inbound]
+        PIR[prompt.improvement_requests]
+        AUDIT[audit.log · memory.updates]
+    end
+
+    subgraph RUNTIME["**Agent Runtime — Pydantic AI**"]
+        BASE[AgentBase<br/>guard chain + lifecycle]
+        CEO[CEO — plan + decompose + aggregate]
+        DIRECTOR[Director — synthesizer + loop guard + security review]
+        ENGINEER[Engineer — code, debug]
+        ANALYST[Analyst — research, data]
+        WRITER[Writer — content, emails]
+        QA[QA — output review]
+        PROMPT[Prompt Creator — meta-agent]
+    end
+
+    subgraph TOOLS["**Tools Layer — MCP Adapter**"]
+        ROTOOLS[web_search · web_fetch · file_read<br/>code_execute · memory_read]
+        IRREV[file_write⚠ · git_push⚠ · send_email⚠<br/>hire_external_agent⚠]
+    end
+
+    subgraph STORE["**Persistence**"]
+        PG[(PostgreSQL 16 + pgvector<br/>source of truth · 24+ tables + RLS)]
+        RDS[(Redis 7 · 4 dbs<br/>working memory · pubsub · budget · locks)]
+        TMP[(Temporal Server<br/>durable workflows)]
+    end
+
+    USER -->|REST + WebSocket| REST
+    EXTAGENT -->|HTTP + Bearer Auth| A2AROUTES
+
+    APILAYER ==>|publish| BUS
+    BUS ==>|consume| RUNTIME
+
+    BASE --- CEO
+    BASE --- DIRECTOR
+    BASE --- ENGINEER
+    BASE --- ANALYST
+    BASE --- WRITER
+    BASE --- QA
+    BASE --- PROMPT
+
+    RUNTIME --> TOOLS
+    RUNTIME --> STORE
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+
+    class USER,EXTAGENT ext
+    class REST,A2AROUTES,BASE,CEO,DIRECTOR,ENGINEER,ANALYST,WRITER,QA,PROMPT core
+    class TQ,AC,AR,TR,TRQ,DR,MR,HB,HIN,A2A,PIR,AUDIT,ROTOOLS integ
+    class IRREV danger
+    class PG,RDS,TMP store
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│  EXTERNAL BOUNDARY                                                       │
-│  Users ←→ Dashboard (React)     External Agents ←→ A2A Gateway          │
-└─────────────┬────────────────────────────────────────┬───────────────────┘
-              │ REST + WebSocket                       │ HTTP + Bearer Auth
-┌─────────────▼────────────────────────────────────────▼───────────────────┐
-│  API LAYER — Litestar                                                    │
-│  /api/tasks  /api/agents  /api/approvals  /api/prompts                   │
-│  /.well-known/agent.json  /a2a/tasks                                     │
-└─────────────┬────────────────────────────────────────────────────────────┘
-              │ Kafka publish
-┌─────────────▼────────────────────────────────────────────────────────────┐
-│  EVENT BUS — Apache Kafka (KRaft)                                        │
-│                                                                          │
-│  task.queue ──→ CEO consumes, decomposes                                 │
-│  agent.commands ──→ Specialist agents consume                            │
-│  agent.responses ──→ Result consumer routes                              │
-│  task.results ──→ Final delivery                                         │
-│  task.review_queue ──→ QA consumes, reviews                              │
-│  meeting.room ──→ Multi-agent debate                                     │
-│  agent.heartbeat ──→ Health monitor consumes                             │
-│  human.input_needed ──→ Dashboard alerts                                 │
-│  a2a.inbound ──→ CEO treats as normal task                               │
-│  prompt.improvement_requests ──→ Prompt Creator consumes                 │
-│  audit.log / memory.updates ──→ Persistence consumers                    │
-└─────────────┬────────────────────────────────────────────────────────────┘
-              │
-┌─────────────▼────────────────────────────────────────────────────────────┐
-│  AGENT RUNTIME — Pydantic AI                                             │
-│                                                                          │
-│  AgentBase (guard chain + lifecycle)                                      │
-│    ├── CEO         — Orchestrator, plans & decomposes & aggregates       │
-│    ├── Director    — Synthesizer, loop prevention & security review      │
-│    ├── Engineer    — Code generation, debugging                          │
-│    ├── Analyst     — Research, data analysis                             │
-│    ├── Writer      — Content, emails, docs                               │
-│    ├── QA          — Reviews all outputs                                 │
-│    └── Prompt Creator — Meta-agent, improves system prompts              │
-└─────────────┬────────────────────────────────────────────────────────────┘
-              │ Tool calls via Pydantic AI
-┌─────────────▼────────────────────────────────────────────────────────────┐
-│  TOOLS LAYER — MCP Adapter                                               │
-│  web_search · web_fetch · file_read · file_write⚠ · code_execute        │
-│  git_push⚠ · send_email⚠ · memory_read                                  │
-│  (⚠ = requires human approval)                                          │
-└─────────────┬────────────────────────────────────────────────────────────┘
-              │
-┌─────────────▼────────────────────────────────────────────────────────────┐
-│  PERSISTENCE                                                             │
-│  PostgreSQL 16 + pgvector  ← Source of truth (24 tables + RLS)           │
-│  Redis 7 (4 databases)     ← Speed layer / working memory               │
-│  Temporal Server           ← Durable workflows (long-running tasks)      │
-└──────────────────────────────────────────────────────────────────────────┘
+
+### Architectural Principles
+
+```mermaid
+mindmap
+  root((NEXUS<br/>Principles))
+    Observable
+      Every message via Kafka
+      Replayable + debuggable
+      Structured JSON logs
+      OpenTelemetry traces
+    Stateless agents
+      No in-memory state
+      State in Redis or Postgres
+      Safe restart anytime
+    Humans in the loop
+      Irreversible → require_approval
+      human_approvals table
+      human.input_needed Kafka topic
+    Protocol separation
+      Kafka — internal A2A
+      MCP — agent → tools
+      A2A — external agents
+    Fail safely
+      Budget caps $5/day
+      Round + tool limits
+      Heartbeat auto-fail
+    Plan before execute
+      CEO risk assessment
+      Director security review
+    Enterprise security
+      HMAC-signed Kafka
+      PII sanitization
+      SOPS + KeepSave secrets
+    Crash-consistent
+      Orphaned task recovery
+      Graceful shutdown drain
+    Circuit-broken
+      Sliding window per provider
+      Health-score routing
 ```
 
 ### Design Philosophy
@@ -130,39 +194,41 @@ NEXUS uses three distinct protocols. Understanding their boundaries is critical:
 Every agent extends `AgentBase`, which provides the guard chain — a sequence of checks
 that runs before and after every task:
 
-```
-Message arrives from Kafka
-    │
-    ▼
-┌─ Idempotency check (Redis db:3) ──→ Skip if duplicate
-│
-├─ Reset tool call counter ──→ 0/20 for this task
-│
-├─ Hot-reload prompt from DB ──→ Check if system_prompt changed
-│
-├─ Budget check (Redis db:1) ──→ Pause if over budget
-│
-├─ Audit: task_received ──→ Write to audit_log table
-│
-├─ Load episodic memory (pgvector) ──→ Similar past tasks
-│
-├─ Load semantic memory (pgvector) ──→ Relevant project facts
-│
-├─ *** handle_task() *** ←── Subclass implements this
-│
-├─ Validate output ──→ Secret detection, size limit, empty check
-│
-├─ PII sanitization ──→ Redact API keys, emails, SSNs, JWTs, etc.
-│
-├─ Write episodic memory ──→ Store what happened
-│
-├─ Audit: task_completed ──→ Write duration, tokens, status
-│
-├─ Publish response to Kafka ──→ agent.responses topic
-│
-├─ Broadcast via WebSocket ──→ Dashboard real-time view
-│
-└─ Clear working memory ──→ Redis db:0 cleanup
+```mermaid
+flowchart TD
+    MSG([Message arrives from Kafka]):::ext
+    IDEM[Idempotency check<br/>Redis db:3]:::core
+    SKIP{{Duplicate?}}:::core
+    SKIPEND([Skip — already processed]):::ext
+    COUNTER[Reset tool call counter<br/>0/20 for this task]:::core
+    HOTPROMPT[Hot-reload prompt from DB<br/>check system_prompt changed]:::core
+    BUDGET[Budget check<br/>Redis db:1 · 90% threshold]:::core
+    PAUSE([Pause → human.input_needed]):::danger
+    AUDIT1[Audit: task_received<br/>audit_log table]:::core
+    EPI[Load episodic memory<br/>pgvector similar tasks]:::store
+    SEM[Load semantic memory<br/>pgvector project facts]:::store
+    HANDLE[handle_task<br/>subclass implements]:::core
+    VALIDATE[Validate output<br/>secret detection · size · empty]:::core
+    PII[PII sanitization<br/>API keys · emails · SSNs · JWTs]:::danger
+    EPIWRITE[Write episodic memory]:::store
+    AUDIT2[Audit: task_completed<br/>duration · tokens · status]:::core
+    PUBLISH[Publish response<br/>Kafka agent.responses]:::core
+    WS[Broadcast via WebSocket<br/>dashboard real-time view]:::integ
+    CLEAR[Clear working memory<br/>Redis db:0 cleanup]:::core
+    DONE([Done]):::ext
+
+    MSG --> IDEM --> SKIP
+    SKIP -->|yes| SKIPEND
+    SKIP -->|no| COUNTER --> HOTPROMPT --> BUDGET
+    BUDGET -->|over budget| PAUSE
+    BUDGET -->|ok| AUDIT1 --> EPI --> SEM --> HANDLE
+    HANDLE --> VALIDATE --> PII --> EPIWRITE --> AUDIT2 --> PUBLISH --> WS --> CLEAR --> DONE
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
 ```
 
 ### Agent Roster
@@ -197,50 +263,117 @@ Supported providers: Anthropic, Google Gemini, OpenAI, Groq, Mistral, Ollama, an
 
 ## 4. Task Lifecycle
 
+### Canonical task flow — sequenceDiagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Human as Human / Dashboard
+    participant API as Litestar API
+    participant K as Kafka
+    participant CEO
+    participant Spec as Specialists
+    participant DIR as Director
+    participant QA
+    participant PG as PostgreSQL
+    participant R as Redis pub/sub
+
+    Human->>API: POST /api/tasks
+    API->>PG: INSERT task (queued)
+    API->>K: publish task.queue
+    K->>CEO: consume
+    CEO->>CEO: create execution plan<br/>(risk + security)
+    CEO->>CEO: decompose with dependencies
+    CEO->>K: publish agent.commands × N
+    K->>Spec: consume (per role)
+    Spec->>Spec: load memory · LLM + MCP tools
+    Spec->>K: agent.responses (HMAC + PII-clean)
+    K->>CEO: aggregate
+    CEO->>K: publish director.review
+    K->>DIR: consume
+    DIR->>DIR: security review vs plan
+    DIR->>DIR: synthesize best result
+    DIR->>K: publish task.review_queue
+    K->>QA: consume
+    alt QA approves
+        QA->>K: publish task.results
+    else QA rejects
+        QA->>K: publish agent.commands (rework w/ feedback)
+    end
+    K->>API: consume task.results
+    API->>PG: UPDATE task (completed)
+    API->>R: pub agent_activity:{task_id}
+    R-->>Human: WebSocket → dashboard
+```
+
 ### Simple Task (single agent)
 
-```
-User → POST /api/tasks → DB insert → Kafka task.queue
-    → CEO consumes → determines single agent needed
-    → Kafka agent.commands (target: engineer)
-    → Engineer processes → Kafka agent.responses
-    → Result consumer → Kafka task.review_queue
-    → QA reviews → approved → Kafka task.results
-    → DB update → Dashboard shows result
+```mermaid
+flowchart LR
+    U[User]:::ext --> A[POST /api/tasks]:::core
+    A --> DB[(DB insert)]:::store
+    A --> TQ[Kafka task.queue]:::core
+    TQ --> CEO:::core
+    CEO --> AC[agent.commands<br/>target: engineer]:::core
+    AC --> ENG[Engineer]:::core
+    ENG --> AR[agent.responses]:::core
+    AR --> RC[Result consumer]:::core
+    RC --> TRQ[task.review_queue]:::core
+    TRQ --> QA:::core
+    QA --> TR[task.results]:::core
+    TR --> DASH[Dashboard]:::ext
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
 ```
 
 ### Complex Task (multi-agent with decomposition)
 
-```
-User → POST /api/tasks → Kafka task.queue
-    → CEO consumes → creates EXECUTION PLAN (risk assessment, security concerns)
-    → CEO decomposes (guided by plan) → creates subtask records with dependencies
-    → Redis: stores tracking state + plan (working memory)
-    → Kafka agent.commands × N (parallel where no dependencies)
+```mermaid
+flowchart TD
+    U[User]:::ext --> POST[POST /api/tasks]:::core
+    POST --> TQ[Kafka task.queue]:::core --> CEO[CEO]:::core
+    CEO --> PLAN[Create EXECUTION PLAN<br/>risk · security · approvals]:::core
+    PLAN --> DECOMP[Decompose into subtasks<br/>with dependencies]:::core
+    DECOMP --> RWM[(Redis · working memory<br/>tracking + plan)]:::store
+    DECOMP --> AC[Kafka agent.commands × N<br/>parallel where unblocked]:::core
+    AC --> S1[Specialist 1]:::core
+    AC --> S2[Specialist 2]:::core
+    AC --> SN[Specialist N]:::core
+    S1 --> RESP[agent.responses<br/>HMAC + PII-sanitized]:::core
+    S2 --> RESP
+    SN --> RESP
+    RESP --> AGG[CEO aggregates + dispatch dependents]:::core
+    AGG --> DR[Kafka director.review<br/>aggregated + plan]:::core
+    DR --> DIR[Director<br/>security review vs plan<br/>synthesize best result]:::core
+    DIR --> TRQ[task.review_queue]:::core
+    TRQ --> QA:::core
+    QA -->|approve| TR[task.results]:::core
+    QA -.->|reject| AC
 
-For each subtask:
-    → Specialist processes → Kafka agent.responses (HMAC-signed, PII-sanitized)
-    → Result consumer detects subtask → forwards to CEO
-    → CEO updates tracking → dispatches unblocked dependents
-
-When all subtasks complete:
-    → CEO aggregates outputs → Kafka director.review (includes execution plan)
-    → Director: security review against plan (flags dangerous patterns)
-    → Director: synthesizes best result from all contributions
-    → Director → Kafka task.review_queue
-    → QA reviews synthesized output → approved → Kafka task.results
-    → QA rejected → Kafka agent.commands (rework with feedback)
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
 ```
 
 ### A2A Task (external agent)
 
-```
-External Agent → POST /a2a/tasks (Bearer auth)
-    → Gateway validates token + skill access
-    → Kafka a2a.inbound
-    → CEO consumes (identical to task.queue flow)
-    → Normal multi-agent pipeline
-    → Result available via GET /a2a/tasks/{id}/status
+```mermaid
+flowchart LR
+    EXT[External Agent]:::ext -->|POST /a2a/tasks<br/>Bearer auth| GW[A2A Gateway]:::integ
+    GW --> CHK{validate<br/>token + skill}:::integ
+    CHK -->|ok| A2AT[Kafka a2a.inbound]:::core
+    CHK -->|deny| ERR[401 Unauthorized]:::danger
+    A2AT --> CEO[CEO — normal pipeline]:::core
+    CEO --> RESULT[task.results]:::core
+    RESULT -.->|GET /a2a/tasks/&#123;id&#125;/status| EXT
+    RESULT -.->|SSE /a2a/tasks/&#123;id&#125;/events| EXT
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
 ```
 
 ---
@@ -315,6 +448,106 @@ All topics are defined in `kafka/topics.py` — never use string literals:
 
 > PostgreSQL is the sole source of truth. If Redis and Kafka both die, the system recovers from PostgreSQL alone. Redis is a speed layer. Kafka is a communication layer. Neither holds irreplaceable state.
 
+### Core Schema — Entity Relationships
+
+```mermaid
+erDiagram
+    AGENTS ||--o{ TASKS : "assigned_to"
+    AGENTS ||--o{ EPISODIC_MEMORY : "owns"
+    AGENTS ||--o{ SEMANTIC_MEMORY : "owns"
+    AGENTS ||--o{ HUMAN_APPROVALS : "requests"
+    AGENTS ||--o{ AUDIT_LOG : "logs"
+    AGENTS ||--o{ LLM_USAGE : "spends"
+    TASKS ||--o{ TASKS : "parent_of"
+    TASKS ||--o{ EPISODIC_MEMORY : "produces"
+    TASKS ||--o{ LLM_USAGE : "costs"
+    TASKS ||--o{ HUMAN_APPROVALS : "blocks_on"
+    TASKS ||--o{ AUDIT_LOG : "trace"
+    PROMPTS ||--o{ AGENTS : "active_for_role"
+    PROMPT_BENCHMARKS ||--o{ PROMPTS : "evaluates"
+
+    AGENTS {
+        uuid id PK
+        varchar role
+        varchar name
+        text system_prompt
+        text_array tool_access
+        varchar llm_model
+        int token_budget_per_task
+        bool is_active
+    }
+    TASKS {
+        uuid id PK
+        uuid trace_id
+        uuid parent_task_id FK
+        uuid assigned_agent_id FK
+        text instruction
+        varchar status
+        varchar source
+        jsonb output
+        int tokens_used
+    }
+    EPISODIC_MEMORY {
+        uuid id PK
+        uuid agent_id FK
+        uuid task_id FK
+        text summary
+        jsonb full_context
+        varchar outcome
+        vector embedding
+        float importance_score
+    }
+    SEMANTIC_MEMORY {
+        uuid id PK
+        uuid agent_id FK
+        varchar namespace
+        varchar key
+        text value
+        float confidence
+        vector embedding
+    }
+    LLM_USAGE {
+        uuid id PK
+        uuid task_id FK
+        uuid agent_id FK
+        varchar model
+        int tokens_in
+        int tokens_out
+        float cost_usd
+    }
+    HUMAN_APPROVALS {
+        uuid id PK
+        uuid task_id FK
+        uuid agent_id FK
+        varchar tool_name
+        text action_description
+        varchar status
+        varchar resolved_by
+    }
+    AUDIT_LOG {
+        uuid id PK
+        uuid task_id FK
+        uuid agent_id FK
+        varchar action
+        jsonb details
+    }
+    PROMPTS {
+        uuid id PK
+        varchar agent_role
+        int version
+        text content
+        bool is_active
+        float benchmark_score
+        varchar authored_by
+    }
+    PROMPT_BENCHMARKS {
+        uuid id PK
+        varchar agent_role
+        text input
+        jsonb expected_criteria
+    }
+```
+
 ---
 
 ## 7. Memory System
@@ -345,12 +578,20 @@ Agents have three types of memory:
 
 ### Architecture
 
-```
-Agent (Pydantic AI) → tools/adapter.py → MCP Python package → External service
-                          │
-                    tools/registry.py (per-role access map)
-                          │
-                    tools/guards.py (require_approval for irreversible tools)
+```mermaid
+flowchart LR
+    AGENT[Agent<br/>Pydantic AI]:::core --> ADAPTER[tools/adapter.py<br/>wraps MCP]:::integ
+    REGISTRY[tools/registry.py<br/>per-role access map]:::integ
+    GUARDS[tools/guards.py<br/>require_approval gate]:::danger
+    AGENT -.-> REGISTRY
+    ADAPTER --> GUARDS
+    ADAPTER --> MCPPKG[MCP Python package]:::integ
+    MCPPKG --> EXT[External service<br/>web · files · email]:::ext
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
 ```
 
 ### Per-Role Tool Access
@@ -370,15 +611,30 @@ Agent (Pydantic AI) → tools/adapter.py → MCP Python package → External ser
 
 ### Approval Flow
 
-```
-Agent calls tool_file_write("deploy.sh", content)
-    → guards.py: require_approval(task_id, agent_id, "file_write", args)
-    → DB: create HumanApproval (pending)
-    → Kafka: publish to human.input_needed
-    → Dashboard: shows approval request
-    → Human clicks Approve/Reject
-    → API: POST /api/approvals/{id}/resolve
-    → Agent: resumes or handles rejection
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Agent
+    participant Guards as guards.py
+    participant DB as PostgreSQL
+    participant K as Kafka
+    actor Dashboard
+    participant API as Litestar API
+    actor Human
+
+    Agent->>Guards: tool_file_write("deploy.sh", content)
+    Guards->>DB: INSERT human_approvals (pending)
+    Guards->>K: publish human.input_needed
+    K->>Dashboard: shows approval request
+    Human->>Dashboard: click Approve / Reject
+    Dashboard->>API: POST /api/approvals/{id}/resolve
+    API->>DB: UPDATE human_approvals (resolved)
+    API-->>Guards: notify decision
+    alt approved
+        Guards-->>Agent: proceed (execute tool)
+    else rejected
+        Guards-->>Agent: raise ApprovalRejected
+    end
 ```
 
 ---
@@ -389,13 +645,31 @@ Agent calls tool_file_write("deploy.sh", content)
 
 External agents discover NEXUS via the Agent Card, then submit tasks:
 
-```
-1. GET /.well-known/agent.json  →  Returns AgentCard with skills & auth info
-2. POST /a2a/tasks (Bearer token)  →  Validates auth + skill access
-3. Task persisted to PostgreSQL (source=a2a) + published to a2a.inbound Kafka topic
-4. CEO picks up → normal multi-agent flow
-5. GET /a2a/tasks/{id}/status  →  Poll for results
-6. GET /a2a/tasks/{id}/events  →  SSE stream (real-time via Redis pub/sub)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Ext as External Agent
+    participant GW as A2A Gateway
+    participant PG as PostgreSQL
+    participant K as Kafka
+    participant CEO
+    participant R as Redis pub/sub
+
+    Ext->>GW: GET /.well-known/agent.json
+    GW-->>Ext: AgentCard (skills + auth)
+    Ext->>GW: POST /a2a/tasks (Bearer token)
+    GW->>GW: validate token + skill access
+    GW->>PG: INSERT task (source=a2a)
+    GW->>K: publish a2a.inbound
+    K->>CEO: consume (normal pipeline)
+    par poll
+        Ext->>GW: GET /a2a/tasks/{id}/status
+        GW-->>Ext: status JSON
+    and stream
+        Ext->>GW: GET /a2a/tasks/{id}/events (SSE)
+        R-->>GW: agent_activity:{task_id}
+        GW-->>Ext: SSE events until task_result/failed
+    end
 ```
 
 **SSE Streaming (ADR-033):** The events endpoint subscribes to Redis pub/sub channel
@@ -443,37 +717,24 @@ requires human approval). The `gateway/outbound.py` implements:
 
 The Prompt Creator Agent is a meta-agent that improves other agents' system prompts:
 
-```
-Trigger (manual or auto when failure rate > 10%)
-    │
-    ▼
-Analyze episodic memory for target role
-    → Identify failure patterns (recent 50 episodes)
-    → Calculate failure rate
-    │
-    ▼
-Draft improved prompt via LLM
-    → Include current prompt + failure analysis
-    → Request specific improvements
-    │
-    ▼
-Benchmark proposed prompt
-    → Score against test cases (LLM self-evaluation v1)
-    │
-    ▼
-Store proposed prompt (is_active = FALSE)
-    → Publish approval request to human.input_needed
-    │
-    ▼
-Human reviews diff in PromptDiffView
-    → Sees current vs proposed side-by-side
-    → Sees benchmark scores
-    → Clicks Approve or ignores
-    │
-    ▼
-POST /api/prompts/{id}/activate
-    → Deactivates current, activates proposed
-    → Agent picks up new prompt on next task
+```mermaid
+flowchart TD
+    TRIGGER([Trigger<br/>manual or auto when failure rate > 10%]):::ext
+    ANALYZE[Analyze episodic memory for target role<br/>identify failure patterns from recent 50 episodes<br/>calculate failure rate]:::core
+    DRAFT[Draft improved prompt via LLM<br/>include current prompt + failure analysis<br/>request specific improvements]:::core
+    BENCH[Benchmark proposed prompt<br/>score against test cases<br/>LLM self-evaluation v1]:::core
+    STORE[Store proposed prompt<br/>is_active=FALSE]:::store
+    APPROVE[Publish approval request<br/>Kafka human.input_needed]:::danger
+    REVIEW[Human reviews diff in PromptDiffView<br/>current vs proposed + benchmark scores]:::ext
+    ACTIVATE[POST /api/prompts/{id}/activate<br/>deactivate current · activate proposed]:::core
+    AGENT([Agent picks up new prompt<br/>on next task]):::core
+
+    TRIGGER --> ANALYZE --> DRAFT --> BENCH --> STORE --> APPROVE --> REVIEW --> ACTIVATE --> AGENT
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
 ```
 
 > **Critical invariant:** Prompts are NEVER auto-activated. See ADR-024.
@@ -665,13 +926,27 @@ Centralized audit trail via `audit/service.py`:
 
 ### Docker Compose (Local Development)
 
-```
-docker-compose.yml (target: dev)
-├── backend    (Python 3.12, Litestar, port 8000, hot-reload)
-├── frontend   (Node 20, Vite, port 5173, hot-reload)
-├── postgres   (PostgreSQL 16 + pgvector, port 5433:5432)
-├── redis      (Redis 7, port 6380:6379)
-└── kafka      (Apache Kafka KRaft, port 9092)
+```mermaid
+flowchart TD
+    COMPOSE[docker-compose.yml<br/>target: dev]:::core
+    BACKEND[backend<br/>Python 3.12 · Litestar · :8000<br/>hot-reload]:::core
+    FRONTEND[frontend<br/>Node 20 · Vite · :5173<br/>hot-reload]:::core
+    POSTGRES[(postgres<br/>PostgreSQL 16 + pgvector<br/>5433:5432)]:::store
+    REDIS[(redis<br/>Redis 7<br/>6380:6379)]:::store
+    KAFKA[(kafka<br/>Apache Kafka KRaft<br/>:9092)]:::store
+
+    COMPOSE --> BACKEND
+    COMPOSE --> FRONTEND
+    COMPOSE --> POSTGRES
+    COMPOSE --> REDIS
+    COMPOSE --> KAFKA
+    BACKEND -.-> POSTGRES
+    BACKEND -.-> REDIS
+    BACKEND -.-> KAFKA
+    FRONTEND -.-> BACKEND
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
 ```
 
 ### Multi-Stage Docker Builds
@@ -713,13 +988,31 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ### Startup Sequence
 
-```
-1. make setup  →  scripts/setup.sh
-2. Docker builds all 5 containers (dev target)
-3. PostgreSQL, Redis, Kafka start (health checks)
-4. Backend starts → runs Alembic migrations → seeds DB → starts agents
-5. Frontend starts → connects to backend API + WebSocket
-6. Health check: GET /health  →  all green
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev
+    participant Make as make setup
+    participant Docker
+    participant PG as PostgreSQL
+    participant R as Redis
+    participant K as Kafka
+    participant BE as Backend
+    participant FE as Frontend
+
+    Dev->>Make: invoke scripts/setup.sh
+    Make->>Docker: build all 5 containers (dev target)
+    Docker->>PG: start + healthcheck
+    Docker->>R: start + healthcheck
+    Docker->>K: start + healthcheck
+    Docker->>BE: start
+    BE->>PG: alembic upgrade head
+    BE->>PG: seed DB
+    BE->>BE: start agents
+    Docker->>FE: start
+    FE->>BE: connect API + WebSocket
+    Dev->>BE: GET /health
+    BE-->>Dev: all green
 ```
 
 ---
@@ -730,34 +1023,38 @@ NEXUS integrates with [KeepSave](https://github.com/santapong/KeepSave) for cent
 
 ### Integration Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  NEXUS Startup                                                   │
-│                                                                 │
-│  settings.py                                                    │
-│    │                                                            │
-│    ├─ Read KEEPSAVE_URL, KEEPSAVE_API_KEY from env              │
-│    │                                                            │
-│    ├─ KeepSave Python SDK → GET /api/v1/projects/{id}/secrets   │
-│    │                                                            │
-│    ├─ Inject decrypted secrets into os.environ                  │
-│    │                                                            │
-│    └─ Pydantic Settings reads from env as normal                │
-│                                                                 │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │ HTTPS
-┌───────────────────────────▼─────────────────────────────────────┐
-│  KeepSave (Go + Gin)                                            │
-│                                                                 │
-│  API Key Auth → Decrypt (AES-256-GCM) → Return secrets         │
-│                                                                 │
-│  Secrets stored:                                                │
-│  ├─ ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY          │
-│  ├─ DATABASE_URL, REDIS_URL, KAFKA_BOOTSTRAP_SERVERS           │
-│  ├─ JWT_SECRET_KEY, A2A_INBOUND_TOKEN                          │
-│  └─ DAILY_SPEND_LIMIT_USD, DEFAULT_TOKEN_BUDGET_PER_TASK       │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph STARTUP["**NEXUS Startup**"]
+        SETTINGS[settings.py]
+        ENV[Read KEEPSAVE_URL,<br/>KEEPSAVE_API_KEY from env]
+        SDK[KeepSave Python SDK<br/>GET /api/v1/projects/{id}/secrets]
+        INJECT[Inject decrypted secrets<br/>into os.environ]
+        PSETTINGS[Pydantic Settings<br/>reads from env as normal]
+    end
+
+    subgraph KS["**KeepSave (Go + Gin)**"]
+        AUTH[API Key Auth]
+        DECRYPT[Decrypt AES-256-GCM]
+        RETURN[Return secrets]
+        VAULT[(Encrypted Vault<br/>ANTHROPIC_API_KEY · GOOGLE_API_KEY · OPENAI_API_KEY<br/>DATABASE_URL · REDIS_URL · KAFKA_BOOTSTRAP_SERVERS<br/>JWT_SECRET_KEY · A2A_INBOUND_TOKEN<br/>DAILY_SPEND_LIMIT_USD · DEFAULT_TOKEN_BUDGET_PER_TASK)]
+    end
+
+    SETTINGS --> ENV --> SDK
+    SDK -->|HTTPS| AUTH
+    AUTH --> DECRYPT
+    DECRYPT --> VAULT
+    VAULT --> RETURN
+    RETURN -->|secrets JSON| INJECT
+    INJECT --> PSETTINGS
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+
+    class SETTINGS,ENV,INJECT,PSETTINGS core
+    class SDK,AUTH,DECRYPT,RETURN integ
+    class VAULT store
 ```
 
 ### What KeepSave Provides
@@ -960,5 +1257,6 @@ Configurable rework loop with escalation guard:
 
 ---
 
-*Last updated: 2026-03-19*
-*Phase: 5 In Progress — Track A complete, Track B complete, Track C in progress*
+*Last updated: 2026-05-21*
+*Phase: 7 Complete + post-Phase 7 audit war room (2026-05-19)*
+*Diagram format: Mermaid (flowchart, sequenceDiagram, erDiagram, mindmap)*
