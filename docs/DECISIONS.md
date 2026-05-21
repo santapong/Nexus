@@ -1967,11 +1967,255 @@ Add invitation flow (email-based with token, 7-day expiry) and enforce RBAC role
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-068 -->
+## ADR-068 — OAuth token encryption at rest via Fernet
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #29 |
+| Context | OAuth refresh and access tokens were stored as plaintext in `oauth_tokens.access_token` / `refresh_token` columns. Audit war-room flagged this as P0: a Postgres dump or a compromised replica would leak every connected user's third-party identity. |
+
+### Decision
+
+Encrypt OAuth token columns at rest using **Fernet (AES-128-CBC + HMAC-SHA256)** keyed off the `NEXUS_ENCRYPTION_KEY` environment variable. Encryption/decryption happens in the model layer via a `TokenCipher` helper. Migration 011 backfills existing rows in place: SELECT → encrypt → UPDATE in a single transaction, then drops the legacy plaintext index.
+
+### Alternatives rejected
+
+- **AWS KMS / GCP KMS** — adds an operational dependency and a per-token API round-trip; key rotation gets caught up in cloud IAM. Not worth it for a single-key envelope.
+- **pgcrypto / DB-native encryption** — key would have to live in the DB role's GUC or be passed via SQL each call. Key management ends up *harder*, not easier, and audit logs would show the key in plaintext.
+- **Hashing only** — refresh tokens are reusable secrets that must be retrievable; one-way hashing breaks the refresh flow.
+
+### Consequences
+
+**Positive:** Database dumps no longer leak third-party tokens. `NEXUS_ENCRYPTION_KEY` rotation is a single in-process re-encryption job. Same primitive can be reused for other secrets-at-rest fields.
+**Negative:** Loss of `NEXUS_ENCRYPTION_KEY` makes all stored tokens unrecoverable; key must be backed up in SOPS alongside infra secrets. CPU overhead on every token read (~50µs per token, negligible).
 
 ---
 
-*Last updated: 2026-03-21*
-*Next ADR ID: ADR-061*
-*Decision count: 51 accepted, 3 superseded*
+## ADR-069 — RLS context injection via SQLAlchemy `after_begin` listener
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #30 |
+| Context | ADR-048 established PostgreSQL row-level security with `SET LOCAL nexus.workspace_id = '{uuid}'`. The original implementation relied on route handlers remembering to issue the `SET LOCAL` themselves. Audit found three handlers that forgot, leaking cross-tenant rows through `EXISTS` subqueries. RLS is only secure if it is unbypassable. |
+
+### Decision
+
+Inject the workspace UUID at the **SQLAlchemy session level** via an `after_begin` event listener. Every request-scoped session, before any route handler sees it, executes `SET LOCAL nexus.workspace_id = '{uuid}'` against the active connection. The UUID comes from a `ContextVar` populated by the auth middleware. Sessions without a workspace context fail fast.
+
+### Alternatives rejected
+
+- **Litestar middleware** — Litestar's middleware runs before dependency injection wires up the DB session, so the middleware couldn't reliably reach the session that the route would receive. Workarounds required a second DB connection.
+- **Manual SET LOCAL in each handler** — exactly what got us into this audit finding. Forgetting one is silent and exploitable.
+- **Per-query filtering in code** — defeats the purpose of RLS; one missed `.filter(workspace_id=...)` reopens the hole.
+
+### Consequences
+
+**Positive:** Forgetting the workspace filter is now impossible — the database refuses to return out-of-tenant rows regardless of application bugs. New code automatically inherits isolation.
+**Negative:** Tasks running outside an HTTP request (Taskiq workers, agent loops) must explicitly call `set_workspace_context(uuid)` before opening a session, or queries 404. Documented in coding policy.
+
+---
+
+## ADR-070 — A2A token hashing via PBKDF2-HMAC-SHA256
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #31 |
+| Context | A2A bearer tokens were stored as raw SHA-256 hashes. SHA-256 is too fast — a leaked DB dump is brute-force-able offline at billions of guesses per second on consumer GPUs. We need a slow hash with per-token salt, plus a way to look tokens up without scanning the whole table. |
+
+### Decision
+
+Use **PBKDF2-HMAC-SHA256** with **600,000 iterations** (current OWASP guidance) and a per-token 16-byte random salt for verification. For lookup, compute a separate **HMAC-SHA256 deterministic ID** keyed by a server-side pepper (`A2A_TOKEN_PEPPER`) — this is what the index sits on. Tokens carry a `hash_algo` column (`sha256` | `pbkdf2_sha256_600k`) so legacy tokens keep working until users rotate.
+
+### Alternatives rejected
+
+- **bcrypt** — verify cost is higher than necessary for our token-per-request usage, and bcrypt truncates input at 72 bytes which complicates long-token futures.
+- **argon2** — strongest option but pulls in a C dependency that complicates our slim Docker image and slowed cold-starts in benchmarks by ~150ms.
+- **Plain SHA-256** — the status quo; offline-crackable in hours.
+
+### Consequences
+
+**Positive:** Token DB dumps are no longer practically crackable. Deterministic lookup ID keeps `O(1)` validation despite the slow hash. Hash-algo column means rotation is gradual, not breaking.
+**Negative:** Token verification is now ~50ms instead of ~50µs. At 1k req/s the verify cost is ~50 CPU-seconds/s — acceptable behind a rate limiter and Redis-cached "recently validated" set.
+
+---
+
+## ADR-071 — Audit log partitioning with per-partition immutability triggers
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #32 |
+| Context | The `audit_log` table is documented as append-only in CLAUDE.md §12 ("never updated, never deleted"), but nothing in the schema actually enforced this. A compromised superuser or a buggy migration could rewrite history. The table is also growing fast — Phase 5 ships ~50k events/day per active workspace — and unpartitioned indexes are starting to slow inserts. |
+
+### Decision
+
+Convert `audit_log` to a `PARTITION BY RANGE (created_at)` table with **monthly partitions**. Attach a `BEFORE UPDATE OR DELETE` trigger to each partition that raises `EXCEPTION` unless the connection role is the dedicated `audit_archiver` (used only by the offline archival job). New partitions are pre-created by a monthly cron via `pg_cron`.
+
+### Alternatives rejected
+
+- **`pg_partman` extension** — adds an extension dependency that complicates managed-Postgres deployments (RDS, Cloud SQL) where superuser is restricted. Hand-rolling monthly partitions is ~30 lines of SQL.
+- **Application-layer "soft delete"** — defeats the entire immutability claim. If the application can rewrite history, so can an attacker who pops the app.
+- **Append-only via permissions alone** — Postgres role-based DELETE/UPDATE revocation can be re-granted; a trigger that errors regardless of role is harder to bypass quietly.
+
+### Consequences
+
+**Positive:** Audit log is now genuinely append-only at the DB level — a falsified row requires intent at the trigger level, which itself is audited. Old partitions can be detached and cold-archived to S3 cheaply. Insert latency improved ~3x on busy workspaces.
+**Negative:** Cross-month range queries now hit multiple partitions; the planner handles this fine but EXPLAIN output is noisier. `audit_archiver` role must be carefully scoped and its credential stored only in SOPS.
+
+---
+
+## ADR-072 — Memory-write failures route to DLQ, never publish
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #33 |
+| Context | CLAUDE.md §20 establishes the invariant: "Write episodic memory before publishing result. If memory write fails → task is failed, not published." But `AgentBase._execute_with_guards` was catching memory exceptions and warn-logging them, then publishing the result anyway. This is the most dangerous kind of "silent" — the user sees a successful task, but no episodic record exists, so future memory-recall can't learn from it and audits can't reconstruct what the agent did. |
+
+### Decision
+
+Introduce a `MemoryWriteFailed` sentinel exception. The inner `_write_memory()` call lets this exception propagate up through `_execute_with_guards`. The outer guard chain catches it, marks the task `failed`, writes the unsanitized output to the dead-letter queue (`{topic}.dead_letter`), and crucially **does not publish to `agent.responses`**. The user-facing failure message points to the audit log for triage.
+
+### Alternatives rejected
+
+- **Silent retry** — papers over real schema/embedding-service problems and can publish the result eventually anyway, violating the "memory before publish" ordering.
+- **Warn-and-publish** — the previous broken behavior. Hides side-effecting tool calls from history; "agent did something, no record".
+- **Fail open with a sentinel "memory_failed=true" flag in the published result** — pollutes the result envelope; consumers would have to special-case it.
+
+### Consequences
+
+**Positive:** Restores the §20 invariant. Memory write failures are now loud and surface in the DLQ dashboard. No task ever publishes a result without a matching `episodic_memory` row.
+**Negative:** Memory subsystem outages now visibly fail user tasks instead of degrading silently. This is correct behavior but raises the operational bar for memory-store availability. Mitigation: memory writes already retry 3x with backoff before raising.
+
+---
+
+## ADR-073 — Plugin `requires_approval` enforcement with dangerous-name regex force-flip
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #34 |
+| Context | Phase 5 introduced third-party plugin tools via `PluginRegistry`. Manifests declare a `requires_approval: bool` per tool. A malicious or naive plugin author could declare `requires_approval: false` on a destructive tool — e.g. `delete_user(id)` — bypassing `require_approval()` and silently letting agents do irreversible things. The guard chain trusts the manifest, which is the wrong trust boundary. |
+
+### Decision
+
+Enforce two layers in the plugin loader:
+
+1. **Whitelist explicit:** `requires_approval` must be present in every tool manifest. Missing field is a load-time error.
+2. **Force-flip on dangerous names:** any tool whose name (case-insensitive) matches the regex `(delete|remove|drop|push|send|pay|charge|deploy|publish|destroy)` is silently re-flagged `requires_approval = true` regardless of what the manifest claims. A warning is logged and written to `audit_log` so plugin authors see it.
+
+### Alternatives rejected
+
+- **Trust manifest authors** — first-party plugins are fine; third-party plugins are exactly the threat model. Trusting a string in JSON is not security.
+- **Sandbox all plugin calls behind approval** — too noisy; read-only plugin tools (search, lookups) would generate constant approval prompts.
+- **Semantic / LLM-based classifier on tool description** — non-deterministic and slow at load time. The regex covers the high-blast-radius verbs cheaply; a classifier can be layered on later if needed.
+
+### Consequences
+
+**Positive:** Plugins cannot quietly bypass human-in-the-loop on irreversible actions. The list of dangerous verbs is centralized and reviewable.
+**Negative:** False positives are possible — a plugin named `send_notification_to_dashboard` (read-only WebSocket push) gets flagged. Plugin authors can use synonyms (`dispatch`, `emit`) to avoid the regex, which is fine: the regex is a safety net, not the only line of defense (`require_approval` itself is still enforced by `guards.py`).
+
+---
+
+## ADR-074 — Director synthesis with plan-scope HALT routes to human
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #35–#36 |
+| Context | The Director (Phase 7) synthesizes specialist outputs into a single high-quality result. Audit war-room asked: what happens if a specialist's output references a subtask the CEO never planned, or contains content matching `security_blocked_patterns` (PII, secret-shaped strings, jailbreak signatures)? Previous behavior was to forward everything to QA and rely on QA to catch it. QA's job is *quality*, not *security* — and a quality reviewer is the wrong filter for a leaked API key. |
+
+### Decision
+
+The Director performs a **plan-scope check** before synthesis:
+
+- Every subtask-ID referenced in a specialist's output must appear in the CEO's execution plan. Unknown IDs → HALT.
+- Every output is run through `core/sanitization.py` against `security_blocked_patterns`. Match → HALT.
+
+HALT outcomes route to `human.input_needed` with the offending excerpt redacted, instead of being forwarded to `task.review_queue` (QA). The original output is preserved in `audit_log` for forensics but never reaches QA or the user without explicit human approval.
+
+### Alternatives rejected
+
+- **Forward everything to QA** — QA agents are LLM-based quality reviewers, not security filters. They will sometimes "approve through" content that pattern-matches a leak.
+- **Drop silently and proceed with partial synthesis** — loses the signal that the system might be under attack or a specialist is misbehaving. Always log, always escalate.
+- **Auto-redact and continue** — fine for incidental PII (e.g. an email in a test fixture), but for plan-scope violations (specialist referencing tasks it wasn't assigned), redaction hides a real correctness bug.
+
+### Consequences
+
+**Positive:** Security checks happen at the synthesis bottleneck, where every result must pass. Plan-scope violations are caught immediately rather than surfacing as anomalies in audit log review weeks later. Clear separation: Director = security review, QA = quality review.
+**Negative:** Adds latency on the Director's hot path (plan-scope check is ~5ms, pattern scan is ~20ms per 10KB of output). HALTs require human attention, so a flaky regex pattern could cause approval-queue noise — patterns are version-controlled and reviewed quarterly.
+
+---
+
+## ADR-075 — Stripe webhook idempotency via Redis event-ID lock
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #37–#38 |
+| Context | Stripe delivers webhooks at-least-once and replays on any `5xx` response for up to ~3 days. ADR-050 (Stripe billing) didn't specify idempotency, so a network blip during a `customer.subscription.updated` could double-apply the change, charging the customer twice or duplicating an invoice row. |
+
+### Decision
+
+On every Stripe webhook handler entry, write `stripe:event:{event_id}` to Redis db:3 (idempotency keys) with `SETNX` and a **7-day TTL**. If the key already exists, return `200 OK` immediately without re-processing. Successful processing leaves the key in place; transient failures (e.g. downstream service unavailable) `DEL` the key so the next retry will be re-processed.
+
+### Alternatives rejected
+
+- **DB unique constraint on `stripe_event_id`** — works but adds a row write and unique-index lookup on every webhook before any business logic; under burst load (Stripe replays in bursts) this contends on the index. Redis SETNX is the right shape for "did I already see this exact event ID".
+- **Application-level dedup cache without TTL** — never expires; memory leaks. Redis with TTL is bounded.
+- **Trust Stripe's "won't retry within X seconds"** — Stripe's retry semantics are at-least-once, period. Don't build on a SLA we don't control.
+
+### Consequences
+
+**Positive:** Stripe replays are now safely no-ops. Double-charges and duplicate billing rows from network blips eliminated. 7-day TTL gives ample margin over Stripe's ~3-day retry window.
+**Negative:** Idempotency lives in Redis db:3, which is treated as ephemeral elsewhere. If Redis is wiped during a Stripe replay window we could re-process — mitigated because Stripe's webhook signature timestamp lets us additionally reject events older than 5 minutes on first delivery. The 7-day TTL only matters for genuine replays.
+
+---
+
+## ADR-076 — Idempotent crash recovery via Redis lock, with DB column as future hardening
+
+| Field | Value |
+|-------|-------|
+| Status | accepted |
+| Date | 2026-05-19 |
+| PR | #39–#40 |
+| Context | Phase 7's crash-recovery service (`core/recovery.py`) scans for orphaned tasks (status=`running` with stale heartbeat) on every backend startup and re-queues or fails them. Under a restart loop — e.g. a misconfigured deployment crashing every 30 seconds — the recovery service was re-publishing the same task to Kafka on every boot, building up duplicate messages that the consumer then had to dedup via the existing `idempotency:{message_id}` keys. Cheaper to dedup at the source. |
+
+### Decision
+
+Wrap recovery actions in a Redis lock: `recovery_attempt:{task_id}` with a **1-hour TTL** in db:3. Recovery only fires for tasks whose lock can be acquired; an in-progress restart loop will see existing locks and skip. After recovery finishes (success or terminal fail), the lock stays in place for the full TTL so a subsequent same-hour restart doesn't re-attempt.
+
+This is a near-term fix. The long-term plan is to add a `recovery_attempted_at: timestamptz` column to the `tasks` table so recovery state survives Redis wipes — but Redis is fine for now because the failure mode it prevents (restart-loop duplication) is itself ephemeral.
+
+### Alternatives rejected
+
+- **Skip idempotency entirely** — what we had. Generates Kafka spam during outages, hammers the DLQ.
+- **DB column only (no Redis)** — correct in steady state but requires a `tasks` migration and adds DB writes to every recovery scan. Acceptable as Phase 8 hardening, not blocking.
+- **Atomic CAS on `tasks.status`** — works but only covers the "don't re-queue" case; doesn't prevent re-emitting structural events like `audit_log` entries for the recovery attempt.
+
+### Consequences
+
+**Positive:** Restart loops no longer thrash the Kafka topology. Recovery is now an at-most-once-per-hour operation per task. Idempotency primitive matches existing Redis db:3 conventions (`idempotency:{message_id}`).
+**Negative:** Redis wipe during an active recovery window could re-trigger recovery; in practice this is a controlled scenario (we restart Redis intentionally) and the existing message-ID idempotency catches the downstream duplication. Migration to a DB column is filed as a future ADR follow-up.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-077 -->
+
+---
+
+*Last updated: 2026-05-19*
+*Next ADR ID: ADR-077*
+*Decision count: 60 accepted, 3 superseded*

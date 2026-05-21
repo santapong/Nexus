@@ -1,5 +1,10 @@
 # NEXUS + KeepSave Integration Guide
 
+![KeepSave](https://img.shields.io/badge/keepsave-secrets%20vault-7c3aed?logo=keybase&logoColor=fff)
+![SOPS](https://img.shields.io/badge/SOPS-AGE%20encryption-0891b2)
+![OAuth2](https://img.shields.io/badge/oauth-2.0-3c873a?logo=openid&logoColor=fff)
+![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-encrypted%20at%20rest-1e40af)
+
 This guide covers how NEXUS integrates with [KeepSave](https://github.com/santapong/KeepSave) for secure secret management, OAuth 2.0 authentication, and MCP gateway access.
 
 ## Table of Contents
@@ -69,33 +74,30 @@ All sensitive secrets are encrypted at rest in KeepSave's vault (AES-256-GCM) an
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  NEXUS Backend (Litestar)                                       │
-│                                                                 │
-│  ┌──────────────┐     ┌──────────────┐     ┌────────────────┐  │
-│  │  settings.py  │────►│  ModelFactory │────►│  Agent Runtime │  │
-│  │  (loads from  │     │  (uses keys  │     │  (CEO,Engineer │  │
-│  │   KeepSave)   │     │   from env)  │     │   Analyst,etc) │  │
-│  └──────┬───────┘     └──────────────┘     └────────────────┘  │
-│         │                                                       │
-│         │  Startup: fetch all secrets                           │
-│         │                                                       │
-└─────────┼───────────────────────────────────────────────────────┘
-          │
-          │  KeepSave Python SDK
-          │  GET /api/v1/projects/{id}/secrets?environment=alpha
-          │
-┌─────────▼───────────────────────────────────────────────────────┐
-│  KeepSave (Go + Gin)                                            │
-│                                                                 │
-│  ┌──────────────┐     ┌──────────────┐     ┌────────────────┐  │
-│  │  API Layer    │────►│  Crypto Layer│────►│  PostgreSQL    │  │
-│  │  (validates   │     │  (AES-256-GCM│     │  (encrypted    │  │
-│  │   API key)    │     │   decrypt)   │     │   at rest)     │  │
-│  └──────────────┘     └──────────────┘     └────────────────┘  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph NEXUS["**NEXUS Backend** (Litestar)"]
+        SETTINGS["settings.py<br/>loads from KeepSave"]
+        FACTORY[ModelFactory<br/>uses keys from env]
+        RUNTIME[Agent Runtime<br/>CEO, Engineer,<br/>Analyst, etc.]
+        SETTINGS ==> FACTORY ==> RUNTIME
+    end
+
+    subgraph KEEPSAVE["**KeepSave** (Go + Gin)"]
+        API[API Layer<br/>validates API key]
+        CRYPTO[Crypto Layer<br/>AES-256-GCM decrypt]
+        STORE[(PostgreSQL<br/>encrypted at rest)]
+        API ==> CRYPTO ==> STORE
+    end
+
+    SETTINGS -->|Startup: KeepSave Python SDK<br/>GET /api/v1/projects/id/secrets?environment=alpha| API
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+    class SETTINGS,FACTORY,RUNTIME core
+    class API,CRYPTO integ
+    class STORE store
 ```
 
 ### Data Flow
@@ -283,21 +285,20 @@ docker compose restart nexus-backend
 
 Replace NEXUS's built-in JWT auth with KeepSave OAuth 2.0 for single sign-on:
 
-```
-User clicks "Login" on NEXUS dashboard
-    │
-    ▼ Redirect to KeepSave OAuth
-    GET /api/v1/oauth/authorize?client_id=<nexus>&redirect_uri=...&scope=read+write
-    │
-    ▼ User authenticates with KeepSave
-    │
-    ▼ Redirect back to NEXUS with authorization code
-    GET http://localhost:5173/auth/callback?code=<auth-code>
-    │
-    ▼ NEXUS exchanges code for tokens
-    POST /api/v1/oauth/token
-    │
-    ▼ User is authenticated in both systems
+```mermaid
+sequenceDiagram
+    actor User
+    participant NEXUS as NEXUS Dashboard
+    participant KS as KeepSave OAuth
+
+    User->>NEXUS: Click "Login"
+    NEXUS->>KS: Redirect: GET /oauth/authorize<br/>client_id=nexus&scope=read+write
+    KS->>User: Show login form
+    User->>KS: Submit credentials
+    KS->>NEXUS: Redirect with auth code<br/>GET /auth/callback?code=<code>
+    NEXUS->>KS: POST /oauth/token<br/>exchange code for tokens
+    KS-->>NEXUS: access_token + refresh_token
+    NEXUS-->>User: Authenticated in both systems
 ```
 
 ### Use Case 2: A2A External Agent Authentication
@@ -374,25 +375,22 @@ async def tool_keepsave_mcp_call(
 
 ### Promotion Workflow
 
-```
-Developer updates secret in Alpha
-    │
-    ▼ Preview diff
-    POST /projects/{id}/promote/diff
-    {"source": "alpha", "target": "uat"}
-    │
-    ▼ Apply promotion (instant for Alpha → UAT)
-    POST /projects/{id}/promote
-    │
-    ▼ Test in UAT environment
-    │
-    ▼ Promote to PROD (requires approval)
-    POST /projects/{id}/promote
-    │
-    ▼ Approver reviews and approves
-    POST /projects/{id}/promotions/{id}/approve
-    │
-    ▼ Restart NEXUS with NEXUS_ENV=prod
+```mermaid
+flowchart LR
+    DEV[Developer updates<br/>secret in Alpha]
+    DIFF[Preview diff<br/>POST /promote/diff]
+    APPLY[Apply promotion<br/>Alpha → UAT<br/>instant]
+    TEST[Test in UAT]
+    PROD_REQ[Promote to PROD<br/>POST /promote]
+    APPROVE[Approver reviews<br/>POST /promotions/id/approve]
+    RESTART[Restart NEXUS<br/>NEXUS_ENV=prod]
+
+    DEV --> DIFF --> APPLY --> TEST --> PROD_REQ --> APPROVE --> RESTART
+
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
+    class DEV,DIFF,APPLY,TEST integ
+    class PROD_REQ,APPROVE,RESTART danger
 ```
 
 ---
@@ -533,7 +531,33 @@ for s in secrets:
 
 ### Fallback Mode
 
-If KeepSave is unavailable, NEXUS falls back to standard environment variables:
+The unified `SecretManager` (`integrations/secrets/sops.py`) walks the
+SOPS → KeepSave → env fallback chain. Each layer is tried in order; the first
+successful resolution wins. If KeepSave is unavailable, NEXUS falls back to
+standard environment variables.
+
+```mermaid
+flowchart LR
+    REQ[Settings bootstrap<br/>requests secret]
+    SOPS[SOPS file<br/>AGE-encrypted at rest]
+    KS[KeepSave API<br/>AES-256-GCM vault]
+    ENV[Process env<br/>Pydantic Settings default]
+    OUT([Resolved value])
+
+    REQ --> SOPS
+    SOPS -- hit --> OUT
+    SOPS -. miss .-> KS
+    KS -- hit --> OUT
+    KS -. miss .-> ENV
+    ENV ==> OUT
+
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef store fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    class SOPS,KS integ
+    class ENV ext
+    class OUT store
+```
 
 ```python
 # settings.py already handles this — KeepSave bootstrap is conditional
