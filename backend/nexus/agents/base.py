@@ -13,6 +13,7 @@ Subclasses implement handle_task() only.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
 from abc import ABC, abstractmethod
@@ -57,6 +58,26 @@ class ToolCallLimitExceededError(Exception):
     """Raised when the agent exceeds 20 tool calls per task."""
 
 
+class ToolAccessDenied(Exception):  # noqa: N818  — name fixed by integration contract (temporal/activities.py)
+    """Raised when an agent attempts to call a tool outside its allow-list.
+
+    Enforces CLAUDE.md §20 NEVER rule 2: agents must never access tools
+    outside their tool_access list. Distinct from approval guards — this
+    is an ACL violation that signals a misconfigured agent or a prompt
+    that escaped registry filtering.
+    """
+
+
+class MemoryWriteFailed(Exception):  # noqa: N818  — sentinel name surfaced in logs and the DLQ payload
+    """Raised when episodic memory write fails.
+
+    CLAUDE.md §20 MUST rule 2 invariant: memory must succeed before result
+    is published. This sentinel is recognized by the outer exception handler
+    to route the failure to the dead-letter queue WITHOUT publishing a
+    user-visible (and misleading) result.
+    """
+
+
 # ─── AgentBase ───────────────────────────────────────────────────────────────
 
 
@@ -68,6 +89,10 @@ class AgentBase(ABC):
     """
 
     MAX_TOOL_CALLS = 20
+    # Meeting response LLM call timeout (Risk 5: avoid silent hangs in meetings)
+    MEETING_RESPONSE_TIMEOUT_SECONDS = 60
+    # Prompt reload cache TTL — avoid hammering the DB for every task
+    _PROMPT_CACHE_TTL_SECONDS = 300.0
 
     def __init__(
         self,
@@ -88,6 +113,17 @@ class AgentBase(ABC):
         self._running = False
         # Track current system prompt for hot-reload detection
         self._current_system_prompt: str | None = None
+        # Strong reference to heartbeat task — without this Python's GC can
+        # collect the asyncio.Task and silently stop heartbeating, causing
+        # the health monitor to auto-fail this agent (Risk 5).
+        self._heartbeat_task: asyncio.Task[None] | None = None
+        # Prompt reload cache: maps agent_id -> (db_prompt, expires_at).
+        # Prevents one DB query per task when the prompt is unchanged.
+        self._prompt_cache: dict[str, tuple[str, float]] = {}
+        # Snapshot of allowed tool names for this role (for runtime ACL check).
+        # Populated lazily on first access to avoid a circular import at module
+        # load time (nexus.tools.registry imports from nexus.agents indirectly).
+        self._tool_access_cache: frozenset[str] | None = None
 
     @abstractmethod
     async def handle_task(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
@@ -117,7 +153,11 @@ class AgentBase(ABC):
         """
         consumer = await create_consumer(*self.subscribe_topics, group_id=self.group_id)
         self._running = True
-        heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        # Hold a strong reference on self so the event loop won't GC the task
+        # mid-flight (see PEP 3156 / asyncio.create_task docs).
+        self._heartbeat_task = asyncio.create_task(
+            self._heartbeat_loop(), name=f"heartbeat-{self.agent_id}"
+        )
 
         logger.info(
             "agent_started",
@@ -151,11 +191,33 @@ class AgentBase(ABC):
 
                 try:
                     await self._process_message(msg.value)
+                except asyncio.CancelledError:
+                    raise
                 except Exception as exc:
-                    await self._handle_consumer_error(msg.value, msg.topic, exc)
+                    try:
+                        await self._handle_consumer_error(msg.value, msg.topic, exc)
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as handler_exc:
+                        # The error handler itself failed (e.g. Redis/Kafka down).
+                        # Log loudly but never let it tear down the consumer loop.
+                        logger.error(
+                            "consumer_error_handler_failed",
+                            agent_id=self.agent_id,
+                            topic=msg.topic,
+                            original_error=str(exc),
+                            handler_error=str(handler_exc),
+                            exc_info=True,
+                        )
         finally:
             self._running = False
-            heartbeat_task.cancel()
+            if self._heartbeat_task is not None:
+                self._heartbeat_task.cancel()
+                # Cancellation is expected; any other exception during teardown
+                # is non-fatal — we're shutting down anyway.
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await self._heartbeat_task
+                self._heartbeat_task = None
             await consumer.stop()
             logger.info("agent_stopped", agent_id=self.agent_id)
 
@@ -257,6 +319,22 @@ class AgentBase(ABC):
 
         register_active_task(task_id)
 
+        # Guaranteed cleanup of the active-task registry — without try/finally
+        # any handler failure (including in the error path) could leak the
+        # task forever, blocking graceful shutdown drain.
+        try:
+            await self._execute_guarded_body(command, msg_id, task_id, trace_id)
+        finally:
+            unregister_active_task(task_id)
+
+    async def _execute_guarded_body(
+        self,
+        command: AgentCommand,
+        msg_id: str,
+        task_id: str,
+        trace_id: str,
+    ) -> None:
+        """Body of the guard chain, wrapped by _execute_guarded_inner for cleanup."""
         # 1. Idempotency
         is_new = await check_idempotency(msg_id)
         if not is_new:
@@ -309,7 +387,9 @@ class AgentBase(ABC):
                             "instruction_snippet": command.instruction[:140],
                         }
                     )
-                except Exception as exc:  # noqa: BLE001
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
                     logger.warning(
                         "task_started_broadcast_failed",
                         agent_id=self.agent_id,
@@ -327,9 +407,16 @@ class AgentBase(ABC):
                 response = self._validate_output(response)
                 response = self._sanitize_output_pii(response, task_id)
 
-                # 5. Write memory BEFORE publishing result (Pattern A)
+                # 5. Write memory BEFORE publishing result (CLAUDE.md §20 rule 2).
+                #    Memory failure MUST NOT result in a published "success"
+                #    response — route to DLQ instead via MemoryWriteFailed.
                 duration = int(time.monotonic() - start_time)
-                await self._write_memory(session, command, response, duration)
+                try:
+                    await self._write_memory(session, command, response, duration)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as mem_exc:
+                    raise MemoryWriteFailed(f"episodic memory write failed: {mem_exc}") from mem_exc
 
                 # Audit: task_completed
                 await log_event(
@@ -366,9 +453,6 @@ class AgentBase(ABC):
             if not self._is_orchestration_response(response):
                 await clear_working_memory(self.agent_id, task_id)
 
-            # Unregister from active tasks for graceful shutdown
-            unregister_active_task(task_id)
-
             logger.info(
                 "task_completed",
                 agent_id=self.agent_id,
@@ -377,6 +461,11 @@ class AgentBase(ABC):
                 status=response.status,
                 duration_seconds=int(time.monotonic() - start_time),
             )
+
+        except asyncio.CancelledError:
+            # Graceful shutdown / external cancellation must propagate cleanly —
+            # do NOT swallow it in the broad Exception clause below.
+            raise
 
         except TokenBudgetExceededError as exc:
             logger.warning(
@@ -407,6 +496,62 @@ class AgentBase(ABC):
                 {"error": str(exc), "role": self.role.value},
             )
             await self._request_human_input(command, reason="tool_call_limit_exceeded")
+
+        except MemoryWriteFailed as exc:
+            # Fail-closed on memory write: do NOT publish a user-visible
+            # response — the invariant "memory written before publish" is
+            # broken, so we route to the dead-letter queue for human review.
+            logger.error(
+                "memory_write_failed_routing_to_dlq",
+                agent_id=self.agent_id,
+                task_id=task_id,
+                trace_id=trace_id,
+                error=str(exc),
+                exc_info=True,
+            )
+            await self._audit_outside_transaction(
+                task_id,
+                trace_id,
+                AuditEventType.TASK_FAILED,
+                {
+                    "error": str(exc),
+                    "role": self.role.value,
+                    "reason": "memory_write_failed",
+                },
+            )
+            try:
+                await publish_dead_letter(
+                    source_topic=Topics.AGENT_COMMANDS,
+                    raw_message=command.model_dump(mode="json"),
+                    error=f"memory_write_failed: {exc}",
+                    task_id=task_id,
+                    db_session_factory=self.db_session_factory,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as dlq_exc:
+                logger.error(
+                    "memory_write_dlq_publish_failed",
+                    agent_id=self.agent_id,
+                    task_id=task_id,
+                    error=str(dlq_exc),
+                )
+            # Best-effort dashboard notification — no user-visible result is
+            # published to agent.responses since the task is effectively lost
+            # until an operator inspects the DLQ.
+            try:
+                await self._broadcast(
+                    {
+                        "event": "task_failed",
+                        "agent_id": self.agent_id,
+                        "task_id": task_id,
+                        "error": "memory_write_failed",
+                    }
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                pass
 
         except Exception as exc:
             logger.error(
@@ -440,9 +585,6 @@ class AgentBase(ABC):
                     "error": str(exc),
                 }
             )
-
-            # Unregister from active tasks on failure
-            unregister_active_task(task_id)
 
     # ─── Budget enforcement ──────────────────────────────────────────────────
 
@@ -494,8 +636,22 @@ class AgentBase(ABC):
 
         Compares agents.system_prompt against the cached value. If different,
         reconstructs the PydanticAgent with the new prompt.
+
+        Uses an in-memory TTL cache (_PROMPT_CACHE_TTL_SECONDS) to avoid
+        hitting the DB on every task — the prompt rarely changes.
         """
         if self._current_system_prompt is None:
+            return
+
+        # In-process TTL cache: skip DB lookup if we checked recently and the
+        # cached prompt still matches the current one in memory.
+        now = time.monotonic()
+        cache_entry = self._prompt_cache.get(self.agent_id)
+        if (
+            cache_entry is not None
+            and cache_entry[1] > now
+            and cache_entry[0] == self._current_system_prompt
+        ):
             return
 
         try:
@@ -508,6 +664,12 @@ class AgentBase(ABC):
                     return
 
                 db_prompt = agent_record.system_prompt
+                # Refresh cache regardless of whether the prompt changed.
+                self._prompt_cache[self.agent_id] = (
+                    db_prompt or "",
+                    now + self._PROMPT_CACHE_TTL_SECONDS,
+                )
+
                 if db_prompt and db_prompt != self._current_system_prompt:
                     from nexus.tools.registry import get_tools_for_role
 
@@ -518,6 +680,8 @@ class AgentBase(ABC):
                         tools=tools,
                     )
                     self._current_system_prompt = db_prompt
+                    # Invalidate tool ACL snapshot so it's rebuilt on next check.
+                    self._tool_access_cache = None
                     logger.info(
                         "system_prompt_hot_reloaded",
                         agent_id=self.agent_id,
@@ -633,6 +797,7 @@ class AgentBase(ABC):
             Workspace ID string or None if not found.
         """
         from sqlalchemy import select
+
         from nexus.db.models import Task
 
         stmt = select(Task.workspace_id).where(Task.id == str(command.task_id))
@@ -757,6 +922,88 @@ class AgentBase(ABC):
             )
         return response
 
+    # ─── Tool access enforcement ────────────────────────────────────────────
+
+    def _allowed_tool_names(self) -> frozenset[str]:
+        """Snapshot of tool names this role is permitted to call.
+
+        Built lazily from `tools.registry.get_tools_for_role(self.role)` and
+        cached on the instance. Invalidated when the system prompt reloads
+        (which may rebuild the PydanticAgent with a different tool set).
+        """
+        cached = self._tool_access_cache
+        if cached is not None:
+            return cached
+        try:
+            from nexus.tools.registry import get_tools_for_role
+
+            allowed = frozenset(fn.__name__ for fn in get_tools_for_role(self.role))
+        except Exception as exc:
+            logger.warning(
+                "tool_access_snapshot_failed",
+                agent_id=self.agent_id,
+                role=self.role.value,
+                error=str(exc),
+            )
+            allowed = frozenset()
+        self._tool_access_cache = allowed
+        return allowed
+
+    async def _check_tool_access(
+        self,
+        tool_name: str,
+        *,
+        task_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> None:
+        """Runtime ACL check before invoking any tool from an LLM response.
+
+        Enforces CLAUDE.md §20 NEVER rule 2 at the call site. The registry
+        already filters tools at agent construction, but a hot-reloaded
+        prompt or a future code path that bypasses the registry could still
+        attempt an out-of-policy call. Raise loudly and write a security
+        audit event when that happens.
+        """
+        allowed = self._allowed_tool_names()
+        # Empty allow-list means we couldn't introspect the registry; fail
+        # open (log only) rather than blocking every call by mistake.
+        if not allowed:
+            return
+        if tool_name in allowed:
+            return
+
+        logger.error(
+            "tool_access_denied",
+            agent_id=self.agent_id,
+            role=self.role.value,
+            tool_name=tool_name,
+            task_id=task_id,
+            trace_id=trace_id,
+        )
+        try:
+            await self._audit_outside_transaction(
+                task_id or "unknown",
+                trace_id or "unknown",
+                AuditEventType.TASK_FAILED,
+                {
+                    "reason": "tool_access_denied",
+                    "tool_name": tool_name,
+                    "role": self.role.value,
+                    "allowed": sorted(allowed),
+                },
+            )
+        except Exception as audit_exc:
+            logger.warning(
+                "tool_access_denied_audit_failed",
+                agent_id=self.agent_id,
+                tool_name=tool_name,
+                error=str(audit_exc),
+            )
+        raise ToolAccessDenied(
+            f"agent role={self.role.value} is not permitted to call tool "
+            f"'{tool_name}' (allowed: {sorted(allowed)})"
+        )
+
     # ─── Orchestration detection ─────────────────────────────────────────────
 
     _ORCHESTRATION_ACTIONS = frozenset(
@@ -827,8 +1074,27 @@ class AgentBase(ABC):
         )
 
         try:
-            result = await self.llm_agent.run(meeting_prompt)
-            response_text = result.output
+            # Bound the LLM call so a stalled provider can't hang the meeting
+            # indefinitely — the conference room needs a response (or a stub)
+            # to make progress toward convergence.
+            try:
+                async with asyncio.timeout(self.MEETING_RESPONSE_TIMEOUT_SECONDS):
+                    result = await self.llm_agent.run(meeting_prompt)
+                response_text = result.output
+            except TimeoutError:
+                logger.warning(
+                    "meeting_response_timed_out",
+                    agent_id=self.agent_id,
+                    meeting_id=meeting_id,
+                    task_id=task_id,
+                    timeout_seconds=self.MEETING_RESPONSE_TIMEOUT_SECONDS,
+                )
+                # Stub response lets convergence detection see this agent as
+                # "spoke but had nothing new" rather than blocking the round.
+                response_text = (
+                    f"[{self.role.value} did not respond within "
+                    f"{self.MEETING_RESPONSE_TIMEOUT_SECONDS}s — skipping this round.]"
+                )
 
             await room.submit_response(
                 response=response_text,
@@ -846,6 +1112,8 @@ class AgentBase(ABC):
                 response_length=len(response_text),
             )
 
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
             logger.error(
                 "meeting_response_failed",
