@@ -195,6 +195,22 @@ class Settings(BaseSettings):
     tool_file_read_max_bytes: int = 10 * 1024 * 1024  # 10MB
     tool_allowed_dirs: str = ""  # Comma-separated allowed directories for file_read
 
+    # ─── Memory Recall (episodic + semantic) ────────────────────────
+    # Default page size for similarity recall queries.
+    memory_recall_limit_default: int = 5
+    # Hard ceiling on recall page size. Prevents callers from issuing a query
+    # that scans the entire pgvector ivfflat index.
+    memory_recall_limit_max: int = 20
+    # Minimum cosine similarity (1 - distance) for a recall hit to be returned.
+    # Below this threshold the memory is considered too dissimilar to be useful.
+    memory_recall_similarity_threshold: float = 0.7
+    # ─── Memory Semantic Contradiction Handling ─────────────────────
+    # When a contradicting upsert arrives, decrement confidence by this delta
+    # and keep the existing value (unless the new write's confidence is higher).
+    memory_contradiction_confidence_step: float = 0.1
+    # Floor for confidence — never decay below this.
+    memory_contradiction_confidence_floor: float = 0.1
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"
