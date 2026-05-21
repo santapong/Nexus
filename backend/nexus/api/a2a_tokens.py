@@ -17,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import A2ATokenRecord
 from nexus.integrations.a2a.auth import (
-    _hash_token,
     create_token,
     invalidate_cache,
     revoke_token,
@@ -212,20 +211,20 @@ class A2ATokenController(Controller):
         # Revoke old
         old_record.is_revoked = True
         old_record.revoked_at = datetime.now(UTC)
+        await db_session.commit()
         invalidate_cache()
 
-        # Create new with same config
+        # Create new with same config — delegate to create_token so the new
+        # row gets a per-token salt + hash_algo='pbkdf2_sha256'.
         raw_token = f"nexus-a2a-{secrets.token_urlsafe(32)}"
-        new_record = A2ATokenRecord(
-            token_hash=_hash_token(raw_token),
+        new_record = await create_token(
+            raw_token=raw_token,
             name=old_record.name,
             allowed_skills=old_record.allowed_skills,
             rate_limit_rpm=old_record.rate_limit_rpm,
             expires_at=old_record.expires_at,
+            db_session=db_session,
         )
-        db_session.add(new_record)
-        await db_session.commit()
-        await db_session.refresh(new_record)
 
         logger.info(
             "a2a_token_rotated",

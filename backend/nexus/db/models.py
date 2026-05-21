@@ -14,6 +14,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -272,7 +273,13 @@ class DeadLetter(UUIDBase):
 class A2ATokenRecord(UUIDBase):
     __tablename__ = "a2a_tokens"
 
-    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    # token_hash: hex digest. SHA-256 is 64 chars; PBKDF2-HMAC-SHA256 is also 64 hex
+    # chars (32-byte output). Column width covers both.
+    token_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True, index=True)
+    # Per-token salt for PBKDF2. NULL for legacy sha256 rows (which must be rotated).
+    salt: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    # Hash algorithm marker. "sha256" = legacy plain SHA-256; "pbkdf2_sha256" = current.
+    hash_algo: Mapped[str] = mapped_column(String(32), nullable=False, server_default="sha256")
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     allowed_skills: Mapped[list[str]] = mapped_column(
         ARRAY(Text), nullable=False, default=lambda: ["*"]

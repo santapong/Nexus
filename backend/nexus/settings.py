@@ -78,6 +78,12 @@ class Settings(BaseSettings):
     keepsave_project_id: str = ""
     nexus_env: str = "alpha"
 
+    # A2A Gateway — pepper used to derive deterministic token lookup IDs
+    # (HMAC of the raw token). Treat like a secret: leak of the DB alone
+    # does not let an attacker forge a lookup ID without also knowing this.
+    # In production set via A2A_TOKEN_PEPPER. Empty -> dev fallback in auth.py.
+    a2a_token_pepper: str = ""
+
     # Application
     app_env: str = "development"
     log_level: str = "INFO"
@@ -135,6 +141,12 @@ class Settings(BaseSettings):
     oauth_github_client_id: str = ""
     oauth_github_client_secret: str = ""
     oauth_redirect_base_url: str = "http://localhost:8000"
+
+    # ─── Phase 7 audit fix: Symmetric encryption key for OAuth tokens ────
+    # 32 url-safe base64 bytes (Fernet key). Generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    # REQUIRED in production — set via NEXUS_ENCRYPTION_KEY env var.
+    encryption_key: str = ""
 
     # ─── Phase 5: Stripe Billing ─────────────────────────────────────────
     stripe_api_key: str = ""

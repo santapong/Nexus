@@ -7,19 +7,19 @@ and propagate task_id/trace_id for observability.
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import httpx
 import structlog
 
+from nexus.settings import settings
+
 logger = structlog.get_logger()
 
-# KeepSave connection — loaded from environment (bootstrap values only)
-_KEEPSAVE_URL = os.environ.get("KEEPSAVE_URL", "http://localhost:8080")
-_KEEPSAVE_API_KEY = os.environ.get("KEEPSAVE_API_KEY", "")
-_KEEPSAVE_PROJECT_ID = os.environ.get("KEEPSAVE_PROJECT_ID", "")
-_NEXUS_ENV = os.environ.get("NEXUS_ENV", "alpha")
+# Per CLAUDE.md §16 rule 6, config must come from the settings module — never
+# os.environ directly. Bootstrap defaults below cover dev when the relevant
+# env vars are unset.
+_DEFAULT_KEEPSAVE_URL = "http://localhost:8080"
 
 
 class KeepSaveClient:
@@ -32,15 +32,18 @@ class KeepSaveClient:
 
     def __init__(
         self,
-        base_url: str = _KEEPSAVE_URL,
-        api_key: str = _KEEPSAVE_API_KEY,
-        project_id: str = _KEEPSAVE_PROJECT_ID,
-        environment: str = _NEXUS_ENV,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        project_id: str | None = None,
+        environment: str | None = None,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        self.project_id = project_id
-        self.environment = environment
+        resolved_url = (
+            base_url if base_url is not None else (settings.keepsave_url or _DEFAULT_KEEPSAVE_URL)
+        )
+        self.base_url = resolved_url.rstrip("/")
+        self.api_key = api_key if api_key is not None else settings.keepsave_api_key
+        self.project_id = project_id if project_id is not None else settings.keepsave_project_id
+        self.environment = environment if environment is not None else settings.nexus_env
         self._headers = {
             "X-API-Key": self.api_key,
             "Content-Type": "application/json",
