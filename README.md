@@ -88,7 +88,7 @@ flowchart TD
     AGENTS --> REDIS
     API --> PG
     A2A --> PG
-    KAFKA -. audit.log .-> PG
+    KAFKA -.->|audit.log| PG
 
     classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
     classDef integ fill:#0891b2,stroke:#0e7490,color:#fff

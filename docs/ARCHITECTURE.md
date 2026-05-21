@@ -367,8 +367,8 @@ flowchart LR
     CHK -->|deny| ERR[401 Unauthorized]:::danger
     A2AT --> CEO[CEO — normal pipeline]:::core
     CEO --> RESULT[task.results]:::core
-    RESULT -.->|GET /a2a/tasks/&#123;id&#125;/status| EXT
-    RESULT -.->|SSE /a2a/tasks/&#123;id&#125;/events| EXT
+    RESULT -.->|"GET /a2a/tasks/{id}/status"| EXT
+    RESULT -.->|"SSE /a2a/tasks/{id}/events"| EXT
 
     classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
     classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
@@ -726,7 +726,7 @@ flowchart TD
     STORE[Store proposed prompt<br/>is_active=FALSE]:::store
     APPROVE[Publish approval request<br/>Kafka human.input_needed]:::danger
     REVIEW[Human reviews diff in PromptDiffView<br/>current vs proposed + benchmark scores]:::ext
-    ACTIVATE[POST /api/prompts/{id}/activate<br/>deactivate current · activate proposed]:::core
+    ACTIVATE["POST /api/prompts/{id}/activate<br/>deactivate current · activate proposed"]:::core
     AGENT([Agent picks up new prompt<br/>on next task]):::core
 
     TRIGGER --> ANALYZE --> DRAFT --> BENCH --> STORE --> APPROVE --> REVIEW --> ACTIVATE --> AGENT
@@ -1028,7 +1028,7 @@ flowchart TD
     subgraph STARTUP["**NEXUS Startup**"]
         SETTINGS[settings.py]
         ENV[Read KEEPSAVE_URL,<br/>KEEPSAVE_API_KEY from env]
-        SDK[KeepSave Python SDK<br/>GET /api/v1/projects/{id}/secrets]
+        SDK["KeepSave Python SDK<br/>GET /api/v1/projects/{id}/secrets"]
         INJECT[Inject decrypted secrets<br/>into os.environ]
         PSETTINGS[Pydantic Settings<br/>reads from env as normal]
     end
