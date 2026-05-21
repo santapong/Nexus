@@ -6,6 +6,34 @@
 > takes NEXUS from its current state (Phase 8, 2026-04-01) to **v1.0 GA** and
 > defines the first post-GA horizon.
 >
+> **2026-05-19 status note:** Phase 9 (Learning Layer) is the active phase. The audit
+> hardening war room on 2026-05-19 merged 19 PRs (#28–#46) closing the bulk of the
+> security/correctness debt accumulated through Phase 8. The single remaining hardening
+> gap is PR #35 (F6, embeddings not generated) which was closed without merging — see
+> ERRORLOG ERROR-026 and BACKLOG-052. This gap is now a Phase 9 prerequisite because the
+> learning layer depends on semantic recall actually returning rows.
+
+---
+
+## Phase-to-GA Schedule
+
+```mermaid
+gantt
+  title NEXUS Phase 9 → v1.0 GA (2026-04 → 2026-07)
+  dateFormat  YYYY-MM-DD
+  axisFormat  %b %d
+  section Done
+  Phase 0-8 shipped              :done, p08, 2025-12-01, 2026-04-01
+  Audit war room (19 PRs)        :done, war, 2026-05-19, 1d
+  section Active
+  Phase 9 Learning Layer          :active, p9,  2026-04-22, 28d
+  section Planned
+  Phase 10 Federation+Marketplace :        p10, after p9, 28d
+  Phase 11 Extensibility Surface  :        p11, after p10, 21d
+  Phase 12 GA Hardening + Launch  :crit,   p12, after p11, 14d
+  v1.0 GA target                  :milestone, ga, 2026-07-21, 0d
+```
+>
 > **Authoritative plan.** When this document disagrees with `BACKLOG.md` line
 > items, this document wins — BACKLOG is the append-only capture log; this is
 > the executable schedule.
@@ -53,8 +81,14 @@ As of 2026-04-01 (Phase 8 ship), NEXUS has closed the following scope:
 - [`BACKLOG-048`](./BACKLOG.md) — Fine-tuning pipeline (episodic → dataset → Ollama).
 - [`BACKLOG-050`](./BACKLOG.md) — Multi-modal tool calls (images, PDFs, audio).
 - [`BACKLOG-051`](./BACKLOG.md) — RLHF-lite feedback loop.
+- [`BACKLOG-052`](./BACKLOG.md) — Wire embedding generation into memory write path
+  (PR #35 closed unmerged on 2026-05-19; blocks Phase 9 recall-dependent work).
 
-These 18 items define the remaining runway.
+These 19 items define the remaining runway.
+
+The 2026-05-19 audit war room closed BACKLOG-007 and BACKLOG-046 (secrets management) and
+re-confirmed every other open item in the list. No new long-running items were added beyond
+BACKLOG-052.
 
 ---
 
@@ -332,4 +366,4 @@ deliberate home for ideas that would pull focus away from shipping 1.0.
 *Authored by:* claude_code
 *Source inputs:* `BACKLOG.md` (051 items), `IDEAS.md` (034 ideas), `DECISIONS.md`
 (ADR-001 through ADR-067), `CHANGELOG.md` (Phase 0 through Phase 8).
-*Last updated:* 2026-04-21
+*Last updated:* 2026-05-19 (audit war room status note + Mermaid gantt)

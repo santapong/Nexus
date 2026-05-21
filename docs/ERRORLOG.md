@@ -74,6 +74,419 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-037 — Director loop-prevention false positives on empty meeting rounds
+
+**Date:** 2026-05-19
+**Severity:** medium
+**Status:** fixed
+**Found by:** audit war room (F7)
+**Affected files:** `backend/nexus/agents/director.py`, `backend/nexus/core/kafka/meeting.py`
+
+### What happened
+Director's convergence/loop detection used `difflib.SequenceMatcher().ratio()` on round
+transcripts. Empty strings (or rounds where all agents abstained) compared against each other
+returned `1.0` (100% similarity), which the loop detector interpreted as a stagnation loop and
+forcibly terminated the meeting before any real work landed.
+
+### Root cause
+`SequenceMatcher("", "").ratio()` is defined as `1.0` (both empty). The Director never guarded
+against zero-length round content. Additional bugs found: `_similarity()` divided by zero on
+single-agent meetings; `_count_unique_ideas()` deduplicated case-sensitively, treating "Idea"
+and "idea" as different.
+
+### Fix applied
+- PR #39 (F7): explicit empty-string guard returning `0.0`; minimum two non-empty rounds before
+  loop detection runs; case-folded idea deduplication; div-by-zero guard.
+
+### Prevention
+- Behavior tests added for empty/single-round meeting transcripts
+- Director synthesis is integration-tested against a fixture of 50 historical meetings
+
+---
+
+## ERROR-036 — Plugin tools bypassed `require_approval()` for irreversible actions
+
+**Date:** 2026-05-19
+**Severity:** critical
+**Status:** fixed
+**Found by:** audit war room (F10)
+**Affected files:** `backend/nexus/integrations/plugins/registry.py`
+
+### What happened
+`PluginTool` declared `requires_approval: bool` in its manifest but the runtime invocation path
+never consulted that flag. A plugin could declare itself irreversible (e.g., `delete_repo`)
+and still be invoked by an agent without any `human_approvals` record. This punched a hole
+straight through Risk 4 / CLAUDE.md §20 NEVER rule 1 — for plugins only.
+
+### Root cause
+`PluginTool.__call__` invoked the registered handler directly. The original Phase 5 Track C
+implementation forgot to call `require_approval()` on the same code path as `tools/adapter.py`
+does for built-in irreversible tools.
+
+### Fix applied
+- PR #33 (F10): `PluginTool` now wraps every invocation in `require_approval()` when
+  `manifest.requires_approval is True`, creating a `human_approvals` row and suspending the
+  task until resolution. Identical semantics to `tool_file_write` etc.
+
+### Prevention
+- Unit test asserts `human_approvals` row exists before plugin handler runs
+- Plugin registration validation rejects manifests with `requires_approval=True` and a
+  handler that doesn't accept the approval context
+
+---
+
+## ERROR-035 — Billing endpoints leak cross-workspace data + Stripe replay possible
+
+**Date:** 2026-05-19
+**Severity:** critical
+**Status:** fixed
+**Found by:** audit war room (F8)
+**Affected files:** `backend/nexus/api/billing.py`, `backend/nexus/integrations/stripe/service.py`
+
+### What happened
+1. `GET /api/billing/records` and `/api/billing/summary` queried `billing_records` without a
+   `workspace_id` filter. Any authenticated user could see every tenant's billing.
+2. Stripe `PaymentIntent` creation did not send an `Idempotency-Key` header, so a retried
+   POST could double-charge a customer.
+3. Audit COUNT for billing operations was wrong (used `len()` of a paged result instead of
+   a SQL COUNT), under-reporting volume in the dashboard.
+
+### Root cause
+Phase 4 billing endpoints predated multi-tenant RLS. After Phase 5 RLS landed, the policy
+covered most tables but the billing endpoints bypassed the session-scoped `workspace_id`
+because they used a service-role session for "admin operations." That backdoor was never
+narrowed.
+
+### Fix applied
+- PR #30 (F8): every billing query now joins on `workspace_id` from JWT; Stripe service helper
+  `with_idempotency_key()` wraps `payment_intents.create` and `checkout.sessions.create`;
+  audit COUNT uses `SELECT COUNT(*)`.
+
+### Prevention
+- E2E test: tenant A cannot see tenant B's billing records
+- Replay test: same `Idempotency-Key` returns the original PaymentIntent, never a second one
+- Linter rule: any direct `stripe.*.create()` call without `idempotency_key=` fails CI
+
+---
+
+## ERROR-034 — Audit log table unbounded and not append-only
+
+**Date:** 2026-05-19
+**Severity:** high
+**Status:** fixed
+**Found by:** audit war room (F11)
+**Affected files:** `backend/alembic/versions/015_audit_log_partitioning.py`,
+`backend/nexus/audit/service.py`
+
+### What happened
+`audit_log` was a single Postgres table growing unboundedly (millions of rows by Phase 7).
+Query latency on the audit dashboard degraded to seconds. Worse, `UPDATE` and `DELETE` on
+`audit_log` were not blocked at the DB level — a compromised admin role could rewrite history.
+
+### Root cause
+CLAUDE.md §12 declares the audit log "Immutable — never updated, never deleted" but that was
+only enforced in application code. No DB-level constraint or partitioning existed.
+
+### Fix applied
+- PR #37 (F11) migration 015:
+  - Converted `audit_log` to PARTITION BY RANGE on `created_at`, one partition per day
+  - Added `BEFORE UPDATE OR DELETE` trigger that raises an exception on any non-INSERT
+  - Backfilled retention policy: hot 30 days, cold partitions exportable to S3
+
+### Prevention
+- Migration adds the trigger so future schema migrations cannot silently relax it
+- Audit-log retention test asserts UPDATE/DELETE raise `feature_not_supported`
+
+---
+
+## ERROR-033 — Kafka `task.results` consumer not idempotent + no signature validation
+
+**Date:** 2026-05-19
+**Severity:** critical
+**Status:** fixed
+**Found by:** audit war room (F3)
+**Affected files:** `backend/nexus/core/kafka/result_consumer.py`,
+`backend/nexus/core/kafka/signing.py`
+
+### What happened
+The `task.results` consumer processed every message it received without checking an
+idempotency key. Because Kafka delivers at-least-once, a single task could be marked
+"completed" twice, double-credited in billing, and double-broadcast to the WebSocket. Equally
+serious: messages had a HMAC signature field (per Phase 7 enterprise security) but the
+consumer never validated it.
+
+### Root cause
+The Phase 7 HMAC-signing module was added to the producer but the result consumer was missed
+in the rollout — only the agent-response consumer was updated. Idempotency keys were similarly
+applied to `agent.responses` but not `task.results`.
+
+### Fix applied
+- PR #31 (F3): result consumer now (1) verifies HMAC signature before deserializing payload,
+  (2) writes `idempotency:result:{message_id}` into Redis db:3 with 24h TTL, skipping
+  duplicates. Both behaviors match the `agent.responses` consumer.
+
+### Prevention
+- Chaos test resends the same `task.results` message 10× and asserts a single DB update
+- New CI lint rule: every consumer class must override `validate_signature()` or explicitly
+  opt out with a justification comment
+
+---
+
+## ERROR-032 — AgentBase invariants violated (heartbeat GC'd, memory-fail not DLQ'd)
+
+**Date:** 2026-05-19
+**Severity:** high
+**Status:** fixed
+**Found by:** audit war room (F4)
+**Affected files:** `backend/nexus/agents/base.py`
+
+### What happened
+Three related AgentBase invariants from CLAUDE.md §7 were violated in production:
+1. `_heartbeat_loop()` was launched as a bare `asyncio.create_task(...)` without holding the
+   task reference. Python's GC could (and occasionally did) cancel the heartbeat mid-task,
+   making the agent appear silent.
+2. When `_write_memory()` raised, the result was published to `agent.responses` anyway — in
+   direct violation of CLAUDE.md §20 MUST rule 2 ("Write episodic memory before publishing
+   result").
+3. Cleanup (`_release_lock()`, `_clear_working_memory()`) was inside `try` but not `finally`,
+   so exceptions during `handle_task()` leaked locks.
+
+### Root cause
+The original AgentBase guard chain was written before mypy --strict was enforced. The fire-
+and-forget heartbeat slipped past review. The memory-fail-publish bug was masked because
+the test suite mocked memory writes to always succeed.
+
+### Fix applied
+- PR #36 (F4):
+  - `self._heartbeat_task = asyncio.create_task(...)` — reference held on `self`
+  - Memory write failures now route the message to `{topic}.dead_letter` instead of
+    `agent.responses`
+  - All cleanup moved into `finally` block
+
+### Prevention
+- New behavior test: simulate `_write_memory()` raising, assert result on DLQ, not on
+  `agent.responses`
+- Heartbeat reference is asserted non-None in `run()`
+
+---
+
+## ERROR-031 — Recovery service double-runs orphan tasks; circuit breaker race
+
+**Date:** 2026-05-19
+**Severity:** high
+**Status:** fixed
+**Found by:** audit war room (F12)
+**Affected files:** `backend/nexus/core/recovery.py`, `backend/nexus/core/llm/circuit_breaker.py`
+
+### What happened
+1. `RecoveryService.scan_orphans()` re-queued orphan tasks (status=running, no heartbeat) but
+   did not lock during scan. Two backend pods starting simultaneously both re-queued the same
+   orphans → duplicate Kafka commands → tasks counted twice in billing.
+2. `CircuitBreaker.record_failure()` and `record_success()` used separate `incr` / `set` calls
+   in Redis, racing each other. A burst of mixed results could leave the breaker stuck in a
+   wrong state.
+
+### Root cause
+Recovery scan didn't use a Redis lock. Circuit breaker mutations were not atomic.
+
+### Fix applied
+- PR #32 (F12):
+  - Recovery scan acquires `recovery:scan_lock` (Redis db:3, 60s TTL) before re-queueing;
+    second pod skips with a log line.
+  - Circuit breaker state transitions now run as a single Lua script in Redis (atomic
+    `EVAL` of read+update).
+
+### Prevention
+- Chaos test starts 5 backend pods simultaneously, asserts each orphan re-queued exactly once
+- Circuit breaker stress test fires 1000 mixed success/failure events, asserts terminal state
+  matches the analytical expectation
+
+---
+
+## ERROR-030 — A2A bearer tokens stored as plain SHA-256 (offline crackable)
+
+**Date:** 2026-05-19
+**Severity:** high
+**Status:** fixed
+**Found by:** audit war room (F9)
+**Affected files:** `backend/nexus/integrations/a2a/auth.py`,
+`backend/alembic/versions/014_a2a_pbkdf2_tokens.py`
+
+### What happened
+A2A bearer tokens were stored with a single round of SHA-256 (per ERROR-021's fix). An
+attacker who exfiltrated the `a2a_tokens` table could brute-force tokens offline at billions
+of hashes per second on a single GPU.
+
+### Root cause
+SHA-256 is a fast hash, designed for integrity, not password storage. The Phase 3 fix
+correctly stopped storing plaintext but used the wrong primitive.
+
+### Fix applied
+- PR #34 (F9) migration 014: `token_hash` column now stores PBKDF2-HMAC-SHA256 with 480,000
+  iterations and a per-token random 32-byte salt. Validation iterates only on lookup, which
+  is fine because the dev token cache (5 min TTL) means hot tokens skip the KDF.
+
+### Prevention
+- Benchmark in CI: PBKDF2 verification ≥ 50ms, < 500ms (rules out tuning regressions)
+- Documented in DECISIONS.md (new ADR): never use SHA-256 alone for any user-supplied
+  credential storage
+
+---
+
+## ERROR-029 — OAuth provider secrets stored unencrypted; login lacked rate limit
+
+**Date:** 2026-05-19
+**Severity:** critical
+**Status:** fixed
+**Found by:** audit war room (F1)
+**Affected files:** `backend/nexus/api/oauth.py`, `backend/nexus/api/auth.py`,
+`backend/alembic/versions/013_oauth_encryption.py`
+
+### What happened
+1. Per-workspace OAuth client secrets (Google/GitHub/Microsoft) were stored in
+   `workspace_oauth_configs.client_secret` as plaintext.
+2. The login endpoint had no rate limit. A credential-stuffing attack could try thousands of
+   passwords per minute against a single account.
+3. RLS policies on workspace-scoped tables were vulnerable to a SQL injection vector through
+   a partner integration query that concatenated `workspace_id` into a raw SQL fragment.
+
+### Root cause
+OAuth was added in Phase 5 Track A under time pressure; the encryption-at-rest design was
+deferred and forgotten. The login endpoint inherited rate limiting from the general API
+middleware but was explicitly exempted by an old TODO. The RLS injection vector existed
+because one developer had bypassed the parameterized-query rule for "performance."
+
+### Fix applied
+- PR #38 (F1) migration 013: `client_secret` column encrypted with AES-GCM keyed by an
+  application secret (separate from JWT secret). Decryption only at OAuth flow time.
+- Login endpoint: per-IP and per-email sliding-window rate limit (5 attempts / 15 min).
+- RLS policies hardened: the offending query rewritten using SQLAlchemy expression-language
+  with bound parameters.
+
+### Prevention
+- CI scanner blocks any commit adding `f"...{user_input}..."` inside a `text()` SQL call
+- Security checklist now requires "secrets at rest are encrypted, not just hashed"
+
+---
+
+## ERROR-028 — Missing DB indexes cause N+1 latency in analytics endpoints
+
+**Date:** 2026-05-19
+**Severity:** medium
+**Status:** fixed
+**Found by:** audit war room (F5)
+**Affected files:** `backend/alembic/versions/012_missing_indexes.py`,
+`backend/nexus/api/analytics.py`
+
+### What happened
+After Phase 5 the analytics endpoints showed acceptable latency, but a load test with 100k
+tasks blew P95 query times to 4+ seconds. The culprits were missing composite/partial
+indexes — Risk 19 had been marked RESOLVED but only the highest-traffic paths were covered
+in migration 005.
+
+### Root cause
+Migration 005 indexed the well-known hot paths but missed several composite indexes that
+only matter at higher cardinality:
+- `(workspace_id, status, created_at DESC)` on `tasks`
+- `(agent_id, created_at DESC) WHERE outcome='failed'` on `episodic_memory`
+- `(provider, created_at DESC)` on `llm_usage` partial index
+- `(workspace_id, resolved_at)` on `human_approvals` partial index WHERE status='pending'
+
+### Fix applied
+- PR #29 (F5) migration 012: adds the four indexes above plus three more identified by
+  `pg_stat_statements` review.
+
+### Prevention
+- Every new endpoint must include an `EXPLAIN ANALYZE` snippet in the PR description proving
+  no seq scan on tables > 10k rows
+- Quarterly `pg_stat_statements` review added to ops checklist
+
+---
+
+## ERROR-027 — Tool `require_approval()` not enforced for built-in irreversible tools
+
+**Date:** 2026-05-19
+**Severity:** critical
+**Status:** fixed
+**Found by:** audit war room (F2)
+**Affected files:** `backend/nexus/tools/adapter.py`,
+`backend/nexus/tools/guards.py`, `backend/nexus/core/sanitization.py`
+
+### What happened
+The `require_approval()` guard had existed since Phase 0 (Risk 4) and was referenced in every
+irreversible tool wrapper in `tools/adapter.py`. But the actual call site had drifted: several
+tools (`tool_send_email`, `tool_git_push`, `tool_hire_external_agent`) had been refactored
+through a code-generation pass that dropped the `await require_approval(...)` line. The
+`human_approvals` record was created — but as a *log-only* row, with no blocking semantics.
+Agents could send emails or push code without waiting for human approval.
+
+Additionally, agent outputs published to `agent.responses` contained raw PII (emails, phone
+numbers extracted from web search) that the dashboard would render. There was no sanitization
+between LLM output and Kafka publish.
+
+### Root cause
+Code-generation for the multi-modal tool refactor reformatted the irreversible tool wrappers
+and the human reviewer didn't notice the missing `await`. The PII sanitization gap was a
+known §23 follow-up that never landed.
+
+### Fix applied
+- PR #40 (F2): re-added `await require_approval(...)` on every irreversible tool in
+  `tools/adapter.py`. Added a unit test that monkey-patches `require_approval` to track calls
+  and fails if any of the 3 irreversible tools fires without invoking it.
+- New `core/sanitization.py.sanitize_output()` runs PII redaction (emails, phone, SSN, credit
+  cards, API keys) on every agent response before Kafka publish. Reversible via task_id for
+  audit replay by an authorized admin.
+
+### Prevention
+- Behavior test in `tests/behavior/test_irreversible_tools.py` asserts that an agent
+  attempting `send_email` without an approved `HumanApproval` row raises `ApprovalRequired`
+  and the email is NOT sent
+- CI rule: any new `tool_*` function in `adapter.py` flagged as irreversible must contain
+  a literal `await require_approval(` in its body
+
+---
+
+## ERROR-026 — Embeddings never generated; vector recall returns NULL
+
+**Date:** 2026-05-19
+**Severity:** high
+**Status:** open — PR #35 (F6) closed without merging on 2026-05-19
+**Found by:** audit war room (F6)
+**Affected files:** `backend/nexus/memory/episodic.py`, `backend/nexus/memory/semantic.py`,
+`backend/nexus/memory/embeddings.py`
+
+### What happened
+Every row written to `episodic_memory` and `semantic_memory` since Phase 1 has `embedding =
+NULL`. The semantic-recall query from CLAUDE.md §12 (`ORDER BY embedding <=> $query`) sorts
+NULLs last in cosine-distance ordering, so it consistently returns zero matches. Agents start
+every task with cold context — none of the "agents learn from past tasks" promise is
+operational at the recall path.
+
+### Root cause
+`nexus/memory/embeddings.py` defines `generate(text: str) -> list[float]` but no caller ever
+invokes it. The original CLAUDE.md §12 design specified a Taskiq fire-and-forget job
+triggered on every memory write; that wiring was deferred during Phase 1 ("we'll add it once
+agents have output to embed") and forgotten.
+
+### Fix needed
+1. Add a Taskiq task `taskiq_embed_episode(episode_id)` that loads the row, calls
+   `embeddings.generate()`, writes the result back to `embedding`, updates the `ivfflat` index.
+2. Call it from `EpisodicMemory.write_episode()` and `SemanticMemory.upsert()` as
+   `await broker.kicker().with_labels(low_priority=True).kiq(...)`.
+3. One-off Alembic migration script to backfill embeddings for the existing ~120k rows in
+   batches of 100, paced to stay under the Google embedding-001 RPM limit.
+
+PR #35 attempted this but was closed without merging on 2026-05-19. A follow-up PR is
+required to ship the fix. Tracked as BACKLOG-052.
+
+### Prevention
+- E2E test that writes an episode, sleeps for the fire-and-forget worker, queries semantic
+  recall, and asserts at least one result
+- Migration assertion that the `episodic_embedding_idx` row count > 0 in every non-empty
+  deployment
+
+---
+
 ## ERROR-025 — Missing authorization on approval resolution endpoint
 
 **Date:** 2026-03-18

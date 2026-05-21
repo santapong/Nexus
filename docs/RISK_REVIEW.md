@@ -3,8 +3,46 @@
 > Review of §23 Prevention Rules against actual implementation status.
 > Phase 5 IN PROGRESS — Track A (Production SaaS) complete, Track B (Platform Intelligence) complete,
 > Track C (Federation & Ecosystem) in progress.
+>
+> **2026-05-19 update:** Audit war room merged 19 PRs (#28–#46) addressing the bulk of remaining
+> code-level mitigations for Risks 4, 9, 10, 11 plus several new findings. Per-risk notes updated below.
 
 ---
+
+## Risk Landscape Snapshot
+
+```mermaid
+mindmap
+  root((NEXUS Risks))
+    Critical
+      R1 Build orchestration before loop (resolved)
+      R2 Cost explosion (resolved)
+      R3 Vague system prompts (resolved)
+      R4 Irreversible actions before approval (resolved - PR #40)
+      R16 A2A Task DB persistence (resolved)
+    High
+      R5 Silent failures (resolved)
+      R6 Memory schema hell (resolved)
+      R7 Kafka instability (resolved)
+      R9 Prompt injection (resolved + PR #38 RLS)
+      R10 LLM cascade failure (resolved + PR #32 CB)
+      R11 Daily spend reset (resolved)
+      R12 CEO decomposition quality (mitigated)
+      R17 Prompt injection layered (resolved)
+      R18 LLM provider cascade (resolved)
+      R20 Daily spend Redis reset (resolved)
+      R21 Embeddings never generated (open - F6 unmerged)
+    Medium
+      R8 Scope creep (mitigated)
+      R9-new Multi-provider key sprawl (PR #34 hashing)
+      R11-new Subtask race (mitigated)
+      R13 Meeting room cluster-safety (resolved)
+      R14 A2A bearer tokens (resolved - PR #34)
+      R15 Security scanning (resolved)
+      R19 N+1 queries (resolved - PR #29 indexes)
+    Low
+      R10-new Local model tool calling
+```
 
 ## Risk Status Summary
 
@@ -13,8 +51,8 @@
 | Risk 1 — Building orchestration before loop works | CRITICAL | RESOLVED | 50-task stress test: 100% pass rate (50/50). |
 | Risk 2 — Cost explosion from unbounded loops | CRITICAL | **RESOLVED** | Budget + tool call limit (20/task) + per-agent cost tracking + audit trail. |
 | Risk 3 — Vague system prompts | CRITICAL | **RESOLVED** | Prompt versioning + rollback + hot-reload + activation history. |
-| Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. |
-| Risk 5 — Agents fail silently | HIGH | **RESOLVED** | Health monitor auto-fail implemented (ADR-026). |
+| Risk 4 — Irreversible action before approval | CRITICAL | RESOLVED | `require_approval()` + `human_approvals` table live since Phase 0. **Tool-layer wiring finalized in PR #40 (F2) on 2026-05-19** — every irreversible tool now blocks at adapter, plus PII output sanitization. |
+| Risk 5 — Agents fail silently | HIGH | **RESOLVED** | Health monitor auto-fail implemented (ADR-026). **PR #36 (F4) hardened AgentBase invariants** — heartbeat task reference held, memory-write failures DLQ properly, cleanup guaranteed. |
 | Risk 6 — Memory schema migration hell | HIGH | RESOLVED | All 18 tables deployed. Embeddings tested. |
 | Risk 7 — Kafka instability | HIGH | RESOLVED | KRaft stable. `make kafka-test` passes. |
 | Risk 8 — Scope creep | MEDIUM | MITIGATED | BACKLOG.md active. Phase gates defined. |
@@ -23,13 +61,19 @@
 | **NEW Risk 11** — Subtask forwarding race condition | MEDIUM | MITIGATED | See below. |
 | **NEW Risk 12** — CEO decomposition quality | HIGH | MITIGATED | See below. |
 | **NEW Risk 13** — Meeting room state not cluster-safe | MEDIUM | **RESOLVED** | Migrated to Redis db:0. |
-| **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | **RESOLVED** | Migrated to a2a_tokens DB table. |
+| **NEW Risk 14** — A2A bearer tokens in memory | MEDIUM | **RESOLVED** | Migrated to a2a_tokens DB table. **PR #34 (F9) upgraded SHA-256 → PBKDF2 (480k iterations) with per-token salt** (migration 014); plaintext tokens never persisted. |
 | **NEW Risk 15** — No automated security scanning | MEDIUM | **RESOLVED** | CI/CD pipeline deployed (ADR-032). |
 | **NEW Risk 16** — A2A gateway Task not persisted to DB | CRITICAL | **RESOLVED** | Fixed 2026-03-16. See ERROR-018. |
-| **NEW Risk 17** — Prompt injection via task instructions | HIGH | **RESOLVED** | LLM classifier added (Phase 5). See below. |
-| **NEW Risk 18** — LLM provider cascade failure | HIGH | **RESOLVED** | Provider health monitoring + circuit breaker. See below. |
-| **NEW Risk 19** — N+1 query performance degradation | MEDIUM | **RESOLVED** | See below. |
+| **NEW Risk 17** — Prompt injection via task instructions | HIGH | **RESOLVED** | LLM classifier added (Phase 5). See below. **PR #38 (F1) added SQL/RLS injection-style isolation to OAuth + login rate limit.** |
+| **NEW Risk 18** — LLM provider cascade failure | HIGH | **RESOLVED** | Provider health monitoring + circuit breaker. **PR #32 (F12) added atomic Lua health check + recovery idempotency.** See below. |
+| **NEW Risk 19** — N+1 query performance degradation | MEDIUM | **RESOLVED** | **PR #29 (F5) migration 012 added missing composite/partial indexes.** See below. |
 | **NEW Risk 20** — Daily spend counter reset on Redis restart | HIGH | **RESOLVED** | See below. |
+| **NEW Risk 21** — Embeddings never generated (vector recall returns NULL) | HIGH | **OPEN** | F6 / PR #35 closed without merging on 2026-05-19. `nexus.memory.embeddings.generate()` is never called by the episodic/semantic write path. All `embedding` columns are NULL; semantic recall query returns no rows. See ERROR-026. |
+| **NEW Risk 22** — Kafka result-consumer non-idempotent + missing HMAC | HIGH | **RESOLVED** | **PR #31 (F3) added HMAC-SHA256 signature validation + Redis idempotency keys on `task.results`.** |
+| **NEW Risk 23** — Audit log unbounded growth + tampering | MEDIUM | **RESOLVED** | **PR #37 (F11) migration 015 partitioned `audit_log` by day + INSERT-only trigger.** |
+| **NEW Risk 24** — Billing not workspace-scoped + Stripe replay risk | HIGH | **RESOLVED** | **PR #30 (F8) added workspace_id filter on every billing read + Stripe `Idempotency-Key` helper.** |
+| **NEW Risk 25** — Plugins bypass approval guard | HIGH | **RESOLVED** | **PR #33 (F10) — PluginTool now enforces `requires_approval=True` via `require_approval()` before invocation.** |
+| **NEW Risk 26** — Director loop-prevention false positives | MEDIUM | **RESOLVED** | **PR #39 (F7) fixed `SequenceMatcher` returning 1.0 on empty strings and other Director synthesis bugs.** |
 
 ---
 
@@ -391,4 +435,53 @@ Items required before Phase 3 can be marked complete (from CLAUDE.md §24):
 
 ---
 
-*Last updated: 2026-03-19*
+---
+
+## 2026-05-19 Audit War Room — Risk Mitigation Map
+
+Nineteen PRs merged on 2026-05-19 closed the long tail of code-level gaps behind the prevention
+rules. Mapping:
+
+| War-room PR | Finding | Risks mitigated |
+|-------------|---------|------------------|
+| #29 (F5) | Missing DB indexes | Risk 19 (N+1) |
+| #38 (F1) | OAuth encryption, RLS injection guard, login rate limit (migration 013) | Risk 9, Risk 17 |
+| #34 (F9) | A2A token PBKDF2 hashing + KeepSave settings (migration 014) | Risk 14, NEW Risk 9 (key sprawl) |
+| #37 (F11) | Audit log partitioning + immutability (migration 015) | NEW Risk 23 |
+| #31 (F3) | Kafka HMAC + result-consumer idempotency | NEW Risk 22 |
+| #36 (F4) | AgentBase invariants (heartbeat ref, memory-fail-DLQ, cleanup) | Risk 5 |
+| #32 (F12) | Recovery idempotency, atomic Lua health check, circuit breaker hardening | Risk 10 / NEW Risk 18 |
+| #40 (F2) | Tool `require_approval()` wiring + PII output sanitizer | Risk 4 |
+| #33 (F10) | Plugin `requires_approval` enforcement | NEW Risk 25 |
+| #30 (F8) | Billing workspace scoping + audit COUNT + Stripe idempotency | NEW Risk 24 |
+| #39 (F7) | Director loop-prevention bug fixes | NEW Risk 26 |
+| #28, #41–#46 | 7 audit reports merged into `docs/audits/` | All — paper trail |
+| **#35 (F6)** | **Embeddings generation** | **CLOSED UNMERGED — Risk 21 remains OPEN** |
+
+---
+
+### NEW Risk 21 — Embeddings never generated (vector recall returns NULL)
+**Severity:** HIGH
+**Status:** **OPEN** — F6 / PR #35 closed without merge on 2026-05-19
+**What happens:** `EpisodicMemory.write_episode()` and `SemanticMemory.upsert()` write rows to
+PostgreSQL but never call `nexus.memory.embeddings.generate()`. The `embedding` column stays
+NULL on every row. The semantic recall query in CLAUDE.md §12 (cosine over `embedding`) returns
+nothing because NULL comparisons sort last and the index is empty.
+
+**Symptoms:**
+- Agents start every task with cold context — no recall of prior similar tasks
+- `episodic_embedding_idx` ivfflat index has zero entries
+- No errors logged; the failure is silent
+
+**What needs to happen:** Re-open a follow-up PR that hooks `embeddings.generate()` into the
+write path (fire-and-forget Taskiq task per CLAUDE.md §12, or sync if latency budget allows).
+Then backfill existing rows with a one-off migration script.
+
+**Why this is high severity:** The whole "agents learn over time" thesis depends on memory
+recall. Without embeddings, NEXUS is a stateless LLM wrapper. This is the single largest gap
+the war room identified that did NOT ship a fix for.
+
+---
+
+*Last updated: 2026-05-19*
+*Previous update: 2026-03-19*
