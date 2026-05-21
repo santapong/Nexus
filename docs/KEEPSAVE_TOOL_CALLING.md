@@ -1,5 +1,10 @@
 # KeepSave Tool Calling Architecture
 
+![KeepSave](https://img.shields.io/badge/keepsave-secrets%20vault-7c3aed?logo=keybase&logoColor=fff)
+![Dual Approval](https://img.shields.io/badge/approval-dual%20gate-dc2626)
+![RBAC](https://img.shields.io/badge/access%20control-RBAC-1e40af)
+![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-encrypted%20at%20rest-0891b2)
+
 How NEXUS agents interact with KeepSave for secret management, API key rotation,
 and MCP gateway access — with dual approval for security-sensitive operations.
 
@@ -11,46 +16,33 @@ and invoke external MCP tools — all with proper security controls.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  NEXUS Agent (CEO, Engineer, etc.)                                  │
-│                                                                     │
-│  "I need to rotate the Anthropic API key"                          │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌──────────────────────────────────────┐                          │
-│  │  1. Nexus Approval Gate (guards.py)  │ ◄── Human approves in   │
-│  │     IRREVERSIBLE_TOOLS check         │     Nexus dashboard      │
-│  │     Polls HumanApproval table        │                          │
-│  └──────────────┬───────────────────────┘                          │
-│                 │ Approved                                          │
-│                 ▼                                                   │
-│  ┌──────────────────────────────────────┐                          │
-│  │  2. KeepSave Tool Function           │                          │
-│  │     tool_keepsave_update_secret()    │                          │
-│  │     (nexus/keepsave/tools.py)        │                          │
-│  └──────────────┬───────────────────────┘                          │
-└─────────────────┼───────────────────────────────────────────────────┘
-                  │ HTTPS (async httpx)
-┌─────────────────▼───────────────────────────────────────────────────┐
-│  KeepSave API                                                       │
-│                                                                     │
-│  PUT /api/v1/projects/{id}/secrets/{secretId}                      │
-│         │                                                           │
-│         ▼                                                           │
-│  ┌──────────────────────────────────────┐                          │
-│  │  3. KeepSave Approval (for PROD)     │ ◄── Admin approves in   │
-│  │     Promotion pipeline enforcement    │     KeepSave dashboard  │
-│  │     Alpha→UAT: instant               │                          │
-│  │     UAT→PROD: requires approval      │                          │
-│  └──────────────┬───────────────────────┘                          │
-│                 │                                                    │
-│                 ▼                                                   │
-│  ┌──────────────────────────────────────┐                          │
-│  │  4. AES-256-GCM Encrypted Storage    │                          │
-│  │     + Audit Trail                     │                          │
-│  └──────────────────────────────────────┘                          │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Agent as NEXUS Agent<br/>(CEO/Engineer)
+    participant Guard as Nexus Approval Gate<br/>guards.py
+    participant Human as Human Reviewer<br/>(Nexus dashboard)
+    participant Tool as KeepSave Tool<br/>integrations/keepsave/tools.py
+    participant KS as KeepSave API
+    participant Admin as KeepSave Admin<br/>(KS dashboard)
+    participant Vault as Encrypted Vault<br/>AES-256-GCM + audit
+
+    Agent->>Guard: Call tool_keepsave_update_secret<br/>(IRREVERSIBLE)
+    Guard->>Human: Create HumanApproval record<br/>publish human.input_needed
+    Note over Guard,Human: Agent polls every 2s until resolved
+    Human-->>Guard: APPROVE
+    Guard->>Tool: invoke tool function
+    Tool->>KS: PUT /api/v1/projects/{id}/secrets/{secretId}<br/>HTTPS async httpx
+    alt target = PROD
+        KS->>Admin: Promotion pipeline:<br/>UAT→PROD pending approval
+        Admin-->>KS: APPROVE
+    else target = Alpha/UAT
+        Note over KS: instant promotion
+    end
+    KS->>Vault: encrypt + persist + audit log
+    Vault-->>KS: ok
+    KS-->>Tool: 200 OK + new version
+    Tool-->>Agent: confirmation
 ```
 
 ## Dual Approval Flow
