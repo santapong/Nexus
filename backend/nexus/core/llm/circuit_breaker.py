@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 
 import structlog
@@ -174,20 +174,30 @@ class CircuitBreaker:
             latency_ms: Call latency in milliseconds.
         """
         self._total_calls += 1
-        self._window.append(CallRecord(
-            timestamp=time.monotonic(),
-            success=True,
-            latency_ms=latency_ms,
-        ))
+        was_half_open = self._state == CircuitState.HALF_OPEN
 
-        if self._state == CircuitState.HALF_OPEN:
+        if was_half_open:
+            # Clear the sliding window on recovery — otherwise the stale
+            # failure history from the OPEN period stays in the window and
+            # the next single failure rapidly re-trips OPEN via the
+            # failure-rate threshold. A successful HALF_OPEN probe means the
+            # provider is healthy; start measuring fresh.
+            self._window.clear()
             logger.info(
                 "circuit_closed",
                 provider=self.provider,
                 previous_failures=self._failure_count,
-                health_score=self.health_score,
+                health_score=1.0,
             )
             self._last_state_change = time.monotonic()
+
+        self._window.append(
+            CallRecord(
+                timestamp=time.monotonic(),
+                success=True,
+                latency_ms=latency_ms,
+            )
+        )
         self._state = CircuitState.CLOSED
         self._failure_count = 0
         self._success_count += 1
@@ -203,17 +213,18 @@ class CircuitBreaker:
         self._failure_count += 1
         self._last_failure_time = time.monotonic()
 
-        self._window.append(CallRecord(
-            timestamp=time.monotonic(),
-            success=False,
-            latency_ms=latency_ms,
-            error_type=error_type,
-        ))
+        self._window.append(
+            CallRecord(
+                timestamp=time.monotonic(),
+                success=False,
+                latency_ms=latency_ms,
+                error_type=error_type,
+            )
+        )
 
         # Check both consecutive failures AND sliding window failure rate
-        should_open = (
-            self._failure_count >= self.failure_threshold
-            or (len(self._window) >= 5 and self.failure_rate > FAILURE_RATE_THRESHOLD)
+        should_open = self._failure_count >= self.failure_threshold or (
+            len(self._window) >= 5 and self.failure_rate > FAILURE_RATE_THRESHOLD
         )
 
         if should_open and self._state != CircuitState.OPEN:
