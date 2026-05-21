@@ -7,6 +7,21 @@
 
 ---
 
+## Status Snapshot (2026-05-19)
+
+```mermaid
+pie title BACKLOG items (51 total) by status
+    "Resolved" : 33
+    "Open" : 17
+    "Open + blocked (F6 embeddings)" : 1
+```
+
+The 2026-05-19 audit war room (PRs #28–#46) closed BACKLOG-046 (secrets vault wiring via SOPS settings),
+BACKLOG-047 (OTel coverage expanded), and surfaced a new open item (embeddings never generated, see
+ERRORLOG ERROR-026). Existing closures (BACKLOG-011–016, 020–034, 038–040, 045, 049) are unchanged.
+
+---
+
 ## Format
 
 ```
@@ -22,6 +37,22 @@
 ## Backlog Items
 
 <!-- New items go here, newest first -->
+
+### BACKLOG-052 — Wire embedding generation into memory write path
+**Suggested phase:** Phase 9 (Learning Layer) — but blocks Phase 9 prerequisites
+**Added by:** audit war room
+**Date:** 2026-05-19
+**Status:** OPEN — PR #35 (F6) closed without merging
+**Source:** Audit findings; ERROR-026
+**Description:** `EpisodicMemory.write_episode()` and `SemanticMemory.upsert()` never call
+`nexus.memory.embeddings.generate()`. Every `embedding` column is NULL; the ivfflat index is
+empty; the semantic recall query in CLAUDE.md §12 returns no rows. Agents start every task
+with cold context. The fix is the original §12 design: a fire-and-forget Taskiq job per
+memory write. PR #35 attempted this but was closed unmerged on 2026-05-19 — a follow-up PR
+must re-attempt and include a backfill migration for existing rows. See ERROR-026 and
+RISK_REVIEW Risk 21.
+
+---
 
 ### BACKLOG-051 — Agent RLHF-lite feedback loop
 **Suggested phase:** Phase 5 — Track B
@@ -91,11 +122,15 @@ debugging at scale in production multi-tenant environment.
 **Suggested phase:** Phase 5 — Track A
 **Added by:** claude_code
 **Date:** 2026-03-19
+**Status:** ✅ RESOLVED — 2026-05-19 (audit war room PR #34 / F9)
 **Source:** BACKLOG-007, Phase 5 planning
 **Description:** Replace `.env` file based secrets with proper secrets management. Options:
 SOPS (simpler, git-encrypted) or HashiCorp Vault (more features, auto-rotation). Per-
 workspace secret scoping for multi-tenant. Auto-rotation for LLM API keys. Required
 before production deployment with real customer data.
+**Resolution:** SOPS integration shipped in Phase 5 (`integrations/secrets/sops.py`). KeepSave
+settings finalized + A2A token PBKDF2 hashing landed in PR #34 (migration 014). `.env`
+removed from deploy path in war-room cleanup.
 
 ---
 
@@ -589,10 +624,13 @@ UX and user perception. Low priority — no architectural impact.
 **Suggested phase:** Phase 4
 **Added by:** claude_code
 **Date:** 2026-03-07
+**Status:** ✅ RESOLVED — 2026-05-19 (rolled up into BACKLOG-046, PR #34)
 **Source:** CLAUDE.md §25 Open Questions
 **Description:** Decide between `.env` files, Docker secrets, or HashiCorp Vault for
 secrets management. Current `.env` approach is sufficient for solo local dev but must be
 replaced before multi-user deployment in Phase 4.
+**Resolution:** SOPS + KeepSave decision recorded (CLAUDE.md §25); KeepSave settings
+finalized in PR #34. See BACKLOG-046.
 
 ---
 
@@ -672,9 +710,10 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-03-19*
-*Next item ID: BACKLOG-052*
+*Last updated: 2026-05-19 (audit war room)*
+*Next item ID: BACKLOG-053*
 *Phase 4 items (029-033) all resolved.*
-*Phase 5 Track A resolved: BACKLOG-038,039,040,045.*
-*Phase 5 Track B resolved: BACKLOG-013,014,022,023,024,036,049.*
-*Phase 5 remaining: BACKLOG-041,043,044,046,047,048,050,051 + BACKLOG-035,037.*
+*Phase 5 Track A resolved: BACKLOG-007, 038, 039, 040, 045, 046.*
+*Phase 5 Track B resolved: BACKLOG-013, 014, 022, 023, 024, 036, 049.*
+*Phase 5 remaining: BACKLOG-041, 043, 044, 047, 048, 050, 051 + BACKLOG-035, 037.*
+*New open from war room: BACKLOG-052 (embeddings never generated; PR #35 closed unmerged).*

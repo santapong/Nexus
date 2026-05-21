@@ -5,6 +5,23 @@
 > NEXUS should grow into **after** v1.0 GA (see `PROJECT_COMPLETION_PLAN.md`).
 > None of this belongs in the 1.0 scope — putting it here is the discipline
 > that keeps the GA train on schedule.
+
+---
+
+## Post-GA Theme Timeline
+
+```mermaid
+timeline
+  title NEXUS post-GA horizon (v1.1+)
+  Theme A : Embodied NEXUS : 2D virtual office : Voice : Mobile PWA : Ambient screens
+  Theme B : Negotiating agents : Agent negotiation protocol : Self-reflection : Hierarchical planning : Validator agent
+  Theme C : NEXUS as substrate : Plugin marketplace : Browser extension : NL workflow compiler : Integration hub : Agent control plane
+  Theme D : Memory and knowledge : Knowledge graph memory : Federated learning : Episodic compaction
+  Theme E : Trust and commerce : NIST CAISI alignment : AP2 full integration : Red-team harness : Privacy-preserving eval
+  Wildcards : Sleep and dream : Mood modeling : MQTT physical world : Multi-player NEXUS : Agent debate : Economic agents
+```
+
+Current ranking (subject to v1.0 post-mortem): **A → C → B → D → E → Wildcards.**
 >
 > **Format.** Each theme has a one-line thesis, 3–5 concrete bets, and a "kill
 > criterion" — the signal that would tell us to stop working on it.
