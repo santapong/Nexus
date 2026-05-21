@@ -1,42 +1,139 @@
 # NEXUS
 
+![Python](https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=fff)
+![PostgreSQL](https://img.shields.io/badge/postgres-16+pgvector-336791?logo=postgresql&logoColor=fff)
+![Redis](https://img.shields.io/badge/redis-7-DC382D?logo=redis&logoColor=fff)
+![Apache Kafka](https://img.shields.io/badge/kafka-KRaft-231F20?logo=apachekafka&logoColor=fff)
+![Litestar](https://img.shields.io/badge/litestar-async-EDB641?logo=litestar&logoColor=000)
+![Pydantic](https://img.shields.io/badge/pydantic-AI-E92063?logo=pydantic&logoColor=fff)
+![Docker](https://img.shields.io/badge/docker-compose-2496ED?logo=docker&logoColor=fff)
+![Kubernetes](https://img.shields.io/badge/k8s-HPA-326CE5?logo=kubernetes&logoColor=fff)
+![React](https://img.shields.io/badge/react-18-61DAFB?logo=react&logoColor=000)
+![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=fff)
+![Vite](https://img.shields.io/badge/vite-build-646CFF?logo=vite&logoColor=fff)
+![Tailwind](https://img.shields.io/badge/tailwind-css-06B6D4?logo=tailwindcss&logoColor=fff)
+![OpenTelemetry](https://img.shields.io/badge/otel-tracing-425CC7?logo=opentelemetry&logoColor=fff)
+![Temporal](https://img.shields.io/badge/temporal-workflows-141414?logo=temporal&logoColor=fff)
+![Stripe](https://img.shields.io/badge/stripe-billing-635BFF?logo=stripe&logoColor=fff)
+
 **Agentic AI Company as a Service**
 
 A platform where every department of a digital company is staffed by an AI agent. Agents have defined roles, persistent memory, access to tools via MCP, and communicate through Apache Kafka — the "conference room" where they meet, debate, and collaborate.
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    subgraph EXTERNAL["**External world**"]
+        EXT[Other AI Agents]
+        USER[User / Dashboard]
+    end
+
+    subgraph GATEWAY["**Edge / Gateway**"]
+        A2A[A2A Gateway Service<br/>/.well-known/agent.json]
+        API[Litestar API<br/>REST + WebSocket + Auth]
+    end
+
+    subgraph BUS["**Apache Kafka — Event Bus (the Conference Room)**"]
+        KAFKA[task.queue · agent.commands · agent.responses · task.results<br/>meeting.room · director.review · audit.log · agent.heartbeat<br/>a2a.inbound · prompt.* · human.input_needed]
+    end
+
+    subgraph AGENTS["**Agent runtime — Pydantic AI (stateless, Kafka-driven)**"]
+        CEO[CEO<br/>orchestrator]
+        DIRECTOR[Director<br/>synthesizer]
+        ENGINEER[Engineer]
+        ANALYST[Analyst]
+        WRITER[Writer]
+        QA[QA]
+        PROMPT[Prompt Creator]
+    end
+
+    subgraph TOOLS["**Tools layer — MCP adapter (per-role registry + approval guards)**"]
+        TOOL_RO[web_search · file_read · code_execute · memory_read]
+        TOOL_RW[file_write · git_push · send_email · hire_external_agent]
+    end
+
+    subgraph PERSIST["**Persistence**"]
+        PG[(PostgreSQL 16 + pgvector<br/>source of truth)]
+        REDIS[(Redis 7<br/>4 roles: working / cache / pubsub / locks)]
+    end
+
+    EXT -.HTTP + SSE.-> A2A
+    USER -.HTTP + WebSocket.-> API
+    A2A ==>|a2a.inbound| KAFKA
+    API ==>|task.queue| KAFKA
+    KAFKA ==> CEO
+    KAFKA ==> DIRECTOR
+    KAFKA ==> ENGINEER
+    KAFKA ==> ANALYST
+    KAFKA ==> WRITER
+    KAFKA ==> QA
+    KAFKA ==> PROMPT
+    CEO -.publishes.-> KAFKA
+    DIRECTOR -.publishes.-> KAFKA
+    ENGINEER -.publishes.-> KAFKA
+    ANALYST -.publishes.-> KAFKA
+    WRITER -.publishes.-> KAFKA
+    QA -.publishes.-> KAFKA
+    PROMPT -.publishes.-> KAFKA
+    ENGINEER --> TOOL_RO
+    ANALYST --> TOOL_RO
+    WRITER --> TOOL_RO
+    QA --> TOOL_RO
+    PROMPT --> TOOL_RO
+    ENGINEER --> TOOL_RW
+    ANALYST --> TOOL_RW
+    WRITER --> TOOL_RW
+    AGENTS --> PG
+    AGENTS --> REDIS
+    API --> PG
+    A2A --> PG
+    KAFKA -. audit.log .-> PG
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    classDef danger fill:#dc2626,stroke:#991b1b,color:#fff
+    class KAFKA,PG,REDIS core
+    class CEO,DIRECTOR,ENGINEER,ANALYST,WRITER,QA,PROMPT core
+    class A2A,API integ
+    class TOOL_RO integ
+    class TOOL_RW danger
+    class EXT,USER ext
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  External World                                                     │
-│  Other AI Agents ←── A2A Protocol ──→     User / Dashboard         │
-└──────────────────┬──────────────────────────────┬───────────────────┘
-                   │                              │
-┌──────────────────▼──────────────┐  ┌────────────▼───────────────────┐
-│  A2A Gateway Service            │  │  Litestar API                  │
-│  /.well-known/agent.json        │  │  REST + WebSocket + Auth       │
-└──────────────────┬──────────────┘  └────────────┬───────────────────┘
-                   │                              │
-┌──────────────────▼──────────────────────────────▼───────────────────┐
-│  Apache Kafka — Event Bus  (The Conference Room)                    │
-│  task.queue · agent.commands · agent.responses · task.results       │
-│  meeting.room · memory.updates · audit.log · agent.heartbeat        │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Agent Runtime — Pydantic AI                                        │
-│  CEO · Director · Engineer · Analyst · Writer · QA · Prompt Creator │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Tools Layer — MCP Adapter                                          │
-│  web_search · file_read · code_execute · file_write · email         │
-└──────────┬──────────────────────────────────────────────────────────┘
-           │
-┌──────────▼──────────────────────────────────────────────────────────┐
-│  Persistence                                                        │
-│  PostgreSQL 16 + pgvector    Redis 7 (4 roles)                      │
-└─────────────────────────────────────────────────────────────────────┘
+
+### Task lifecycle (sequence)
+
+```mermaid
+sequenceDiagram
+    participant U as User / External A2A
+    participant API as Litestar API / A2A Gateway
+    participant K as Kafka
+    participant CEO
+    participant SPEC as Specialist (Engineer/Analyst/Writer)
+    participant DIR as Director
+    participant QA
+    participant DB as PostgreSQL
+
+    U->>API: POST /api/tasks (or POST /a2a)
+    API->>DB: insert task (status=queued)
+    API->>K: publish task.queue (HMAC-signed)
+    K->>CEO: deliver task
+    CEO->>CEO: build execution plan (risk + security)
+    CEO->>K: publish agent.commands (per subtask)
+    K->>SPEC: deliver subtask
+    SPEC->>SPEC: load memory → LLM → MCP tools
+    SPEC->>K: publish agent.responses (PII-sanitized)
+    K->>CEO: deliver responses
+    CEO->>K: publish director.review (with plan)
+    K->>DIR: deliver aggregated output
+    DIR->>DIR: security review + synthesis<br/>(convergence / loop detection)
+    DIR->>K: publish task.review_queue
+    K->>QA: deliver synthesized result
+    QA->>K: publish task.results
+    K->>API: deliver result
+    API->>DB: update task (status=completed)
+    API-->>U: WebSocket / SSE event
 ```
 
 ### Three Protocol Layers
@@ -53,9 +150,9 @@ A platform where every department of a digital company is staffed by an AI agent
 
 **Frontend:** TypeScript · React 18 · Vite · TanStack Query v5 · Zustand · Tailwind CSS · Shadcn/ui
 
-**Infrastructure:** PostgreSQL 16 + pgvector · Redis 7 · Apache Kafka (KRaft) · Docker Compose · Kubernetes (Kustomize)
+**Infrastructure:** PostgreSQL 16 + pgvector · Redis 7 · Apache Kafka (KRaft) · Docker Compose · Kubernetes (Kustomize) · Temporal · Jaeger · Uptime Kuma · OpenTelemetry · Stripe
 
-**LLM Providers:** Anthropic Claude · Google Gemini · OpenAI · Groq · Mistral · Ollama · any OpenAI-compatible endpoint (abstracted via universal ModelFactory)
+**LLM Providers:** ![Anthropic](https://img.shields.io/badge/anthropic-claude-191717?logo=anthropic&logoColor=fff) ![Google](https://img.shields.io/badge/google-gemini-4285F4?logo=google&logoColor=fff) ![Ollama](https://img.shields.io/badge/ollama-local-000?logo=ollama&logoColor=fff) OpenAI · Groq · Mistral · any OpenAI-compatible endpoint (abstracted via universal ModelFactory)
 
 ## Agent Roster
 
@@ -73,59 +170,35 @@ Models are configured per-role via environment variables (e.g., `MODEL_ENGINEER=
 
 ## Project Structure
 
-```
-nexus/
-├── CLAUDE.md                      # Master project document
-├── AGENTS.md                      # AI agent coding policy
-├── docs/
-│   ├── ARCHITECTURE.md            # System architecture & fundamentals
-│   ├── DECISIONS.md               # Architecture decision records
-│   ├── RISK_REVIEW.md             # Risk assessment & phase gates
-│   ├── BACKLOG.md                 # Deferred scope capture
-│   ├── CHANGELOG.md               # Version history
-│   ├── ERRORLOG.md                # Bug tracking & prevention
-│   └── archive/                   # Old planning documents
-├── backend/
-│   ├── pyproject.toml
-│   ├── Dockerfile
-│   ├── alembic/                   # DB migrations
-│   └── nexus/
-│       ├── api/                   # Litestar REST + WebSocket endpoints
-│       ├── agents/                # Agent implementations (base, ceo, director, engineer, ...)
-│       ├── core/                  # Core infrastructure (system breaks without these)
-│       │   ├── kafka/             # Topics, schemas, producer, consumer, meeting, signing
-│       │   ├── redis/             # 4-role client abstraction
-│       │   ├── llm/              # ModelFactory, usage tracking, circuit breaker
-│       │   ├── sanitization.py   # PII detection + output redaction
-│       │   ├── recovery.py       # Crash recovery for orphaned tasks
-│       │   ├── shutdown.py       # Graceful shutdown + task draining
-│       │   └── retry.py          # Configurable retry policies
-│       ├── tools/                 # MCP adapter (13 tools), per-role registry, approval guards
-│       ├── integrations/          # Pluggable services (degrade gracefully)
-│       │   ├── a2a/              # A2A protocol gateway
-│       │   ├── keepsave/         # Secret management + RBAC
-│       │   ├── temporal/         # Long-running workflow orchestration
-│       │   └── eval/             # LLM-as-judge eval scoring + LangFuse
-│       ├── memory/                # Episodic, semantic, working memory + embeddings
-│       ├── db/                    # SQLAlchemy models (24 tables), session, seed data
-│       ├── audit/                 # Structured audit logging
-│       └── tests/                 # Unit, behavior, integration, e2e, chaos
-├── frontend/
-│   ├── package.json
-│   └── src/
-│       ├── api/                   # Typed API client
-│       ├── components/            # Dashboard, agents, tasks, approvals, prompts
-│       ├── hooks/                 # TanStack Query hooks
-│       ├── types/                 # TypeScript interfaces
-│       └── ws/                    # WebSocket context provider
-├── scripts/
-│   └── setup.sh                   # One-command project setup
-├── k8s/
-│   ├── base/                     # K8s manifests (postgres, redis, kafka, backend, frontend)
-│   └── overlays/                 # Kustomize overlays (dev, prod)
-├── docker-compose.yml
-├── Makefile
-└── .env.example
+```mermaid
+flowchart TD
+    ROOT[nexus/]
+    ROOT --> DOCS[docs/<br/>ARCHITECTURE · DECISIONS · RISK_REVIEW<br/>BACKLOG · CHANGELOG · ERRORLOG · audits/]
+    ROOT --> BACK[backend/<br/>pyproject · Dockerfile · alembic/]
+    ROOT --> FRONT[frontend/<br/>package.json · src/]
+    ROOT --> K8S[k8s/<br/>base + dev/staging/prod overlays]
+    ROOT --> SCRIPTS[scripts/<br/>setup.sh]
+    ROOT --> META[CLAUDE.md · AGENTS.md<br/>docker-compose.yml · Makefile · .env.example]
+
+    BACK --> NEXUS[backend/nexus/]
+    NEXUS --> API_DIR[api/<br/>Litestar REST + WebSocket endpoints]
+    NEXUS --> AGENTS_DIR[agents/<br/>base · ceo · director · engineer · analyst<br/>· writer · qa · prompt_creator]
+    NEXUS --> CORE[core/<br/>kafka · redis · llm · sanitization<br/>· recovery · shutdown · retry]
+    NEXUS --> TOOLS_DIR[tools/<br/>adapter · registry · guards]
+    NEXUS --> INTEG[integrations/<br/>a2a · keepsave · temporal · eval<br/>· secrets · rlhf · fine_tuning · otel · plugins]
+    NEXUS --> MEM[memory/<br/>episodic · semantic · working · embeddings]
+    NEXUS --> DB_DIR[db/<br/>SQLAlchemy models · session · seed]
+    NEXUS --> AUDIT_DIR[audit/<br/>service · retention]
+    NEXUS --> TESTS[tests/<br/>unit · behavior · integration · e2e · chaos]
+
+    FRONT --> FSRC[src/<br/>api · components · hooks · types · ws · pages]
+
+    classDef core fill:#1e40af,stroke:#1e3a8a,color:#fff
+    classDef integ fill:#0891b2,stroke:#0e7490,color:#fff
+    classDef ext fill:#64748b,stroke:#475569,color:#fff
+    class CORE,AGENTS_DIR,DB_DIR,API_DIR,MEM core
+    class INTEG,TOOLS_DIR,AUDIT_DIR,TESTS integ
+    class ROOT,DOCS,BACK,FRONT,K8S,SCRIPTS,META,NEXUS,FSRC ext
 ```
 
 ## Current Status

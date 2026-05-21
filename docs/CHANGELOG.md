@@ -40,6 +40,135 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [0.9.0-audit-hardening] - 2026-05-21 — Audit war room: 6 audits + 11 fix PRs merged
+
+A 4-area audit followed by an 18-agent fix war room (May 19–21) shipped seven security and
+correctness fixes and six audit reports. Migration chain after merge: `011 → 012 (F5) →
+013 (F1) → 014 (F9) → 015 (F11)`. All entries below correspond to squash-merged PRs.
+
+### Security
+- **F1 — OAuth & RLS hardening** (PR #38): Fernet symmetric encryption for OAuth access /
+  refresh tokens persisted in `oauth_accounts`, with backfill migration `013` for existing
+  rows. Live RLS workspace-context injection via SQLAlchemy `after_begin` event (replaces
+  middleware-only path that could leak across tasks). OAuth `state` is now CSRF-bound to
+  the session. Login rate-limit helpers added. API-key endpoints now use the injected
+  session instead of opening a new connection.
+- **F9 — A2A token PBKDF2 hashing** (PR #34, migration `014_a2a_pbkdf2_hashing`): A2A bearer
+  tokens upgraded from raw SHA-256 to PBKDF2-HMAC-SHA256 (600 000 iterations, per-token
+  salt). Legacy SHA-256 verify path retained for backward compatibility during cut-over. A
+  deterministic HMAC pepper enables O(1) hash-prefix lookup. KeepSave client now reads
+  config from `settings` instead of env directly.
+- **F11 — Audit log partitioning + immutability** (PR #37, migration `015_audit_log_
+  partition_immutable`): `audit_log` is now monthly-partitioned with a DB-level
+  `BEFORE UPDATE OR DELETE` trigger that raises an exception on mutation. Cold-storage
+  archival job sweeps partitions older than the retention window. Closes the long-standing
+  "audit log is theoretically tamper-proof" gap.
+- **F3 — Kafka result consumer integrity** (PR #31): HMAC signature validation and
+  Redis-backed idempotency check added to the result consumer (previously sign-on-publish
+  only). `core/kafka/signing.py` now refuses the dev-key fallback unless the calling host
+  is on an explicit allowlist; production never sees a default HMAC key.
+- **F2 — Tool approval + sanitization wiring** (PR #40): `require_approval()` is finally
+  invoked inside `tool_file_write`, `tool_send_email`, `tool_git_push`, and
+  `tool_hire_external_agent` (the guard existed but was not called from the wrappers). PII
+  sanitizer is now chained on all 13 tool outputs. `tool_send_email` and the E2B sandbox
+  now fail loudly when unconfigured instead of silently no-oping. `tool_hire_external_
+  agent` response is schema-validated before being returned to the agent.
+- **F10 — Plugin guardrails** (PR #33): `requires_approval` flag on plugin manifests is now
+  enforced. A dangerous-name regex `(?i)(delete|remove|drop|push|send|pay|charge|deploy|
+  publish|destroy)` force-flips the flag to `True` regardless of what the manifest claims.
+  HTTP plugin responses are validated: `Content-Length` ≤ 1 MB, allowlisted
+  `Content-Type`, body truncated to 50 KB. Plugin hot-reload now takes a Redis lock to
+  prevent split-brain registrations.
+
+### Fixed
+- **F4 — AgentBase invariants** (PR #36): `self._heartbeat_task` reference is now preserved
+  on the instance so the background task is not GC'd mid-run (it was being silently
+  collected on short tasks). A `MemoryWriteFailed` sentinel routes failed memory writes to
+  the DLQ instead of publishing a partially-saved result. `_active_tasks` is cleaned up in
+  a `finally` block (prevents leak on cancel). `asyncio.CancelledError` is now re-raised
+  rather than swallowed. Per-task prompt is cached for 5 minutes (was: reloaded every
+  call). Meeting room participation has a 60 s default timeout. Runtime tool-ACL is
+  enforced inside `AgentBase` even when a plugin registers a tool dynamically.
+- **F12 — Idempotent recovery** (PR #32): Crash recovery now takes a Redis lock
+  `recovery_attempt:{task_id}` with a 1-hour TTL before attempting re-queue or fail. The
+  silence-check race (heartbeat written between scan and update) is eliminated via an
+  atomic Lua script. Circuit breaker sliding window is cleared on the HALF_OPEN → CLOSED
+  recovery transition (previously stale failures could re-trip immediately).
+- **F8 — Billing & analytics scoping** (PR #30): Billing queries are now scoped to
+  `workspace_id` (the cross-tenant leak was the most embarrassing finding). Audit-log
+  `COUNT(*)` patterns fixed to avoid full-table scans. Pagination caps added on all
+  unbounded list endpoints. Stripe webhook idempotency helpers landed but require a
+  one-line adoption in the webhook handler (see Known Issues).
+- **F7 — Director loop prevention** (PR #39): `SequenceMatcher.ratio()` returns `1.0` for
+  two empty strings, which was making the Director declare false stagnation on rounds
+  where everyone happened to be still thinking — empty rounds are now skipped. The
+  plan-scope HALT path now routes to `human.input_needed` instead of forwarding to QA.
+  Activity timeout for meeting room rounds defaulted to 120 s.
+
+### Added
+- **F5 — Hot-path DB indexes** (PR #29, migration `012_audit_perf_indexes`): six new
+  indexes including the long-missing `ivfflat` index on `episodic_memory.embedding` (gated
+  on `vector_cosine_ops`) and composite indexes for the analytics and audit dashboards.
+  EXPLAIN-ANALYZE shows the worst dashboard query dropping from 4.2 s to 38 ms on the
+  reference dataset.
+- **6 audit reports** under `docs/audits/` (PR #28, #41, #42, #43, #44, #45, #46):
+  - `AUDIT_2026-05-19.md` — original 4-area audit (security, db, backend, tools)
+  - `A2A_2026-05-19.md` — A2A protocol & federation
+  - `INFRA_2026-05-19.md` — infra & K8s
+  - `WORKFLOW_2026-05-19.md` — Taskiq / Temporal workflow correctness
+  - `OBSERVABILITY_2026-05-19.md` — OTel coverage + structured logging gaps
+  - `FRONTEND_2026-05-19.md` — TS strictness, TanStack invalidation, accessibility
+  - `PERFORMANCE_2026-05-19.md` — hot-path EXPLAIN-ANALYZE
+- **Audit skill set** under `.claude/skills/audit-*/SKILL.md` (PR #28): `audit-security`,
+  `audit-db-performance`, `audit-backend`, `audit-tools-mcp`. These are reusable
+  read-only skills the team can invoke before any production push.
+
+### Changed
+- `core/kafka/signing.py` — dev-key fallback is now allowlist-gated by host (was: always
+  allowed when JWT secret missing).
+- `tools/adapter.py` — every wrapper goes through PII sanitization and (where applicable)
+  `require_approval()`. `test_tools_registry_phase2` updated to reflect the new wiring;
+  the stale assertion that the guard was *not* called has been removed.
+- `core/llm/circuit_breaker.py` — sliding window is cleared on successful recovery, not
+  carried across state transitions.
+
+### Database
+- Migration: `012_audit_perf_indexes` — 6 hot-path indexes including `ivfflat` on
+  `episodic_memory.embedding`
+- Migration: `013_oauth_token_encryption` — Fernet-encrypts `oauth_accounts.access_token`
+  / `refresh_token` columns with backfill of existing rows
+- Migration: `014_a2a_pbkdf2_hashing` — PBKDF2-HMAC-SHA256 hashing for A2A tokens, dual
+  read of legacy SHA-256 column during cut-over
+- Migration: `015_audit_log_partition_immutable` — monthly partitions on `audit_log` plus
+  `BEFORE UPDATE OR DELETE` trigger that raises on mutation
+
+### Documentation
+- Six audit reports under `docs/audits/` (see Added).
+- Four reusable audit skills under `.claude/skills/audit-*/SKILL.md`.
+
+### Known Issues
+- **F6 (memory & embeddings) was NOT merged** — PR #35 was closed without merging. The
+  audit's hidden finding remains unfixed on main: `episodic_memory.embedding` and
+  `semantic_memory.embedding` are always `NULL` because the embedding-generation pipeline
+  was never wired through `AgentBase._write_memory()`. The `012` ivfflat index from F5
+  exists but is querying an empty column, so semantic recall returns zero rows. Re-apply
+  before relying on episodic recall for anything user-facing.
+- **F8 Stripe webhook idempotency wire-up pending** — the helper
+  `stripe_event_already_processed(redis, event_id)` is implemented and tested but
+  `integrations/stripe/webhooks.py` still needs the one-line adoption:
+  `if await stripe_event_already_processed(redis, event.id): return 200`. Without it,
+  Stripe webhook retries can double-charge.
+- **F12 future work** — the Redis-lock fallback survives ~1-hour crash windows. A future
+  migration adding `recovery_attempted_at` to the `Task` model would make it fully
+  crash-survivable across longer outages.
+
+**Authored by:** claude_code (war room: 18 agents across 4 audit areas)
+**Task ID:** war-room-2026-05-19
+**PRs:** #28, #29, #30, #31, #32, #33, #34, #36, #37, #38, #39, #40, #41, #42, #43, #44,
+#45, #46
+
+---
+
 ## [2026-04-01] — Phase 8: Business-grade platform, Temporal deep integration, observability
 
 ### Added
