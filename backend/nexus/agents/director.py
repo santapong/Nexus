@@ -21,9 +21,8 @@ Publishes to: task.review_queue (sends synthesized output to QA)
 from __future__ import annotations
 
 import asyncio
-import json
+import re
 from typing import Any
-from uuid import UUID
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
@@ -36,6 +35,7 @@ from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import calculate_cost, record_usage
 from nexus.db.models import AgentRole
+from nexus.settings import settings
 
 logger = structlog.get_logger()
 
@@ -44,6 +44,78 @@ _RETRY_BACKOFF_SECONDS = [5.0, 10.0, 20.0, 30.0, 45.0]
 
 # Maximum number of contributions the Director will evaluate
 _MAX_CONTRIBUTIONS = 10
+
+# Reasons the Director uses when escalating to human.input_needed.
+_HALT_REASON_BLOCKED_PATTERN = "director_security_violation"
+_HALT_REASON_OUT_OF_SCOPE = "director_scope_violation"
+
+
+def _compile_blocked_patterns(raw: str) -> list[re.Pattern[str]]:
+    """Compile the comma-separated `settings.security_blocked_patterns` value.
+
+    Invalid regex patterns are skipped with a warning so a misconfiguration
+    cannot completely disable the Director.
+
+    Args:
+        raw: Comma-separated regex pattern string from settings.
+
+    Returns:
+        List of compiled regex Pattern objects (may be empty).
+    """
+    patterns: list[re.Pattern[str]] = []
+    for part in (raw or "").split(","):
+        token = part.strip()
+        if not token:
+            continue
+        try:
+            patterns.append(re.compile(token, re.IGNORECASE))
+        except re.error as exc:
+            logger.warning(
+                "director_invalid_blocked_pattern",
+                pattern=token,
+                error=str(exc),
+            )
+    return patterns
+
+
+def _extract_subtask_ids(execution_plan: dict[str, Any]) -> set[str]:
+    """Pull known subtask identifiers out of the CEO's execution plan.
+
+    Tolerates multiple plan shapes — the plan may store subtasks as a list
+    of dicts (each with `id`), a list of strings, or a dict keyed by id.
+
+    Args:
+        execution_plan: Plan dict from the CEO.
+
+    Returns:
+        Set of subtask ID strings the plan authorized. Empty set means the
+        plan did not define any subtasks (scope check is then a no-op).
+    """
+    subtasks = execution_plan.get("subtasks") if execution_plan else None
+    ids: set[str] = set()
+    if isinstance(subtasks, dict):
+        for key in subtasks:
+            ids.add(str(key))
+    elif isinstance(subtasks, list):
+        for entry in subtasks:
+            if isinstance(entry, dict):
+                value = entry.get("id") or entry.get("subtask_id")
+                if value is not None:
+                    ids.add(str(value))
+            elif isinstance(entry, str):
+                ids.add(entry)
+    return ids
+
+
+def _scan_for_blocked_patterns(text: str, patterns: list[re.Pattern[str]]) -> list[str]:
+    """Return the list of pattern source-strings that match the text."""
+    if not text or not patterns:
+        return []
+    matches: list[str] = []
+    for pat in patterns:
+        if pat.search(text):
+            matches.append(pat.pattern)
+    return matches
 
 
 class DirectorAgent(AgentBase):
@@ -87,7 +159,37 @@ class DirectorAgent(AgentBase):
                 recommendation=report.recommendation,
             )
 
-        # Security review: validate output against execution plan
+        # Hard security checks BEFORE synthesis. A violation halts the
+        # pipeline — we publish to human.input_needed and skip QA entirely.
+        halt_reason, halt_details = self._enforce_plan_constraints(
+            task_id=task_id,
+            aggregated_output=aggregated_output,
+            agent_outputs=message.payload.get("agent_outputs"),
+            execution_plan=execution_plan,
+        )
+        if halt_reason is not None:
+            await self._halt_for_human(
+                message=message,
+                reason=halt_reason,
+                details=halt_details,
+                original_instruction=original_instruction,
+            )
+            return AgentResponse(
+                task_id=message.task_id,
+                trace_id=message.trace_id,
+                agent_id=self.agent_id,
+                payload={},
+                status="escalated",
+                output={
+                    "action": "director_halted_for_human",
+                    "reason": halt_reason,
+                    "details": halt_details,
+                    "task_id": task_id,
+                },
+                tokens_used=0,
+            )
+
+        # Soft security review: produce LLM context for the synthesis prompt.
         security_context = self._security_review(
             task_id=task_id,
             aggregated_output=aggregated_output,
@@ -145,6 +247,151 @@ class DirectorAgent(AgentBase):
             tokens_used=0,
         )
 
+    def _enforce_plan_constraints(
+        self,
+        *,
+        task_id: str,
+        aggregated_output: str,
+        agent_outputs: Any,
+        execution_plan: dict[str, Any],
+    ) -> tuple[str | None, dict[str, Any]]:
+        """Run hard pre-synthesis security & scope checks.
+
+        Returns a tuple ``(halt_reason, details)``. ``halt_reason`` is None
+        when nothing blocks the pipeline; otherwise it is a stable string
+        identifier (see ``_HALT_REASON_*`` constants) and ``details`` is a
+        dict suitable for inclusion in a human.input_needed payload.
+
+        Checks performed:
+          1. Scan ``aggregated_output`` against each compiled regex from
+             ``settings.security_blocked_patterns``. Any match halts.
+          2. Extract authorized subtask IDs from ``execution_plan``. If
+             ``agent_outputs`` is provided as a list of objects with a
+             ``subtask_id`` field, flag any output that references an
+             unknown ID. Outputs lacking any ID reference are also flagged
+             — they cannot be traced back to a plan-approved scope.
+
+        Args:
+            task_id: For logging context.
+            aggregated_output: Combined text from all agents.
+            agent_outputs: Optional structured per-agent output list from the
+                CEO's payload. Each entry may be a dict with ``subtask_id``.
+            execution_plan: CEO's plan dict (may be empty).
+
+        Returns:
+            ``(reason, details)`` — reason is None when synthesis may proceed.
+        """
+        # 1) Blocked-pattern scan (regex from settings).
+        blocked_setting = getattr(settings, "security_blocked_patterns", "") or ""
+        patterns = _compile_blocked_patterns(blocked_setting)
+        matched = _scan_for_blocked_patterns(aggregated_output, patterns)
+        if matched:
+            logger.warning(
+                "director_security_blocked_pattern",
+                task_id=task_id,
+                matched_patterns=matched,
+            )
+            return _HALT_REASON_BLOCKED_PATTERN, {
+                "matched_patterns": matched,
+                "description": (
+                    "Aggregated output matched one or more configured "
+                    "security_blocked_patterns. Human review required."
+                ),
+            }
+
+        # 2) Scope check: outputs must reference a plan-authorized subtask.
+        known_ids = _extract_subtask_ids(execution_plan)
+        if known_ids and isinstance(agent_outputs, list):
+            unknown_refs: list[dict[str, Any]] = []
+            missing_refs: list[dict[str, Any]] = []
+            for idx, entry in enumerate(agent_outputs):
+                if not isinstance(entry, dict):
+                    continue
+                ref = entry.get("subtask_id") or entry.get("id")
+                if ref is None:
+                    missing_refs.append({"index": idx, "agent": entry.get("agent")})
+                    continue
+                if str(ref) not in known_ids:
+                    unknown_refs.append(
+                        {
+                            "index": idx,
+                            "agent": entry.get("agent"),
+                            "subtask_id": str(ref),
+                        }
+                    )
+
+            if unknown_refs or missing_refs:
+                logger.warning(
+                    "director_scope_violation",
+                    task_id=task_id,
+                    unknown_refs=unknown_refs,
+                    missing_refs=missing_refs,
+                    known_subtask_ids=sorted(known_ids),
+                )
+                return _HALT_REASON_OUT_OF_SCOPE, {
+                    "unknown_refs": unknown_refs,
+                    "missing_refs": missing_refs,
+                    "known_subtask_ids": sorted(known_ids),
+                    "description": (
+                        "One or more agent outputs reference a subtask not "
+                        "in the CEO's execution plan, or do not reference "
+                        "any subtask at all. Scope creep blocked."
+                    ),
+                }
+
+        return None, {}
+
+    async def _halt_for_human(
+        self,
+        *,
+        message: AgentCommand,
+        reason: str,
+        details: dict[str, Any],
+        original_instruction: str,
+    ) -> None:
+        """Publish a human.input_needed event and stop the synthesis pipeline.
+
+        Does NOT forward to QA. The pipeline only resumes after a human
+        explicitly approves or rejects via the approvals flow.
+        """
+        msg = KafkaMessage(
+            task_id=message.task_id,
+            trace_id=message.trace_id,
+            agent_id=self.agent_id,
+            payload={
+                "reason": reason,
+                "instruction": original_instruction,
+                "agent_role": self.role.value,
+                "violation": details,
+                "stage": "director_pre_synthesis",
+            },
+        )
+        await publish(Topics.HUMAN_INPUT_NEEDED, msg, key=str(message.task_id))
+
+        try:
+            await self._broadcast(
+                {
+                    "event": "human_input_needed",
+                    "agent_id": self.agent_id,
+                    "task_id": str(message.task_id),
+                    "reason": reason,
+                }
+            )
+        except Exception as exc:
+            # Broadcast failures are non-fatal — the Kafka publish is the
+            # authoritative event.
+            logger.warning(
+                "director_broadcast_failed",
+                task_id=str(message.task_id),
+                error=str(exc),
+            )
+
+        logger.info(
+            "director_halted_pipeline",
+            task_id=str(message.task_id),
+            reason=reason,
+        )
+
     def _security_review(
         self,
         *,
@@ -188,11 +435,17 @@ class DirectorAgent(AgentBase):
             )
 
         # Check for shell injection patterns in output
-        _DANGEROUS_PATTERNS = [
-            "rm -rf", "sudo ", "; DROP TABLE", "eval(", "exec(",
-            "os.system(", "subprocess.call(", "__import__(",
+        dangerous_patterns = [
+            "rm -rf",
+            "sudo ",
+            "; DROP TABLE",
+            "eval(",
+            "exec(",
+            "os.system(",
+            "subprocess.call(",
+            "__import__(",
         ]
-        for pattern in _DANGEROUS_PATTERNS:
+        for pattern in dangerous_patterns:
             if pattern in aggregated_output:
                 concerns.append(
                     f"WARNING: Output contains potentially dangerous pattern: '{pattern}'. "
@@ -243,7 +496,8 @@ class DirectorAgent(AgentBase):
             "- Do NOT simply concatenate the outputs. Synthesize them.\n"
             "- Do NOT add information that no agent provided — only combine what exists.\n"
             "- Do NOT fabricate sources or data.\n"
-            "- Preserve specific technical details, code, and citations from the best contribution.\n"
+            "- Preserve specific technical details, code, and citations from"
+            " the best contribution.\n"
             "- If one agent's work is clearly superior, use it as the foundation and enhance.\n"
         )
 
@@ -254,14 +508,11 @@ class DirectorAgent(AgentBase):
             synthesis_prompt += f"\n{security_context}\n"
 
         user_message = (
-            f"Original task: {original_instruction}\n\n"
-            f"Agent contributions:\n{aggregated_output}"
+            f"Original task: {original_instruction}\n\nAgent contributions:\n{aggregated_output}"
         )
 
         try:
-            result = await self._run_with_retry(
-                f"{synthesis_prompt}\n\n{user_message}", task_id
-            )
+            result = await self._run_with_retry(f"{synthesis_prompt}\n\n{user_message}", task_id)
 
             # Record LLM usage
             try:
@@ -315,13 +566,9 @@ class DirectorAgent(AgentBase):
             )
 
         if report.similarity_scores:
-            lines.append(
-                f"Round-to-round similarity: {report.similarity_scores}"
-            )
+            lines.append(f"Round-to-round similarity: {report.similarity_scores}")
         if report.unique_ideas_per_round:
-            lines.append(
-                f"Unique ideas per round: {report.unique_ideas_per_round}"
-            )
+            lines.append(f"Unique ideas per round: {report.unique_ideas_per_round}")
 
         lines.append(f"Recommendation: {report.recommendation} — {report.reason}")
 

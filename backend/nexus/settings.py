@@ -207,6 +207,12 @@ class Settings(BaseSettings):
     tool_file_read_max_bytes: int = 10 * 1024 * 1024  # 10MB
     tool_allowed_dirs: str = ""  # Comma-separated allowed directories for file_read
 
+    # ─── Phase 7: Director security review ──────────────────────────
+    # Comma-separated regex patterns. If any agent output matches, the
+    # Director halts the pipeline and escalates to human.input_needed.
+    # Default empty — operators add patterns via env var at runtime.
+    security_blocked_patterns: str = ""
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"
