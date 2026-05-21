@@ -25,11 +25,48 @@ logger = structlog.get_logger()
 _SIGNING_KEY: bytes = b""
 
 
+_DEV_FALLBACK_KEY = "nexus-dev-signing-key"
+_DEV_ENVIRONMENTS = frozenset({"dev", "development", "local", "test"})
+
+
 def _get_signing_key() -> bytes:
-    """Lazily load the signing key from settings."""
-    global _SIGNING_KEY  # noqa: PLW0603
+    """Lazily load the signing key from settings.
+
+    The signing key is derived from ``settings.jwt_secret_key``. If it is
+    missing/empty:
+
+    * In a dev/local/test environment we fall back to a well-known literal
+      so local development is friction-free. A WARNING is logged so the
+      fallback is never silent.
+    * In any other environment we raise ``RuntimeError`` — running with a
+      predictable signing key in production would let any attacker forge
+      valid Kafka messages and bypass HMAC integrity checks entirely.
+
+    Raises:
+        RuntimeError: If ``jwt_secret_key`` is empty in a non-dev environment.
+    """
+    global _SIGNING_KEY
     if not _SIGNING_KEY:
-        key_material = settings.jwt_secret_key or "nexus-dev-signing-key"
+        key_material = settings.jwt_secret_key
+        if not key_material:
+            env = (settings.app_env or "").lower()
+            if env not in _DEV_ENVIRONMENTS:
+                msg = (
+                    "FATAL: jwt_secret_key is empty and the Kafka signing key "
+                    "fallback is only allowed in dev/local/test environments "
+                    f"(current app_env={settings.app_env!r}). Set a strong "
+                    "JWT_SECRET_KEY before starting the service."
+                )
+                raise RuntimeError(msg)
+            logger.warning(
+                "kafka_signing_key_dev_fallback",
+                app_env=settings.app_env,
+                hint=(
+                    "Using hardcoded dev signing key. Set JWT_SECRET_KEY "
+                    "to a strong random secret outside dev/local/test."
+                ),
+            )
+            key_material = _DEV_FALLBACK_KEY
         _SIGNING_KEY = key_material.encode("utf-8")
     return _SIGNING_KEY
 
