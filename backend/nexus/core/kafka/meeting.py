@@ -34,6 +34,107 @@ DEFAULT_TIMEOUT_SECONDS = 300  # 5 minutes
 MAX_ROUNDS = 10
 SIMILARITY_THRESHOLD = 0.75  # Above this, responses are considered repetitive
 STAGNATION_WINDOW = 2  # Consecutive rounds with no new ideas = stagnation
+DEFAULT_ACTIVITY_TIMEOUT_SECONDS = 120  # No-activity timeout (2 minutes)
+
+# Allowed termination reasons. Any meeting.terminated event must use one of these.
+TERMINATION_REASONS: frozenset[str] = frozenset(
+    {
+        "ceo",
+        "converged",
+        "stagnated",
+        "looped",
+        "max_rounds",
+        "timeout",
+        "activity_timeout",
+        "director_convergence",
+        "director_loop",
+    }
+)
+
+
+# ─── Similarity & convergence helpers (unit-testable) ───────────────────────
+
+
+def jaccard_similarity(text_a: str, text_b: str) -> float:
+    """Token-set Jaccard similarity. Returns 1.0 for two empty strings.
+
+    TODO: Replace with embedding-based cosine similarity once the embeddings
+    pipeline supports synchronous calls without taskiq overhead.
+
+    Args:
+        text_a: First text.
+        text_b: Second text.
+
+    Returns:
+        Similarity in [0.0, 1.0].
+    """
+    tokens_a = set(text_a.lower().split())
+    tokens_b = set(text_b.lower().split())
+    if not tokens_a and not tokens_b:
+        # Two empty strings are considered identical only because they hold no
+        # information — callers should treat this case as "no data" and skip.
+        return 1.0
+    union = tokens_a | tokens_b
+    if not union:
+        return 0.0
+    intersection = tokens_a & tokens_b
+    return len(intersection) / len(union)
+
+
+def text_similarity(text_a: str, text_b: str) -> float:
+    """Composite similarity using SequenceMatcher with a Jaccard fallback.
+
+    SequenceMatcher captures sentence-level structure; Jaccard captures
+    vocabulary overlap. Empty inputs yield 0.0 (treated as "no signal").
+
+    Args:
+        text_a: First text.
+        text_b: Second text.
+
+    Returns:
+        Similarity in [0.0, 1.0]. 0.0 if either input is empty.
+    """
+    # Bail out on empty inputs — SequenceMatcher returns 1.0 for two empties,
+    # which would otherwise be misread as "the rounds are identical".
+    if not text_a.strip() or not text_b.strip():
+        return 0.0
+    seq = SequenceMatcher(None, text_a, text_b).ratio()
+    jac = jaccard_similarity(text_a, text_b)
+    # Weighted average — sequence structure weighted slightly higher.
+    return round(0.6 * seq + 0.4 * jac, 4)
+
+
+def count_unique_ideas(
+    responses: list[MeetingMessage], *, similarity_threshold: float = SIMILARITY_THRESHOLD
+) -> int:
+    """Count distinct ideas in a list of responses.
+
+    Two responses are considered the same idea if their similarity is at or
+    above the threshold. An empty response list returns 0 (caller must NOT
+    treat 0 as stagnation without also confirming responses existed).
+
+    Args:
+        responses: Messages from a single round.
+        similarity_threshold: Threshold above which responses collapse.
+
+    Returns:
+        Number of distinct response clusters in this round.
+    """
+    if not responses:
+        return 0
+    unique: list[str] = []
+    for resp in responses:
+        content = (resp.content or "").strip()
+        if not content:
+            continue
+        is_unique = True
+        for existing in unique:
+            if text_similarity(existing, content) >= similarity_threshold:
+                is_unique = False
+                break
+        if is_unique:
+            unique.append(content)
+    return len(unique)
 
 
 # ─── Meeting room models ────────────────────────────────────────────────────
@@ -61,6 +162,10 @@ class MeetingConfig(BaseModel):
     participants: list[str]  # Agent roles to invite
     max_rounds: int = MAX_ROUNDS
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS
+    # If no message lands on the meeting for this many seconds, force terminate
+    # with reason="activity_timeout". Prevents indefinitely-hung meetings if an
+    # agent crashes mid-discussion.
+    activity_timeout_seconds: int = DEFAULT_ACTIVITY_TIMEOUT_SECONDS
 
 
 class MeetingResult(BaseModel):
@@ -70,7 +175,8 @@ class MeetingResult(BaseModel):
     rounds_completed: int
     messages: list[MeetingMessage]
     conclusion: str
-    terminated_by: str  # "ceo" | "timeout" | "max_rounds" | "director_convergence" | "director_loop"
+    # One of TERMINATION_REASONS (see top of file).
+    terminated_by: str
 
 
 class ConvergenceReport(BaseModel):
@@ -104,6 +210,7 @@ class MeetingRoom:
         self.messages: list[MeetingMessage] = []
         self.current_round = 0
         self._start_time = time.time()
+        self._last_activity_at = self._start_time
 
     @property
     def meeting_id(self) -> str:
@@ -119,6 +226,19 @@ class MeetingRoom:
     def is_max_rounds(self) -> bool:
         """Check if the meeting has exceeded max rounds."""
         return self.current_round >= self.config.max_rounds
+
+    @property
+    def is_activity_timed_out(self) -> bool:
+        """Return True when no message has arrived within the activity window.
+
+        Used by callers (typically a watchdog or the Director's polling loop)
+        to detect when an agent crashed mid-discussion and the meeting is hung.
+        """
+        return (time.time() - self._last_activity_at) > self.config.activity_timeout_seconds
+
+    def _mark_activity(self) -> None:
+        """Reset the activity-timeout clock. Called on every publish_message."""
+        self._last_activity_at = time.time()
 
     async def publish_message(self, msg: MeetingMessage) -> None:
         """Publish a meeting message to the meeting.room topic.
@@ -138,6 +258,7 @@ class MeetingRoom:
             key=self.meeting_id,
         )
         self.messages.append(msg)
+        self._mark_activity()
 
         logger.info(
             "meeting_message_published",
@@ -191,11 +312,22 @@ class MeetingRoom:
         Args:
             conclusion: The CEO's final summary/decision.
             sender_id: The CEO agent's ID.
-            reason: Why terminated ("ceo", "timeout", "max_rounds").
+            reason: Why terminated. Must be in TERMINATION_REASONS; falls back
+                to "ceo" if an unknown legacy value is passed.
 
         Returns:
             MeetingResult with all messages and the conclusion.
         """
+        # Tolerate legacy callers that pass a "synthesize" / "continue"
+        # recommendation rather than a real termination reason.
+        if reason not in TERMINATION_REASONS:
+            logger.warning(
+                "meeting_terminate_unknown_reason",
+                meeting_id=self.meeting_id,
+                given_reason=reason,
+            )
+            reason = "ceo"
+
         msg = MeetingMessage(
             meeting_id=self.meeting_id,
             sender_role="ceo",
@@ -260,68 +392,89 @@ class MeetingRoom:
         The Director agent calls this to decide whether to continue,
         synthesize a result, or terminate the meeting.
 
+        Edge-case behavior:
+          - < 2 rounds → recommendation="continue", no scoring attempted.
+          - A round with zero responses contributes 0 unique ideas BUT does
+            NOT increment the looping/stagnation counters (empty rounds are
+            treated as "no signal", not as repetition).
+          - Activity timeout → recommendation="terminate", reason mentions
+            "activity_timeout".
+
         Returns:
             ConvergenceReport with analysis and recommendation.
         """
         report = ConvergenceReport(meeting_id=self.meeting_id)
 
+        # Hard timeouts take precedence — even if there is no data, we must
+        # surface a clear terminate recommendation.
+        if self.is_activity_timed_out:
+            report.recommendation = "terminate"
+            report.reason = (
+                f"No activity for {self.config.activity_timeout_seconds}s — "
+                "likely a crashed participant. activity_timeout."
+            )
+            self._log_convergence(report)
+            return report
+
         if self.current_round < 2:
             report.recommendation = "continue"
             report.reason = "Too few rounds to assess convergence"
+            self._log_convergence(report)
             return report
 
-        # Compute per-round similarity to detect repetition
-        round_texts: list[str] = []
+        # Collect per-round combined text + presence flag so we can skip
+        # empty rounds from similarity scoring.
+        round_payloads: list[tuple[str, bool]] = []
         for r in range(1, self.current_round + 1):
             responses = self.get_responses_for_round(r)
-            combined = " ".join(m.content for m in responses)
-            round_texts.append(combined)
+            combined = " ".join((m.content or "").strip() for m in responses).strip()
+            round_payloads.append((combined, bool(responses)))
+            report.unique_ideas_per_round.append(count_unique_ideas(responses))
 
-        # Compare consecutive rounds for similarity
-        for i in range(1, len(round_texts)):
-            sim = SequenceMatcher(None, round_texts[i - 1], round_texts[i]).ratio()
+        # Compare consecutive rounds for similarity. Skip pairs where either
+        # round had zero responses — comparing to nothing is meaningless and
+        # would otherwise produce false-positive loops.
+        for i in range(1, len(round_payloads)):
+            prev_text, prev_present = round_payloads[i - 1]
+            curr_text, curr_present = round_payloads[i]
+            if not (prev_present and curr_present):
+                continue
+            sim = text_similarity(prev_text, curr_text)
             report.similarity_scores.append(round(sim, 3))
 
-        # Detect looping: high similarity across consecutive rounds
+        # Detect looping: high similarity across the most-recent comparable rounds.
         recent_sims = report.similarity_scores[-STAGNATION_WINDOW:]
-        if recent_sims and all(s >= SIMILARITY_THRESHOLD for s in recent_sims):
+        if len(recent_sims) >= STAGNATION_WINDOW and all(
+            s >= SIMILARITY_THRESHOLD for s in recent_sims
+        ):
             report.is_looping = True
 
-        # Detect stagnation: agents repeating their own arguments
-        for r in range(1, self.current_round + 1):
-            responses = self.get_responses_for_round(r)
-            unique_contents: set[str] = set()
-            for resp in responses:
-                # Check if this response is substantially different from existing ones
-                is_unique = True
-                for existing in unique_contents:
-                    if SequenceMatcher(None, existing, resp.content).ratio() >= SIMILARITY_THRESHOLD:
-                        is_unique = False
-                        break
-                if is_unique:
-                    unique_contents.add(resp.content)
-            report.unique_ideas_per_round.append(len(unique_contents))
-
-        # Check if unique ideas are declining
-        if len(report.unique_ideas_per_round) >= STAGNATION_WINDOW:
-            recent_ideas = report.unique_ideas_per_round[-STAGNATION_WINDOW:]
+        # Detect stagnation: only consider rounds that actually had responses.
+        # A round with zero responses is "missing data", not "stagnation".
+        rounds_with_responses = [
+            count
+            for count, (_, present) in zip(
+                report.unique_ideas_per_round, round_payloads, strict=False
+            )
+            if present
+        ]
+        if len(rounds_with_responses) >= STAGNATION_WINDOW:
+            recent_ideas = rounds_with_responses[-STAGNATION_WINDOW:]
             if all(c <= 1 for c in recent_ideas):
                 report.is_stagnating = True
 
-        # Detect convergence: agents are agreeing (high intra-round similarity)
-        if self.current_round >= 2:
-            last_responses = self.get_responses_for_round(self.current_round)
-            if len(last_responses) >= 2:
-                contents = [m.content for m in last_responses]
-                intra_sims: list[float] = []
-                for i in range(len(contents)):
-                    for j in range(i + 1, len(contents)):
-                        intra_sims.append(
-                            SequenceMatcher(None, contents[i], contents[j]).ratio()
-                        )
-                avg_intra = sum(intra_sims) / len(intra_sims) if intra_sims else 0.0
-                if avg_intra >= SIMILARITY_THRESHOLD:
-                    report.is_converging = True
+        # Detect convergence: agents agree within the last populated round.
+        last_responses = self.get_responses_for_round(self.current_round)
+        if len(last_responses) >= 2:
+            contents = [(m.content or "").strip() for m in last_responses]
+            contents = [c for c in contents if c]
+            intra_sims: list[float] = []
+            for i in range(len(contents)):
+                for j in range(i + 1, len(contents)):
+                    intra_sims.append(text_similarity(contents[i], contents[j]))
+            avg_intra = sum(intra_sims) / len(intra_sims) if intra_sims else 0.0
+            if avg_intra >= SIMILARITY_THRESHOLD:
+                report.is_converging = True
 
         # Determine recommendation
         if report.is_looping:
@@ -349,6 +502,11 @@ class MeetingRoom:
             report.recommendation = "continue"
             report.reason = "Discussion is productive — new ideas emerging."
 
+        self._log_convergence(report)
+        return report
+
+    def _log_convergence(self, report: ConvergenceReport) -> None:
+        """Emit a structured log for the convergence decision."""
         logger.info(
             "meeting_convergence_checked",
             meeting_id=self.meeting_id,
@@ -359,7 +517,98 @@ class MeetingRoom:
             is_converging=report.is_converging,
         )
 
-        return report
+    def map_recommendation_to_reason(self, report: ConvergenceReport) -> str:
+        """Map a ConvergenceReport to an allowed termination reason.
+
+        Returns one of TERMINATION_REASONS based on the report state and
+        meeting clock.
+
+        Args:
+            report: The convergence report to interpret.
+
+        Returns:
+            A reason string from TERMINATION_REASONS.
+        """
+        if report.is_looping:
+            return "looped"
+        if report.is_stagnating:
+            return "stagnated"
+        if report.is_converging:
+            return "converged"
+        if self.is_max_rounds:
+            return "max_rounds"
+        if self.is_activity_timed_out:
+            return "activity_timeout"
+        if self.is_timed_out:
+            return "timeout"
+        return "ceo"
+
+    async def force_terminate(
+        self,
+        *,
+        reason: str,
+        sender_id: str,
+        final_summary: str = "",
+    ) -> MeetingResult:
+        """Force-terminate the meeting with a structured reason.
+
+        Publishes a `meeting.terminated` event to the MEETING_ROOM topic
+        using the standard KafkaMessage envelope so it shows up in the same
+        ordered stream as other meeting messages. The payload includes the
+        full set of required fields: task_id, trace_id, agent_id="director",
+        reason, final_round, participants, final_summary.
+
+        Args:
+            reason: One of TERMINATION_REASONS.
+            sender_id: ID of the agent forcing termination (Director usually).
+            final_summary: Optional summary string to include in payload.
+
+        Returns:
+            MeetingResult with `terminated_by` set to the validated reason.
+
+        Raises:
+            ValueError: If `reason` is not in TERMINATION_REASONS.
+        """
+        if reason not in TERMINATION_REASONS:
+            raise ValueError(
+                f"Invalid termination reason '{reason}'. "
+                f"Must be one of {sorted(TERMINATION_REASONS)}."
+            )
+
+        # Publish the meeting.terminated event with the full required payload.
+        terminated_event = KafkaMessage(
+            task_id=UUID(self.config.parent_task_id),
+            trace_id=UUID(self.config.trace_id),
+            agent_id="director",
+            payload={
+                "event": "meeting.terminated",
+                "meeting_id": self.meeting_id,
+                "task_id": self.config.parent_task_id,
+                "trace_id": self.config.trace_id,
+                "reason": reason,
+                "final_round": self.current_round,
+                "participants": list(self.config.participants),
+                "final_summary": final_summary,
+            },
+        )
+        await publish(Topics.MEETING_ROOM, terminated_event, key=self.meeting_id)
+        self._mark_activity()
+
+        logger.info(
+            "meeting_force_terminated",
+            meeting_id=self.meeting_id,
+            reason=reason,
+            final_round=self.current_round,
+            participants=self.config.participants,
+        )
+
+        return MeetingResult(
+            meeting_id=self.meeting_id,
+            rounds_completed=self.current_round,
+            messages=self.messages,
+            conclusion=final_summary,
+            terminated_by=reason,
+        )
 
     async def run_meeting_round(
         self,
@@ -467,7 +716,7 @@ class MeetingRoom:
         for resp in all_responses:
             is_unique = True
             for kept in best:
-                if SequenceMatcher(None, kept.content, resp.content).ratio() >= SIMILARITY_THRESHOLD:
+                if text_similarity(kept.content, resp.content) >= SIMILARITY_THRESHOLD:
                     is_unique = False
                     break
             if is_unique:
@@ -493,6 +742,7 @@ def _serialize_room(room: MeetingRoom) -> str:
             "messages": [m.model_dump() for m in room.messages],
             "current_round": room.current_round,
             "start_time": room._start_time,
+            "last_activity_at": room._last_activity_at,
         }
     )
 
@@ -505,6 +755,8 @@ def _deserialize_room(data: str) -> MeetingRoom:
     room.messages = [MeetingMessage(**m) for m in parsed["messages"]]
     room.current_round = parsed["current_round"]
     room._start_time = parsed["start_time"]
+    # Fall back to start_time for rooms persisted before this field existed.
+    room._last_activity_at = parsed.get("last_activity_at", parsed["start_time"])
     return room
 
 
