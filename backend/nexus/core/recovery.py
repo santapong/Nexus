@@ -14,12 +14,13 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, KafkaMessage
 from nexus.core.kafka.topics import Topics
+from nexus.core.redis.clients import redis_locks
 from nexus.db.models import Task, TaskStatus
 
 logger = structlog.get_logger()
@@ -29,6 +30,12 @@ ORPHAN_THRESHOLD_MINUTES = 30
 
 # Maximum number of recovery retries before marking as failed
 MAX_RECOVERY_RETRIES = 2
+
+# Idempotency lock — prevents the same orphaned task from being re-published
+# multiple times across overlapping startups. The `recovery_attempted_at`
+# column does not exist on Task, so we use a Redis lock in db:3 instead.
+RECOVERY_LOCK_KEY_PREFIX = "recovery_attempt"
+RECOVERY_LOCK_TTL_SECONDS = 3600  # 1 hour
 
 
 async def recover_orphaned_tasks(
@@ -58,9 +65,7 @@ async def recover_orphaned_tasks(
 
     # Find orphaned tasks
     stmt = (
-        select(Task)
-        .where(Task.status == TaskStatus.RUNNING.value)
-        .where(Task.started_at < cutoff)
+        select(Task).where(Task.status == TaskStatus.RUNNING.value).where(Task.started_at < cutoff)
     )
     result = await session.execute(stmt)
     orphaned_tasks = result.scalars().all()
@@ -85,6 +90,21 @@ async def recover_orphaned_tasks(
         # Skip subtasks — they'll be handled via parent task recovery
         if task.parent_task_id is not None:
             skipped += 1
+            continue
+
+        # Idempotency guard: acquire a Redis lock with a 1h TTL before
+        # touching this task. If the lock is already held, another (possibly
+        # crashed) recovery run handled it within the last hour — skip to
+        # avoid re-publishing the same task multiple times.
+        lock_key = f"{RECOVERY_LOCK_KEY_PREFIX}:{task_id}"
+        lock_acquired = await redis_locks.set(lock_key, "1", nx=True, ex=RECOVERY_LOCK_TTL_SECONDS)
+        if not lock_acquired:
+            skipped += 1
+            logger.info(
+                "task_recovery_skipped_lock_held",
+                task_id=task_id,
+                reason="recovery_already_attempted_within_ttl",
+            )
             continue
 
         if task.rework_round < MAX_RECOVERY_RETRIES:
@@ -145,9 +165,7 @@ async def recover_orphaned_tasks(
 
     # Also reset any 'paused' tasks that have no pending approvals
     paused_stmt = (
-        select(Task)
-        .where(Task.status == TaskStatus.PAUSED.value)
-        .where(Task.started_at < cutoff)
+        select(Task).where(Task.status == TaskStatus.PAUSED.value).where(Task.started_at < cutoff)
     )
     paused_result = await session.execute(paused_stmt)
     paused_tasks = paused_result.scalars().all()
@@ -188,15 +206,14 @@ async def cleanup_stale_locks(session: AsyncSession) -> int:
     cursor = 0
 
     while True:
-        cursor, keys = await redis_locks.scan(
-            cursor=cursor, match="task_lock:*", count=100
-        )
+        cursor, keys = await redis_locks.scan(cursor=cursor, match="task_lock:*", count=100)
         for key in keys:
             ttl = await redis_locks.ttl(key)
             if ttl == -1:  # No TTL set — stale lock
                 await redis_locks.delete(key)
                 cleaned += 1
-                logger.info("stale_lock_cleaned", key=key.decode() if isinstance(key, bytes) else key)
+                key_str = key.decode() if isinstance(key, bytes) else key
+                logger.info("stale_lock_cleaned", key=key_str)
 
         if cursor == 0:
             break
