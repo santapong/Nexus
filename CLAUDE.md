@@ -102,10 +102,13 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 6 build | ✅ Complete — security RCA (7 fixes), federation registry, A2A v0.3, ADRs |
 | Phase 7 build | ✅ Complete — Director agent, conference room 5-phase workflow, enterprise security/performance/fault tolerance |
 | Audit & hardening (2026-05-19 war room) | ✅ Complete — 4-agent doc-refresh + audit pass: ASCII diagrams converted to Mermaid, ER + sequence diagrams added, tech-stack logos, security/db/backend/tools-mcp audits archived |
+| 2026-H2 Redesign blueprint | 🟡 Proposed (design-only) — `docs/REDESIGN.md` + ADR-077…086: MessageBus abstraction & transport PoC, staged harness/loop engineering, DBOS + Logfire/OTel, A2A v1.0 / AG-UI / MCP-auth. No code changed. |
 
 **Current phase:** Phase 7 COMPLETE + post-Phase 7 audit war room (2026-05-19) shipped. All Phase 7 objectives delivered: Director agent (loop prevention + result synthesis), meeting room convergence detection, HMAC-SHA256 Kafka signing, PII sanitization, crash recovery, graceful shutdown, configurable retry policies, CEO planning-first pipeline, enhanced circuit breaker, 5-phase conference room workflow. Docs hardened with Mermaid diagrams, ER schema, sequence flows, and shields.io tech-stack logos.
 
-**Next action:** Phase 8 planning — Temporal deep integration, knowledge graph memory, agent negotiation, visual workflow builder, or gRPC transport based on priority.
+**A 2026-H2 modernization redesign is proposed** (design-only blueprint — see `docs/REDESIGN.md`, §26 below, and ADR-077…086). It decouples the transport behind a `MessageBus` seam and re-evaluates Kafka against Redpanda / NATS+JetStream / Redis Streams via a PoC; adds staged harness engineering (`Agent.iter()`) and loop engineering (`LoopPolicy` + embedding convergence); and folds in newer tech (A2A v1.0, AG-UI, DBOS + Logfire/OTel, MCP auth). Nothing is built yet.
+
+**Next action:** Review/accept the redesign blueprint (`docs/REDESIGN.md`), then execute rollout phases R1–R5 (MessageBus seam → Stage-1 harness → transport PoC → Stage-2 harness → new tech). Phase 8 candidates (knowledge-graph memory, agent negotiation, visual workflow builder) remain in the backlog behind the redesign.
 
 ---
 
@@ -123,7 +126,7 @@ flowchart TD
         API[Litestar API<br/>REST + WebSocket + Auth<br/>Rate limiting]
     end
 
-    subgraph KAFKA["**Apache Kafka — Conference Room (Event Bus)**"]
+    subgraph KAFKA["**Message Bus — Conference Room (Kafka · Redpanda · NATS · Redis Streams)**"]
         TOPICS[task.queue · agent.commands · agent.responses<br/>task.results · task.review_queue · meeting.room<br/>memory.updates · audit.log · agent.heartbeat<br/>human.input_needed · a2a.inbound · prompt.*<br/>director.review · tools.*]
     end
 
@@ -278,7 +281,10 @@ flowchart TD
 | Containerization | **Docker + Docker Compose** | ![docker](https://img.shields.io/badge/-2496ED?logo=docker&logoColor=fff) | v1 local dev target |
 | Database | **PostgreSQL 16 + pgvector** | ![postgresql](https://img.shields.io/badge/-336791?logo=postgresql&logoColor=fff) | Vector memory support |
 | Cache / Speed | **Redis 7** | ![redis](https://img.shields.io/badge/-DC382D?logo=redis&logoColor=fff) | 4 roles (see §11) |
-| Message Bus | **Apache Kafka KRaft** | ![apachekafka](https://img.shields.io/badge/-231F20?logo=apachekafka&logoColor=fff) | No ZooKeeper dependency |
+| Message Bus | **Apache Kafka KRaft** *(default today)* | ![apachekafka](https://img.shields.io/badge/-231F20?logo=apachekafka&logoColor=fff) | No ZooKeeper dependency. **Redesign (ADR-077/078):** move behind a `MessageBus` seam; `MESSAGE_BUS_BACKEND` selects Kafka / **Redpanda** / **NATS+JetStream** / **Redis Streams**, default chosen by PoC (see `docs/REDESIGN.md` §2) |
+| Durable execution | **DBOS** *(proposed)* · Temporal (>1hr) | ![temporal](https://img.shields.io/badge/-141414?logo=temporal&logoColor=fff) | Redesign (ADR-081): DBOS Postgres-backed library for crash-consistent intra-task loops; Temporal stays scoped to >1hr workflows |
+| Agent tracing | **Logfire + OTel GenAI** *(proposed)* | ![opentelemetry](https://img.shields.io/badge/-425CC7?logo=opentelemetry&logoColor=fff) | Redesign (ADR-082): per-step spans on the `Agent.iter()` harness; convention-compliant → Langfuse/Phoenix swappable |
+| Agent↔UI | **AG-UI** *(proposed pilot)* | ![react](https://img.shields.io/badge/-61DAFB?logo=react&logoColor=000) | Redesign (ADR-084): Pydantic-AI-native agent→UI stream; pilots alongside the existing WebSocket path |
 | Embedding Model | **Google embedding-001** | ![google](https://img.shields.io/badge/-4285F4?logo=google&logoColor=fff) | ✅ Decided — already using Gemini |
 | Orchestration | **Kubernetes (Phase 4+)** | ![kubernetes](https://img.shields.io/badge/-326CE5?logo=kubernetes&logoColor=fff) | HPA-driven autoscaling, manifests in `k8s/` |
 | Observability | Structured logs + OpenTelemetry | ![opentelemetry](https://img.shields.io/badge/-425CC7?logo=opentelemetry&logoColor=fff) | OTel OTLP HTTP exporter wired in Phase 5 |
@@ -609,6 +615,13 @@ discover each other, negotiate capabilities, and exchange tasks. Uses JSON over 
 with Server-Sent Events (SSE) for streaming. Agents advertise via an "Agent Card" JSON
 document served at `/.well-known/agent.json`.
 
+> **Redesign note (ADR-083):** A2A has since moved to the **Linux Foundation** and shipped
+> **v1.0** (~Apr 2026). NEXUS's gateway is built on the April-2025 pre-1.0 spec — the blueprint
+> proposes upgrading to v1.0 + the official Python SDK (boundary-only architecture unchanged).
+> **ACP (IBM) merged into A2A** — no separate adoption. For the agent↔**UI** layer, the blueprint
+> pilots **AG-UI** (ADR-084, Pydantic-AI-native) to replace bespoke dashboard streaming. Payments
+> (AP2/x402/Stripe-ACP) and decentralized identity (ANP) stay on the watch-list. See `docs/REDESIGN.md` §3.1.
+
 ### Three use cases — all planned
 
 | Use Case | Direction | Phase |
@@ -687,6 +700,14 @@ external service. Prevents agents from autonomously spending on third-party APIs
 ---
 
 ## 10. Kafka Design — Topics & Flow
+
+> **Redesign note (ADR-077/078):** this section describes today's Kafka-native transport. The
+> 2026-H2 blueprint moves it behind a **`MessageBus`** seam (`nexus/core/bus/`) so the broker is a
+> `MESSAGE_BUS_BACKEND` flag — Kafka / **Redpanda** (wire-compatible drop-in) / **NATS+JetStream** /
+> **Redis Streams** — with the default decided by PoC. The `Topics` constants (as "subjects"), the
+> `KafkaMessage` envelope, and HMAC signing below are **broker-neutral and carry over unchanged**; only
+> `producer.publish` / `consumer.create_consumer` are re-pointed to delegate to `get_bus()`. See
+> `docs/REDESIGN.md` §2.
 
 ### Topic registry
 
@@ -1999,6 +2020,14 @@ Not planned in detail. Candidate items:
 
 | Decision | Choice | Date | Reason |
 |----------|--------|------|--------|
+| Transport (re-eval) | 🟡 *Proposed* — `MessageBus` seam; PoC over Kafka/Redpanda/NATS+JetStream/Redis Streams | 2026-07-10 | Decouple from one broker; pick lightweight default by evidence (ADR-077/078, supersedes ADR-008) |
+| Agent harness | 🟡 *Proposed* — staged: guard-chain contract → `Agent.iter()` loop | 2026-07-10 | Own the inference loop for per-step budget/tool-gating/verification; no second orchestrator (ADR-079) |
+| Loop engineering | 🟡 *Proposed* — unified `LoopPolicy` + embedding convergence | 2026-07-10 | One termination model across all 4 loops; cosine over Jaccard (ADR-080) |
+| Durable execution | 🟡 *Proposed* — DBOS intra-task; Temporal >1hr only | 2026-07-10 | Postgres-backed durability without a competing orchestrator (ADR-081) |
+| Agent tracing | 🟡 *Proposed* — Logfire + OTel GenAI semconv | 2026-07-10 | Per-step spans, backend-portable (ADR-082) |
+| A2A version | 🟡 *Proposed* — upgrade to v1.0 (LF) + official SDK | 2026-07-10 | Close gap from April-2025 pre-1.0 spec (ADR-083) |
+| Agent↔UI protocol | 🟡 *Proposed* — pilot AG-UI | 2026-07-10 | Pydantic-AI-native; replaces bespoke dashboard streaming (ADR-084) |
+| Pydantic AI pin | 🟡 *Proposed* — record 1.x (supersede ADR-014) | 2026-07-10 | ADR-014 (0.5.x) is stale; code is on 1.56; `Agent.iter()` needed (ADR-086) |
 | Secrets backend | SOPS + KeepSave (dual) | 2026-03-19 | SOPS for encrypted files, KeepSave for API-based, env fallback |
 | Injection classifier | Haiku/Flash API call | 2026-03-19 | Simpler than fine-tuned model, sufficient accuracy |
 | RLS granularity | Table-level policies | 2026-03-19 | Covers all workspace-scoped tables, column-level unnecessary |
@@ -2023,9 +2052,72 @@ Not planned in detail. Candidate items:
 
 ---
 
-*Last updated: 2026-05-21*
+## 26. Harness & Loop Engineering *(proposed — 2026-H2 redesign)*
+
+> Full design in `docs/REDESIGN.md` §4–§5; decisions in ADR-079/080/081/082/086. This section is the
+> CLAUDE.md summary of the modernization's harness + loop pillars.
+
+### 26.1 Harness engineering — the instrumented scaffolding around each LLM call
+
+Today NEXUS owns **no** inference loop: LLM+tool iteration is a black box inside `pydantic_ai.Agent.run()`,
+and the "max 20 tool calls" rule is a monkey-patched counter (`agents/factory.py`). The redesign adopts a
+**staged harness**:
+
+**Stage 1 — formalize + wire the dormant pieces (no new loop):**
+1. Document the existing guard chain (`AgentBase._execute_guarded_body`) as the canonical **outer harness
+   contract**: idempotency → budget → context → `handle_task` → write-memory → publish → broadcast → clear.
+2. **Unify retry** — replace the 6 copy-pasted `_run_with_retry` with `core/retry.py` (`retry_async` +
+   `RetryPolicy.LLM`).
+3. **Wire the circuit breaker** — a shared `AgentBase._invoke_llm` calls `provider_health.record_call()`
+   so `core/llm/circuit_breaker.py` trips on live failures (today it only feeds the dashboard).
+4. **Load semantic memory** into `_load_memory` (currently orphaned — only episodic/working/workspace load).
+5. **General `ContextAssembler`** — promote the workspace token-budgeted packer into a reusable, all-agent
+   context builder (smallest high-signal token set).
+
+**Stage 2 — own the inference loop (gated behind Stage 1):**
+- Replace `Agent.run()` with an `Agent.iter()` / `AgentRun.next()` loop inside a `HarnessRunner`. Per-step
+  invariants: mid-loop token-budget check (§20's 90% halt), in-loop tool gating (allow/deny/require-approval,
+  retiring the monkey-counter), mid-loop context injection, optional verification/reflection critic, and
+  per-step OTel spans.
+- **DBOS** wraps the run for crash-consistent intra-task durability (Postgres library — no new cluster, no
+  competing orchestrator). **Temporal stays scoped to >1hr workflows.**
+- **Logfire + OTel GenAI conventions** make the loop observable; convention spans keep eval backends portable.
+
+### 26.2 Loop engineering — make the four loop levels explicit
+
+| # | Loop | Where | Bound today | Redesign |
+|---|------|-------|-------------|----------|
+| 1 | Inference (one agent) | inside `Agent.run()` | `MAX_TOOL_CALLS=20` monkey-counter | Stage-2 harness under `LoopPolicy` |
+| 2 | Task/guard (per message) | `agents/base.py::run()` | guard chain | formalized outer harness |
+| 3 | Verification/rework | `qa.py` + `director.py` | `qa_max_rework_rounds` (bounded) | keep; evaluator-optimizer grounding |
+| 4 | Convergence (multi-agent) | `core/kafka/meeting.py` | max-rounds + lexical **Jaccard** | **embedding cosine** convergence |
+
+- **Unified `LoopPolicy`** — every loop declares `max_iterations` + `token_budget` + `timeout` +
+  `termination_predicate`, replacing scattered constants.
+- **Embedding-based convergence** — replace `meeting.py`'s Jaccard (its own `TODO`) with cosine via
+  `memory/embeddings.py` (sequenced after BACKLOG-052, which fixes the never-generated embeddings).
+- **Loop-guard catalog** — convergence, stagnation, oscillation, forced-termination → human escalation;
+  these are a **spend-safety** control tied to §23 Risk 2 (unbounded-loop cost), not just quality.
+
+**Principle (Anthropic evaluator-optimizer):** verification needs fresh context or deterministic execution —
+"same blind spots in, same blind spots out." This validates NEXUS's **separate** Director/QA agents over
+self-checking.
+
+---
+
+*Last updated: 2026-07-10*
 *Owner: Nexus Project*
-*Document version: 0.9*
+*Document version: 0.10*
+
+*Changes in v0.10 (2026-H2 redesign blueprint — design-only, no code changed):*
+*— §2: Added redesign-blueprint status row + current-phase/next-action notes*
+*— §4: Message Bus row now points at the `MessageBus` seam (Kafka/Redpanda/NATS/Redis via PoC);*
+*  added Durable execution (DBOS), Agent tracing (Logfire+OTel), Agent↔UI (AG-UI) rows*
+*— §9: A2A upgrade to v1.0 (LF) + AG-UI pilot notes; ACP dropped (merged into A2A)*
+*— §10: "Kafka Design" reframed behind the `MessageBus` abstraction; envelope/Topics/signing unchanged*
+*— §25: Added 8 proposed-decision rows for the redesign*
+*— New §26: Harness & Loop Engineering (staged harness, `Agent.iter()`, `LoopPolicy`, embedding convergence)*
+*— New docs: `docs/REDESIGN.md`; ADR-077…086 in `docs/DECISIONS.md`; BACKLOG-053…060*
 
 *Changes in v0.9:*
 *— §2: Added audit-and-hardening war room (2026-05-19) row*
