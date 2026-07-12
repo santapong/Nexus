@@ -22,8 +22,12 @@ ERRORLOG ERROR-026). Existing closures (BACKLOG-011–016, 020–034, 038–040,
 
 **Update (2026-07-10 — redesign blueprint):** the 2026-H2 modernization redesign (REDESIGN.md,
 ADR-077…086) adds 8 OPEN items **BACKLOG-053…060** (MessageBus/transport PoC, staged harness, LoopPolicy,
-DBOS, Logfire/OTel, A2A v1.0, AG-UI, MCP auth). New totals: **60 items — 33 resolved, 26 open, 1 blocked.**
-These are design-only proposals; nothing is built yet.
+DBOS, Logfire/OTel, A2A v1.0, AG-UI, MCP auth). These are design-only proposals; nothing is built yet.
+
+**Update (2026-07-12 — "Co" personal-assistant blueprint):** ASSISTANT.md (ADR-087…093) adds 7 OPEN items
+**BACKLOG-061…067** (Co persona + personal mode, upload endpoint, document ingestion, VoiceFactory, HTML
+presentation output, React-Flow Co canvas, frontend modernization). New totals: **67 items — 33 resolved,
+33 open, 1 blocked.** Design-only; nothing is built yet.
 
 ---
 
@@ -42,6 +46,88 @@ These are design-only proposals; nothing is built yet.
 ## Backlog Items
 
 <!-- New items go here, newest first -->
+
+### BACKLOG-067 — Frontend modernization: React 19 + Compiler, Tailwind v4, Motion
+**Suggested phase:** Assistant MVP-1 / Phase C
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §2.2; ADR-093
+**Description:** Upgrade React 18→19 + React Compiler, Tailwind 3→v4, add Motion + AutoAnimate, shadcn/ui on
+Base UI + React Aria; surgical GSAP/Aceternity for the Co hero; optional R3F 3D central node. Stay on
+Vite + TanStack Query + Zustand (no reframework).
+
+---
+
+### BACKLOG-066 — Co DAG canvas via React Flow
+**Suggested phase:** Assistant MVP-1 (B1)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §2; ADR-092
+**Description:** `components/co/CoCanvas.tsx` — single central "Co" node that expands into a live agent DAG
+(React Flow), nodes/edges animated from `ws/agentEventStore.ts`; `/co` becomes the default view. Composer bar
+(text + mic + file drop).
+
+---
+
+### BACKLOG-065 — HTML presentation output
+**Suggested phase:** Assistant MVP-1 (B4)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.3; ADR-091
+**Description:** Typed `presentation` field `{format, content, speech_text}` on the task result; server-side
+HTML sanitization (nh3/bleach); sandboxed render panel in the Co canvas; `speech_text` feeds VoiceFactory TTS.
+
+---
+
+### BACKLOG-064 — VoiceFactory (STT/TTS, browser/cloud/local)
+**Suggested phase:** Assistant MVP-1 (B3)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.2; ADR-088
+**Description:** `core/voice/VoiceFactory` (prefix-registry like ModelFactory) with STT/TTS protocols;
+backends browser (Web Speech, default) / cloud (Whisper·Deepgram / ElevenLabs·OpenAI·Google) / local
+(faster-whisper / Piper); `api/voice.py` transcribe + speak. Select via `VOICE_STT_BACKEND`/`VOICE_TTS_BACKEND`.
+
+---
+
+### BACKLOG-063 — Document ingestion (PDF/Word/Excel/Parquet)
+**Suggested phase:** Assistant MVP-1 (B2)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.1; ADR-090
+**Description:** `core/ingest/` + `tool_read_document` — pypdf/PyMuPDF (PDF), python-docx (Word), openpyxl
+(Excel), pandas+pyarrow (CSV/Parquet) → normalized markdown + tables; chunk+summarize large files via
+ContextAssembler; cache parsed text on the attachment row.
+
+---
+
+### BACKLOG-062 — File-upload endpoint + attachments table
+**Suggested phase:** Assistant MVP-1 (B2)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.1; ADR-089
+**Description:** `POST /api/uploads` (multipart) storing bytes via workspace storage; `attachments` table
+(migration 016); extend `CreateTaskRequest.attachments`; `_load_memory` loads attachment text into context.
+
+---
+
+### BACKLOG-061 — "Co" persona over the CEO + personal mode
+**Suggested phase:** Assistant MVP-1
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.4; ADR-087
+**Description:** Reframe the CEO orchestrator as "Co" (personal chief-of-staff) in seed prompt + UI (no role
+enum change); add `PERSONAL_MODE` that auto-scopes requests to the single owner's workspace using the existing
+`NEXUS_SEED_DEMO` default user/workspace. Phase-C follow-on: custom-role runtime so user-defined agents can run.
+
+---
 
 ### BACKLOG-060 — MCP auth modernization (OAuth/OIDC + PKCE + CIMD)
 **Suggested phase:** Redesign R5 (New tech)

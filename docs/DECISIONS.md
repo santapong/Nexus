@@ -97,6 +97,13 @@
 | ADR-084 | AG-UI adoption for dashboard streaming (Pydantic AI native) | proposed | 2026-07-10 |
 | ADR-085 | MCP auth modernization — OAuth/OIDC + PKCE + CIMD | proposed | 2026-07-10 |
 | ADR-086 | Supersede ADR-014 — Pydantic AI 1.x (unlocks `Agent.iter()`) | proposed | 2026-07-10 |
+| ADR-087 | "Co" personal-assistant persona over the CEO orchestrator | proposed | 2026-07-12 |
+| ADR-088 | VoiceFactory — provider-agnostic STT/TTS (browser/cloud/local) | proposed | 2026-07-12 |
+| ADR-089 | User file-upload endpoint + `attachments` table | proposed | 2026-07-12 |
+| ADR-090 | Document ingestion (PDF/Word/Excel/Parquet) via `core/ingest` | proposed | 2026-07-12 |
+| ADR-091 | HTML presentation output — typed `presentation` field, sanitized | proposed | 2026-07-12 |
+| ADR-092 | React Flow for the Co DAG canvas | proposed | 2026-07-12 |
+| ADR-093 | Frontend modernization — React 19 + Compiler, Tailwind v4, Motion | proposed | 2026-07-12 |
 
 ---
 
@@ -2535,12 +2542,228 @@ with its rationale).
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-087 -->
+## ADR-087 — "Co" personal-assistant persona over the CEO orchestrator
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §7; ASSISTANT.md §4.4; ADR-003 |
+| Context | NEXUS is being repurposed as the owner's personal assistant fronted by a single orchestrator, "Co." The CEO agent (`agents/ceo.py`) already plans → decomposes → delegates → aggregates with a parent-task response loopback — i.e. it is already the central orchestrator. Introducing a distinct "Co" role would require a new `AgentRole` enum value and a custom-role runtime (which doesn't exist — `build_agent()` hard-fails on non-enum roles). |
+
+### Decision
+
+Add "Co" as a **persona over the existing CEO orchestrator**, not a new role: reframe the CEO system
+prompt as a personal chief-of-staff and surface the name "Co" in the seed and UI. The role enum, routing
+topics, and result-consumer loopback are unchanged. Add a **`PERSONAL_MODE`** flag that, with the existing
+`NEXUS_SEED_DEMO` default workspace/user, auto-scopes every request to the single owner's workspace
+(removing the multi-tenant JWT requirement in `api/tasks.py::_require_workspace_id`).
+
+### Alternatives rejected
+
+- **New dedicated `co` role above the CEO** — needs the custom-role runtime + a second orchestration layer; duplicates the CEO for no functional gain.
+- **Rename CEO → Co everywhere** — churns seeds, prompts, tests, and migrations for a cosmetic change.
+
+### Consequences
+
+**Positive:** the personal-assistant framing ships with zero role/runtime churn and full reuse of the
+orchestration pipeline. **Negative:** internal artifacts still say "CEO" (role value, topics); the persona
+layer must map CEO↔Co in the UI. Custom user-defined agents remain blocked until the Phase-C custom-role runtime.
 
 ---
 
-*Last updated: 2026-07-10*
-*Next ADR ID: ADR-087*
-*Decision count: 60 accepted, 10 proposed (ADR-077…086, 2026-H2 redesign blueprint), 3 superseded*
+## ADR-088 — VoiceFactory — provider-agnostic STT/TTS (browser/cloud/local)
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §6; ASSISTANT.md §4.2; ADR-017 (ModelFactory pattern) |
+| Context | The assistant needs voice input (STT) and voice output (TTS). None exists today. The owner wants all three backend styles available — browser-native (zero cost), cloud (best quality), and local (private) — rather than committing to one. |
+
+### Decision
+
+Add `core/voice/` with a **`VoiceFactory`** mirroring `core/llm/factory.py`'s prefix-registry pattern:
+`STTProvider` and `TTSProvider` protocols, concrete backends selected by `VOICE_STT_BACKEND` /
+`VOICE_TTS_BACKEND` settings — **browser** (Web Speech API, client-side, default), **cloud** (Whisper/Deepgram
+STT; ElevenLabs/OpenAI/Google TTS), **local** (faster-whisper STT; Piper TTS). Endpoints `api/voice.py`:
+`POST /api/voice/transcribe` and `POST /api/voice/speak`, invoked only for non-browser backends. Voice code
+never names a provider directly — same isolation rule as the LLM ModelFactory.
+
+### Alternatives rejected
+
+- **Commit to one cloud vendor** — cost + privacy lock-in; the owner explicitly wanted all three.
+- **Browser-only** — free and simplest but inconsistent voices/quality across browsers and no server-side TTS for automation.
+- **Bolt STT/TTS into agent code** — violates the provider-isolation rule and can't be swapped per deployment.
+
+### Consequences
+
+**Positive:** voice becomes a config flag; MVP ships on the free browser backend while cloud/local drop in
+unchanged. **Negative:** three backends to test; audio format normalization (webm/opus ↔ wav) lives in the factory.
+
+---
+
+## ADR-089 — User file-upload endpoint + `attachments` table
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §12, §15; ASSISTANT.md §4.1; ADR-090 |
+| Context | Task input is text-only (`CreateTaskRequest.instruction: str`); there is no multipart upload route (`workspace_files.py` is read-only). A personal assistant must accept images and documents from the user. |
+
+### Decision
+
+Add `api/uploads.py` — `POST /api/uploads` (multipart; `python-multipart` is already transitive via
+`litestar[standard]`). Persist bytes via the git-backed `core/workspace/storage.py::write_file` (already
+accepts `bytes`) or a local object dir, and return an `AttachmentRef`. New **`attachments`** table (id, mime,
+size, storage path, parsed-text ref, `task_id`/`trace_id` link) via Alembic migration 016. Extend
+`CreateTaskRequest` with `attachments: list[AttachmentRef]`; `AgentBase._load_memory` loads attachment text
+into task context.
+
+### Alternatives rejected
+
+- **Base64 in the task JSON** — bloats Kafka messages and the DB; breaks the small-envelope model.
+- **Reuse `workspace_files` write path directly** — that path is git-commit-per-file (agent/workspace semantics), too heavy for arbitrary user attachments.
+
+### Consequences
+
+**Positive:** a single ingress for all user files, linked to tasks for audit. **Negative:** introduces
+binary storage lifecycle (retention, cleanup) — deferred to Phase C; MVP keeps files in the workspace store.
+
+---
+
+## ADR-090 — Document ingestion (PDF/Word/Excel/Parquet) via `core/ingest`
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §8; ASSISTANT.md §4.1; ADR-089 |
+| Context | No document parsing exists — files are only readable as raw UTF-8 text or sent whole to a vision model. The assistant must extract text/tables from PDF, Word, Excel, CSV, and Parquet to feed agents. |
+
+### Decision
+
+Add `core/ingest/` plus a `tool_read_document` tool (registered in `tools/adapter.py` + `registry.py`).
+Parsers: PDF (**pypdf** / **PyMuPDF**), Word (**python-docx**), Excel (**openpyxl**), CSV/Parquet
+(**pandas + pyarrow**). Output = normalized markdown + extracted tables. Large documents are chunked and
+summarized via the redesign's `ContextAssembler` before entering agent context. Parsing runs at
+upload/ingest time; parsed text is cached on the `attachments` row.
+
+### Alternatives rejected
+
+- **`unstructured` mega-library** — heavy dependency tree + native builds; overkill for the core formats.
+- **LLM-only extraction (send whole file to a vision model)** — costly, lossy for tables/spreadsheets, and useless for Parquet.
+- **Parse lazily at agent runtime** — repeats work per subtask and blocks the agent loop on I/O.
+
+### Consequences
+
+**Positive:** deterministic, cheap, offline-capable extraction with table fidelity for spreadsheets/Parquet.
+**Negative:** adds data-libs (pandas/pyarrow) to the backend image; scanned-PDF OCR is out of scope for MVP.
+
+---
+
+## ADR-091 — HTML presentation output — typed `presentation` field, sanitized
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §10; ASSISTANT.md §4.3; ADR-084 (AG-UI) |
+| Context | Task results are a plain JSON dict; there is no rich/HTML output. The owner wants Co to present results as HTML (reports, tables, charts) and to be read aloud. |
+
+### Decision
+
+Extend the task result envelope with a typed **`presentation`** field:
+`{ format: "html"|"markdown"|"mermaid", content, speech_text }`. Writer/Co produces the artifact;
+HTML is **sanitized server-side** (nh3/bleach; strip scripts/handlers, allow-list tags/attrs) before
+publishing to `TaskResponse.output.presentation` and the WebSocket stream. `speech_text` is the plain-text
+summary handed to `VoiceFactory` TTS. Rendering in the frontend uses a sandboxed container.
+
+### Alternatives rejected
+
+- **Return raw HTML unsanitized** — stored-XSS risk on render.
+- **Markdown only** — insufficient for charts/rich layout the owner asked for.
+- **Client-only rendering with no server sanitization** — pushes the security boundary into the browser; sanitize at the source instead.
+
+### Consequences
+
+**Positive:** rich, safe presentation + a clean hook for TTS; composes with the AG-UI pilot (ADR-084).
+**Negative:** a sanitization allow-list to maintain; interactive JS in results is intentionally not supported.
+
+---
+
+## ADR-092 — React Flow for the Co DAG canvas
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §17; ASSISTANT.md §2.1 |
+| Context | The front-end needs a single central "Co" node that expands into a live-animated DAG of agents (nodes show idle/thinking/tool-calling; edges animate on delegation), at tens–low-hundreds of nodes with premium custom branded node design. No graph engine is installed today. |
+
+### Decision
+
+Adopt **React Flow (`@xyflow/react`)** as the graph engine. Rationale (from a surveyed comparison): it
+renders **React-component nodes**, so Tailwind styling and the existing Zustand `agentEventStore` live state
+work natively (React Flow itself uses Zustand internally); it ships built-in animated edges, pan/zoom,
+expand/collapse, and dagre/elk auto-layout; it is MIT (all features free) and the best-maintained option.
+At NEXUS node counts it is nowhere near its DOM performance ceiling. New `components/co/CoCanvas.tsx` with
+`CoNode`/`AgentNode` types bound to the event store.
+
+### Alternatives rejected
+
+- **tldraw SDK** — highest custom-design ceiling but a paid commercial license and no built-in DAG layout (kept as a premium alternative).
+- **Reaflow** — React nodes + built-in ELK, but smaller community / slower cadence.
+- **WebGL engines (Sigma/Reagraph/Cosmograph)** — for 1k–1M nodes; can't render custom React nodes — a future escape hatch, not MVP.
+- **Cytoscape/GoJS/JointJS** — Canvas/SVG-template nodes (not React components), fighting the Tailwind custom-design workflow; GoJS/JointJS+ also carry license cost.
+
+### Consequences
+
+**Positive:** canonical "expandable orchestrator → live agent DAG" pattern, native to the React+Tailwind+Zustand
+stack, MIT. **Negative:** auto-layout is bring-your-own (add dagre/elk); a WebGL migration would be needed only
+if the graph ever exceeds ~1–2k live nodes.
+
+---
+
+## ADR-093 — Frontend modernization — React 19 + Compiler, Tailwind v4, Motion
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §4, §17; ASSISTANT.md §2.2; ADR-005 (shadcn/ui) |
+| Context | The owner asked for a modern, best-design frontend. A full reframework (SolidJS/Svelte/Next) was evaluated: it costs ~4–16 weeks, degrades AI-assisted coding output, and discards the existing live event store + hooks — for marginal runtime gains a WebSocket assistant UI won't perceive. |
+
+### Decision
+
+**Stay on React + Vite; modernize in place.** Upgrade **React 18 → 19 + React Compiler** (auto-memoization
+suits a high-churn WebSocket UI; codemod-assisted), **Tailwind 3 → v4** (CSS-first `@theme`, ~100× faster
+incremental builds), add **Motion** (ex-Framer Motion) + **AutoAnimate** for transitions/live lists, keep
+**shadcn/ui** now riding on **Base UI** plus **React Aria** for hard-a11y widgets, and use **GSAP /
+Aceternity / Magic UI** surgically for the Co hero only. **React Three Fiber + drei** is an optional,
+code-split 3D central-node hero. Keep **Vite + TanStack Query + Zustand**.
+
+### Alternatives rejected
+
+- **Reframework to SolidJS / Svelte 5 / Qwik** — 4–16 week rewrite, smaller ecosystem, worse AI-assist, discards the live event store; benefit is marginal perf not needed here.
+- **Next.js 15 (App Router/RSC)** — RSC benefits the shell/SEO an internal real-time app doesn't need and adds a new bug class.
+- **Marketing kits (Aceternity/Magic UI) for working surfaces** — bundle-size/accessibility overkill; reserve for the hero.
+
+### Consequences
+
+**Positive:** a modern, animated, accessible design system built on the existing investment; React Compiler
+removes most manual memoization. **Negative:** Tailwind v4 and React 19 are breaking upgrades (codemods cover
+most); marketing-kit effects must be quarantined to the hero to protect bundle size and a11y.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-094 -->
+
+---
+
+*Last updated: 2026-07-12*
+*Next ADR ID: ADR-094*
+*Decision count: 60 accepted, 17 proposed (ADR-077…086 redesign + ADR-087…093 "Co" assistant blueprint), 3 superseded*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*

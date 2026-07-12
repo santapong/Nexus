@@ -103,6 +103,7 @@ These three protocols never compete. Confusing their roles is the #1 integration
 | Phase 7 build | ✅ Complete — Director agent, conference room 5-phase workflow, enterprise security/performance/fault tolerance |
 | Audit & hardening (2026-05-19 war room) | ✅ Complete — 4-agent doc-refresh + audit pass: ASCII diagrams converted to Mermaid, ER + sequence diagrams added, tech-stack logos, security/db/backend/tools-mcp audits archived |
 | 2026-H2 Redesign blueprint | 🟡 Proposed (design-only) — `docs/REDESIGN.md` + ADR-077…086: MessageBus abstraction & transport PoC, staged harness/loop engineering, DBOS + Logfire/OTel, A2A v1.0 / AG-UI / MCP-auth. No code changed. |
+| "Co" personal-assistant blueprint | 🟡 Proposed (design-only) — `docs/ASSISTANT.md` + ADR-087…093: Co persona over the CEO, multimodal input (voice/image/docs), VoiceFactory (browser/cloud/local), HTML presentation output, React-Flow Co DAG canvas, React 19/Tailwind v4/Motion frontend. No code changed. |
 
 **Current phase:** Phase 7 COMPLETE + post-Phase 7 audit war room (2026-05-19) shipped. All Phase 7 objectives delivered: Director agent (loop prevention + result synthesis), meeting room convergence detection, HMAC-SHA256 Kafka signing, PII sanitization, crash recovery, graceful shutdown, configurable retry policies, CEO planning-first pipeline, enhanced circuit breaker, 5-phase conference room workflow. Docs hardened with Mermaid diagrams, ER schema, sequence flows, and shields.io tech-stack logos.
 
@@ -2104,6 +2105,43 @@ and the "max 20 tool calls" rule is a monkey-patched counter (`agents/factory.py
 self-checking.
 
 ---
+
+## 27. Personal Assistant — "Co" *(proposed — design-only)*
+
+> Full design in `docs/ASSISTANT.md`; decisions in ADR-087…093. NEXUS is being repurposed into the owner's
+> **personal assistant**, fronted by a single orchestrator, **"Co."** Nothing is built yet.
+
+**What's already there (reuse):** every agent already has its own **role + isolated memory + outer harness**
+(§7, §12, §20) — requirement met. The **CEO is already the central orchestrator** — "Co" is a **persona over
+the CEO** (ADR-087), no role/enum change. The frontend already has a live per-agent event store
+(`ws/agentEventStore.ts`).
+
+**What's added (all design-only):**
+- **Multimodal input** — user **file-upload endpoint** + `attachments` table (ADR-089); **document ingestion**
+  PDF/Word/Excel/Parquet via `core/ingest` (ADR-090); image reuses `tool_analyze_image`.
+- **Voice** — `core/voice/` **`VoiceFactory`** (mirrors ModelFactory), STT/TTS with **browser (default) /
+  cloud / local** backends behind `VOICE_STT_BACKEND` / `VOICE_TTS_BACKEND` (ADR-088).
+- **HTML presentation output** — typed `presentation` field `{format, content, speech_text}`, **sanitized
+  server-side**; `speech_text` feeds TTS (ADR-091).
+- **DAG front-end** — one central **Co node** that expands into the live agent DAG via **React Flow**
+  (ADR-092), animated from the existing event store; **modern design stack** = React 19 + Compiler,
+  Tailwind v4, Motion, shadcn-on-Base-UI (ADR-093).
+- **Personal mode** — `PERSONAL_MODE` auto-scopes to the single owner's workspace (reuses `NEXUS_SEED_DEMO`).
+
+**Roadmap:** Phase A = this blueprint → **MVP-1** thin slice of all four capabilities (Co canvas + text,
+upload+parsing, browser voice, HTML output) → Phase C hardening (cloud/local voice, large-doc RAG,
+custom-role runtime). Backlog: **BACKLOG-061…067**.
+
+---
+
+*Last updated: 2026-07-12*
+*Owner: Nexus Project*
+*Document version: 0.11*
+
+*Changes in v0.11 (2026-07-12 — "Co" personal-assistant blueprint; design-only, no code changed):*
+*— §2: Added "Co" personal-assistant blueprint status row*
+*— New §27: Personal Assistant — "Co" (persona over the CEO, multimodal I/O, VoiceFactory, HTML output, React-Flow DAG canvas, frontend modernization)*
+*— New doc: `docs/ASSISTANT.md`; ADR-087…093 in `docs/DECISIONS.md`; BACKLOG-061…067*
 
 *Last updated: 2026-07-10*
 *Owner: Nexus Project*
