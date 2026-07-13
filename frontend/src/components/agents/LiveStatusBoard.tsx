@@ -1,71 +1,13 @@
 import { useMemo, useEffect, useState } from 'react'
-import {
-  Activity,
-  Brain,
-  CheckCircle2,
-  Clock,
-  Cpu,
-  AlertTriangle,
-  Pause,
-  Wrench,
-} from 'lucide-react'
+import { Activity, Brain, CheckCircle2, Cpu } from 'lucide-react'
 import { useAgents } from '@/hooks/useAgents'
 import { useTasks } from '@/hooks/useTasks'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
+import { STATE_META, relativeSecondsAgo } from '@/components/agents/stateMeta'
 import { useAgentEventStore, type AgentLifecycleState } from '@/ws/agentEventStore'
 import type { AgentInfo } from '@/types'
 import { cn } from '@/lib/utils'
-
-const STATE_META: Record<
-  AgentLifecycleState,
-  { label: string; ring: string; pulse: string; dot: string; icon: typeof Brain }
-> = {
-  idle: {
-    label: 'Idle',
-    ring: 'ring-gray-700',
-    pulse: '',
-    dot: 'bg-gray-500',
-    icon: Pause,
-  },
-  thinking: {
-    label: 'Thinking',
-    ring: 'ring-blue-500/40',
-    pulse: 'animate-pulse',
-    dot: 'bg-blue-400',
-    icon: Brain,
-  },
-  calling_tool: {
-    label: 'Using tool',
-    ring: 'ring-amber-500/40',
-    pulse: 'animate-pulse',
-    dot: 'bg-amber-400',
-    icon: Wrench,
-  },
-  waiting: {
-    label: 'Waiting',
-    ring: 'ring-violet-500/40',
-    pulse: '',
-    dot: 'bg-violet-400',
-    icon: Clock,
-  },
-  failed: {
-    label: 'Failed',
-    ring: 'ring-red-500/40',
-    pulse: '',
-    dot: 'bg-red-500',
-    icon: AlertTriangle,
-  },
-}
-
-function relativeSecondsAgo(ts?: number, now?: number): string | null {
-  if (!ts) return null
-  const seconds = Math.max(0, Math.floor(((now ?? Date.now()) - ts) / 1000))
-  if (seconds < 5) return 'just now'
-  if (seconds < 60) return `${seconds}s ago`
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  return `${Math.floor(seconds / 3600)}h ago`
-}
 
 function AgentTile({
   agent,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
+  Handshake,
   LayoutDashboard,
   Activity,
   ListTodo,
@@ -35,7 +36,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={18} /> },
+  { label: 'Co', path: '/', icon: <Handshake size={18} /> },
+  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
   { label: 'Live Ops', path: '/live', icon: <Activity size={18} /> },
   { label: 'Tasks', path: '/tasks', icon: <ListTodo size={18} /> },
   { label: 'Agents', path: '/agents', icon: <Users size={18} /> },

@@ -6,7 +6,8 @@ import { BudgetAlert } from '@/components/dashboard/BudgetAlert'
 import { cn } from '@/lib/utils'
 
 const pageTitles: Record<string, string> = {
-  '/': 'Dashboard',
+  '/': 'Co',
+  '/dashboard': 'Dashboard',
   '/live': 'Live Operations',
   '/tasks': 'Tasks',
   '/agents': 'Agents',
@@ -19,6 +20,7 @@ const pageTitles: Record<string, string> = {
 }
 
 const segmentToPath: Record<string, string> = {
+  Dashboard: '/dashboard',
   Live: '/live',
   Tasks: '/tasks',
   Agents: '/agents',
