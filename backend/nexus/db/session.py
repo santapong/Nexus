@@ -12,6 +12,7 @@ from typing import Any
 
 from advanced_alchemy.extensions.litestar import (
     AsyncSessionConfig,
+    EngineConfig,
     SQLAlchemyAsyncConfig,
 )
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -24,14 +25,14 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     connection_string=settings.database_url,
     session_config=session_config,
     create_all=False,  # Alembic handles schema
-    engine_config={
-        "pool_pre_ping": True,  # Validate connections before use
-        "pool_size": settings.db_pool_size,  # Configurable via env
-        "max_overflow": settings.db_max_overflow,  # Configurable via env
-        "pool_recycle": settings.db_pool_recycle,  # Recycle stale connections
-        "pool_timeout": settings.db_pool_timeout,  # Wait max for a connection
-        "echo": False,
-    },
+    engine_config=EngineConfig(
+        pool_pre_ping=True,  # Validate connections before use
+        pool_size=settings.db_pool_size,  # Configurable via env
+        max_overflow=settings.db_max_overflow,  # Configurable via env
+        pool_recycle=settings.db_pool_recycle,  # Recycle stale connections
+        pool_timeout=settings.db_pool_timeout,  # Wait max for a connection
+        echo=False,
+    ),
 )
 
 

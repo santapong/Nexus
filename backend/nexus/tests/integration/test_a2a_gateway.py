@@ -38,14 +38,14 @@ class TestA2AAuthentication:
     def test_valid_cached_token_accepted(self) -> None:
         """A valid cached token passes all checks."""
         token = _CachedToken(
-            token_hash="abc123",
+            lookup_id="abc123",
             name="test",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=None,
             is_revoked=False,
         )
-        is_valid, error, rpm = _check_token_validity(token, "general", "abc123")
+        is_valid, error, rpm = _check_token_validity(token, "general")
         assert is_valid is True
         assert error == ""
         assert rpm == 60
@@ -53,14 +53,14 @@ class TestA2AAuthentication:
     def test_revoked_token_rejected(self) -> None:
         """Revoked token is rejected."""
         token = _CachedToken(
-            token_hash="abc123",
+            lookup_id="abc123",
             name="revoked",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=None,
             is_revoked=True,
         )
-        is_valid, error, rpm = _check_token_validity(token, "general", "abc123")
+        is_valid, error, rpm = _check_token_validity(token, "general")
         assert is_valid is False
         assert "revoked" in error.lower()
         assert rpm == 0
@@ -68,21 +68,21 @@ class TestA2AAuthentication:
     def test_expired_token_rejected(self) -> None:
         """Expired token is rejected."""
         token = _CachedToken(
-            token_hash="abc123",
+            lookup_id="abc123",
             name="expired",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=datetime.now(UTC) - timedelta(hours=1),
             is_revoked=False,
         )
-        is_valid, error, _rpm = _check_token_validity(token, "general", "abc123")
+        is_valid, error, _rpm = _check_token_validity(token, "general")
         assert is_valid is False
         assert "expired" in error.lower()
 
     def test_skill_access_control(self) -> None:
         """Token with limited skills can't access other skills."""
         token = _CachedToken(
-            token_hash="abc123",
+            lookup_id="abc123",
             name="limited",
             allowed_skills=["research"],
             rate_limit_rpm=60,
@@ -90,27 +90,27 @@ class TestA2AAuthentication:
             is_revoked=False,
         )
         # Allowed skill
-        is_valid, _, _ = _check_token_validity(token, "research", "abc123")
+        is_valid, _, _ = _check_token_validity(token, "research")
         assert is_valid is True
 
         # Disallowed skill
-        is_valid, error, _ = _check_token_validity(token, "code", "abc123")
+        is_valid, error, _ = _check_token_validity(token, "code")
         assert is_valid is False
         assert "skill" in error.lower()
 
     def test_wildcard_skill_access(self) -> None:
         """Token with wildcard can access all skills."""
         token = _CachedToken(
-            token_hash="abc123",
+            lookup_id="abc123",
             name="wildcard",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=None,
             is_revoked=False,
         )
-        is_valid, _, _ = _check_token_validity(token, "code", "abc123")
+        is_valid, _, _ = _check_token_validity(token, "code")
         assert is_valid is True
-        is_valid, _, _ = _check_token_validity(token, "research", "abc123")
+        is_valid, _, _ = _check_token_validity(token, "research")
         assert is_valid is True
 
     def test_invalidate_cache_clears(self) -> None:
@@ -118,7 +118,7 @@ class TestA2AAuthentication:
         from nexus.integrations.a2a.auth import _token_cache
 
         _token_cache["test"] = _CachedToken(
-            token_hash="test",
+            lookup_id="test",
             name="test",
             allowed_skills=["*"],
             rate_limit_rpm=60,
@@ -151,7 +151,7 @@ class TestAgentCard:
     def test_agent_card_version(self) -> None:
         """Agent Card has version info."""
         card = AgentCard()
-        assert card.version == "0.2.0"
+        assert card.version == "0.3.0"
 
 
 class TestA2ATaskRequest:

@@ -358,9 +358,7 @@ class WorkspaceMember(UUIDBase):
     workspace_id: Mapped[str] = mapped_column(
         ForeignKey("workspaces.id"), nullable=False, index=True
     )
-    user_id: Mapped[Any | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True, index=True
-    )
+    user_id: Mapped[Any | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -653,9 +651,7 @@ class SLASnapshot(UUIDBase):
 
 class WorkspaceProject(UUIDAuditBase):
     __tablename__ = "workspace_projects"
-    __table_args__ = (
-        UniqueConstraint("workspace_id", "slug", name="uq_workspace_project_slug"),
-    )
+    __table_args__ = (UniqueConstraint("workspace_id", "slug", name="uq_workspace_project_slug"),)
 
     workspace_id: Mapped[str] = mapped_column(
         ForeignKey("workspaces.id"), nullable=False, index=True
@@ -715,9 +711,7 @@ class WorkspaceFileVersion(UUIDBase):
     file_id: Mapped[str] = mapped_column(
         ForeignKey("workspace_files.id"), nullable=False, index=True
     )
-    project_id: Mapped[str] = mapped_column(
-        ForeignKey("workspace_projects.id"), nullable=False
-    )
+    project_id: Mapped[str] = mapped_column(ForeignKey("workspace_projects.id"), nullable=False)
     commit_sha: Mapped[str] = mapped_column(String(40), nullable=False)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     operation: Mapped[str] = mapped_column(String(20), nullable=False)  # create | update | delete

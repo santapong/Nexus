@@ -29,7 +29,6 @@ from nexus.db.models import (
     EpisodicMemory,
     EvalResult,
     FineTuningJob,
-    LLMUsage,
 )
 from nexus.settings import settings
 
@@ -102,18 +101,20 @@ class DatasetBuilder:
             if not instruction or not response:
                 continue
 
-            samples.append({
-                "messages": [
-                    {"role": "system", "content": f"You are the {agent_role} agent of NEXUS."},
-                    {"role": "user", "content": instruction},
-                    {"role": "assistant", "content": response},
-                ],
-                "metadata": {
-                    "episode_id": str(episode.id),
-                    "eval_score": eval_result.overall_score if eval_result else None,
-                    "importance": episode.importance_score,
-                },
-            })
+            samples.append(
+                {
+                    "messages": [
+                        {"role": "system", "content": f"You are the {agent_role} agent of NEXUS."},
+                        {"role": "user", "content": instruction},
+                        {"role": "assistant", "content": response},
+                    ],
+                    "metadata": {
+                        "episode_id": str(episode.id),
+                        "eval_score": eval_result.overall_score if eval_result else None,
+                        "importance": episode.importance_score,
+                    },
+                }
+            )
 
             if len(samples) >= max_samples:
                 break
@@ -151,7 +152,8 @@ class DatasetBuilder:
                 s["metadata"]["eval_score"]
                 for s in samples
                 if s["metadata"]["eval_score"] is not None
-            ) / max(sum(1 for s in samples if s["metadata"]["eval_score"] is not None), 1),
+            )
+            / max(sum(1 for s in samples if s["metadata"]["eval_score"] is not None), 1),
         }
 
 

@@ -40,7 +40,7 @@ def inject_trace_context(headers: dict[str, Any] | None = None) -> dict[str, Any
         if not _ensure_initialized():
             return headers
 
-        from opentelemetry import context, trace
+        from opentelemetry import trace
         from opentelemetry.trace import format_span_id, format_trace_id
 
         span = trace.get_current_span()
@@ -83,6 +83,7 @@ def extract_trace_context(headers: dict[str, Any] | None) -> Any:
 
         if not _ensure_initialized() or not headers:
             from opentelemetry import context
+
             return context.get_current()
 
         from opentelemetry import context
@@ -103,9 +104,7 @@ def extract_trace_context(headers: dict[str, Any] | None) -> Any:
         trace_flags = TraceFlags(int(parts[3], 16))
 
         tracestate_header = headers.get(_TRACESTATE_KEY, "")
-        trace_state = TraceState.from_header(
-            [tracestate_header] if tracestate_header else []
-        )
+        trace_state = TraceState.from_header([tracestate_header] if tracestate_header else [])
 
         span_context = SpanContext(
             trace_id=trace_id,
@@ -124,6 +123,7 @@ def extract_trace_context(headers: dict[str, Any] | None) -> Any:
         # Gracefully degrade — return current context on any parsing error
         try:
             from opentelemetry import context
+
             return context.get_current()
         except Exception:
             return None

@@ -1,12 +1,12 @@
 """Task feedback API — human ratings for completed tasks (Phase 9 Track 1).
 
 Users submit a dual-score feedback per task:
-- helpful_score: 1–5 (was the output useful?)
-- safe_score: 1–5 (was the output safe, in-scope, non-toxic?)
+- helpful_score: 1-5 (was the output useful?)
+- safe_score: 1-5 (was the output safe, in-scope, non-toxic?)
 - optional comment
 
 Each submission writes two rows into the existing `feedback_signals` table
-(one per dimension, normalized to 0.0–1.0) plus a preference record into
+(one per dimension, normalized to 0.0-1.0) plus a preference record into
 `semantic_memory` via the canonical `upsert_fact()` writer. This is the
 foundation for BACKLOG-051 (RLHF-lite) and BACKLOG-048 (fine-tuning dataset
 export) — both read from `feedback_signals`.
@@ -50,7 +50,7 @@ class FeedbackSignalRecord(BaseModel):
     task_id: str
     agent_id: str
     signal_type: str  # 'helpful' | 'safe' | legacy types
-    signal_value: float  # 0.0–1.0
+    signal_value: float  # 0.0-1.0
     context: dict[str, Any]
     created_at: str
 
@@ -78,7 +78,7 @@ def _signal_row(
     raw_score: int,
     context: dict[str, Any],
 ) -> FeedbackSignal:
-    """Build one FeedbackSignal row from a 1–5 raw score."""
+    """Build one FeedbackSignal row from a 1-5 raw score."""
     return FeedbackSignal(
         id=str(uuid4()),
         task_id=task_id,
@@ -126,9 +126,7 @@ class FeedbackController(Controller):
 
         if task.assigned_agent_id is None:
             # No agent to attribute feedback to — feedback_signals.agent_id is NOT NULL.
-            raise ValidationException(
-                detail="Task has no assigned agent; cannot record feedback."
-            )
+            raise ValidationException(detail="Task has no assigned agent; cannot record feedback.")
 
         context: dict[str, Any] = {
             "submitted_by": user_id,
@@ -176,7 +174,7 @@ class FeedbackController(Controller):
                 source_task_id=task_id,
             )
             preference_recorded = True
-        except Exception as exc:  # noqa: BLE001 — feedback must not fail on memory write
+        except Exception as exc:
             logger.warning(
                 "feedback_semantic_memory_failed",
                 task_id=task_id,

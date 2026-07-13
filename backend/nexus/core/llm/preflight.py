@@ -104,7 +104,7 @@ async def probe_model(model_name: str, *, timeout_seconds: float = 20.0) -> Pref
             latency_ms=int((perf_counter() - start) * 1000),
             error=f"timeout after {timeout_seconds}s",
         )
-    except Exception as exc:  # noqa: BLE001 — capture anything from the SDK
+    except Exception as exc:
         return PreflightOutcome(
             model_name=model_name,
             ok=False,

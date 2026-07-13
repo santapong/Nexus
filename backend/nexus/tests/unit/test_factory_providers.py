@@ -91,9 +91,7 @@ def test_openrouter_warns_for_off_allowlist_free_model(
         _resolve_openrouter("openrouter:google/gemma-3-27b:free")
         # The factory uses structlog .warning(event_name, **kwargs) — assert the
         # canonical event name was recorded.
-        warn_events = [
-            call.args[0] for call in mock_logger.warning.call_args_list if call.args
-        ]
+        warn_events = [call.args[0] for call in mock_logger.warning.call_args_list if call.args]
         assert "openrouter_free_model_off_allowlist" in warn_events
 
 
@@ -101,9 +99,7 @@ def test_openrouter_no_warning_for_paid_model(with_keys: None) -> None:
     """Paid models (no :free suffix) bypass the allowlist check entirely."""
     with patch("nexus.core.llm.factory.logger") as mock_logger:
         _resolve_openrouter("openrouter:openai/gpt-4o-mini")
-        warn_events = [
-            call.args[0] for call in mock_logger.warning.call_args_list if call.args
-        ]
+        warn_events = [call.args[0] for call in mock_logger.warning.call_args_list if call.args]
         assert "openrouter_free_model_off_allowlist" not in warn_events
 
 

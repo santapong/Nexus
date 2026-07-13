@@ -91,7 +91,7 @@ def test_speech_text_derived_when_missing() -> None:
 
 
 def test_invalid_shape_degrades_to_empty() -> None:
-    p = sanitize_presentation({"format": "carrier-pigeon", "content": 42})  # type: ignore[dict-item]
+    p = sanitize_presentation({"format": "carrier-pigeon", "content": 42})
     assert p == Presentation(format="markdown", content="", speech_text="")
 
 

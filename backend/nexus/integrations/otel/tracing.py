@@ -9,8 +9,8 @@ Degrades gracefully — if OTel is not configured, all trace operations are no-o
 from __future__ import annotations
 
 import functools
-from collections.abc import Callable
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from typing import Any
 
 import structlog
@@ -44,11 +44,13 @@ def _ensure_initialized() -> bool:
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-        resource = Resource.create({
-            "service.name": settings.otel_service_name,
-            "service.version": "0.6.0",
-            "deployment.environment": settings.app_env,
-        })
+        resource = Resource.create(
+            {
+                "service.name": settings.otel_service_name,
+                "service.version": "0.6.0",
+                "deployment.environment": settings.app_env,
+            }
+        )
 
         exporter = OTLPSpanExporter(
             endpoint=settings.otel_exporter_endpoint,
@@ -130,7 +132,7 @@ async def trace_agent_task(
     agent_role: str,
     task_id: str,
     trace_id: str,
-):
+) -> AsyncIterator[Any]:
     """Context manager for tracing an agent task execution.
 
     Creates a span covering the entire task lifecycle with standard attributes.
@@ -170,7 +172,7 @@ async def trace_llm_call(
     model_name: str,
     agent_role: str,
     task_id: str,
-):
+) -> AsyncIterator[Any]:
     """Context manager for tracing an LLM API call.
 
     Args:
@@ -204,7 +206,7 @@ async def trace_tool_call(
     tool_name: str,
     agent_role: str,
     task_id: str,
-):
+) -> AsyncIterator[Any]:
     """Context manager for tracing a tool execution.
 
     Args:
@@ -238,7 +240,7 @@ async def trace_kafka_consume(
     topic: str,
     message_id: str,
     task_id: str,
-):
+) -> AsyncIterator[Any]:
     """Context manager for tracing Kafka message consumption.
 
     Args:
@@ -268,7 +270,7 @@ async def trace_kafka_consume(
         span.end()
 
 
-def traced(name: str | None = None) -> Callable:
+def traced(name: str | None = None) -> Callable[..., Any]:
     """Decorator for tracing async functions.
 
     Args:
@@ -278,7 +280,7 @@ def traced(name: str | None = None) -> Callable:
         Decorated function with automatic tracing.
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         span_name = name or f"{func.__module__}.{func.__qualname__}"
 
         @functools.wraps(func)

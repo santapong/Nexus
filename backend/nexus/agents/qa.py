@@ -10,7 +10,7 @@ reaches the user or external caller.
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
@@ -156,7 +156,7 @@ class QAAgent(AgentBase):
             )
         else:
             # Multi-round rework: track round and guard against unbounded loops
-            current_round = message.payload.get("rework_round", 0)
+            current_round = cast(int, message.payload.get("rework_round", 0))
             max_rounds = settings.qa_max_rework_rounds
 
             if current_round >= max_rounds:

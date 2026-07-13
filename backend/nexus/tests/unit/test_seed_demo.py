@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from typing import Any
+
 import pytest
 
 
@@ -74,7 +77,7 @@ async def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> 
     fake_session.commit = AsyncMock()
 
     @contextlib.asynccontextmanager
-    async def _ctx() -> object:
+    async def _ctx() -> AsyncIterator[Any]:
         yield fake_session
 
     fake_factory = MagicMock(return_value=_ctx())

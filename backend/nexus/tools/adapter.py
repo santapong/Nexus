@@ -510,8 +510,8 @@ async def tool_memory_read(
             if namespace:
                 sem_stmt = sem_stmt.where(SemanticMemory.namespace == namespace)
             sem_stmt = sem_stmt.order_by(SemanticMemory.updated_at.desc()).limit(limit)
-            result = await _session.execute(sem_stmt)
-            facts = result.scalars().all()
+            sem_result = await _session.execute(sem_stmt)
+            facts = sem_result.scalars().all()
 
             if not facts:
                 return _sanitize_tool_output(

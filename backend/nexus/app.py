@@ -48,9 +48,7 @@ async def _security_checks() -> None:
             )
 
     if len(settings.jwt_secret_key) < 16 and not settings.is_development:
-        raise RuntimeError(
-            "FATAL: JWT_SECRET_KEY must be at least 16 characters for production."
-        )
+        raise RuntimeError("FATAL: JWT_SECRET_KEY must be at least 16 characters for production.")
 
     available_providers = detect_llm_providers()
     if not available_providers:

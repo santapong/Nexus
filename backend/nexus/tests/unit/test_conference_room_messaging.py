@@ -10,7 +10,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from nexus.core.kafka.schemas import MeetingCommand, PlanApprovalMessage
+from nexus.core.kafka.schemas import AgentCommand, MeetingCommand, PlanApprovalMessage
 from nexus.db.models import TaskStatus
 
 
@@ -112,13 +112,20 @@ class TestTaskStatusEnum:
 
     def test_awaiting_approval_status_exists(self) -> None:
         """TaskStatus enum includes awaiting_approval."""
-        assert TaskStatus.AWAITING_APPROVAL == "awaiting_approval"
+        assert TaskStatus("awaiting_approval") == TaskStatus.AWAITING_APPROVAL
         assert TaskStatus.AWAITING_APPROVAL.value == "awaiting_approval"
 
     def test_all_statuses_present(self) -> None:
         """All expected task statuses exist in the enum."""
-        expected = {"queued", "running", "paused", "awaiting_approval",
-                    "completed", "failed", "escalated"}
+        expected = {
+            "queued",
+            "running",
+            "paused",
+            "awaiting_approval",
+            "completed",
+            "failed",
+            "escalated",
+        }
         actual = {s.value for s in TaskStatus}
         assert expected == actual
 
@@ -127,11 +134,11 @@ class TestShouldUseMeeting:
     """Tests for CEO's _should_use_meeting() heuristic."""
 
     def _make_command(
-        self, instruction: str, payload: dict | None = None,
-    ) -> object:
+        self,
+        instruction: str,
+        payload: dict[str, object] | None = None,
+    ) -> AgentCommand:
         """Create a mock AgentCommand-like object for testing."""
-        from nexus.core.kafka.schemas import AgentCommand
-
         return AgentCommand(
             task_id=uuid4(),
             trace_id=uuid4(),
@@ -143,7 +150,7 @@ class TestShouldUseMeeting:
 
     def test_short_instruction_skips_meeting(self) -> None:
         """Short instructions skip the meeting flow."""
-        from nexus.agents.ceo import CEOAgent, _MIN_MEETING_INSTRUCTION_LENGTH
+        from nexus.agents.ceo import _MIN_MEETING_INSTRUCTION_LENGTH
 
         # We can't instantiate CEOAgent without all deps, so test the heuristic directly
         cmd = self._make_command("Fix the login bug")
@@ -187,7 +194,7 @@ class TestMeetingRoomRoundOrchestration:
         from nexus.core.kafka.meeting import MeetingRoom
 
         assert hasattr(MeetingRoom, "run_meeting_round")
-        assert callable(getattr(MeetingRoom, "run_meeting_round"))
+        assert callable(MeetingRoom.run_meeting_round)
 
     def test_convergence_report_model(self) -> None:
         """ConvergenceReport serializes correctly."""

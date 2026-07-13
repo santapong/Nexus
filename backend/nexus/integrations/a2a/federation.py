@@ -116,7 +116,7 @@ async def discover_instances(
         stmt = stmt.where(FederationInstance.trust_level == trust_level)
 
     if skill_id:
-        stmt = stmt.where(FederationInstance.capabilities.any(skill_id))
+        stmt = stmt.where(FederationInstance.capabilities.any(skill_id))  # type: ignore[arg-type]
 
     stmt = stmt.order_by(FederationInstance.registered_at.desc())
     result = await db_session.execute(stmt)
@@ -181,7 +181,7 @@ async def deactivate_instance(
     result = await db_session.execute(stmt)
     await db_session.commit()
 
-    if result.rowcount > 0:
+    if int(getattr(result, "rowcount", 0) or 0) > 0:
         logger.info("federation_instance_deactivated", instance_id=instance_id)
         return True
     return False

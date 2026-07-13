@@ -31,9 +31,7 @@ def _make_request(authorization_header: str | None = None) -> MagicMock:
     headers: dict[str, str] = {}
     if authorization_header is not None:
         headers["authorization"] = authorization_header
-    request.headers.get.side_effect = lambda key, default="": headers.get(
-        key.lower(), default
-    )
+    request.headers.get.side_effect = lambda key, default="": headers.get(key.lower(), default)
     return request
 
 

@@ -7,10 +7,10 @@ These definitions are used by the evaluator to calculate compliance.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class SLATier(str, Enum):
+class SLATier(StrEnum):
     """Workspace SLA tiers — maps to pricing plans."""
 
     FREE = "free"

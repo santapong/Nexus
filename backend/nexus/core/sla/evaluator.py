@@ -7,14 +7,14 @@ is meeting its SLA tier guarantees. Used by the API and alerting system.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.core.sla.definitions import SLATier, SLAThresholds, get_thresholds
+from nexus.core.sla.definitions import SLAThresholds, SLATier, get_thresholds
 from nexus.db.models import SLASnapshot
 
 logger = structlog.get_logger()
@@ -74,7 +74,7 @@ async def evaluate_compliance(
         SLAComplianceReport with measured values and compliance flags.
     """
     thresholds = get_thresholds(tier)
-    cutoff = datetime.now(timezone.utc) - timedelta(days=period_days)
+    cutoff = datetime.now(UTC) - timedelta(days=period_days)
 
     # Build filter
     base_filter = SLASnapshot.timestamp >= cutoff
@@ -105,7 +105,9 @@ async def evaluate_compliance(
         if thresholds.has_guarantees and thresholds.max_queue_wait_seconds > 0
         else True
     )
-    error_ok = measured_error <= thresholds.max_error_rate_pct if thresholds.has_guarantees else True
+    error_ok = (
+        measured_error <= thresholds.max_error_rate_pct if thresholds.has_guarantees else True
+    )
 
     report = SLAComplianceReport(
         workspace_id=workspace_id,

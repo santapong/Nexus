@@ -14,21 +14,20 @@ from __future__ import annotations
 
 import asyncio
 import time
+from typing import Any
 
 import structlog
 
 from nexus.integrations.temporal.schemas import (
     PlanInput,
-    PlanOutput,
     PlannedSubtask,
+    PlanOutput,
     ReviewInput,
     ReviewOutput,
     SubtaskActivityInput,
     SubtaskActivityOutput,
     SynthesisInput,
     SynthesisOutput,
-    TaskWorkflowInput,
-    TaskWorkflowOutput,
 )
 
 logger = structlog.get_logger()
@@ -264,7 +263,10 @@ async def director_synthesis_activity(
                 "plan_context": input_data.plan_context,
             },
             target_role="director",
-            instruction=f"Synthesize the following agent outputs into the best possible result:\n\n{combined[:5000]}",
+            instruction=(
+                "Synthesize the following agent outputs into the best possible result:\n\n"
+                f"{combined[:5000]}"
+            ),
         )
         await publish(Topics.DIRECTOR_REVIEW, command, key=input_data.task_id)
 
@@ -336,7 +338,10 @@ async def qa_review_activity(input_data: ReviewInput) -> ReviewOutput:
                 "rework_round": input_data.rework_round,
             },
             target_role="qa",
-            instruction=f"Review the following output for quality and completeness:\n\n{input_data.output[:5000]}",
+            instruction=(
+                "Review the following output for quality and completeness:\n\n"
+                f"{input_data.output[:5000]}"
+            ),
         )
         await publish(Topics.TASK_REVIEW_QUEUE, command, key=input_data.task_id)
 
@@ -380,7 +385,7 @@ async def _poll_task_completion(
     heartbeat_message: str,
     timeout_seconds: int = 600,
     poll_interval: int = 5,
-) -> dict | None:
+) -> dict[str, Any] | None:
     """Poll the database for task completion with heartbeat reporting.
 
     Args:

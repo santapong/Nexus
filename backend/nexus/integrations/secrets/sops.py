@@ -56,10 +56,7 @@ class SOPSClient:
     @property
     def is_configured(self) -> bool:
         """Check if SOPS is properly configured."""
-        return bool(
-            self.secrets_dir.exists()
-            and self.age_key_file.exists()
-        )
+        return bool(self.secrets_dir.exists() and self.age_key_file.exists())
 
     async def decrypt_file(self, file_path: str | Path) -> dict[str, Any]:
         """Decrypt a SOPS-encrypted file and return its contents.

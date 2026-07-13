@@ -26,10 +26,12 @@ async def start_temporal_worker() -> None:
         from temporalio.worker import Worker
 
         from nexus.integrations.temporal.activities import (
+            ceo_planning_activity,
+            director_synthesis_activity,
             execute_subtask_activity,
-            execute_task_activity,
+            qa_review_activity,
         )
-        from nexus.integrations.temporal.task_workflow import task_execution_workflow
+        from nexus.integrations.temporal.task_workflow import AgentTaskWorkflow
 
         client = await Client.connect(settings.temporal_host)
 
@@ -43,8 +45,13 @@ async def start_temporal_worker() -> None:
         worker = Worker(
             client,
             task_queue=settings.temporal_task_queue,
-            workflows=[task_execution_workflow],  # type: ignore[list-item]
-            activities=[execute_task_activity, execute_subtask_activity],
+            workflows=[AgentTaskWorkflow],
+            activities=[
+                ceo_planning_activity,
+                execute_subtask_activity,
+                director_synthesis_activity,
+                qa_review_activity,
+            ],
         )
 
         logger.info("temporal_worker_started")

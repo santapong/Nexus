@@ -12,14 +12,12 @@ from __future__ import annotations
 import asyncio
 import random
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from dataclasses import dataclass
+from typing import Any
 
 import structlog
 
 logger = structlog.get_logger()
-
-T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -79,6 +77,8 @@ REDIS_RETRY_POLICY = RetryPolicy(
     jitter=True,
 )
 
+DEFAULT_RETRY_POLICY = RetryPolicy()
+
 
 def _compute_delay(policy: RetryPolicy, attempt: int) -> float:
     """Compute the delay for a given retry attempt.
@@ -93,18 +93,18 @@ def _compute_delay(policy: RetryPolicy, attempt: int) -> float:
         Delay in seconds.
     """
     delay = min(
-        policy.base_delay * (policy.exponential_base ** attempt),
+        policy.base_delay * (policy.exponential_base**attempt),
         policy.max_delay,
     )
     if policy.jitter:
-        delay = delay * (0.5 + random.random() * 0.5)  # noqa: S311
+        delay = delay * (0.5 + random.random() * 0.5)
     return delay
 
 
-async def retry_async(
+async def retry_async[T](
     fn: Callable[..., Awaitable[T]],
     *args: Any,
-    policy: RetryPolicy = RetryPolicy(),
+    policy: RetryPolicy = DEFAULT_RETRY_POLICY,
     operation_name: str = "operation",
     context: dict[str, Any] | None = None,
     **kwargs: Any,

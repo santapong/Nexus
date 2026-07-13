@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
+from nexus.agents.base import AgentBase
 from nexus.core.kafka.schemas import AgentCommand
 from nexus.db.models import AgentRole
 from nexus.settings import settings
@@ -15,8 +16,6 @@ from nexus.settings import settings
 
 class _StubAgent:
     """Bare object carrying just what _load_attachments needs."""
-
-    from nexus.agents.base import AgentBase
 
     _load_attachments = AgentBase._load_attachments
     _attachment_context_block = AgentBase._attachment_context_block
@@ -55,7 +54,7 @@ def _attachment(filename: str, text: str) -> MagicMock:
 
 @pytest.mark.asyncio
 async def test_loads_attachments_for_direct_task() -> None:
-    agent = _StubAgent()
+    agent = cast(AgentBase, _StubAgent())
     session = _session_returning([_attachment("a.txt", "alpha")])
 
     loaded = await agent._load_attachments(session, _command())
@@ -65,7 +64,7 @@ async def test_loads_attachments_for_direct_task() -> None:
 
 @pytest.mark.asyncio
 async def test_subtask_queries_parent_task_id_too() -> None:
-    agent = _StubAgent()
+    agent = cast(AgentBase, _StubAgent())
     session = _session_returning([])
     parent_id = str(uuid4())
 
@@ -87,7 +86,7 @@ async def test_subtask_queries_parent_task_id_too() -> None:
 async def test_char_budget_truncates_across_attachments(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    agent = _StubAgent()
+    agent = cast(AgentBase, _StubAgent())
     monkeypatch.setattr(settings, "attachment_context_char_budget", 8)
     session = _session_returning(
         [_attachment("a.txt", "12345"), _attachment("b.txt", "67890"), _attachment("c.txt", "x")]
@@ -102,14 +101,14 @@ async def test_char_budget_truncates_across_attachments(
 
 @pytest.mark.asyncio
 async def test_empty_result_returns_empty_list() -> None:
-    agent = _StubAgent()
+    agent = cast(AgentBase, _StubAgent())
     session = _session_returning([])
     assert await agent._load_attachments(session, _command()) == []
 
 
 def test_attachment_context_block_formats_sections() -> None:
-    agent = _StubAgent()
-    agent._memory_context = {  # type: ignore[attr-defined]
+    agent = cast(AgentBase, _StubAgent())
+    agent._memory_context = {
         "attachments": [
             {"filename": "r.pdf", "mime_type": "application/pdf", "parsed_text": "profits up"}
         ]
@@ -122,6 +121,6 @@ def test_attachment_context_block_formats_sections() -> None:
 
 
 def test_attachment_context_block_none_when_absent() -> None:
-    agent = _StubAgent()
-    agent._memory_context = {}  # type: ignore[attr-defined]
+    agent = cast(AgentBase, _StubAgent())
+    agent._memory_context = {}
     assert agent._attachment_context_block() is None

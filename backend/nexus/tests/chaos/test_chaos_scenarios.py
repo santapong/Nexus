@@ -209,14 +209,14 @@ class TestInvalidA2AToken:
         from nexus.integrations.a2a.auth import _CachedToken, _check_token_validity
 
         token = _CachedToken(
-            token_hash="abc",
+            lookup_id="abc",
             name="test",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=None,
             is_revoked=True,
         )
-        valid, _error, rpm = _check_token_validity(token, "general", "abc")
+        valid, _error, rpm = _check_token_validity(token, "general")
         assert valid is False
         assert rpm == 0
 

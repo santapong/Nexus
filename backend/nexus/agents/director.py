@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
@@ -143,11 +143,11 @@ class DirectorAgent(AgentBase):
             trace_id=trace_id,
         )
 
-        aggregated_output = message.payload.get("aggregated_output", "")
-        original_instruction = message.payload.get("original_instruction", "")
+        aggregated_output = cast(str, message.payload.get("aggregated_output", ""))
+        original_instruction = cast(str, message.payload.get("original_instruction", ""))
         subtask_count = message.payload.get("subtask_count", 0)
         convergence_data = message.payload.get("convergence_report")
-        execution_plan = message.payload.get("execution_plan", {})
+        execution_plan = cast("dict[str, Any]", message.payload.get("execution_plan", {}))
 
         # If convergence data exists, log and include in synthesis context
         convergence_context = ""
@@ -543,7 +543,7 @@ class DirectorAgent(AgentBase):
             except Exception as exc:
                 logger.warning("director_usage_tracking_failed", task_id=task_id, error=str(exc))
 
-            return result.output
+            return cast(str, result.output)
 
         except Exception as exc:
             logger.error(

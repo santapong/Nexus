@@ -191,9 +191,7 @@ async def _handle_response(
 
         raw_presentation = response.output["presentation"]
         if isinstance(raw_presentation, dict):
-            response.output["presentation"] = sanitize_presentation(
-                raw_presentation
-            ).model_dump()
+            response.output["presentation"] = sanitize_presentation(raw_presentation).model_dump()
         else:
             # Wrong shape — drop rather than store something unexpected.
             response.output.pop("presentation", None)
