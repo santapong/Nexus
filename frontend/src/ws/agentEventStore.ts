@@ -61,11 +61,23 @@ export interface RawAgentEvent {
   is_converging?: boolean
   is_looping?: boolean
   is_stagnating?: boolean
+  /** Present on `task_result` broadcasts from the result consumer. */
+  output?: Record<string, unknown>
+  tokens_used?: number
+}
+
+export interface TaskResultEvent {
+  task_id: string
+  status?: string
+  output?: Record<string, unknown>
+  received_at: number
 }
 
 interface AgentEventStore {
   agents: Record<string, AgentLiveStatus>
   thinking: ThinkingEntry[]
+  /** Latest task_result broadcast — drives the Co presentation panel. */
+  lastTaskResult: TaskResultEvent | null
   connectionState: 'connecting' | 'open' | 'closed'
   pushEvent: (raw: RawAgentEvent) => void
   setConnectionState: (s: 'connecting' | 'open' | 'closed') => void
@@ -235,12 +247,22 @@ function deriveEntry(raw: RawAgentEvent): ThinkingEntry | null {
 export const useAgentEventStore = create<AgentEventStore>((set) => ({
   agents: {},
   thinking: [],
+  lastTaskResult: null,
   connectionState: 'connecting',
   setConnectionState: (s) => set({ connectionState: s }),
   clearThinking: () => set({ thinking: [] }),
   pushEvent: (raw) =>
     set((store) => {
       const next: Partial<AgentEventStore> = {}
+
+      if (raw.event === 'task_result' && raw.task_id) {
+        next.lastTaskResult = {
+          task_id: raw.task_id,
+          status: raw.status,
+          output: raw.output,
+          received_at: Date.now(),
+        }
+      }
 
       if (raw.agent_id) {
         const prior = store.agents[raw.agent_id]

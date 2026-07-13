@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CoCanvas } from '@/components/co/CoCanvas'
 import { CoComposer } from '@/components/co/CoComposer'
+import { PresentationPanel } from '@/components/co/PresentationPanel'
 import { ThinkingFeed } from '@/components/co/ThinkingFeed'
 
 /**
@@ -24,6 +25,7 @@ export function CoPage() {
         <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center px-4">
           <CoComposer />
         </div>
+        <PresentationPanel />
       </div>
       <ThinkingFeed
         selectedAgentId={selectedAgentId}
