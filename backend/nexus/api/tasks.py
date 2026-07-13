@@ -5,19 +5,19 @@ from uuid import UUID, uuid4
 
 import structlog
 from litestar import Controller, Request, get, post
-from litestar.exceptions import NotAuthorizedException
 from litestar.params import Parameter
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.api.auth import require_auth_user
+from nexus.api.auth import get_auth_user_from_request, resolve_workspace_id
 from nexus.core.kafka.producer import publish
-from nexus.core.kafka.schemas import AgentCommand, PlanApprovalMessage
+from nexus.core.kafka.schemas import AgentCommand
 from nexus.core.kafka.topics import Topics
 from nexus.db.models import (
     AgentRole,
     ApprovalStatus,
+    Attachment,
     EpisodicMemory,
     HumanApproval,
     LLMUsage,
@@ -33,6 +33,8 @@ class CreateTaskRequest(BaseModel):
     instruction: str
     source: str = TaskSource.HUMAN.value
     require_meeting: bool | None = None  # Override meeting auto-detection
+    # Attachment IDs from POST /api/uploads to link to this task (ADR-089)
+    attachments: list[str] = []
 
 
 class ApprovePlanRequest(BaseModel):
@@ -56,28 +58,29 @@ class TaskResponse(BaseModel):
     completed_at: str | None = None
 
 
-def _require_workspace_id(request: Request[Any, Any, Any]) -> str:
-    """Require an authenticated workspace_id from the request JWT.
+async def _require_workspace_id(
+    request: Request[Any, Any, Any],
+    db_session: AsyncSession,
+) -> str:
+    """Resolve the workspace scope for a task request.
 
-    Tasks must never be served to anonymous callers — without a workspace
-    filter every task across every tenant would be visible. Raises 401 if
-    the request lacks a valid Bearer token, or if the token has no
-    workspace_id claim.
+    Tasks must never be served without a workspace filter — every task
+    across every tenant would be visible otherwise. A valid JWT workspace
+    claim always wins; in personal mode (ADR-087) anonymous requests fall
+    back to the single owner workspace; otherwise raises 401.
 
     Args:
         request: Litestar request object.
+        db_session: Async database session for personal-mode resolution.
 
     Returns:
-        The authenticated user's workspace_id (guaranteed non-empty).
+        The resolved workspace_id (guaranteed non-empty).
 
     Raises:
-        NotAuthorizedException: If no valid JWT is present or it has no
-            workspace_id claim.
+        NotAuthorizedException: If no valid JWT is present and personal
+            mode is disabled (or its workspace is not seeded).
     """
-    workspace_id = require_auth_user(request).workspace_id
-    if not workspace_id:
-        raise NotAuthorizedException(detail="No workspace associated with this user")
-    return workspace_id
+    return await resolve_workspace_id(request, db_session)
 
 
 class TaskController(Controller):
@@ -97,7 +100,7 @@ class TaskController(Controller):
         if not validation.valid:
             return {"error": validation.error or "Invalid instruction", "status": "rejected"}
 
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         trace_id = str(uuid4())
         task = Task(
@@ -109,6 +112,29 @@ class TaskController(Controller):
         )
         db_session.add(task)
         await db_session.flush()
+
+        # Link previously-uploaded attachments (ADR-089). Only unclaimed
+        # attachments in the caller's workspace may be linked — a wrong or
+        # foreign ID is a hard error, not a silent skip.
+        attachment_count = 0
+        if data.attachments:
+            att_stmt = select(Attachment).where(Attachment.id.in_(data.attachments))
+            att_result = await db_session.execute(att_stmt)
+            found = {str(a.id): a for a in att_result.scalars().all()}
+            for att_id in data.attachments:
+                attachment = found.get(att_id)
+                if (
+                    attachment is None
+                    or attachment.workspace_id != workspace_id
+                    or attachment.task_id is not None
+                ):
+                    return {
+                        "error": f"Unknown or already-linked attachment: {att_id}",
+                        "status": "rejected",
+                    }
+                attachment.task_id = str(task.id)
+                attachment_count += 1
+
         await db_session.commit()
 
         logger.info(
@@ -116,12 +142,17 @@ class TaskController(Controller):
             task_id=str(task.id),
             trace_id=trace_id,
             workspace_id=workspace_id,
+            attachment_count=attachment_count,
         )
 
-        # Publish to Kafka task.queue — CEO will pick this up
+        # Publish to Kafka task.queue — CEO will pick this up. Attachment
+        # text stays in the DB (small-envelope rule); only the count rides
+        # the payload as a signal.
         task_payload: dict[str, Any] = {"instruction": data.instruction, "source": data.source}
         if data.require_meeting is not None:
             task_payload["require_meeting"] = data.require_meeting
+        if attachment_count:
+            task_payload["attachment_count"] = attachment_count
 
         kafka_msg = AgentCommand(
             task_id=task.id,
@@ -166,7 +197,7 @@ class TaskController(Controller):
         offset: int = Parameter(query="offset", default=0, ge=0),
     ) -> list[TaskResponse]:
         """List tasks with optional status filter, scoped to workspace."""
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         stmt = (
             select(Task)
@@ -205,7 +236,7 @@ class TaskController(Controller):
         db_session: AsyncSession,
     ) -> TaskResponse | dict[str, str]:
         """Get a single task by ID, scoped to workspace."""
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         stmt = select(Task).where(
             Task.id == task_id,
@@ -239,7 +270,7 @@ class TaskController(Controller):
         db_session: AsyncSession,
     ) -> dict[str, Any]:
         """Get a task with its full subtask tree for multi-agent tracing."""
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         stmt = select(Task).where(
             Task.id == task_id,
@@ -301,7 +332,7 @@ class TaskController(Controller):
         Returns:
             Dict with task info, episodic memories, and LLM usage entries.
         """
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         # Get the task
         task_stmt = select(Task).where(
@@ -432,7 +463,7 @@ class TaskController(Controller):
         the plan is presented to the user. This endpoint lets the user approve
         (proceed to execution) or reject (re-plan with feedback).
         """
-        workspace_id = _require_workspace_id(request)
+        workspace_id = await _require_workspace_id(request, db_session)
 
         # Verify task exists and is awaiting approval
         stmt = select(Task).where(
@@ -463,9 +494,9 @@ class TaskController(Controller):
         if approval:
             from nexus.tools.guards import resolve_approval
 
-            # _require_workspace_id above guarantees an authenticated user.
-            auth_user = require_auth_user(request)
-            resolved_by = auth_user.email or auth_user.user_id
+            # In personal mode there may be no JWT — attribute to the owner.
+            auth_user = get_auth_user_from_request(request)
+            resolved_by = (auth_user.email or auth_user.user_id) if auth_user else "owner"
 
             await resolve_approval(
                 session=db_session,
@@ -499,8 +530,13 @@ class TaskController(Controller):
             feedback=data.feedback[:200] if data.feedback else "",
         )
 
+        next_step = (
+            "Execution will begin shortly."
+            if data.approved
+            else "CEO will re-plan with your feedback."
+        )
         return {
             "task_id": task_id,
             "status": status,
-            "message": f"Plan {status}. {'Execution will begin shortly.' if data.approved else 'CEO will re-plan with your feedback.'}",
+            "message": f"Plan {status}. {next_step}",
         }

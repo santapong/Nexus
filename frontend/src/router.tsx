@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { CoPage } from '@/pages/CoPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { LiveOperationsPage } from '@/pages/LiveOperationsPage'
 import { TasksPage } from '@/pages/TasksPage'
@@ -20,7 +21,8 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <DashboardPage /> },
+      { index: true, element: <CoPage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
       { path: 'live', element: <LiveOperationsPage /> },
       { path: 'tasks', element: <TasksPage /> },
       { path: 'agents', element: <AgentsPage /> },

@@ -10,7 +10,6 @@ from typing import Any
 
 import structlog
 from litestar import Controller, Response, get, post
-from litestar.di import Provide
 from litestar.params import Parameter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,12 +43,17 @@ class WorkspaceFileController(Controller):
     ) -> list[dict[str, Any]]:
         """List all projects in a workspace."""
         from sqlalchemy import select
+
         from nexus.db.models import WorkspaceProject
 
-        stmt = select(WorkspaceProject).where(
-            WorkspaceProject.workspace_id == workspace_id,
-            WorkspaceProject.is_archived.is_(False),
-        ).order_by(WorkspaceProject.name)
+        stmt = (
+            select(WorkspaceProject)
+            .where(
+                WorkspaceProject.workspace_id == workspace_id,
+                WorkspaceProject.is_archived.is_(False),
+            )
+            .order_by(WorkspaceProject.name)
+        )
         result = await db_session.execute(stmt)
         projects = result.scalars().all()
 
@@ -110,7 +114,7 @@ class WorkspaceFileController(Controller):
         file_path: str,
         db_session: AsyncSession,
         version: int | None = Parameter(default=None, query="version"),
-    ) -> Response:
+    ) -> Response[dict[str, Any]]:
         """Read file content from a workspace project."""
         content = await read_file(
             db_session,
@@ -144,6 +148,7 @@ class WorkspaceFileController(Controller):
     ) -> list[FileVersion]:
         """Get version history for a specific file."""
         from sqlalchemy import select
+
         from nexus.db.models import WorkspaceFile, WorkspaceFileVersion
 
         project = await get_project(

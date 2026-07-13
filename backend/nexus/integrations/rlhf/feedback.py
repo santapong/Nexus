@@ -19,8 +19,6 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import (
-    AgentRole,
-    EpisodicMemory,
     FeedbackSignal,
     HumanApproval,
     SemanticMemory,
@@ -134,11 +132,13 @@ class FeedbackCollector:
                     "decision": approval.status,
                 },
             )
-            signals.append({
-                "signal_id": signal.id,
-                "agent_id": approval.agent_id,
-                "decision": approval.status,
-            })
+            signals.append(
+                {
+                    "signal_id": signal.id,
+                    "agent_id": approval.agent_id,
+                    "decision": approval.status,
+                }
+            )
 
         logger.info("approval_signals_collected", count=len(signals))
         return signals
@@ -204,11 +204,13 @@ class FeedbackCollector:
                     "final_status": task.status,
                 },
             )
-            signals.append({
-                "signal_id": signal.id,
-                "agent_id": task.assigned_agent_id,
-                "rework_rounds": task.rework_round,
-            })
+            signals.append(
+                {
+                    "signal_id": signal.id,
+                    "agent_id": task.assigned_agent_id,
+                    "rework_rounds": task.rework_round,
+                }
+            )
 
         logger.info("rework_signals_collected", count=len(signals))
         return signals
@@ -220,12 +222,16 @@ class FeedbackCollector:
         signal_type: str,
     ) -> bool:
         """Check if a feedback signal already exists for this task/agent/type."""
-        stmt = select(func.count()).select_from(FeedbackSignal).where(
-            and_(
-                FeedbackSignal.task_id == task_id,
-                FeedbackSignal.agent_id == agent_id,
-                FeedbackSignal.signal_type == signal_type,
-            ),
+        stmt = (
+            select(func.count())
+            .select_from(FeedbackSignal)
+            .where(
+                and_(
+                    FeedbackSignal.task_id == task_id,
+                    FeedbackSignal.agent_id == agent_id,
+                    FeedbackSignal.signal_type == signal_type,
+                ),
+            )
         )
         result = await self.session.execute(stmt)
         count = result.scalar_one()
@@ -281,7 +287,11 @@ class PreferenceUpdater:
                 agent_id=agent_id,
                 key="approval_rate",
                 value=f"Approval rate: {approval_rate:.0%} over {len(approval_signals)} actions. "
-                f"{'Users generally approve your actions.' if approval_rate > 0.7 else 'Users frequently reject your actions — be more cautious.'}",
+                + (
+                    "Users generally approve your actions."
+                    if approval_rate > 0.7
+                    else "Users frequently reject your actions — be more cautious."
+                ),
                 confidence=min(len(approval_signals) / 20, 1.0),
             )
 
@@ -292,8 +302,13 @@ class PreferenceUpdater:
             await self._upsert_preference(
                 agent_id=agent_id,
                 key="rework_quality",
-                value=f"QA quality score: {avg_quality:.0%} over {len(rework_signals)} reviewed tasks. "
-                f"{'Your outputs rarely need rework.' if avg_quality > 0.7 else 'Your outputs frequently require rework — improve thoroughness.'}",
+                value=f"QA quality score: {avg_quality:.0%} "
+                + f"over {len(rework_signals)} reviewed tasks. "
+                + (
+                    "Your outputs rarely need rework."
+                    if avg_quality > 0.7
+                    else "Your outputs frequently require rework — improve thoroughness."
+                ),
                 confidence=min(len(rework_signals) / 10, 1.0),
             )
 
@@ -305,14 +320,17 @@ class PreferenceUpdater:
                 agent_id=agent_id,
                 key="user_satisfaction",
                 value=f"User satisfaction: {avg_rating:.0%} over {len(rating_signals)} ratings. "
-                f"{'Users are satisfied with your work.' if avg_rating > 0.7 else 'Users are dissatisfied — adjust your approach.'}",
+                + (
+                    "Users are satisfied with your work."
+                    if avg_rating > 0.7
+                    else "Users are dissatisfied — adjust your approach."
+                ),
                 confidence=min(len(rating_signals) / 10, 1.0),
             )
 
         # Analyze tool-specific patterns from rejected approvals
         rejected = [
-            s for s in approval_signals
-            if s.signal_value == 0.0 and s.context.get("tool_name")
+            s for s in approval_signals if s.signal_value == 0.0 and s.context.get("tool_name")
         ]
         if rejected:
             tool_rejections: dict[str, int] = {}

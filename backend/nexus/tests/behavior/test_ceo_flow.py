@@ -39,6 +39,10 @@ def _make_mock_llm() -> MagicMock:
 def _make_ceo() -> CEOAgent:
     """Build a CEOAgent with all dependencies mocked."""
     mock_session = AsyncMock()
+    # SQLAlchemy result objects are sync — bare AsyncMock results mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks).
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     mock_session.__aenter__ = AsyncMock(return_value=mock_session)
     mock_session.__aexit__ = AsyncMock(return_value=None)
     mock_session.commit = AsyncMock()
@@ -79,6 +83,10 @@ async def test_ceo_delegates_to_engineer(
     agent = _make_ceo()
     command = _make_task_command()
     mock_session = AsyncMock()
+    # SQLAlchemy result objects are sync — bare AsyncMock results mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks).
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     mock_session.flush = AsyncMock()
     mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
@@ -116,6 +124,10 @@ async def test_ceo_returns_delegation_response(
     agent = _make_ceo()
     command = _make_task_command()
     mock_session = AsyncMock()
+    # SQLAlchemy result objects are sync — bare AsyncMock results mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks).
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     mock_session.flush = AsyncMock()
     mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 
@@ -149,6 +161,10 @@ async def test_ceo_preserves_task_and_trace_ids(
         instruction="Investigate performance issue",
     )
     mock_session = AsyncMock()
+    # SQLAlchemy result objects are sync — bare AsyncMock results mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks).
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     mock_session.flush = AsyncMock()
     mock_session.add = MagicMock(side_effect=lambda obj: setattr(obj, "id", uuid4()))
 

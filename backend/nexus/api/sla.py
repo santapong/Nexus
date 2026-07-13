@@ -60,7 +60,9 @@ class SLAController(Controller):
         try:
             sla_tier = SLATier(tier)
         except ValueError:
-            return {"error": f"Invalid tier: {tier}. Must be one of: free, starter, pro, enterprise"}
+            return {
+                "error": f"Invalid tier: {tier}. Must be one of: free, starter, pro, enterprise"
+            }
 
         async with sqlalchemy_config.get_session() as session:
             report = await evaluate_compliance(
@@ -114,7 +116,9 @@ class SLAController(Controller):
         from nexus.db.models import SLASnapshot
 
         async with sqlalchemy_config.get_session() as session:
-            query = select(SLASnapshot).order_by(SLASnapshot.timestamp.desc()).limit(min(limit, 500))
+            query = (
+                select(SLASnapshot).order_by(SLASnapshot.timestamp.desc()).limit(min(limit, 500))
+            )
 
             if workspace_id is not None:
                 query = query.where(SLASnapshot.workspace_id == workspace_id)

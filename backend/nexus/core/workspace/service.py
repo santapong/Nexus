@@ -19,8 +19,11 @@ from nexus.core.workspace.storage import (
     guess_mime_type,
     init_repo,
     is_binary_file,
-    list_files as git_list_files,
+)
+from nexus.core.workspace.storage import (
     read_file as git_read_file,
+)
+from nexus.core.workspace.storage import (
     write_file as git_write_file,
 )
 from nexus.db.models import WorkspaceFile, WorkspaceFileVersion, WorkspaceProject
@@ -157,12 +160,9 @@ async def write_file_with_versioning(
         raise ValueError(msg)
 
     # Check file count limit
-    file_count_stmt = (
-        select(WorkspaceFile)
-        .where(
-            WorkspaceFile.project_id == str(project.id),
-            WorkspaceFile.is_deleted.is_(False),
-        )
+    file_count_stmt = select(WorkspaceFile).where(
+        WorkspaceFile.project_id == str(project.id),
+        WorkspaceFile.is_deleted.is_(False),
     )
     file_count_result = await session.execute(file_count_stmt)
     existing_files = file_count_result.scalars().all()
@@ -307,9 +307,7 @@ async def read_file(
 
     if version is not None:
         # Look up the commit SHA for this version
-        project = await get_project(
-            session, workspace_id=workspace_id, project_slug=project_slug
-        )
+        project = await get_project(session, workspace_id=workspace_id, project_slug=project_slug)
         if project is None:
             return None
 
@@ -356,9 +354,7 @@ async def list_project_files(
     Returns:
         List of FileMetadata.
     """
-    project = await get_project(
-        session, workspace_id=workspace_id, project_slug=project_slug
-    )
+    project = await get_project(session, workspace_id=workspace_id, project_slug=project_slug)
     if project is None:
         return []
 
@@ -505,7 +501,6 @@ async def load_context_for_task(
     similar_rows = result.all()
 
     # Step 2: Also get last 5 files modified by this agent
-    recent_file_ids: set[str] = set()
     if agent_id:
         recent_stmt = (
             select(WorkspaceFile, WorkspaceProject.slug.label("project_slug"))

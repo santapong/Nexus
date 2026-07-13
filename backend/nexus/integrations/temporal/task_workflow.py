@@ -25,13 +25,10 @@ import structlog
 from nexus.integrations.temporal.schemas import (
     HumanApprovalSignal,
     PlanInput,
-    PlanOutput,
     ReviewInput,
-    ReviewOutput,
     SubtaskActivityInput,
     SubtaskActivityOutput,
     SynthesisInput,
-    SynthesisOutput,
     TaskProgressSignal,
     TaskStatusQuery,
     TaskWorkflowInput,
@@ -202,19 +199,19 @@ class AgentTaskWorkflow:
                     )
                     for subtask in independent
                 ]
-                parallel_results = await asyncio.gather(
-                    *parallel_tasks, return_exceptions=True
-                )
+                parallel_results = await asyncio.gather(*parallel_tasks, return_exceptions=True)
 
                 for i, result in enumerate(parallel_results):
-                    if isinstance(result, Exception):
+                    if isinstance(result, BaseException):
                         failed_subtasks.append(independent[i].subtask_id)
-                        results.append(SubtaskActivityOutput(
-                            task_id=independent[i].subtask_id,
-                            agent_role=independent[i].agent_role,
-                            status="failed",
-                            error=str(result),
-                        ))
+                        results.append(
+                            SubtaskActivityOutput(
+                                task_id=independent[i].subtask_id,
+                                agent_role=independent[i].agent_role,
+                                status="failed",
+                                error=str(result),
+                            )
+                        )
                     else:
                         results.append(result)
                         if result.status == "completed":
@@ -223,17 +220,17 @@ class AgentTaskWorkflow:
             # Execute dependent subtasks sequentially
             for subtask in dependent:
                 # Check if dependencies succeeded
-                dep_failed = any(
-                    dep_id in failed_subtasks for dep_id in subtask.depends_on
-                )
+                dep_failed = any(dep_id in failed_subtasks for dep_id in subtask.depends_on)
                 if dep_failed:
                     failed_subtasks.append(subtask.subtask_id)
-                    results.append(SubtaskActivityOutput(
-                        task_id=subtask.subtask_id,
-                        agent_role=subtask.agent_role,
-                        status="skipped",
-                        error="Dependency failed",
-                    ))
+                    results.append(
+                        SubtaskActivityOutput(
+                            task_id=subtask.subtask_id,
+                            agent_role=subtask.agent_role,
+                            status="skipped",
+                            error="Dependency failed",
+                        )
+                    )
                     continue
 
                 dep_result = await execute_subtask_activity(

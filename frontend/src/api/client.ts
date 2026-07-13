@@ -4,6 +4,7 @@ import type {
   AgentInfo,
   Approval,
   ApprovalRatesData,
+  AttachmentRef,
   AuditEvent,
   AuditTimelineEntry,
   BillingRecord,
@@ -50,11 +51,23 @@ export const api = {
 
   getTask: (id: string) => apiFetch<Task>(`/api/tasks/${id}`),
 
-  createTask: (instruction: string) =>
+  createTask: (instruction: string, attachments?: string[]) =>
     apiFetch<CreateTaskResponse>('/api/tasks', {
       method: 'POST',
-      body: JSON.stringify({ instruction }),
+      body: JSON.stringify(
+        attachments && attachments.length > 0 ? { instruction, attachments } : { instruction },
+      ),
     }),
+
+  // Multipart — must NOT go through apiFetch (it hardcodes a JSON
+  // Content-Type; the browser sets the multipart boundary itself).
+  uploadFile: async (file: File): Promise<AttachmentRef> => {
+    const form = new FormData()
+    form.append('data', file, file.name)
+    const res = await fetch(`${API_URL}/api/uploads`, { method: 'POST', body: form })
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+    return res.json() as Promise<AttachmentRef>
+  },
 
   listApprovals: () => apiFetch<Approval[]>('/api/approvals'),
 

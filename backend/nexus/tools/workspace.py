@@ -11,13 +11,13 @@ from __future__ import annotations
 
 import structlog
 
+from nexus.core.workspace.indexer import index_file
 from nexus.core.workspace.service import (
     list_project_files,
     read_file,
     search_files,
     write_file_with_versioning,
 )
-from nexus.core.workspace.indexer import index_file
 from nexus.settings import settings
 
 logger = structlog.get_logger()
@@ -38,9 +38,9 @@ async def tool_workspace_list(
     Returns:
         Formatted list of files with sizes and metadata.
     """
-    from nexus.db.session import async_session_factory
+    from nexus.db.session import get_session_factory
 
-    async with async_session_factory() as session:
+    async with get_session_factory()() as session:
         files = await list_project_files(
             session,
             workspace_id=_get_workspace_id(),
@@ -78,9 +78,9 @@ async def tool_workspace_read(
     Returns:
         File content as text, or error message if not found.
     """
-    from nexus.db.session import async_session_factory
+    from nexus.db.session import get_session_factory
 
-    async with async_session_factory() as session:
+    async with get_session_factory()() as session:
         content = await read_file(
             session,
             workspace_id=_get_workspace_id(),
@@ -122,11 +122,11 @@ async def tool_workspace_write(
     Returns:
         Confirmation with commit SHA and version number.
     """
-    from nexus.db.session import async_session_factory
+    from nexus.db.session import get_session_factory
 
     workspace_id = _get_workspace_id()
 
-    async with async_session_factory() as session:
+    async with get_session_factory()() as session:
         result = await write_file_with_versioning(
             session,
             workspace_id=workspace_id,
@@ -179,9 +179,9 @@ async def tool_workspace_search(
     Returns:
         Ranked list of matching files with summaries and relevance scores.
     """
-    from nexus.db.session import async_session_factory
+    from nexus.db.session import get_session_factory
 
-    async with async_session_factory() as session:
+    async with get_session_factory()() as session:
         results = await search_files(
             session,
             workspace_id=_get_workspace_id(),
@@ -216,4 +216,5 @@ def _get_workspace_id() -> str:
     # This will be injected via RunContext in the Pydantic AI tool call.
     # For standalone use, check environment or use default.
     import os
+
     return os.environ.get("NEXUS_DEFAULT_WORKSPACE_ID", "default")

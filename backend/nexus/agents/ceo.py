@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import structlog
@@ -32,17 +32,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.agents.base import AgentBase
 from nexus.core.kafka.meeting import (
     MeetingConfig,
-    MeetingRoom,
     close_meeting,
     create_meeting,
-    get_meeting,
-    save_meeting,
 )
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import calculate_cost, record_usage
-from nexus.db.models import AgentRole, HumanApproval, ApprovalStatus, Task, TaskStatus
+from nexus.db.models import AgentRole, ApprovalStatus, HumanApproval, Task, TaskStatus
 from nexus.memory.episodic import write_episode
 from nexus.memory.working import get_working_memory, set_working_memory
 
@@ -128,10 +125,7 @@ class CEOAgent(AgentBase):
             return False
 
         # Check for complexity keywords
-        if _COMPLEXITY_KEYWORDS.search(instruction):
-            return True
-
-        return False
+        return bool(_COMPLEXITY_KEYWORDS.search(instruction))
 
     # ─── Phase 1-3: Meeting flow (extract → discuss → approve) ────────────
 
@@ -171,7 +165,8 @@ class CEOAgent(AgentBase):
 
         # Phase 3: Request user approval
         plan_summary = await self._synthesize_plan_for_approval(
-            message, session,
+            message,
+            session,
             requirements=requirements,
             meeting_transcript=meeting_result.get("transcript", ""),
             best_contributions=meeting_result.get("best_contributions", []),
@@ -185,20 +180,25 @@ class CEOAgent(AgentBase):
 
         # Create approval record and notify user
         await self._request_plan_approval(
-            message, session,
+            message,
+            session,
             plan_summary=plan_summary,
             requirements=requirements,
         )
 
         # Store state for when approval comes back
-        await set_working_memory(self.agent_id, task_id, {
-            "workflow_phase": "awaiting_approval",
-            "original_instruction": message.instruction,
-            "requirements": requirements,
-            "meeting_result": meeting_result,
-            "plan_summary": plan_summary,
-            "trace_id": trace_id,
-        })
+        await set_working_memory(
+            self.agent_id,
+            task_id,
+            {
+                "workflow_phase": "awaiting_approval",
+                "original_instruction": message.instruction,
+                "requirements": requirements,
+                "meeting_result": meeting_result,
+                "plan_summary": plan_summary,
+                "trace_id": trace_id,
+            },
+        )
 
         return AgentResponse(
             task_id=message.task_id,
@@ -259,16 +259,14 @@ class CEOAgent(AgentBase):
                     cost_usd=calculate_cost(model_name, input_tokens, output_tokens),
                 )
             except Exception as exc:
-                logger.warning(
-                    "ceo_requirements_usage_failed", task_id=task_id, error=str(exc)
-                )
+                logger.warning("ceo_requirements_usage_failed", task_id=task_id, error=str(exc))
 
             raw = result.output.strip()
             if raw.startswith("```"):
                 raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
                 raw = raw.rsplit("```", 1)[0]
 
-            requirements = json.loads(raw)
+            requirements = cast("dict[str, Any]", json.loads(raw))
 
             logger.info(
                 "ceo_requirements_extracted",
@@ -281,9 +279,7 @@ class CEOAgent(AgentBase):
             return requirements
 
         except Exception as exc:
-            logger.warning(
-                "ceo_requirements_extraction_failed", task_id=task_id, error=str(exc)
-            )
+            logger.warning("ceo_requirements_extraction_failed", task_id=task_id, error=str(exc))
             return {
                 "summary": message.instruction[:200],
                 "goals": [message.instruction],
@@ -399,9 +395,7 @@ class CEOAgent(AgentBase):
         return {
             "meeting_id": meeting_id,
             "transcript": transcript,
-            "best_contributions": [
-                {"role": m.sender_role, "content": m.content} for m in best
-            ],
+            "best_contributions": [{"role": m.sender_role, "content": m.content} for m in best],
             "convergence_report": convergence.model_dump(),
             "rounds": room.current_round,
         }
@@ -419,8 +413,7 @@ class CEOAgent(AgentBase):
         task_id = str(message.task_id)
 
         contributions_text = "\n".join(
-            f"- [{c['role'].upper()}]: {c['content'][:500]}"
-            for c in best_contributions
+            f"- [{c['role'].upper()}]: {c['content'][:500]}" for c in best_contributions
         )
 
         synthesis_prompt = (
@@ -437,11 +430,9 @@ class CEOAgent(AgentBase):
 
         try:
             result = await self._run_with_retry(synthesis_prompt, task_id)
-            return result.output
+            return cast(str, result.output)
         except Exception as exc:
-            logger.warning(
-                "ceo_plan_synthesis_failed", task_id=task_id, error=str(exc)
-            )
+            logger.warning("ceo_plan_synthesis_failed", task_id=task_id, error=str(exc))
             return (
                 f"Requirements: {requirements.get('summary', 'N/A')}\n\n"
                 f"Deliverables: {requirements.get('deliverables', [])}\n\n"
@@ -487,12 +478,14 @@ class CEOAgent(AgentBase):
         )
         await publish(Topics.HUMAN_INPUT_NEEDED, notify_msg, key=task_id)
 
-        await self._broadcast({
-            "event": "plan_approval_needed",
-            "agent_id": self.agent_id,
-            "task_id": task_id,
-            "plan_summary": plan_summary[:500],
-        })
+        await self._broadcast(
+            {
+                "event": "plan_approval_needed",
+                "agent_id": self.agent_id,
+                "task_id": task_id,
+                "plan_summary": plan_summary[:500],
+            }
+        )
 
         logger.info(
             "ceo_plan_approval_requested",
@@ -510,7 +503,7 @@ class CEOAgent(AgentBase):
         """
         task_id = str(message.task_id)
         approved = message.payload.get("approved", False)
-        feedback = message.payload.get("feedback", "")
+        feedback = cast(str, message.payload.get("feedback", ""))
 
         # Load saved workflow state
         state = await get_working_memory(self.agent_id, task_id)
@@ -533,8 +526,7 @@ class CEOAgent(AgentBase):
             )
             # Re-run with feedback incorporated
             revised_instruction = (
-                f"{state['original_instruction']}\n\n"
-                f"[User feedback on previous plan: {feedback}]"
+                f"{state['original_instruction']}\n\n[User feedback on previous plan: {feedback}]"
             )
             revised_message = AgentCommand(
                 task_id=message.task_id,
@@ -567,7 +559,8 @@ class CEOAgent(AgentBase):
         )
 
         return await self._run_execution_phase(
-            original_message, session,
+            original_message,
+            session,
             requirements=state.get("requirements", {}),
             meeting_result=state.get("meeting_result", {}),
         )
@@ -610,13 +603,8 @@ class CEOAgent(AgentBase):
 
     # ─── Phase 4: Execution (direct flow for simple tasks) ──────────────────
 
-    async def _run_direct_flow(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> AgentResponse:
+    async def _run_direct_flow(self, message: AgentCommand, session: AsyncSession) -> AgentResponse:
         """Direct decomposition flow for simple tasks (skips meeting)."""
-        task_id = str(message.task_id)
-        trace_id = str(message.trace_id)
-
         # Plan
         plan = await self._create_plan(message, session)
 
@@ -636,18 +624,19 @@ class CEOAgent(AgentBase):
         Uses the meeting discussion to inform the execution plan,
         then decomposes and dispatches as normal.
         """
-        task_id = str(message.task_id)
-
         # Create plan informed by the meeting discussion
         plan = await self._create_plan(message, session)
         # Enrich plan with meeting context
         plan["requirements"] = requirements
-        plan["meeting_recommendations"] = meeting_result.get(
-            "convergence_report", {}
-        ).get("recommendation", "")
+        plan["meeting_recommendations"] = meeting_result.get("convergence_report", {}).get(
+            "recommendation", ""
+        )
 
         return await self._decompose_and_dispatch(
-            message, session, plan=plan, requirements=requirements,
+            message,
+            session,
+            plan=plan,
+            requirements=requirements,
             meeting_result=meeting_result,
         )
 
@@ -766,9 +755,7 @@ class CEOAgent(AgentBase):
             tokens_used=0,
         )
 
-    async def _create_plan(
-        self, message: AgentCommand, session: AsyncSession
-    ) -> dict[str, Any]:
+    async def _create_plan(self, message: AgentCommand, session: AsyncSession) -> dict[str, Any]:
         """Create an execution plan with security and architecture assessment.
 
         The planning phase happens BEFORE task decomposition. It evaluates:
@@ -787,13 +774,15 @@ class CEOAgent(AgentBase):
         task_id = str(message.task_id)
 
         plan_prompt = (
-            "You are the CEO planning an execution strategy. Analyze this task and create a plan.\n\n"
+            "You are the CEO planning an execution strategy. "
+            "Analyze this task and create a plan.\n\n"
             f"Task: {message.instruction}\n\n"
             "Respond ONLY with a JSON object containing:\n"
             '- "approach": brief description of how to approach this task\n'
             '- "risk_level": "low" | "medium" | "high"\n'
             '- "security_concerns": list of security concerns (empty if none)\n'
-            '- "requires_approval": true if task involves irreversible actions (file writes, emails, external API calls)\n'
+            '- "requires_approval": true if task involves irreversible actions '
+            "(file writes, emails, external API calls)\n"
             '- "estimated_complexity": "simple" | "moderate" | "complex"\n'
             '- "parallel_possible": true if subtasks can run in parallel\n\n'
             "Risk level guidelines:\n"
@@ -829,7 +818,7 @@ class CEOAgent(AgentBase):
                 raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
                 raw = raw.rsplit("```", 1)[0]
 
-            plan = json.loads(raw)
+            plan = cast("dict[str, Any]", json.loads(raw))
 
             logger.info(
                 "ceo_plan_created",
@@ -855,8 +844,11 @@ class CEOAgent(AgentBase):
             }
 
     async def _decompose_task(
-        self, message: AgentCommand, session: AsyncSession,
-        *, plan: dict[str, Any] | None = None,
+        self,
+        message: AgentCommand,
+        session: AsyncSession,
+        *,
+        plan: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """Use LLM to analyze the task and produce a decomposition plan."""
         task_id = str(message.task_id)
@@ -874,10 +866,18 @@ class CEOAgent(AgentBase):
                 f"If risk is 'high', ensure irreversible actions are explicit.\n"
             )
 
+        # Surface attached-document context so decomposition can route the
+        # relevant facts into subtask instructions (specialists also load
+        # the attachment text themselves via _load_memory).
+        attachment_context = ""
+        attachment_block = self._attachment_context_block()
+        if attachment_block:
+            attachment_context = f"\n{attachment_block}\n"
+
         decompose_prompt = (
             f"Decompose the following task into subtasks.\n\n"
             f"Task: {message.instruction}\n"
-            f"{plan_context}\n"
+            f"{plan_context}{attachment_context}\n"
             f"Available specialist agents:\n"
             f"- engineer: code, debugging, technical tasks\n"
             f"- analyst: research, data analysis, reports\n"
@@ -957,6 +957,11 @@ class CEOAgent(AgentBase):
         subtask_ids: list[UUID] = []
         parent_task_id = str(parent_message.task_id)
 
+        # Inherit the parent's workspace so workspace scoping and context
+        # loading (workspace files, attachments) work for subtasks too.
+        parent_ws_stmt = select(Task.workspace_id).where(Task.id == parent_task_id)
+        parent_workspace_id = (await session.execute(parent_ws_stmt)).scalar_one_or_none()
+
         for st in subtasks:
             subtask = Task(
                 trace_id=str(parent_message.trace_id),
@@ -964,6 +969,7 @@ class CEOAgent(AgentBase):
                 instruction=st["instruction"],
                 status=TaskStatus.QUEUED.value,
                 source="internal",
+                workspace_id=parent_workspace_id,
             )
             session.add(subtask)
             await session.flush()
@@ -1064,7 +1070,9 @@ class CEOAgent(AgentBase):
 
         # Check if all subtasks are complete
         if tracking["completed"] >= tracking["total"]:
-            return await self._aggregate_and_route_to_director(parent_task_id, tracking, message, session)
+            return await self._aggregate_and_route_to_director(
+                parent_task_id, tracking, message, session
+            )
 
         logger.info(
             "ceo_subtask_completed",
@@ -1189,7 +1197,8 @@ class CEOAgent(AgentBase):
         # Phase 5: Run post-execution evaluation if this was a meeting workflow
         if meeting_result and requirements:
             await self._run_evaluation_meeting(
-                message, session,
+                message,
+                session,
                 parent_task_id=parent_task_id,
                 tracking=tracking,
                 aggregated_output=aggregated,
@@ -1240,7 +1249,7 @@ class CEOAgent(AgentBase):
         # Get unique roles that participated in execution
         agent_roles = list({st["role"] for st in tracking["subtasks"].values()})
         # Add QA as lead evaluator
-        participants = list(set(agent_roles + ["qa"]))
+        participants = list({*agent_roles, "qa"})
 
         meeting_id = str(uuid4())
         config = MeetingConfig(
@@ -1275,7 +1284,6 @@ class CEOAgent(AgentBase):
 
         # Check evaluation consensus
         convergence = room.check_convergence()
-        transcript = room.get_transcript()
 
         await room.terminate(
             f"Evaluation complete. {convergence.recommendation}",

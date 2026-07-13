@@ -15,10 +15,10 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.core.workspace.storage import is_binary_file, read_file as git_read_file
+from nexus.core.workspace.storage import is_binary_file
+from nexus.core.workspace.storage import read_file as git_read_file
 from nexus.db.models import WorkspaceFile, WorkspaceProject
 from nexus.memory.embeddings import generate_embedding
-from nexus.settings import settings
 
 logger = structlog.get_logger()
 
@@ -83,7 +83,7 @@ async def index_file(
     # Generate embedding from summary
     embedding = await generate_embedding(summary)
     if embedding is not None:
-        ws_file.embedding = embedding
+        ws_file.embedding = embedding  # type: ignore[assignment]
 
     await session.flush()
 
@@ -137,7 +137,10 @@ async def _generate_summary(
             ),
         )
 
-        prompt = f"File: {file_path}\nMIME type: {mime_type or 'unknown'}\n\nContent:\n{truncated_content}"
+        prompt = (
+            f"File: {file_path}\nMIME type: {mime_type or 'unknown'}\n\n"
+            f"Content:\n{truncated_content}"
+        )
         result = await summarizer.run(prompt)
         return result.output
 

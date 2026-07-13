@@ -44,6 +44,7 @@ from nexus.db.models import AgentRole
 from nexus.memory.embeddings import generate_embedding
 from nexus.memory.episodic import recall_similar, write_episode
 from nexus.memory.working import clear_working_memory, get_working_memory
+from nexus.settings import settings
 
 logger = structlog.get_logger()
 
@@ -752,6 +753,21 @@ class AgentBase(ABC):
             "working_memory": working,
         }
 
+        # Load user-uploaded attachment text (ADR-089/090). Attachments are
+        # linked to the parent task; subtasks reach them via the
+        # parent_task_id every CEO dispatch carries in its payload.
+        try:
+            attachments = await self._load_attachments(session, command)
+            if attachments:
+                result["attachments"] = attachments
+        except Exception:
+            logger.warning(
+                "attachment_context_load_failed",
+                task_id=str(command.task_id),
+                agent_id=self.agent_id,
+                exc_info=True,
+            )
+
         # Load workspace files via smart context (if embedding available)
         if embedding:
             try:
@@ -783,6 +799,65 @@ class AgentBase(ABC):
                 )
 
         return result
+
+    async def _load_attachments(
+        self, session: AsyncSession, command: AgentCommand
+    ) -> list[dict[str, str]]:
+        """Load parsed attachment text for this task (and its parent).
+
+        Returns a list of {filename, mime_type, parsed_text} dicts, with
+        the combined parsed_text trimmed to
+        settings.attachment_context_char_budget characters total.
+        """
+        from sqlalchemy import select as sa_select
+
+        from nexus.db.models import Attachment
+
+        task_ids = [str(command.task_id)]
+        parent_task_id = command.payload.get("parent_task_id")
+        if parent_task_id:
+            task_ids.append(str(parent_task_id))
+
+        stmt = (
+            sa_select(Attachment)
+            .where(Attachment.task_id.in_(task_ids))
+            .where(Attachment.parsed_text.is_not(None))
+            .order_by(Attachment.created_at)
+        )
+        rows = (await session.execute(stmt)).scalars().all()
+        if not rows:
+            return []
+
+        budget = settings.attachment_context_char_budget
+        loaded: list[dict[str, str]] = []
+        for att in rows:
+            if budget <= 0:
+                break
+            text = (att.parsed_text or "")[:budget]
+            budget -= len(text)
+            loaded.append(
+                {
+                    "filename": att.filename,
+                    "mime_type": att.mime_type,
+                    "parsed_text": text,
+                }
+            )
+        return loaded
+
+    def _attachment_context_block(self) -> str | None:
+        """Format loaded attachment text as a prompt context block.
+
+        Specialists append this to their context_parts so user-uploaded
+        documents reach the LLM alongside episodic/working memory.
+        """
+        memory_context = getattr(self, "_memory_context", {})
+        attachments = memory_context.get("attachments") or []
+        if not attachments:
+            return None
+        sections = [
+            f"### {a['filename']} ({a['mime_type']})\n{a['parsed_text']}" for a in attachments
+        ]
+        return "Attached documents (uploaded by the owner):\n\n" + "\n\n".join(sections)
 
     async def _resolve_workspace_id(
         self, session: AsyncSession, command: AgentCommand

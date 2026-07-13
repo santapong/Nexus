@@ -10,7 +10,7 @@ reaches the user or external caller.
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from pydantic_ai import Agent as PydanticAgent
@@ -126,18 +126,26 @@ class QAAgent(AgentBase):
             # If we can't parse, treat as approved with the raw output
             pass
 
+        # Presentation block produced by the Director (ADR-091) — QA passes
+        # it through untouched; sanitization happened at production and is
+        # re-enforced in the result consumer.
+        presentation = message.payload.get("presentation")
+
         if approved:
             # Publish final result to task.results
+            approved_output: dict[str, Any] = {
+                "qa_review": qa_output,
+                "original_output": message.payload.get("aggregated_output", ""),
+            }
+            if presentation:
+                approved_output["presentation"] = presentation
             task_result = TaskResult(
                 task_id=message.task_id,
                 trace_id=message.trace_id,
                 agent_id=self.agent_id,
                 payload=message.payload,
                 status="completed",
-                output={
-                    "qa_review": qa_output,
-                    "original_output": message.payload.get("aggregated_output", ""),
-                },
+                output=approved_output,
             )
             await publish(Topics.TASK_RESULTS, task_result, key=task_id)
 
@@ -148,7 +156,7 @@ class QAAgent(AgentBase):
             )
         else:
             # Multi-round rework: track round and guard against unbounded loops
-            current_round = message.payload.get("rework_round", 0)
+            current_round = cast(int, message.payload.get("rework_round", 0))
             max_rounds = settings.qa_max_rework_rounds
 
             if current_round >= max_rounds:
@@ -161,18 +169,21 @@ class QAAgent(AgentBase):
                     max_rounds=max_rounds,
                 )
                 # Publish as completed with QA notes — let human decide
+                escalated_output: dict[str, Any] = {
+                    "qa_review": qa_output,
+                    "original_output": message.payload.get("aggregated_output", ""),
+                    "rework_rounds_exhausted": True,
+                    "total_rework_rounds": current_round,
+                }
+                if presentation:
+                    escalated_output["presentation"] = presentation
                 task_result = TaskResult(
                     task_id=message.task_id,
                     trace_id=message.trace_id,
                     agent_id=self.agent_id,
                     payload=message.payload,
                     status="escalated",
-                    output={
-                        "qa_review": qa_output,
-                        "original_output": message.payload.get("aggregated_output", ""),
-                        "rework_rounds_exhausted": True,
-                        "total_rework_rounds": current_round,
-                    },
+                    output=escalated_output,
                 )
                 await publish(Topics.TASK_RESULTS, task_result, key=task_id)
 
@@ -245,13 +256,16 @@ class QAAgent(AgentBase):
             tokens_used=total_tokens,
         )
 
+        response_output: dict[str, Any] = {"result": qa_output, "approved": approved}
+        if presentation:
+            response_output["presentation"] = presentation
         return AgentResponse(
             task_id=message.task_id,
             trace_id=message.trace_id,
             agent_id=self.agent_id,
             payload={},
             status="success",
-            output={"result": qa_output, "approved": approved},
+            output=response_output,
             tokens_used=total_tokens,
         )
 

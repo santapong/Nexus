@@ -30,12 +30,6 @@ from nexus.integrations.keepsave.tools import (
     tool_keepsave_promote_environment,
     tool_keepsave_update_secret,
 )
-from nexus.tools.workspace import (
-    tool_workspace_list,
-    tool_workspace_read,
-    tool_workspace_search,
-    tool_workspace_write,
-)
 from nexus.tools.adapter import (
     tool_analyze_image,
     tool_code_execute,
@@ -53,6 +47,12 @@ from nexus.tools.adapter import (
     tool_send_email,
     tool_web_fetch,
     tool_web_search,
+)
+from nexus.tools.workspace import (
+    tool_workspace_list,
+    tool_workspace_read,
+    tool_workspace_search,
+    tool_workspace_write,
 )
 
 # Tools that require human approval before execution
@@ -125,8 +125,8 @@ TOOL_REGISTRY: dict[AgentRole, list[Callable[..., Any]]] = {
         tool_hire_external_agent,
         tool_analyze_image,
         # Sandbox tools (E2B Firecracker microVM isolation)
-        tool_sandbox_execute,   # Read-only: execute code snippets
-        tool_sandbox_project,   # Irreversible: clone repos + run commands
+        tool_sandbox_execute,  # Read-only: execute code snippets
+        tool_sandbox_project,  # Irreversible: clone repos + run commands
         # Planning & design tools
         tool_create_plan,
         tool_design_system,

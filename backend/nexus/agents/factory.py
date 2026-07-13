@@ -21,8 +21,11 @@ from nexus.tools.registry import get_tools_for_role
 # Kafka topic subscriptions per role
 ROLE_TOPICS: dict[AgentRole, list[str]] = {
     AgentRole.CEO: [
-        Topics.TASK_QUEUE, Topics.AGENT_RESPONSES, Topics.A2A_INBOUND,
-        Topics.PLAN_APPROVAL, Topics.MEETING_ROOM,
+        Topics.TASK_QUEUE,
+        Topics.AGENT_RESPONSES,
+        Topics.A2A_INBOUND,
+        Topics.PLAN_APPROVAL,
+        Topics.MEETING_ROOM,
     ],
     AgentRole.DIRECTOR: [Topics.DIRECTOR_REVIEW],
     AgentRole.ENGINEER: [Topics.AGENT_COMMANDS, Topics.MEETING_ROOM],

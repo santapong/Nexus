@@ -126,6 +126,10 @@ def _make_agent() -> FakeAgent:
     mock_session.commit = AsyncMock()
     mock_session.flush = AsyncMock()
     mock_session.add = MagicMock()
+    # Result objects are sync in SQLAlchemy — a bare AsyncMock here would
+    # mint un-awaited coroutines on .scalar_one_or_none() etc., which
+    # filterwarnings=error escalates to test failures.
+    mock_session.execute = AsyncMock(return_value=MagicMock())
 
     agent = FakeAgent(
         role=AgentRole.ENGINEER,
@@ -157,6 +161,11 @@ async def test_counter_resets_between_tasks() -> None:
         patch("nexus.agents.base.check_idempotency", new_callable=AsyncMock) as mock_idemp,
         patch("nexus.agents.base.check_daily_spend", new_callable=AsyncMock) as mock_daily,
         patch("nexus.agents.base.check_task_budget", new_callable=AsyncMock) as mock_task_budget,
+        patch(
+            "nexus.core.llm.cost_alerts.check_agent_daily_cost",
+            new_callable=AsyncMock,
+            return_value=(True, 0.0, 2.0),
+        ),
         patch("nexus.agents.base.publish", new_callable=AsyncMock),
         patch("nexus.agents.base.redis_pubsub", new_callable=AsyncMock),
         patch("nexus.agents.base.generate_embedding", new_callable=AsyncMock, return_value=None),

@@ -10,10 +10,19 @@ export function useTasks() {
   })
 }
 
+export interface CreateTaskInput {
+  instruction: string
+  attachments?: string[]
+}
+
 export function useCreateTask() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (instruction: string) => api.createTask(instruction),
+    mutationFn: (input: string | CreateTaskInput) => {
+      const { instruction, attachments } =
+        typeof input === 'string' ? { instruction: input, attachments: undefined } : input
+      return api.createTask(instruction, attachments)
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['tasks'] })
       toast.success('Task submitted successfully')

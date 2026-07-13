@@ -12,11 +12,10 @@ Integrates with the recovery service for crash-consistent restarts.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from typing import Any
 
 import structlog
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.models import Task, TaskStatus
@@ -41,7 +40,7 @@ def is_shutting_down() -> bool:
 
 def request_shutdown() -> None:
     """Signal that shutdown has been requested."""
-    global _shutdown_requested  # noqa: PLW0603
+    global _shutdown_requested
     _shutdown_requested = True
     logger.info(
         "shutdown_requested",

@@ -358,9 +358,7 @@ class WorkspaceMember(UUIDBase):
     workspace_id: Mapped[str] = mapped_column(
         ForeignKey("workspaces.id"), nullable=False, index=True
     )
-    user_id: Mapped[Any | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True, index=True
-    )
+    user_id: Mapped[Any | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -653,9 +651,7 @@ class SLASnapshot(UUIDBase):
 
 class WorkspaceProject(UUIDAuditBase):
     __tablename__ = "workspace_projects"
-    __table_args__ = (
-        UniqueConstraint("workspace_id", "slug", name="uq_workspace_project_slug"),
-    )
+    __table_args__ = (UniqueConstraint("workspace_id", "slug", name="uq_workspace_project_slug"),)
 
     workspace_id: Mapped[str] = mapped_column(
         ForeignKey("workspaces.id"), nullable=False, index=True
@@ -715,9 +711,7 @@ class WorkspaceFileVersion(UUIDBase):
     file_id: Mapped[str] = mapped_column(
         ForeignKey("workspace_files.id"), nullable=False, index=True
     )
-    project_id: Mapped[str] = mapped_column(
-        ForeignKey("workspace_projects.id"), nullable=False
-    )
+    project_id: Mapped[str] = mapped_column(ForeignKey("workspace_projects.id"), nullable=False)
     commit_sha: Mapped[str] = mapped_column(String(40), nullable=False)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     operation: Mapped[str] = mapped_column(String(20), nullable=False)  # create | update | delete
@@ -744,3 +738,38 @@ class FederationInstance(UUIDBase):
     )
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+# ─── Table 35: attachments (Co assistant — user uploads, ADR-089) ───────────
+
+
+class AttachmentParseStatus(enum.StrEnum):
+    PENDING = "pending"
+    PARSED = "parsed"
+    FAILED = "failed"
+    UNSUPPORTED = "unsupported"
+
+
+class Attachment(UUIDAuditBase):
+    """A user-uploaded file, parsed at upload time (ADR-089/090).
+
+    task_id is NULL until the attachment is linked to a task at creation;
+    agents load parsed_text into context via AgentBase._load_memory.
+    """
+
+    __tablename__ = "attachments"
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(1000), nullable=False)
+    parsed_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parsed_tables: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    parse_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=AttachmentParseStatus.PENDING.value
+    )
+    parse_error: Mapped[str | None] = mapped_column(Text, nullable=True)

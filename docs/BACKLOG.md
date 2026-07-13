@@ -20,6 +20,15 @@ The 2026-05-19 audit war room (PRs #28–#46) closed BACKLOG-046 (secrets vault 
 BACKLOG-047 (OTel coverage expanded), and surfaced a new open item (embeddings never generated, see
 ERRORLOG ERROR-026). Existing closures (BACKLOG-011–016, 020–034, 038–040, 045, 049) are unchanged.
 
+**Update (2026-07-10 — redesign blueprint):** the 2026-H2 modernization redesign (REDESIGN.md,
+ADR-077…086) adds 8 OPEN items **BACKLOG-053…060** (MessageBus/transport PoC, staged harness, LoopPolicy,
+DBOS, Logfire/OTel, A2A v1.0, AG-UI, MCP auth). These are design-only proposals; nothing is built yet.
+
+**Update (2026-07-12 — "Co" personal-assistant blueprint):** ASSISTANT.md (ADR-087…093) adds 7 OPEN items
+**BACKLOG-061…067** (Co persona + personal mode, upload endpoint, document ingestion, VoiceFactory, HTML
+presentation output, React-Flow Co canvas, frontend modernization). New totals: **67 items — 33 resolved,
+33 open, 1 blocked.** Design-only; nothing is built yet.
+
 ---
 
 ## Format
@@ -37,6 +46,188 @@ ERRORLOG ERROR-026). Existing closures (BACKLOG-011–016, 020–034, 038–040,
 ## Backlog Items
 
 <!-- New items go here, newest first -->
+
+### BACKLOG-067 — Frontend modernization: React 19 + Compiler, Tailwind v4, Motion
+**Suggested phase:** Assistant MVP-1 / Phase C
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §2.2; ADR-093
+**Description:** Upgrade React 18→19 + React Compiler, Tailwind 3→v4, add Motion + AutoAnimate, shadcn/ui on
+Base UI + React Aria; surgical GSAP/Aceternity for the Co hero; optional R3F 3D central node. Stay on
+Vite + TanStack Query + Zustand (no reframework).
+
+---
+
+### BACKLOG-066 — Co DAG canvas via React Flow
+**Suggested phase:** Assistant MVP-1 (B1)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §2; ADR-092
+**Description:** `components/co/CoCanvas.tsx` — single central "Co" node that expands into a live agent DAG
+(React Flow), nodes/edges animated from `ws/agentEventStore.ts`; `/co` becomes the default view. Composer bar
+(text + mic + file drop).
+
+---
+
+### BACKLOG-065 — HTML presentation output
+**Suggested phase:** Assistant MVP-1 (B4)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.3; ADR-091
+**Description:** Typed `presentation` field `{format, content, speech_text}` on the task result; server-side
+HTML sanitization (nh3/bleach); sandboxed render panel in the Co canvas; `speech_text` feeds VoiceFactory TTS.
+
+---
+
+### BACKLOG-064 — VoiceFactory (STT/TTS, browser/cloud/local)
+**Suggested phase:** Assistant MVP-1 (B3)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.2; ADR-088
+**Description:** `core/voice/VoiceFactory` (prefix-registry like ModelFactory) with STT/TTS protocols;
+backends browser (Web Speech, default) / cloud (Whisper·Deepgram / ElevenLabs·OpenAI·Google) / local
+(faster-whisper / Piper); `api/voice.py` transcribe + speak. Select via `VOICE_STT_BACKEND`/`VOICE_TTS_BACKEND`.
+
+---
+
+### BACKLOG-063 — Document ingestion (PDF/Word/Excel/Parquet)
+**Suggested phase:** Assistant MVP-1 (B2)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.1; ADR-090
+**Description:** `core/ingest/` + `tool_read_document` — pypdf/PyMuPDF (PDF), python-docx (Word), openpyxl
+(Excel), pandas+pyarrow (CSV/Parquet) → normalized markdown + tables; chunk+summarize large files via
+ContextAssembler; cache parsed text on the attachment row.
+
+---
+
+### BACKLOG-062 — File-upload endpoint + attachments table
+**Suggested phase:** Assistant MVP-1 (B2)
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.1; ADR-089
+**Description:** `POST /api/uploads` (multipart) storing bytes via workspace storage; `attachments` table
+(migration 016); extend `CreateTaskRequest.attachments`; `_load_memory` loads attachment text into context.
+
+---
+
+### BACKLOG-061 — "Co" persona over the CEO + personal mode
+**Suggested phase:** Assistant MVP-1
+**Added by:** claude ("Co" assistant blueprint)
+**Date:** 2026-07-12
+**Status:** OPEN
+**Source:** ASSISTANT.md §4.4; ADR-087
+**Description:** Reframe the CEO orchestrator as "Co" (personal chief-of-staff) in seed prompt + UI (no role
+enum change); add `PERSONAL_MODE` that auto-scopes requests to the single owner's workspace using the existing
+`NEXUS_SEED_DEMO` default user/workspace. Phase-C follow-on: custom-role runtime so user-defined agents can run.
+
+---
+
+### BACKLOG-060 — MCP auth modernization (OAuth/OIDC + PKCE + CIMD)
+**Suggested phase:** Redesign R5 (New tech)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §3.1; ADR-085
+**Description:** Align the MCP integration to the 2025-11 auth model (OAuth 2.0/OIDC, mandatory PKCE,
+`iss` validation, CIMD URL-based client registration). Readiness item while MCP is a local package;
+becomes blocking at the first MCP-over-HTTP external server.
+
+---
+
+### BACKLOG-059 — AG-UI pilot for dashboard streaming
+**Suggested phase:** Redesign R5 (New tech)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §3.1; ADR-084
+**Description:** Pilot the AG-UI agent→UI event protocol (Pydantic AI native) alongside the existing
+Kafka→Redis(db:2)→WebSocket path; if it succeeds, retire the bespoke streaming glue. Pairs with React 18→19.
+
+---
+
+### BACKLOG-058 — A2A v1.0 upgrade (LF spec + official SDK)
+**Suggested phase:** Redesign R5 (New tech)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §3.1; ADR-083
+**Description:** Migrate the A2A gateway from the April-2025 pre-1.0 spec to Linux-Foundation-hosted
+A2A v1.0 and the official Python SDK, keeping the boundary-only gateway architecture (ADR-003) unchanged.
+Removes hand-rolled protocol code. Note: ACP (IBM) merged into A2A — drop it from the watch list.
+
+---
+
+### BACKLOG-057 — Observability: Logfire + OTel GenAI semantic conventions
+**Suggested phase:** Redesign R4 (Stage-2 harness)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §3.2/§4; ADR-082
+**Description:** Instrument the `Agent.iter()` harness per step with Logfire; emit OTel GenAI-convention
+spans (model request + tool call). Keep eval backends (Langfuse/Phoenix, tied to `prompts`/
+`prompt_benchmarks`) swappable via OTel. Builds on the Phase-5 OTLP exporter (ADR-064).
+
+---
+
+### BACKLOG-056 — Durable intra-task loops via DBOS
+**Suggested phase:** Redesign R4 (Stage-2 harness)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §3.2/§4; ADR-081
+**Description:** Wrap the agent run with DBOS (Postgres-backed durable-execution library, native
+`DBOSAgent`) so a mid-task crash resumes from the last LLM/tool step without a new cluster or event router.
+Keep Temporal scoped to >1hr workflows only. Measure the per-step Postgres write cost.
+
+---
+
+### BACKLOG-055 — Loop engineering: unified LoopPolicy + embedding convergence
+**Suggested phase:** Redesign R4
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN (embedding part blocked by BACKLOG-052)
+**Source:** REDESIGN.md §5; ADR-080
+**Description:** Route the four loop levels (inference, task/guard, QA-rework, meeting) through one
+`LoopPolicy` (max_iterations + token_budget + timeout + termination_predicate). Replace `meeting.py`'s
+lexical Jaccard convergence with embedding cosine via `memory/embeddings.py` — depends on BACKLOG-052
+(embeddings are NULL today). Publish a loop-guard catalog tied to the §23 unbounded-loop cost risk.
+
+---
+
+### BACKLOG-054 — Agent harness: Stage-1 wiring + Stage-2 Agent.iter() loop
+**Suggested phase:** Redesign R2 (Stage 1) then R4 (Stage 2)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §4; ADR-079, ADR-086
+**Description:** Stage 1 — document the guard chain as the outer harness contract; unify the 6 copy-pasted
+`_run_with_retry` onto `core/retry.py`; wire the dormant circuit breaker into a shared `_invoke_llm`; load
+semantic memory into `_load_memory`; promote the workspace context packer into a general `ContextAssembler`.
+Stage 2 — replace `pydantic_ai.Agent.run()` with an `Agent.iter()` `HarnessRunner` making budget/tool-gating/
+context-injection/verification/OTel first-class per-step invariants (retires the `factory.py:36` monkey-counter).
+
+---
+
+### BACKLOG-053 — MessageBus abstraction + transport PoC
+**Suggested phase:** Redesign R1 (seam) then R3 (PoC)
+**Added by:** claude (2026-H2 redesign)
+**Date:** 2026-07-10
+**Status:** OPEN
+**Source:** REDESIGN.md §2; ADR-077, ADR-078
+**Description:** Add `nexus/core/bus/` (`MessageBus` Protocol + `InboundMessage` + adapters
+kafka/nats/redis; `get_bus()` on `MESSAGE_BUS_BACKEND`); re-point `producer.publish`/`consumer.create_consumer`
+to delegate so the 44 call sites stay unchanged; lift idempotency + dead-letter into the bus. Then run the
+design-only PoC (REDESIGN.md §2.5) over Kafka/Redpanda/NATS+JetStream/Redis Streams to pick the default.
+Supersedes the ADR-008 Kafka↔Redis-Streams fallback with a general pluggable transport.
+
+---
 
 ### BACKLOG-052 — Wire embedding generation into memory write path
 **Suggested phase:** Phase 9 (Learning Layer) — but blocks Phase 9 prerequisites

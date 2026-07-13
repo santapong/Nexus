@@ -106,9 +106,7 @@ async def _generate_unique_slug(base: str, db_session: AsyncSession) -> str:
     slug = base
     counter = 1
     while True:
-        stmt = select(
-            exists().where(Workspace.slug == slug)
-        )
+        stmt = select(exists().where(Workspace.slug == slug))
         result = await db_session.execute(stmt)
         if not result.scalar():
             return slug

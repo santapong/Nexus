@@ -156,8 +156,8 @@ class RoleApprovalMetric(BaseModel):
     """Mean dual-score approval rate for a single agent role."""
 
     role: str
-    mean_helpful: float  # 0.0–1.0
-    mean_safe: float  # 0.0–1.0
+    mean_helpful: float  # 0.0-1.0
+    mean_safe: float  # 0.0-1.0
     n_helpful: int
     n_safe: int
 

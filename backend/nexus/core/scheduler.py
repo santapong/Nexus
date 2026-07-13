@@ -120,8 +120,8 @@ async def execute_schedule(
 
     # Publish to Kafka
     msg = KafkaMessage(
-        task_id=task_id,  # type: ignore[arg-type]
-        trace_id=trace_id,  # type: ignore[arg-type]
+        task_id=task_id,
+        trace_id=trace_id,
         agent_id="scheduler",
         payload={
             "instruction": schedule.instruction,

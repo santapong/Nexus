@@ -35,6 +35,11 @@ def _make_mock_session() -> AsyncMock:
             obj.id = uuid4()
 
     mock_session.add = MagicMock(side_effect=add_side_effect)
+    # Result objects are sync in SQLAlchemy — a bare AsyncMock would mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks), which filterwarnings=error
+    # escalates to failures.
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     return mock_session
 
 
@@ -228,8 +233,9 @@ async def test_ceo_aggregates_when_all_complete(
 
     assert response.status == "success"
     assert response.output is not None
-    assert response.output["action"] == "aggregated_and_sent_to_qa"
-    # Should publish to task.review_queue
+    # Phase 7: aggregation routes through the Director (director.review)
+    # before QA, not directly to task.review_queue.
+    assert response.output["action"] == "aggregated_and_sent_to_director"
     mock_publish.assert_called()
 
 

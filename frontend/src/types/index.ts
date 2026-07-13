@@ -398,3 +398,18 @@ export interface CreateAgentRequest {
   tool_access?: string[]
   token_budget_per_task?: number
 }
+
+export interface Presentation {
+  format: 'html' | 'markdown' | 'mermaid'
+  content: string
+  speech_text: string
+}
+
+export interface AttachmentRef {
+  id: string
+  filename: string
+  mime_type: string
+  size_bytes: number
+  parse_status: string
+  parse_error: string | null
+}

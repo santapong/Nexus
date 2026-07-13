@@ -10,8 +10,10 @@ when part of a multi-agent workflow fails.
 
 from __future__ import annotations
 
+from datetime import UTC
+
 import structlog
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from nexus.db.models import Task
@@ -67,7 +69,7 @@ async def compensate_failed_subtasks(
                     parent_task_id=parent_task_id,
                     failed_subtask_id=failed_subtask_id,
                     cancelled_count=len(cancelled_ids),
-                    cancelled_ids=[str(id) for id in cancelled_ids],
+                    cancelled_ids=[str(task_id) for task_id in cancelled_ids],
                 )
 
             return len(cancelled_ids)
@@ -99,14 +101,14 @@ async def cleanup_orphaned_subtasks(
     Returns:
         Number of orphaned subtasks cleaned up.
     """
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     engine = create_async_engine(settings.database_url)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     try:
         async with session_factory() as session:
-            cutoff = datetime.now(timezone.utc) - timedelta(seconds=max_age_seconds)
+            cutoff = datetime.now(UTC) - timedelta(seconds=max_age_seconds)
 
             stmt = (
                 update(Task)

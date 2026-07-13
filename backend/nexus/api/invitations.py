@@ -12,7 +12,7 @@ from typing import Any
 from uuid import UUID
 
 import structlog
-from litestar import Controller, delete, get, post
+from litestar import Controller, get, post
 from sqlalchemy import select
 
 from nexus.db.models import User, Workspace, WorkspaceMember
@@ -59,9 +59,7 @@ class InvitationController(Controller):
                 return {"error": "Workspace not found"}
 
             # Check if user already exists
-            user_result = await session.execute(
-                select(User).where(User.email == email)
-            )
+            user_result = await session.execute(select(User).where(User.email == email))
             existing_user = user_result.scalar_one_or_none()
 
             # Check if already a member

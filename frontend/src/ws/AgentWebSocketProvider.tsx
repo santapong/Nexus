@@ -60,6 +60,10 @@ export function AgentWebSocketProvider({ children }: { children: React.ReactNode
         case 'approval_resolved':
           void queryClient.invalidateQueries({ queryKey: ['approvals'] })
           break
+        case 'task_result':
+          // The Co presentation panel reads this from the event store.
+          void queryClient.invalidateQueries({ queryKey: ['tasks'] })
+          break
         case 'agent_state_change':
         case 'agent_thinking_update':
         case 'meeting_message_published':

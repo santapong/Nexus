@@ -40,7 +40,7 @@ class TestMeetingLifecycle:
     """Tests for the meeting room create -> debate -> terminate lifecycle."""
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_create_meeting(
         self,
         mock_redis: AsyncMock,
@@ -66,8 +66,8 @@ class TestMeetingLifecycle:
         mock_redis.delete.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
-    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_pose_question_increments_round(
         self,
         mock_redis: AsyncMock,
@@ -93,8 +93,8 @@ class TestMeetingLifecycle:
         await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
-    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_submit_response(
         self,
         mock_redis: AsyncMock,
@@ -121,8 +121,8 @@ class TestMeetingLifecycle:
         await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
-    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_terminate_returns_result(
         self,
         mock_redis: AsyncMock,
@@ -154,8 +154,8 @@ class TestMeetingLifecycle:
         await close_meeting(meeting_config.meeting_id)
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.meeting.publish", new_callable=AsyncMock)
-    @patch("nexus.kafka.meeting.redis_working", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.publish", new_callable=AsyncMock)
+    @patch("nexus.core.kafka.meeting.redis_working", new_callable=AsyncMock)
     async def test_full_debate_round(
         self,
         mock_redis: AsyncMock,

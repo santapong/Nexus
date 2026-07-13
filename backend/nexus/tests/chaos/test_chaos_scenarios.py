@@ -26,7 +26,7 @@ class TestKafkaUnavailable:
     """When Kafka is unreachable, tasks should fail cleanly."""
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.producer.get_producer")
+    @patch("nexus.core.kafka.producer.get_producer")
     async def test_publish_fails_cleanly(self, mock_get_producer: AsyncMock) -> None:
         """Publishing to Kafka when unavailable raises, not hangs."""
         mock_producer = AsyncMock()
@@ -79,7 +79,7 @@ class TestRedisWiped:
         assert tokens_used == 0
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.consumer.redis_locks")
+    @patch("nexus.core.kafka.consumer.redis_locks")
     async def test_idempotency_allows_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When idempotency keys are wiped, messages are processed."""
         mock_redis.set = AsyncMock(return_value=True)
@@ -164,7 +164,7 @@ class TestDuplicateMessage:
     """Duplicate messages should be deduplicated via idempotency keys."""
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.consumer.redis_locks")
+    @patch("nexus.core.kafka.consumer.redis_locks")
     async def test_first_message_is_new(self, mock_redis: AsyncMock) -> None:
         """First occurrence of a message_id is marked as new."""
         mock_redis.set = AsyncMock(return_value=True)
@@ -175,7 +175,7 @@ class TestDuplicateMessage:
         assert result is True
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.consumer.redis_locks")
+    @patch("nexus.core.kafka.consumer.redis_locks")
     async def test_duplicate_message_is_skipped(self, mock_redis: AsyncMock) -> None:
         """Second occurrence of same message_id is rejected."""
         mock_redis.set = AsyncMock(return_value=False)
@@ -186,7 +186,7 @@ class TestDuplicateMessage:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.consumer.redis_locks")
+    @patch("nexus.core.kafka.consumer.redis_locks")
     async def test_idempotency_uses_correct_key_format(self, mock_redis: AsyncMock) -> None:
         """Idempotency key follows the pattern 'idempotency:{message_id}'."""
         mock_redis.set = AsyncMock(return_value=True)
@@ -209,14 +209,14 @@ class TestInvalidA2AToken:
         from nexus.integrations.a2a.auth import _CachedToken, _check_token_validity
 
         token = _CachedToken(
-            token_hash="abc",
+            lookup_id="abc",
             name="test",
             allowed_skills=["*"],
             rate_limit_rpm=60,
             expires_at=None,
             is_revoked=True,
         )
-        valid, _error, rpm = _check_token_validity(token, "general", "abc")
+        valid, _error, rpm = _check_token_validity(token, "general")
         assert valid is False
         assert rpm == 0
 
@@ -278,7 +278,7 @@ class TestDeadLetterRouting:
     """Failed messages should route to dead letter after max retries."""
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.dead_letter.redis_locks")
+    @patch("nexus.core.kafka.dead_letter.redis_locks")
     async def test_retry_counter_increments(self, mock_redis: AsyncMock) -> None:
         """Retry counter increments on each failure."""
         mock_redis.incr = AsyncMock(return_value=1)
@@ -292,7 +292,7 @@ class TestDeadLetterRouting:
         mock_redis.expire.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("nexus.kafka.dead_letter.redis_locks")
+    @patch("nexus.core.kafka.dead_letter.redis_locks")
     async def test_retry_counter_reaches_max(self, mock_redis: AsyncMock) -> None:
         """After MAX_RETRIES, message should be routed to dead letter."""
         mock_redis.incr = AsyncMock(return_value=3)

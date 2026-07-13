@@ -9,8 +9,7 @@ Designed to run as an async background task via the scheduler.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
@@ -45,7 +44,7 @@ async def collect_sla_snapshot(
     Returns:
         The created SLASnapshot record.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     window_start = now - timedelta(minutes=_WINDOW_MINUTES)
 
     # Base query for tasks in the window
@@ -54,9 +53,7 @@ async def collect_sla_snapshot(
         base_filter = base_filter & (Task.workspace_id == workspace_id)
 
     # Count tasks by status
-    total_result = await session.execute(
-        select(func.count(Task.id)).where(base_filter)
-    )
+    total_result = await session.execute(select(func.count(Task.id)).where(base_filter))
     tasks_total = total_result.scalar() or 0
 
     completed_result = await session.execute(

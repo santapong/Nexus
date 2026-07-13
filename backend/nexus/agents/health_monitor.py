@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Awaitable
 from datetime import UTC, datetime
+from typing import Any, cast
 
 import structlog
 from sqlalchemy import select, update
@@ -160,13 +162,16 @@ async def _scan_and_fail_silent(
                     hb_key = f"{HEARTBEAT_KEY_PREFIX}:{agent_id}"
                     status_key = f"{AGENT_STATUS_KEY_PREFIX}:{agent_id}"
                     threshold_ts = now - SILENCE_THRESHOLD_SECONDS
-                    claimed = await redis_cache.eval(
-                        SILENCE_CHECK_LUA,
-                        2,
-                        hb_key,
-                        status_key,
-                        str(threshold_ts),
-                        str(AGENT_STATUS_TTL_SECONDS),
+                    claimed = await cast(
+                        Awaitable[Any],
+                        redis_cache.eval(
+                            SILENCE_CHECK_LUA,
+                            2,
+                            hb_key,
+                            status_key,
+                            str(threshold_ts),
+                            str(AGENT_STATUS_TTL_SECONDS),
+                        ),
                     )
 
                     if int(claimed) == 1:

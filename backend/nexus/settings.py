@@ -61,6 +61,25 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440  # 24 hours
 
+    # Personal assistant ("Co") mode — ADR-087
+    # When enabled, unauthenticated requests are scoped to the single owner
+    # workspace identified by personal_workspace_slug (seeded via
+    # NEXUS_SEED_DEMO). A valid JWT with a workspace claim always wins.
+    personal_mode: bool = False
+    personal_workspace_slug: str = "demo-company"
+
+    # Uploads + document ingestion — ADR-089/090
+    upload_storage_path: str = "/data/uploads"
+    upload_max_bytes: int = 25 * 1024 * 1024  # 25 MB
+    # Total characters of parsed attachment text injected into agent context
+    attachment_context_char_budget: int = 20_000
+
+    # Voice (STT/TTS) — ADR-088. `browser` = client-side Web Speech API
+    # (zero backend cost); Phase C adds cloud (whisper/deepgram,
+    # elevenlabs/openai/google) and local (faster-whisper, piper) backends.
+    voice_stt_backend: str = "browser"
+    voice_tts_backend: str = "browser"
+
     # Temporal
     temporal_host: str = "localhost:7233"
     temporal_namespace: str = "nexus"

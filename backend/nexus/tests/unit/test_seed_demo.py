@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from typing import Any
+
 import pytest
 
 
@@ -28,11 +31,18 @@ def test_demo_seed_function_is_present() -> None:
     assert inspect.iscoroutinefunction(_seed_demo_workspace)
 
 
-def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
-    """``seed()`` only invokes ``_seed_demo_workspace`` when NEXUS_SEED_DEMO is truthy."""
+@pytest.mark.asyncio
+async def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``seed()`` only invokes ``_seed_demo_workspace`` when NEXUS_SEED_DEMO is truthy.
+
+    Runs as an async test (awaiting ``seed()`` directly) rather than calling
+    ``asyncio.run`` inside a sync test — nested manual loops collide with
+    pytest-asyncio's loop management and leak unclosed-loop ResourceWarnings
+    that ``filterwarnings=error`` escalates onto unrelated tests.
+    """
     from nexus.db import seed as seed_mod
 
-    calls = {"demo": 0, "agents": 0, "prompts": 0, "benchmarks": 0, "schedules": 0}
+    calls = {"demo": 0, "agents": 0, "prompts": 0, "co": 0, "benchmarks": 0, "schedules": 0}
 
     async def _record_demo(_session: object) -> None:
         calls["demo"] += 1
@@ -43,6 +53,9 @@ def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     async def _record_prompts(_session: object) -> None:
         calls["prompts"] += 1
 
+    async def _record_co(_session: object) -> None:
+        calls["co"] += 1
+
     async def _record_benchmarks(_session: object) -> None:
         calls["benchmarks"] += 1
 
@@ -52,6 +65,7 @@ def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(seed_mod, "_seed_demo_workspace", _record_demo)
     monkeypatch.setattr(seed_mod, "_seed_agents", _record_agents)
     monkeypatch.setattr(seed_mod, "_seed_prompts", _record_prompts)
+    monkeypatch.setattr(seed_mod, "_seed_co_persona", _record_co)
     monkeypatch.setattr(seed_mod, "_seed_benchmarks", _record_benchmarks)
     monkeypatch.setattr(seed_mod, "_seed_schedules", _record_schedules)
 
@@ -63,7 +77,7 @@ def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_session.commit = AsyncMock()
 
     @contextlib.asynccontextmanager
-    async def _ctx() -> object:
+    async def _ctx() -> AsyncIterator[Any]:
         yield fake_session
 
     fake_factory = MagicMock(return_value=_ctx())
@@ -73,15 +87,15 @@ def test_seed_main_respects_demo_flag(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Demo flag OFF — should not call the demo seeder.
     monkeypatch.delenv("NEXUS_SEED_DEMO", raising=False)
-    import asyncio
-
-    asyncio.run(seed_mod.seed())
+    await seed_mod.seed()
     assert calls["demo"] == 0
     assert calls["agents"] == 1
+    assert calls["co"] == 1  # Co persona is seeded unconditionally
 
     # Demo flag ON — must call the demo seeder.
     monkeypatch.setenv("NEXUS_SEED_DEMO", "true")
     fake_factory.return_value = _ctx()  # fresh context manager
-    asyncio.run(seed_mod.seed())
+    await seed_mod.seed()
     assert calls["demo"] == 1
     assert calls["agents"] == 2
+    assert calls["co"] == 2

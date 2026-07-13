@@ -87,6 +87,23 @@
 | ADR-065 | Temporal deep integration — child workflows, signals, sagas | accepted | 2026-04-01 |
 | ADR-066 | Workspace API keys for programmatic access | accepted | 2026-04-01 |
 | ADR-067 | Team invitations and RBAC enforcement | accepted | 2026-04-01 |
+| ADR-077 | MessageBus abstraction — broker-agnostic Protocol + adapters | proposed | 2026-07-10 |
+| ADR-078 | Transport strategy — pluggable, PoC-decided (Kafka/Redpanda/NATS/Redis) | proposed | 2026-07-10 |
+| ADR-079 | Agent harness (staged) — guard-chain contract → `Agent.iter()` loop | proposed | 2026-07-10 |
+| ADR-080 | Loop engineering — unified `LoopPolicy` + embedding convergence | proposed | 2026-07-10 |
+| ADR-081 | Durable execution — DBOS for intra-task; Temporal scoped to >1hr | proposed | 2026-07-10 |
+| ADR-082 | Observability — Logfire + OTel GenAI semantic conventions | proposed | 2026-07-10 |
+| ADR-083 | A2A v1.0 upgrade — LF-hosted spec + official SDK | proposed | 2026-07-10 |
+| ADR-084 | AG-UI adoption for dashboard streaming (Pydantic AI native) | proposed | 2026-07-10 |
+| ADR-085 | MCP auth modernization — OAuth/OIDC + PKCE + CIMD | proposed | 2026-07-10 |
+| ADR-086 | Supersede ADR-014 — Pydantic AI 1.x (unlocks `Agent.iter()`) | proposed | 2026-07-10 |
+| ADR-087 | "Co" personal-assistant persona over the CEO orchestrator | proposed | 2026-07-12 |
+| ADR-088 | VoiceFactory — provider-agnostic STT/TTS (browser/cloud/local) | proposed | 2026-07-12 |
+| ADR-089 | User file-upload endpoint + `attachments` table | proposed | 2026-07-12 |
+| ADR-090 | Document ingestion (PDF/Word/Excel/Parquet) via `core/ingest` | proposed | 2026-07-12 |
+| ADR-091 | HTML presentation output — typed `presentation` field, sanitized | proposed | 2026-07-12 |
+| ADR-092 | React Flow for the Co DAG canvas | proposed | 2026-07-12 |
+| ADR-093 | Frontend modernization — React 19 + Compiler, Tailwind v4, Motion | proposed | 2026-07-12 |
 
 ---
 
@@ -2211,11 +2228,542 @@ This is a near-term fix. The long-term plan is to add a `recovery_attempted_at: 
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-077 -->
+## ADR-077 — MessageBus abstraction — broker-agnostic Protocol + adapters
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §10, §3; REDESIGN.md §2; ADR-007, ADR-008 |
+| Context | `nexus.core.kafka.*` is imported in 44 files with ~30 `publish()` calls, and `AgentBase.run()` *is* an `aiokafka` consumer loop. `producer.py`/`consumer.py` construct `aiokafka` objects directly and leak the `ConsumerRecord` shape (`msg.value`, `msg.topic`) into callers. The only broker-neutral pieces are the `KafkaMessage` envelope and the `Topics` constants. Re-evaluating the transport (ADR-078) is impossible while the whole system is welded to one client. |
+
+### Decision
+
+Introduce `nexus/core/bus/` with a `MessageBus` Protocol — `publish(topic, message, key)`,
+`subscribe(*topics, group_id) -> AsyncIterator[InboundMessage]`, `ack/nack`, `dead_letter`, `health`,
+`start/stop` — plus adapters `kafka_bus.py` (wraps today's aiokafka; also serves Redpanda unchanged),
+`nats_bus.py` (JetStream), and `redis_bus.py` (XADD/XREADGROUP + XCLAIM). `factory.py::get_bus()` selects
+on `settings.MESSAGE_BUS_BACKEND`. An `InboundMessage` value object normalizes `{topic, value, key,
+headers, id}` so no adapter's native record shape leaks into `base.py`/`result_consumer.py`. The existing
+`producer.publish` / `consumer.create_consumer` free functions are re-pointed to delegate to `get_bus()`,
+so all 44 call sites keep working unchanged. Idempotency (`check_idempotency`, Redis `SET NX`) and
+dead-letter routing lift into the bus layer so every adapter inherits them once. `Topics`, the
+`KafkaMessage` envelope, and HMAC `signing.py` are reused as-is.
+
+### Alternatives rejected
+
+- **Leave Kafka hard-coupled** — the status quo; makes ADR-078 undecidable and blocks the light-weight-default goal.
+- **Rewrite every call site to a new client** — 44 files of churn with no rollback story. The shim is reversible.
+- **Adopt a framework message bus (Restate/Inngest)** — duplicates NEXUS's existing consumers + idempotency + guard chain, and reintroduces a second orchestrator (see ADR-010).
+
+### Consequences
+
+**Positive:** Transport becomes a deployment flag; the PoC (ADR-078) can measure all candidates behind one
+interface; the aiokafka record shape stops leaking. **Negative:** the Protocol must faithfully cover every
+current Kafka behavior (offset commit timing, partition keys, rebalance, reconnect) or an adapter will drift
+— mitigated by shipping the Kafka adapter first (behavior-identical) before any alternative.
 
 ---
 
-*Last updated: 2026-05-19*
-*Next ADR ID: ADR-077*
-*Decision count: 60 accepted, 3 superseded*
+## ADR-078 — Transport strategy — pluggable, PoC-decided; candidates Kafka/Redpanda/NATS/Redis Streams
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §10; REDESIGN.md §2; ADR-077 |
+| Supersedes | ADR-008 (on acceptance) — extends its Kafka↔Redis-Streams fallback into a general pluggable-transport decision |
+| Context | The NEXUS workload is agent choreography (dispatch, request/reply, dashboard fan-out, meeting polling), not analytics streaming. LLM latency dominates wall-clock; broker throughput is nearly irrelevant. Kafka works but is over-provisioned (JVM weight, batching latency floor) for the current single-user reality, while its durability/replay is genuinely wanted for the multi-tenant vision. Unbiased research surfaced a real four-way choice. |
+
+### Decision
+
+Do **not** pre-commit to a broker. Behind the ADR-077 seam, treat transport as configurable
+(`MESSAGE_BUS_BACKEND`) and decide the *default* with a proof-of-concept over **Kafka (baseline),
+Redpanda, NATS+JetStream, and Redis Streams**. The PoC replays a realistic agent trace and measures
+distributions (not averages) of: request/reply round-trip, meeting-room topic churn, durable-replay
+correctness under broker-kill, duplicate/DLQ behavior under consumer crash, idle+load ops footprint, and
+async-Python glue lines. Decision rule: pick the lightest backend that passes durable-replay and
+delivery-under-chaos at NEXUS's real concurrency; escalate to Kafka/Redpanda only if the audit-replay SLA
+demands it. **Apache Pulsar is ruled out** (broken async-Python client); RabbitMQ is out of the shortlist
+(no decisive win on any axis NEXUS cares about).
+
+### Alternatives rejected
+
+- **Stay on Kafka by default, no evaluation** — ignores the ops-weight cost the user explicitly questioned.
+- **Migrate wholesale to NATS now** — best architectural fit, but committing before the PoC repeats the original mistake of an unmeasured transport choice.
+- **Redis Streams as the terminal answer** — cheapest now (already in-stack) but weakest durability; a poor fit exactly when the SaaS audit requirement matters.
+
+### Consequences
+
+**Positive:** the "does Kafka work well / is there an alternative" question is answered with evidence, and
+the answer is reversible per-deployment. **Negative:** the PoC is real work (a later phase) and needs
+honest controls (identical hardware, >12h runs) to avoid vendor-benchmark bias.
+
+---
+
+## ADR-079 — Agent harness (staged) — guard-chain contract → `Agent.iter()` instrumented loop
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §7 (AgentBase), §20, new §26; REDESIGN.md §4; ADR-001, ADR-086 |
+| Context | NEXUS owns no inference loop — LLM+tool iteration is a black box inside `pydantic_ai.Agent.run()`. The "max 20 tool calls" rule is enforced by monkey-wrapping each tool with a shared counter in `agents/factory.py:36`, and budget/approval are side-effects rather than loop invariants. There is no place to inject per-step verification, context, or tracing. |
+
+### Decision
+
+Adopt an explicit two-stage **harness** (instrumented scaffolding around each LLM call). **Stage 1**
+(no new loop): document the existing guard chain (`base.py::_execute_guarded_body`) as the canonical outer
+harness contract; unify the 6 copy-pasted `_run_with_retry` onto `core/retry.py`; wire the dormant circuit
+breaker into a shared `AgentBase._invoke_llm`; load semantic memory into `_load_memory`; promote the
+workspace token-budgeted context packer into a general `ContextAssembler`. **Stage 2** (own the loop):
+replace `Agent.run()` with an `Agent.iter()`/`AgentRun.next()` loop inside a `HarnessRunner`, making token
+budget, tool gating (retiring the monkey-counter), context injection, verification, and OTel spans
+first-class per-step invariants. Stage 2 is gated behind Stage 1.
+
+### Alternatives rejected
+
+- **Adopt LangGraph/CrewAI/OpenAI-Agents-SDK/Google-ADK for the loop** — each is a second orchestrator and/or a Pydantic-AI replacement; conflicts with Kafka (ADR-010) or forces a runtime swap.
+- **Keep the black-box `Agent.run()`** — leaves budget/limits/approval as fragile side-effects with no per-step hook.
+- **Custom hand-rolled LLM loop** — reinvents what `Agent.iter()` gives for free and diverges from the Pydantic AI update path.
+
+### Consequences
+
+**Positive:** per-step control (budget halt at 90%, in-loop approval, reflection) with zero new
+infrastructure and no Kafka conflict; Stage-1 wins land even if Stage-2 slips. **Negative:** `Agent.iter()`
+internals can shift across Pydantic AI minors — mitigated by version pinning and behavior tests.
+
+---
+
+## ADR-080 — Loop engineering — unified `LoopPolicy` + embedding-based convergence
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §7 (Director), §23 Risk 2, new §26; REDESIGN.md §5; ADR-079 |
+| Context | NEXUS has four loop levels (inference, task/guard, QA-rework, meeting convergence) with bounds scattered across constants (`MAX_TOOL_CALLS=20`, `qa_max_rework_rounds`, meeting max-rounds). Meeting convergence uses lexical Jaccard similarity with an explicit `TODO` (`core/kafka/meeting.py`) to move to embeddings, so "the agents keep saying the same thing" is detected only crudely. |
+
+### Decision
+
+Introduce a single `LoopPolicy` model — every loop declares `max_iterations`, `token_budget`, `timeout`,
+and a `termination_predicate` — and route all four loop levels through it. Replace `meeting.py`'s Jaccard
+with embedding cosine similarity via the existing `memory/embeddings.py`, with documented
+convergence/stagnation/oscillation thresholds. Publish a loop-guard catalog (convergence, stagnation,
+oscillation, forced-termination → human escalation) cross-referenced to the §23 unbounded-loop **cost**
+risk — loop bounds are a spend-safety control, not only a quality control.
+
+### Alternatives rejected
+
+- **Keep per-loop ad-hoc constants** — works but makes budget/termination invisible and untestable as a unit.
+- **Self-verification inside the generator** — same blind spots in, same blind spots out; the evaluator-optimizer pattern (separate Director/QA with fresh context) is retained instead.
+- **Embeddings for everything immediately** — blocked on BACKLOG-052 (embeddings are never generated today); convergence upgrade is sequenced after that fix.
+
+### Consequences
+
+**Positive:** uniform, testable loop termination; better convergence detection; explicit tie to cost
+safety. **Negative:** embedding-based convergence depends on BACKLOG-052 landing first (embeddings
+currently NULL) — documented as a sequencing constraint.
+
+---
+
+## ADR-081 — Durable execution — DBOS for intra-task durability; Temporal scoped to >1hr workflows
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §4, §5; REDESIGN.md §3.2, §4; ADR-065 (Temporal) |
+| Context | Goal (b) of the redesign is durable, observable agent loops. A crashed agent mid-run currently loses in-flight LLM/tool progress (only the Kafka message is redelivered). Temporal exists (`integrations/temporal/`) but is a heavy separate cluster and tends to want to *be* the orchestrator, which would fight Kafka (ADR-010). |
+
+### Decision
+
+Use **DBOS** — a Postgres-backed durable-execution *library* with a native Pydantic AI `DBOSAgent` wrapper
+— to checkpoint intra-task LLM/tool steps so a crashed run resumes from the last step. DBOS adds no new
+service and no event router (it reuses NEXUS's existing Postgres), so it composes with Kafka rather than
+competing with it. **Temporal stays strictly scoped to genuine >1hr durable workflows** (its existing
+`integrations/temporal/` intent) and must not absorb the CEO→specialist→Director→QA choreography.
+
+### Alternatives rejected
+
+- **Temporal for intra-task durability** — heaviest option (cluster + workers + datastore) and blurs into the second-orchestrator anti-pattern for short tasks.
+- **Restate / Inngest** — designed to own event consumption + orchestration, duplicating NEXUS's Kafka consumers/idempotency/guard chain; Inngest is also TS-first.
+- **No durability (status quo)** — a mid-task crash wastes tokens already spent and restarts from zero.
+
+### Consequences
+
+**Positive:** crash-consistent agent loops reusing existing Postgres; revives the dormant retry/breaker
+intent with real durability. **Negative:** one Postgres write per durable step — acceptable since Postgres
+is already the source of truth; measured in rollout phase R4.
+
+---
+
+## ADR-082 — Observability — Logfire + OTel GenAI semantic conventions
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §4; REDESIGN.md §3.2, §4; ADR-064 (OTel), ADR-079 |
+| Context | Phase 5 wired an OTLP exporter, but the new `Agent.iter()` harness needs per-step visibility (each model request + tool call as a span), and eval/prompt tooling should map onto the existing `prompts`/`prompt_benchmarks` tables without lock-in. |
+
+### Decision
+
+Adopt **Pydantic Logfire** as the trace layer (one-line `logfire.instrument_pydantic_ai()`, same vendor as
+the agent runtime, OTel-native), and emit **OpenTelemetry GenAI semantic-convention** spans so storage/eval
+backends are swappable. Self-hosted **Langfuse** or **Arize Phoenix** may be added later for eval storage
+tied to `prompts`/`prompt_benchmarks`, without rework, because everything speaks OTel.
+
+### Alternatives rejected
+
+- **Bespoke structured logs only** — already present, but no per-step LLM span model or eval linkage.
+- **A single proprietary platform (no OTel conventions)** — lock-in; can't self-host evals later.
+- **LangSmith** — tied to the LangChain/LangGraph runtime NEXUS rejected (ADR-010).
+
+### Consequences
+
+**Positive:** the Stage-2 loop is observable per step; convention-compliant spans keep backends portable.
+**Negative:** GenAI semconv is still marked experimental upstream — expect minor attribute churn; mitigated
+by centralizing span emission.
+
+---
+
+## ADR-083 — A2A v1.0 upgrade — LF-hosted spec + official SDK
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §9; REDESIGN.md §3.1; ADR-003 |
+| Context | NEXUS's A2A gateway is built against the **April-2025 pre-1.0** Google spec. A2A has since been donated to the **Linux Foundation** and shipped **v1.0** (~Apr 2026) with 150+ orgs and 5 official SDKs. NEXUS carries a hand-rolled implementation against a superseded spec. |
+
+### Decision
+
+Upgrade the A2A gateway from the pre-1.0 spec to **A2A v1.0** and adopt the official Python SDK, keeping
+the existing boundary-only gateway architecture (ADR-003) unchanged — agents still receive tasks on
+`a2a.inbound` and cannot tell A2A tasks from human tasks. This closes a version gap and reduces custom
+protocol code.
+
+### Alternatives rejected
+
+- **Stay on the April-2025 spec** — drifts further from an ecosystem now standardized at v1.0.
+- **Also adopt ACP (IBM)** — ACP merged into A2A under the LF; adopting A2A covers it. Remove ACP from the watch list.
+- **Wait for the next A2A version** — v1.0 is the stable, foundation-governed baseline; no reason to defer.
+
+### Consequences
+
+**Positive:** interoperability with the 150+ org A2A ecosystem; less bespoke code via the official SDK.
+**Negative:** a migration of the gateway's schemas/auth to the SDK's shapes — contained to
+`integrations/a2a/*`.
+
+---
+
+## ADR-084 — AG-UI adoption for dashboard streaming (Pydantic AI native)
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §3, §11 (db:2 pub/sub), §17 (frontend); REDESIGN.md §3.1 |
+| Context | The dashboard receives agent activity via bespoke plumbing: Kafka → Redis pub/sub (db:2) → Litestar WebSocket. **AG-UI** is an emerging, framework-backed standard for exactly this agent→UI event stream, and **Pydantic AI supports it natively** — making it the lowest-friction new standard NEXUS could add. |
+
+### Decision
+
+Pilot **AG-UI** on the dashboard as the agent→UI streaming protocol, using Pydantic AI's native support.
+Run it alongside the existing WebSocket path first; if the pilot succeeds, AG-UI standardizes (and can
+retire) the bespoke streaming glue for the frontend layer. Pairs with the React 18→19 modernization.
+
+### Alternatives rejected
+
+- **Keep the bespoke Kafka→Redis→WebSocket stack** — works but is non-standard and reinvents a solved problem.
+- **Build a custom SSE protocol** — more code, no ecosystem, no framework support.
+
+### Consequences
+
+**Positive:** a standard, framework-native UI transport; less custom frontend/streaming code.
+**Negative:** AG-UI is younger and more vendor-driven (CopilotKit) than MCP/A2A — piloted behind the
+existing path, not a hard cutover.
+
+---
+
+## ADR-085 — MCP auth modernization — OAuth/OIDC + PKCE + CIMD
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §8; REDESIGN.md §3.1; ADR-002 |
+| Context | MCP's 2025-11 spec overhauled authorization: OAuth 2.0/OIDC alignment, **mandatory PKCE**, `iss` validation (RFC 9207), and **CIMD** (OAuth Client ID Metadata Documents) URL-based client registration replacing fragile Dynamic Client Registration. NEXUS integrates MCP as a local Python package today, so direct exposure is low — but any MCP-over-HTTP to an external server must use the new model. |
+
+### Decision
+
+Align NEXUS's MCP integration to the 2025-11 auth model (OAuth/OIDC, mandatory PKCE, `iss` validation,
+CIMD client registration) **before** NEXUS speaks MCP over HTTP to any external server. While MCP remains a
+local package, this is a readiness/documentation item; it becomes blocking at the first remote MCP server.
+
+### Alternatives rejected
+
+- **Ignore until needed** — invites a rushed, insecure integration under deadline when a remote MCP server appears.
+- **Build a custom OAuth proxy** — CIMD's URL-based registration specifically removes the need for proxies.
+
+### Consequences
+
+**Positive:** remote-MCP-ready with standards-aligned auth; no proxy required. **Negative:** work is
+partly speculative while MCP stays local — scoped as readiness, not immediate rewrite.
+
+---
+
+## ADR-086 — Supersede ADR-014 — Pydantic AI 1.x (unlocks `Agent.iter()`)
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-10 |
+| Relates to | CLAUDE.md §5; REDESIGN.md §6; ADR-001, ADR-079 |
+| Supersedes | ADR-014 (on acceptance) |
+| Context | ADR-014 recorded pinning `pydantic-ai 0.5.x` with `anthropic <0.83.0` to work around an `UserLocation`/`BetaUserLocationParam` import break. But `pyproject.toml` has since moved to `pydantic-ai >=1.56.0,<2.0` — the ADR is stale and no longer describes reality. Pydantic AI v1 also ships `Agent.iter()`/`AgentRun.next()`, the exact API the Stage-2 harness (ADR-079) depends on. |
+
+### Decision
+
+Supersede ADR-014. Record that NEXUS runs **Pydantic AI 1.x** (`>=1.56,<2.0`) with the current `anthropic`
+ceiling pin, and that `Agent.iter()` is the supported mechanism for owning the inference loop. Document the
+dependency-refresh pass (revisit pre-1.0 pins on `aiokafka`, `taskiq`; keep the `anthropic` ceiling pin
+with its rationale).
+
+### Alternatives rejected
+
+- **Leave ADR-014 as-is** — actively misleading; future agents would re-pin to 0.5.x and break the harness plan.
+- **Downgrade code to match ADR-014** — regresses off a working 1.x baseline and forfeits `Agent.iter()`.
+
+### Consequences
+
+**Positive:** the ADR record matches the code; the Stage-2 harness has a documented, supported API.
+**Negative:** none material — this is reconciliation of an already-shipped reality.
+
+---
+
+## ADR-087 — "Co" personal-assistant persona over the CEO orchestrator
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §7; ASSISTANT.md §4.4; ADR-003 |
+| Context | NEXUS is being repurposed as the owner's personal assistant fronted by a single orchestrator, "Co." The CEO agent (`agents/ceo.py`) already plans → decomposes → delegates → aggregates with a parent-task response loopback — i.e. it is already the central orchestrator. Introducing a distinct "Co" role would require a new `AgentRole` enum value and a custom-role runtime (which doesn't exist — `build_agent()` hard-fails on non-enum roles). |
+
+### Decision
+
+Add "Co" as a **persona over the existing CEO orchestrator**, not a new role: reframe the CEO system
+prompt as a personal chief-of-staff and surface the name "Co" in the seed and UI. The role enum, routing
+topics, and result-consumer loopback are unchanged. Add a **`PERSONAL_MODE`** flag that, with the existing
+`NEXUS_SEED_DEMO` default workspace/user, auto-scopes every request to the single owner's workspace
+(removing the multi-tenant JWT requirement in `api/tasks.py::_require_workspace_id`).
+
+### Alternatives rejected
+
+- **New dedicated `co` role above the CEO** — needs the custom-role runtime + a second orchestration layer; duplicates the CEO for no functional gain.
+- **Rename CEO → Co everywhere** — churns seeds, prompts, tests, and migrations for a cosmetic change.
+
+### Consequences
+
+**Positive:** the personal-assistant framing ships with zero role/runtime churn and full reuse of the
+orchestration pipeline. **Negative:** internal artifacts still say "CEO" (role value, topics); the persona
+layer must map CEO↔Co in the UI. Custom user-defined agents remain blocked until the Phase-C custom-role runtime.
+
+---
+
+## ADR-088 — VoiceFactory — provider-agnostic STT/TTS (browser/cloud/local)
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §6; ASSISTANT.md §4.2; ADR-017 (ModelFactory pattern) |
+| Context | The assistant needs voice input (STT) and voice output (TTS). None exists today. The owner wants all three backend styles available — browser-native (zero cost), cloud (best quality), and local (private) — rather than committing to one. |
+
+### Decision
+
+Add `core/voice/` with a **`VoiceFactory`** mirroring `core/llm/factory.py`'s prefix-registry pattern:
+`STTProvider` and `TTSProvider` protocols, concrete backends selected by `VOICE_STT_BACKEND` /
+`VOICE_TTS_BACKEND` settings — **browser** (Web Speech API, client-side, default), **cloud** (Whisper/Deepgram
+STT; ElevenLabs/OpenAI/Google TTS), **local** (faster-whisper STT; Piper TTS). Endpoints `api/voice.py`:
+`POST /api/voice/transcribe` and `POST /api/voice/speak`, invoked only for non-browser backends. Voice code
+never names a provider directly — same isolation rule as the LLM ModelFactory.
+
+### Alternatives rejected
+
+- **Commit to one cloud vendor** — cost + privacy lock-in; the owner explicitly wanted all three.
+- **Browser-only** — free and simplest but inconsistent voices/quality across browsers and no server-side TTS for automation.
+- **Bolt STT/TTS into agent code** — violates the provider-isolation rule and can't be swapped per deployment.
+
+### Consequences
+
+**Positive:** voice becomes a config flag; MVP ships on the free browser backend while cloud/local drop in
+unchanged. **Negative:** three backends to test; audio format normalization (webm/opus ↔ wav) lives in the factory.
+
+---
+
+## ADR-089 — User file-upload endpoint + `attachments` table
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §12, §15; ASSISTANT.md §4.1; ADR-090 |
+| Context | Task input is text-only (`CreateTaskRequest.instruction: str`); there is no multipart upload route (`workspace_files.py` is read-only). A personal assistant must accept images and documents from the user. |
+
+### Decision
+
+Add `api/uploads.py` — `POST /api/uploads` (multipart; `python-multipart` is already transitive via
+`litestar[standard]`). Persist bytes via the git-backed `core/workspace/storage.py::write_file` (already
+accepts `bytes`) or a local object dir, and return an `AttachmentRef`. New **`attachments`** table (id, mime,
+size, storage path, parsed-text ref, `task_id`/`trace_id` link) via Alembic migration 016. Extend
+`CreateTaskRequest` with `attachments: list[AttachmentRef]`; `AgentBase._load_memory` loads attachment text
+into task context.
+
+### Alternatives rejected
+
+- **Base64 in the task JSON** — bloats Kafka messages and the DB; breaks the small-envelope model.
+- **Reuse `workspace_files` write path directly** — that path is git-commit-per-file (agent/workspace semantics), too heavy for arbitrary user attachments.
+
+### Consequences
+
+**Positive:** a single ingress for all user files, linked to tasks for audit. **Negative:** introduces
+binary storage lifecycle (retention, cleanup) — deferred to Phase C; MVP keeps files in the workspace store.
+
+---
+
+## ADR-090 — Document ingestion (PDF/Word/Excel/Parquet) via `core/ingest`
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §8; ASSISTANT.md §4.1; ADR-089 |
+| Context | No document parsing exists — files are only readable as raw UTF-8 text or sent whole to a vision model. The assistant must extract text/tables from PDF, Word, Excel, CSV, and Parquet to feed agents. |
+
+### Decision
+
+Add `core/ingest/` plus a `tool_read_document` tool (registered in `tools/adapter.py` + `registry.py`).
+Parsers: PDF (**pypdf** / **PyMuPDF**), Word (**python-docx**), Excel (**openpyxl**), CSV/Parquet
+(**pandas + pyarrow**). Output = normalized markdown + extracted tables. Large documents are chunked and
+summarized via the redesign's `ContextAssembler` before entering agent context. Parsing runs at
+upload/ingest time; parsed text is cached on the `attachments` row.
+
+### Alternatives rejected
+
+- **`unstructured` mega-library** — heavy dependency tree + native builds; overkill for the core formats.
+- **LLM-only extraction (send whole file to a vision model)** — costly, lossy for tables/spreadsheets, and useless for Parquet.
+- **Parse lazily at agent runtime** — repeats work per subtask and blocks the agent loop on I/O.
+
+### Consequences
+
+**Positive:** deterministic, cheap, offline-capable extraction with table fidelity for spreadsheets/Parquet.
+**Negative:** adds data-libs (pandas/pyarrow) to the backend image; scanned-PDF OCR is out of scope for MVP.
+
+---
+
+## ADR-091 — HTML presentation output — typed `presentation` field, sanitized
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §10; ASSISTANT.md §4.3; ADR-084 (AG-UI) |
+| Context | Task results are a plain JSON dict; there is no rich/HTML output. The owner wants Co to present results as HTML (reports, tables, charts) and to be read aloud. |
+
+### Decision
+
+Extend the task result envelope with a typed **`presentation`** field:
+`{ format: "html"|"markdown"|"mermaid", content, speech_text }`. Writer/Co produces the artifact;
+HTML is **sanitized server-side** (nh3/bleach; strip scripts/handlers, allow-list tags/attrs) before
+publishing to `TaskResponse.output.presentation` and the WebSocket stream. `speech_text` is the plain-text
+summary handed to `VoiceFactory` TTS. Rendering in the frontend uses a sandboxed container.
+
+### Alternatives rejected
+
+- **Return raw HTML unsanitized** — stored-XSS risk on render.
+- **Markdown only** — insufficient for charts/rich layout the owner asked for.
+- **Client-only rendering with no server sanitization** — pushes the security boundary into the browser; sanitize at the source instead.
+
+### Consequences
+
+**Positive:** rich, safe presentation + a clean hook for TTS; composes with the AG-UI pilot (ADR-084).
+**Negative:** a sanitization allow-list to maintain; interactive JS in results is intentionally not supported.
+
+---
+
+## ADR-092 — React Flow for the Co DAG canvas
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §17; ASSISTANT.md §2.1 |
+| Context | The front-end needs a single central "Co" node that expands into a live-animated DAG of agents (nodes show idle/thinking/tool-calling; edges animate on delegation), at tens–low-hundreds of nodes with premium custom branded node design. No graph engine is installed today. |
+
+### Decision
+
+Adopt **React Flow (`@xyflow/react`)** as the graph engine. Rationale (from a surveyed comparison): it
+renders **React-component nodes**, so Tailwind styling and the existing Zustand `agentEventStore` live state
+work natively (React Flow itself uses Zustand internally); it ships built-in animated edges, pan/zoom,
+expand/collapse, and dagre/elk auto-layout; it is MIT (all features free) and the best-maintained option.
+At NEXUS node counts it is nowhere near its DOM performance ceiling. New `components/co/CoCanvas.tsx` with
+`CoNode`/`AgentNode` types bound to the event store.
+
+### Alternatives rejected
+
+- **tldraw SDK** — highest custom-design ceiling but a paid commercial license and no built-in DAG layout (kept as a premium alternative).
+- **Reaflow** — React nodes + built-in ELK, but smaller community / slower cadence.
+- **WebGL engines (Sigma/Reagraph/Cosmograph)** — for 1k–1M nodes; can't render custom React nodes — a future escape hatch, not MVP.
+- **Cytoscape/GoJS/JointJS** — Canvas/SVG-template nodes (not React components), fighting the Tailwind custom-design workflow; GoJS/JointJS+ also carry license cost.
+
+### Consequences
+
+**Positive:** canonical "expandable orchestrator → live agent DAG" pattern, native to the React+Tailwind+Zustand
+stack, MIT. **Negative:** auto-layout is bring-your-own (add dagre/elk); a WebGL migration would be needed only
+if the graph ever exceeds ~1–2k live nodes.
+
+---
+
+## ADR-093 — Frontend modernization — React 19 + Compiler, Tailwind v4, Motion
+
+| Field | Value |
+|-------|-------|
+| Status | proposed |
+| Date | 2026-07-12 |
+| Relates to | CLAUDE.md §4, §17; ASSISTANT.md §2.2; ADR-005 (shadcn/ui) |
+| Context | The owner asked for a modern, best-design frontend. A full reframework (SolidJS/Svelte/Next) was evaluated: it costs ~4–16 weeks, degrades AI-assisted coding output, and discards the existing live event store + hooks — for marginal runtime gains a WebSocket assistant UI won't perceive. |
+
+### Decision
+
+**Stay on React + Vite; modernize in place.** Upgrade **React 18 → 19 + React Compiler** (auto-memoization
+suits a high-churn WebSocket UI; codemod-assisted), **Tailwind 3 → v4** (CSS-first `@theme`, ~100× faster
+incremental builds), add **Motion** (ex-Framer Motion) + **AutoAnimate** for transitions/live lists, keep
+**shadcn/ui** now riding on **Base UI** plus **React Aria** for hard-a11y widgets, and use **GSAP /
+Aceternity / Magic UI** surgically for the Co hero only. **React Three Fiber + drei** is an optional,
+code-split 3D central-node hero. Keep **Vite + TanStack Query + Zustand**.
+
+### Alternatives rejected
+
+- **Reframework to SolidJS / Svelte 5 / Qwik** — 4–16 week rewrite, smaller ecosystem, worse AI-assist, discards the live event store; benefit is marginal perf not needed here.
+- **Next.js 15 (App Router/RSC)** — RSC benefits the shell/SEO an internal real-time app doesn't need and adds a new bug class.
+- **Marketing kits (Aceternity/Magic UI) for working surfaces** — bundle-size/accessibility overkill; reserve for the hero.
+
+### Consequences
+
+**Positive:** a modern, animated, accessible design system built on the existing investment; React Compiler
+removes most manual memoization. **Negative:** Tailwind v4 and React 19 are breaking upgrades (codemods cover
+most); marketing-kit effects must be quarantined to the hero to protect bundle size and a11y.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-094 -->
+
+---
+
+*Last updated: 2026-07-12*
+*Next ADR ID: ADR-094*
+*Decision count: 60 accepted, 17 proposed (ADR-077…086 redesign + ADR-087…093 "Co" assistant blueprint), 3 superseded*
+*Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*

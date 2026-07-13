@@ -52,6 +52,10 @@ class EngineerAgent(AgentBase):
         if memory_context.get("working_memory"):
             context_parts.append("Working memory:\n" + str(memory_context["working_memory"]))
 
+        attachment_block = self._attachment_context_block()
+        if attachment_block:
+            context_parts.append(attachment_block)
+
         # Construct the user message
         if context_parts:
             user_message = "\n\n".join(context_parts) + f"\n\nTask: {message.instruction}"
