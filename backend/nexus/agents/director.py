@@ -34,6 +34,10 @@ from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import calculate_cost, record_usage
+from nexus.core.presentation import (
+    PRESENTATION_PROMPT_INSTRUCTIONS,
+    extract_presentation_from_llm_output,
+)
 from nexus.db.models import AgentRole
 from nexus.settings import settings
 
@@ -197,7 +201,7 @@ class DirectorAgent(AgentBase):
         )
 
         # Use LLM to synthesize the best result
-        synthesized = await self._synthesize_result(
+        synthesized_raw = await self._synthesize_result(
             task_id=task_id,
             original_instruction=original_instruction,
             aggregated_output=aggregated_output,
@@ -205,6 +209,10 @@ class DirectorAgent(AgentBase):
             security_context=security_context,
             session=session,
         )
+
+        # Extract + sanitize the presentation block (ADR-091). Falls back
+        # to markdown-wrapping the synthesis — never fails.
+        synthesized, presentation = extract_presentation_from_llm_output(synthesized_raw)
 
         # Route synthesized result to QA
         qa_command = AgentCommand(
@@ -217,6 +225,7 @@ class DirectorAgent(AgentBase):
                 "subtask_count": subtask_count,
                 "original_role": "director",
                 "director_synthesized": True,
+                "presentation": presentation.model_dump(),
             },
             target_role=AgentRole.QA.value,
             instruction=(
@@ -500,6 +509,7 @@ class DirectorAgent(AgentBase):
             " the best contribution.\n"
             "- If one agent's work is clearly superior, use it as the foundation and enhance.\n"
         )
+        synthesis_prompt += PRESENTATION_PROMPT_INSTRUCTIONS
 
         if convergence_context:
             synthesis_prompt += f"\n## Meeting Analysis\n{convergence_context}\n"

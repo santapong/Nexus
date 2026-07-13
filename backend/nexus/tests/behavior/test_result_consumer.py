@@ -92,12 +92,12 @@ async def test_handle_response_updates_task_to_completed() -> None:
 
     with (
         patch(
-            "nexus.kafka.result_consumer.check_idempotency",
+            "nexus.core.kafka.result_consumer.check_idempotency",
             new_callable=AsyncMock,
             return_value=True,
         ),
-        patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
-        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
+        patch("nexus.core.kafka.result_consumer.publish", new_callable=AsyncMock),
+        patch("nexus.core.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
         await _handle_response(raw, mock_session_factory)
 
@@ -117,12 +117,12 @@ async def test_handle_response_updates_task_to_failed() -> None:
 
     with (
         patch(
-            "nexus.kafka.result_consumer.check_idempotency",
+            "nexus.core.kafka.result_consumer.check_idempotency",
             new_callable=AsyncMock,
             return_value=True,
         ),
-        patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock),
-        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
+        patch("nexus.core.kafka.result_consumer.publish", new_callable=AsyncMock),
+        patch("nexus.core.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
         await _handle_response(raw, mock_session_factory)
 
@@ -138,11 +138,11 @@ async def test_handle_response_skips_duplicate_messages() -> None:
 
     with (
         patch(
-            "nexus.kafka.result_consumer.check_idempotency",
+            "nexus.core.kafka.result_consumer.check_idempotency",
             new_callable=AsyncMock,
             return_value=False,
         ),
-        patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
+        patch("nexus.core.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
 
@@ -159,11 +159,11 @@ async def test_handle_response_skips_ceo_delegation() -> None:
 
     with (
         patch(
-            "nexus.kafka.result_consumer.check_idempotency",
+            "nexus.core.kafka.result_consumer.check_idempotency",
             new_callable=AsyncMock,
             return_value=True,
         ),
-        patch("nexus.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
+        patch("nexus.core.kafka.result_consumer.publish", new_callable=AsyncMock) as mock_publish,
     ):
         await _handle_response(raw, mock_session_factory)
 
@@ -188,12 +188,12 @@ async def test_handle_response_publishes_task_result() -> None:
 
     with (
         patch(
-            "nexus.kafka.result_consumer.check_idempotency",
+            "nexus.core.kafka.result_consumer.check_idempotency",
             new_callable=AsyncMock,
             return_value=True,
         ),
-        patch("nexus.kafka.result_consumer.publish", side_effect=capture),
-        patch("nexus.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
+        patch("nexus.core.kafka.result_consumer.publish", side_effect=capture),
+        patch("nexus.core.kafka.result_consumer.redis_pubsub", new_callable=AsyncMock),
     ):
         await _handle_response(raw, mock_session_factory)
 

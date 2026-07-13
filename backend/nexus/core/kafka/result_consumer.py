@@ -182,6 +182,22 @@ async def _handle_response(
     # Direct task result — update DB and publish
     task_status = _map_status(response.status)
 
+    # Re-sanitize any presentation payload at the choke point every
+    # user-visible output passes through (ADR-091). Producers sanitize at
+    # source; this is the invariant that survives future producers —
+    # tasks.output is the stored-XSS surface for the dashboard.
+    if response.output and "presentation" in response.output:
+        from nexus.core.presentation import sanitize_presentation
+
+        raw_presentation = response.output["presentation"]
+        if isinstance(raw_presentation, dict):
+            response.output["presentation"] = sanitize_presentation(
+                raw_presentation
+            ).model_dump()
+        else:
+            # Wrong shape — drop rather than store something unexpected.
+            response.output.pop("presentation", None)
+
     async with db_session_factory() as session:
         await _update_task_in_db(session, task_id, task_status, response)
         await session.commit()

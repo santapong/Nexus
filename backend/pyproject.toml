@@ -43,6 +43,8 @@ dependencies = [
     "openpyxl>=3.1.5,<4.0",
     "pandas>=2.2.0,<3.0",
     "pyarrow>=18.0.0,<22.0",
+    # HTML presentation sanitization — Co assistant MVP-1 (ADR-091)
+    "nh3>=0.2.18,<1.0",
     # Utilities
     "uvicorn[standard]>=0.34.0,<1.0",
 ]

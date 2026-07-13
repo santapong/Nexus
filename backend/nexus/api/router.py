@@ -22,6 +22,7 @@ from nexus.api.schedules import ScheduleController
 from nexus.api.sla import SLAController
 from nexus.api.tasks import TaskController
 from nexus.api.uploads import UploadController
+from nexus.api.voice import VoiceController
 from nexus.api.webhooks import WebhookController
 from nexus.api.websocket import agent_activity_ws
 from nexus.api.workspace_files import WorkspaceFileController
@@ -56,6 +57,7 @@ api_router = Router(
         ApiKeyController,
         WorkspaceFileController,
         UploadController,
+        VoiceController,
     ],
 )
 

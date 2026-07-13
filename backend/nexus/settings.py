@@ -74,6 +74,12 @@ class Settings(BaseSettings):
     # Total characters of parsed attachment text injected into agent context
     attachment_context_char_budget: int = 20_000
 
+    # Voice (STT/TTS) — ADR-088. `browser` = client-side Web Speech API
+    # (zero backend cost); Phase C adds cloud (whisper/deepgram,
+    # elevenlabs/openai/google) and local (faster-whisper, piper) backends.
+    voice_stt_backend: str = "browser"
+    voice_tts_backend: str = "browser"
+
     # Temporal
     temporal_host: str = "localhost:7233"
     temporal_namespace: str = "nexus"

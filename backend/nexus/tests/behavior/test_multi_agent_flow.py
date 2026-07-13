@@ -22,6 +22,7 @@ from nexus.db.models import AgentRole
 
 def _mock_session() -> AsyncMock:
     session = AsyncMock()
+    session.execute = AsyncMock(return_value=MagicMock())
     session.__aenter__ = AsyncMock(return_value=session)
     session.__aexit__ = AsyncMock(return_value=None)
     session.commit = AsyncMock()
