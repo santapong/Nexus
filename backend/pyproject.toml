@@ -37,6 +37,12 @@ dependencies = [
     "PyJWT>=2.9.0,<3.0",
     # Scheduling
     "croniter>=3.0.0,<4.0",
+    # Document ingestion — Co assistant MVP-1 (ADR-090)
+    "pypdf>=5.1.0,<6.0",
+    "python-docx>=1.1.2,<2.0",
+    "openpyxl>=3.1.5,<4.0",
+    "pandas>=2.2.0,<3.0",
+    "pyarrow>=18.0.0,<22.0",
     # Utilities
     "uvicorn[standard]>=0.34.0,<1.0",
 ]
@@ -94,6 +100,11 @@ module = [
     "taskiq_aio_kafka.*",
     "taskiq_redis.*",
     "advanced_alchemy.*",
+    "pgvector.*",
+    "pandas.*",
+    "openpyxl.*",
+    "docx.*",
+    "pypdf.*",
 ]
 ignore_missing_imports = true
 

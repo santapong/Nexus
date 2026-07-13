@@ -32,17 +32,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.agents.base import AgentBase
 from nexus.core.kafka.meeting import (
     MeetingConfig,
-    MeetingRoom,
     close_meeting,
     create_meeting,
-    get_meeting,
-    save_meeting,
 )
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
 from nexus.core.llm.usage import calculate_cost, record_usage
-from nexus.db.models import AgentRole, HumanApproval, ApprovalStatus, Task, TaskStatus
+from nexus.db.models import AgentRole, ApprovalStatus, HumanApproval, Task, TaskStatus
 from nexus.memory.episodic import write_episode
 from nexus.memory.working import get_working_memory, set_working_memory
 
@@ -874,10 +871,18 @@ class CEOAgent(AgentBase):
                 f"If risk is 'high', ensure irreversible actions are explicit.\n"
             )
 
+        # Surface attached-document context so decomposition can route the
+        # relevant facts into subtask instructions (specialists also load
+        # the attachment text themselves via _load_memory).
+        attachment_context = ""
+        attachment_block = self._attachment_context_block()
+        if attachment_block:
+            attachment_context = f"\n{attachment_block}\n"
+
         decompose_prompt = (
             f"Decompose the following task into subtasks.\n\n"
             f"Task: {message.instruction}\n"
-            f"{plan_context}\n"
+            f"{plan_context}{attachment_context}\n"
             f"Available specialist agents:\n"
             f"- engineer: code, debugging, technical tasks\n"
             f"- analyst: research, data analysis, reports\n"
@@ -957,6 +962,11 @@ class CEOAgent(AgentBase):
         subtask_ids: list[UUID] = []
         parent_task_id = str(parent_message.task_id)
 
+        # Inherit the parent's workspace so workspace scoping and context
+        # loading (workspace files, attachments) work for subtasks too.
+        parent_ws_stmt = select(Task.workspace_id).where(Task.id == parent_task_id)
+        parent_workspace_id = (await session.execute(parent_ws_stmt)).scalar_one_or_none()
+
         for st in subtasks:
             subtask = Task(
                 trace_id=str(parent_message.trace_id),
@@ -964,6 +974,7 @@ class CEOAgent(AgentBase):
                 instruction=st["instruction"],
                 status=TaskStatus.QUEUED.value,
                 source="internal",
+                workspace_id=parent_workspace_id,
             )
             session.add(subtask)
             await session.flush()

@@ -35,6 +35,11 @@ def _make_mock_session() -> AsyncMock:
             obj.id = uuid4()
 
     mock_session.add = MagicMock(side_effect=add_side_effect)
+    # Result objects are sync in SQLAlchemy — a bare AsyncMock would mint
+    # un-awaited coroutines on .scalar_one_or_none() (e.g. the parent
+    # workspace lookup in _create_subtasks), which filterwarnings=error
+    # escalates to failures.
+    mock_session.execute = AsyncMock(return_value=MagicMock())
     return mock_session
 
 

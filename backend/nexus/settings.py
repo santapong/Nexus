@@ -68,6 +68,12 @@ class Settings(BaseSettings):
     personal_mode: bool = False
     personal_workspace_slug: str = "demo-company"
 
+    # Uploads + document ingestion — ADR-089/090
+    upload_storage_path: str = "/data/uploads"
+    upload_max_bytes: int = 25 * 1024 * 1024  # 25 MB
+    # Total characters of parsed attachment text injected into agent context
+    attachment_context_char_budget: int = 20_000
+
     # Temporal
     temporal_host: str = "localhost:7233"
     temporal_namespace: str = "nexus"

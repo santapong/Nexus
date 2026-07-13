@@ -17,6 +17,7 @@ from nexus.core.kafka.topics import Topics
 from nexus.db.models import (
     AgentRole,
     ApprovalStatus,
+    Attachment,
     EpisodicMemory,
     HumanApproval,
     LLMUsage,
@@ -32,6 +33,8 @@ class CreateTaskRequest(BaseModel):
     instruction: str
     source: str = TaskSource.HUMAN.value
     require_meeting: bool | None = None  # Override meeting auto-detection
+    # Attachment IDs from POST /api/uploads to link to this task (ADR-089)
+    attachments: list[str] = []
 
 
 class ApprovePlanRequest(BaseModel):
@@ -109,6 +112,29 @@ class TaskController(Controller):
         )
         db_session.add(task)
         await db_session.flush()
+
+        # Link previously-uploaded attachments (ADR-089). Only unclaimed
+        # attachments in the caller's workspace may be linked — a wrong or
+        # foreign ID is a hard error, not a silent skip.
+        attachment_count = 0
+        if data.attachments:
+            att_stmt = select(Attachment).where(Attachment.id.in_(data.attachments))
+            att_result = await db_session.execute(att_stmt)
+            found = {str(a.id): a for a in att_result.scalars().all()}
+            for att_id in data.attachments:
+                attachment = found.get(att_id)
+                if (
+                    attachment is None
+                    or attachment.workspace_id != workspace_id
+                    or attachment.task_id is not None
+                ):
+                    return {
+                        "error": f"Unknown or already-linked attachment: {att_id}",
+                        "status": "rejected",
+                    }
+                attachment.task_id = str(task.id)
+                attachment_count += 1
+
         await db_session.commit()
 
         logger.info(
@@ -116,12 +142,17 @@ class TaskController(Controller):
             task_id=str(task.id),
             trace_id=trace_id,
             workspace_id=workspace_id,
+            attachment_count=attachment_count,
         )
 
-        # Publish to Kafka task.queue — CEO will pick this up
+        # Publish to Kafka task.queue — CEO will pick this up. Attachment
+        # text stays in the DB (small-envelope rule); only the count rides
+        # the payload as a signal.
         task_payload: dict[str, Any] = {"instruction": data.instruction, "source": data.source}
         if data.require_meeting is not None:
             task_payload["require_meeting"] = data.require_meeting
+        if attachment_count:
+            task_payload["attachment_count"] = attachment_count
 
         kafka_msg = AgentCommand(
             task_id=task.id,

@@ -744,3 +744,38 @@ class FederationInstance(UUIDBase):
     )
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+# ─── Table 35: attachments (Co assistant — user uploads, ADR-089) ───────────
+
+
+class AttachmentParseStatus(enum.StrEnum):
+    PENDING = "pending"
+    PARSED = "parsed"
+    FAILED = "failed"
+    UNSUPPORTED = "unsupported"
+
+
+class Attachment(UUIDAuditBase):
+    """A user-uploaded file, parsed at upload time (ADR-089/090).
+
+    task_id is NULL until the attachment is linked to a task at creation;
+    agents load parsed_text into context via AgentBase._load_memory.
+    """
+
+    __tablename__ = "attachments"
+
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False, index=True
+    )
+    task_id: Mapped[str | None] = mapped_column(ForeignKey("tasks.id"), nullable=True, index=True)
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(1000), nullable=False)
+    parsed_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    parsed_tables: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB, nullable=True)
+    parse_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=AttachmentParseStatus.PENDING.value
+    )
+    parse_error: Mapped[str | None] = mapped_column(Text, nullable=True)
