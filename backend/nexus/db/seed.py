@@ -74,6 +74,46 @@ Rules:
   - writer: content writing, emails, documentation, communications
 """
 
+CO_SYSTEM_PROMPT = """\
+You are Co, the personal chief-of-staff of your owner — a single person whose
+time you protect. You run their team of specialist agents and you are the only
+agent the owner talks to. Your role is to:
+
+1. Receive requests from your owner (text or voice, sometimes with attached
+   documents or images)
+2. Analyze and decompose complex requests into subtasks
+3. Delegate subtasks to the appropriate specialist agents
+4. Aggregate results from specialists
+5. Ensure quality by routing outputs through QA review
+
+When decomposing tasks, respond with a JSON array of subtasks. Each subtask must have:
+- "role": which agent should handle it (engineer, analyst, writer)
+- "instruction": clear, specific instructions for the agent
+- "depends_on": list of subtask indices this depends on (empty for independent tasks)
+
+Example decomposition:
+[
+  {"role": "analyst", "instruction": "Research the top 5 competitors...", "depends_on": []},
+  {"role": "writer", "instruction": "Using the research, draft a summary email...", "depends_on": [0]}
+]
+
+For simple tasks that only need one agent, return a single-item array.
+
+Rules:
+- You do NOT use tools directly. You delegate tool use to specialists.
+- Always include clear, specific instructions when delegating.
+- Track task progress and escalate if agents are stuck.
+- Never fabricate results — only report what specialists produce.
+- Attached documents were parsed for you; pass the relevant facts into
+  subtask instructions rather than assuming specialists can see the files.
+- Speak to your owner plainly and concisely: short sentences, no corporate
+  filler, lead with the answer. Summaries should read well when spoken aloud.
+- Choose the most appropriate agent for each subtask:
+  - engineer: code, debugging, technical implementation
+  - analyst: research, data analysis, competitive analysis, reports
+  - writer: content writing, emails, documentation, communications
+"""
+
 ENGINEER_SYSTEM_PROMPT = """\
 You are the Engineer agent of NEXUS, an AI company. Your role is to:
 
@@ -928,6 +968,7 @@ async def seed() -> None:
     async with session_factory() as session:
         await _seed_agents(session)
         await _seed_prompts(session)
+        await _seed_co_persona(session)
         await _seed_benchmarks(session)
         await _seed_schedules(session)
         if seed_demo:
@@ -936,6 +977,54 @@ async def seed() -> None:
 
     await engine.dispose()
     logger.info("seed_complete", demo_seeded=seed_demo)
+
+
+async def _seed_co_persona(session: AsyncSession) -> None:
+    """Install the "Co" personal-assistant persona over the CEO (ADR-087).
+
+    Seeds CO_SYSTEM_PROMPT as CEO prompt version 2 and activates it,
+    deactivating older versions, then syncs the agents row (system_prompt +
+    name) so running agents hot-reload it via _check_prompt_reload.
+    Idempotent by (agent_role='ceo', version=2).
+    """
+    ceo_role = AgentRole.CEO.value
+
+    stmt = select(Prompt).where(Prompt.agent_role == ceo_role, Prompt.version == 2)
+    result = await session.execute(stmt)
+    co_prompt = result.scalar_one_or_none()
+
+    if co_prompt is None:
+        co_prompt = Prompt(
+            agent_role=ceo_role,
+            version=2,
+            content=CO_SYSTEM_PROMPT,
+            is_active=True,
+            authored_by="human",
+            notes='"Co" personal chief-of-staff persona over the CEO — ADR-087',
+        )
+        session.add(co_prompt)
+        logger.info("co_persona_prompt_created", role=ceo_role, version=2)
+    elif not co_prompt.is_active:
+        co_prompt.is_active = True
+        logger.info("co_persona_prompt_reactivated", role=ceo_role, version=2)
+
+    # Only one active prompt per role — deactivate every other CEO version.
+    others_stmt = select(Prompt).where(
+        Prompt.agent_role == ceo_role,
+        Prompt.version != 2,
+        Prompt.is_active.is_(True),
+    )
+    others_result = await session.execute(others_stmt)
+    for old_prompt in others_result.scalars().all():
+        old_prompt.is_active = False
+        logger.info("co_persona_deactivated_prompt", role=ceo_role, version=old_prompt.version)
+
+    # Sync the agents row so running agents hot-reload the persona.
+    agent_stmt = select(Agent).where(Agent.role == ceo_role)
+    agent_result = await session.execute(agent_stmt)
+    for agent_record in agent_result.scalars().all():
+        agent_record.system_prompt = CO_SYSTEM_PROMPT
+        agent_record.name = "Co"
 
 
 async def _seed_agents(session: AsyncSession) -> None:

@@ -65,12 +65,27 @@ async def _security_checks() -> None:
         )
     logger.info("llm_providers_available", providers=available_providers)
 
-    if not settings.is_development:
-        if settings.stripe_api_key and not settings.stripe_webhook_secret:
-            logger.warning(
-                "stripe_webhook_secret_missing",
-                hint="Set STRIPE_WEBHOOK_SECRET for secure webhook verification",
-            )
+    if (
+        not settings.is_development
+        and settings.stripe_api_key
+        and not settings.stripe_webhook_secret
+    ):
+        logger.warning(
+            "stripe_webhook_secret_missing",
+            hint="Set STRIPE_WEBHOOK_SECRET for secure webhook verification",
+        )
+    if settings.personal_mode:
+        # Personal mode (ADR-087) needs the owner workspace to exist; warn
+        # loudly at boot rather than 401ing every request later.
+        logger.warning(
+            "personal_mode_enabled",
+            workspace_slug=settings.personal_workspace_slug,
+            hint=(
+                "unauthenticated requests are scoped to this workspace; "
+                "seed it with NEXUS_SEED_DEMO=true python -m nexus.db.seed"
+            ),
+        )
+
     logger.info(
         "security_checks_passed",
         env=settings.app_env,

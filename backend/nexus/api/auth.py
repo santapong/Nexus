@@ -169,6 +169,80 @@ def require_auth_user(request: Request[Any, Any, Any]) -> AuthUser:
     return user
 
 
+# ─── Personal mode workspace resolution (ADR-087) ────────────────────────────
+
+# Cache of the resolved personal-workspace id — looked up once per process.
+_personal_workspace_id: str | None = None
+
+
+def reset_personal_workspace_cache() -> None:
+    """Clear the cached personal-workspace id (tests + reseeding)."""
+    global _personal_workspace_id
+    _personal_workspace_id = None
+
+
+async def resolve_workspace_id(
+    request: Request[Any, Any, Any],
+    db_session: Any,
+) -> str:
+    """Resolve the workspace scope for a request.
+
+    Resolution order:
+    1. A valid JWT with a workspace_id claim always wins — multi-tenant
+       behavior is unchanged when a token is presented.
+    2. If settings.personal_mode is enabled, fall back to the single owner
+       workspace identified by settings.personal_workspace_slug (created by
+       the NEXUS_SEED_DEMO seed path).
+    3. Otherwise raise 401 — identical to the pre-personal-mode behavior.
+
+    Args:
+        request: Litestar request object.
+        db_session: Async database session for the slug lookup.
+
+    Returns:
+        The resolved workspace_id (guaranteed non-empty).
+
+    Raises:
+        NotAuthorizedException: No valid JWT and personal mode is off, or
+            personal mode is on but the owner workspace does not exist.
+    """
+    user = get_auth_user_from_request(request)
+    if user is not None and user.workspace_id:
+        return user.workspace_id
+
+    if not settings.personal_mode:
+        raise NotAuthorizedException(detail="Authentication required")
+
+    global _personal_workspace_id
+    if _personal_workspace_id is not None:
+        return _personal_workspace_id
+
+    from sqlalchemy import select
+
+    from nexus.db.models import Workspace
+
+    stmt = select(Workspace).where(Workspace.slug == settings.personal_workspace_slug)
+    result = await db_session.execute(stmt)
+    workspace = result.scalar_one_or_none()
+    if workspace is None:
+        logger.error(
+            "personal_mode_workspace_missing",
+            slug=settings.personal_workspace_slug,
+            hint="run NEXUS_SEED_DEMO=true python -m nexus.db.seed",
+        )
+        raise NotAuthorizedException(
+            detail="Personal mode is enabled but the owner workspace is not seeded",
+        )
+
+    _personal_workspace_id = str(workspace.id)
+    logger.info(
+        "personal_mode_workspace_resolved",
+        workspace_id=_personal_workspace_id,
+        slug=settings.personal_workspace_slug,
+    )
+    return _personal_workspace_id
+
+
 # ─── Symmetric encryption (Fernet) for at-rest OAuth tokens ──────────────────
 
 _fernet_cache: Fernet | None = None

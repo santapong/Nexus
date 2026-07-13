@@ -76,24 +76,39 @@ def test_require_auth_user_returns_user_on_valid_token() -> None:
     assert user.email == "alice@example.com"
 
 
-def test_tasks_require_workspace_id_raises_when_anonymous() -> None:
+@pytest.mark.asyncio
+async def test_tasks_require_workspace_id_raises_when_anonymous(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Tasks list/get/create must refuse anonymous callers.
 
     Previously the endpoint silently returned tasks across all workspaces
-    when no JWT was present.
+    when no JWT was present. With PERSONAL_MODE off (the default), the
+    behavior is unchanged.
     """
-    from nexus.api.tasks import _require_workspace_id
+    from unittest.mock import AsyncMock
 
+    from nexus.api.tasks import _require_workspace_id
+    from nexus.settings import settings
+
+    monkeypatch.setattr(settings, "personal_mode", False)
     request = _make_request(authorization_header=None)
     with pytest.raises(NotAuthorizedException):
-        _require_workspace_id(request)
+        await _require_workspace_id(request, AsyncMock())
 
 
-def test_tasks_require_workspace_id_raises_on_token_without_workspace() -> None:
+@pytest.mark.asyncio
+async def test_tasks_require_workspace_id_raises_on_token_without_workspace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A JWT with an empty workspace_id claim is still 401, not all-tenant."""
+    from unittest.mock import AsyncMock
+
     from nexus.api.auth import create_access_token
     from nexus.api.tasks import _require_workspace_id
+    from nexus.settings import settings
 
+    monkeypatch.setattr(settings, "personal_mode", False)
     token = create_access_token(
         user_id="user-1",
         workspace_id="",  # malformed token (no workspace assigned)
@@ -101,4 +116,4 @@ def test_tasks_require_workspace_id_raises_on_token_without_workspace() -> None:
     )
     request = _make_request(authorization_header=f"Bearer {token}")
     with pytest.raises(NotAuthorizedException):
-        _require_workspace_id(request)
+        await _require_workspace_id(request, AsyncMock())

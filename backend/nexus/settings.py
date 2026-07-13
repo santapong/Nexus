@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440  # 24 hours
 
+    # Personal assistant ("Co") mode — ADR-087
+    # When enabled, unauthenticated requests are scoped to the single owner
+    # workspace identified by personal_workspace_slug (seeded via
+    # NEXUS_SEED_DEMO). A valid JWT with a workspace claim always wins.
+    personal_mode: bool = False
+    personal_workspace_slug: str = "demo-company"
+
     # Temporal
     temporal_host: str = "localhost:7233"
     temporal_namespace: str = "nexus"
