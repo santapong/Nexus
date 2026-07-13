@@ -54,9 +54,9 @@ class TestModelFactoryFallbacks:
         from nexus.db.models import AgentRole
 
         with (
-            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch("nexus.core.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
             patch(
-                "nexus.llm.factory._AGENT_FALLBACK_MAP",
+                "nexus.core.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.ENGINEER: "groq:llama-3.3-70b-versatile"},
             ),
         ):
@@ -70,8 +70,8 @@ class TestModelFactoryFallbacks:
         from nexus.db.models import AgentRole
 
         with (
-            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
-            patch("nexus.llm.factory._AGENT_FALLBACK_MAP", {AgentRole.ENGINEER: ""}),
+            patch("nexus.core.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch("nexus.core.llm.factory._AGENT_FALLBACK_MAP", {AgentRole.ENGINEER: ""}),
         ):
             result = ModelFactory.get_model_with_fallbacks(AgentRole.ENGINEER)
             assert isinstance(result, TestModel)
@@ -84,9 +84,9 @@ class TestModelFactoryFallbacks:
 
         # Primary is test model (no API call), fallback is an unknown provider
         with (
-            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
+            patch("nexus.core.llm.factory._AGENT_MODEL_MAP", {AgentRole.ENGINEER: "test:model"}),
             patch(
-                "nexus.llm.factory._AGENT_FALLBACK_MAP",
+                "nexus.core.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.ENGINEER: "unknown-provider:xyz"},
             ),
         ):
@@ -103,12 +103,12 @@ class TestModelFactoryFallbacks:
         mock_fb_instance = MagicMock()
 
         with (
-            patch("nexus.llm.factory._AGENT_MODEL_MAP", {AgentRole.CEO: "claude-sonnet"}),
+            patch("nexus.core.llm.factory._AGENT_MODEL_MAP", {AgentRole.CEO: "claude-sonnet"}),
             patch(
-                "nexus.llm.factory._AGENT_FALLBACK_MAP",
+                "nexus.core.llm.factory._AGENT_FALLBACK_MAP",
                 {AgentRole.CEO: "groq:llama-3.3-70b-versatile"},
             ),
-            patch("nexus.llm.factory.resolve_model") as mock_resolve,
+            patch("nexus.core.llm.factory.resolve_model") as mock_resolve,
             patch(
                 "pydantic_ai.models.fallback.FallbackModel",
                 return_value=mock_fb_instance,

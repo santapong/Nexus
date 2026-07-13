@@ -7,10 +7,23 @@ from nexus.tools.adapter import tool_code_execute, tool_file_read, tool_file_wri
 from nexus.tools.registry import get_tools_for_role, is_irreversible
 
 
-def test_ceo_has_no_tools() -> None:
-    """CEO agent should not have any tools."""
+def test_ceo_has_planning_but_no_execution_tools() -> None:
+    """CEO delegates execution — planning/design/workspace tools only.
+
+    The original Phase-1 rule was "CEO has no tools"; later phases granted
+    planning (create_plan, design_*), workspace, and KeepSave tools. The
+    invariant that matters is that the CEO cannot execute code or mutate
+    files directly.
+    """
     tools = get_tools_for_role(AgentRole.CEO)
-    assert tools == []
+    tool_names = {t.__name__ for t in tools}
+
+    assert "tool_create_plan" in tool_names
+    assert "tool_design_system" in tool_names
+    # Execution tools stay with specialists.
+    assert tool_code_execute not in tools
+    assert tool_file_write not in tools
+    assert tool_web_search not in tools
 
 
 def test_engineer_has_all_tools() -> None:

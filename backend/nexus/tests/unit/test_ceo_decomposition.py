@@ -228,8 +228,9 @@ async def test_ceo_aggregates_when_all_complete(
 
     assert response.status == "success"
     assert response.output is not None
-    assert response.output["action"] == "aggregated_and_sent_to_qa"
-    # Should publish to task.review_queue
+    # Phase 7: aggregation routes through the Director (director.review)
+    # before QA, not directly to task.review_queue.
+    assert response.output["action"] == "aggregated_and_sent_to_director"
     mock_publish.assert_called()
 
 
