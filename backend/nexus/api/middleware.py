@@ -9,7 +9,7 @@ RLS:
 - Extracts workspace_id from JWT and sets PostgreSQL session variable
 - All queries are automatically filtered by RLS policies
 - Workspace context is stored in a ContextVar so the SQLAlchemy
-  `after_begin` event listener can issue `SET LOCAL nexus.workspace_id`
+  `after_begin` event listener applies transaction-local `set_config`
   on every per-request session as soon as its transaction opens.
 """
 
@@ -25,7 +25,7 @@ from litestar import Request
 from litestar.middleware import AbstractMiddleware
 from litestar.types import Receive, Scope, Send
 from pydantic import BaseModel
-from sqlalchemy import event, text
+from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session as SyncSession
 
 from nexus.core.redis.clients import redis_cache
@@ -38,7 +38,7 @@ logger = structlog.get_logger()
 
 # Per-request workspace id, populated by RLSMiddleware. The SQLAlchemy
 # `after_begin` listener below reads it whenever the request-scoped session
-# opens a transaction and issues `SET LOCAL nexus.workspace_id = '<uuid>'`
+# opens a transaction and applies `set_config('nexus.workspace_id', value, true)`
 # so every query made by that session is filtered by RLS policies.
 _workspace_id_ctx: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "nexus_workspace_id", default=None
@@ -56,7 +56,7 @@ def _inject_rls_workspace(
     transaction: Any,
     connection: Any,
 ) -> None:
-    """SQLAlchemy hook — apply `SET LOCAL nexus.workspace_id` per request.
+    """SQLAlchemy hook — bind a transaction-local workspace value per request.
 
     Fires inside the freshly-opened transaction so the setting is scoped
     to that transaction and rolled back at commit/rollback. When no
@@ -68,12 +68,10 @@ def _inject_rls_workspace(
     if not workspace_id:
         return
     try:
-        connection.execute(
-            text("SET LOCAL nexus.workspace_id = :ws_id"),
-            {"ws_id": workspace_id},
-        )
+        connection.execute(select(func.set_config("nexus.workspace_id", workspace_id, True)))
     except Exception as exc:
-        logger.warning("rls_set_local_failed", error=str(exc))
+        logger.warning("rls_set_local_failed", error_type=type(exc).__name__)
+        raise
 
 
 class RLSMiddleware(AbstractMiddleware):
@@ -83,7 +81,7 @@ class RLSMiddleware(AbstractMiddleware):
     in scope state and in the `_workspace_id_ctx` ContextVar. The
     SQLAlchemy `after_begin` listener picks it up the moment the
     request-scoped session opens a transaction and issues
-    `SET LOCAL nexus.workspace_id` so every query is RLS-filtered.
+    transaction-local `set_config` so every query is RLS-filtered.
     """
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:

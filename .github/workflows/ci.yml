@@ -22,16 +22,18 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
 
       - name: Ruff lint
-        run: ruff check nexus/
+        run: uv run --frozen --extra dev ruff check nexus/ company_alembic/
 
       - name: Ruff format check
-        run: ruff format --check nexus/
+        run: uv run --frozen --extra dev ruff format --check nexus/ company_alembic/
 
       - name: Mypy type check
-        run: mypy nexus/ --ignore-missing-imports
+        run: uv run --frozen --extra dev mypy nexus/ --ignore-missing-imports
 
   test-unit:
     name: Unit Tests
@@ -49,10 +51,124 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
 
       - name: Run unit tests
-        run: pytest nexus/tests/unit/ -v --tb=short
+        run: uv run --frozen --extra dev pytest nexus/tests/unit/ -v --tb=short
+
+  test-company-governance:
+    name: Company PostgreSQL - ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: journal
+            database: nexus_company_test_ci
+            tests: test_company_journal.py
+          - suite: directory
+            database: nexus_company_test_directory
+            tests: test_company_directory.py
+          - suite: registered-authority
+            database: nexus_company_test_governance
+            tests: test_company_registered_authorization.py
+          - suite: owner-controls
+            database: nexus_company_test_governance
+            tests: test_company_controls.py
+          - suite: standing-authority
+            database: nexus_company_test_standing
+            tests: test_company_standing_authority.py
+          - suite: standing-journal
+            database: nexus_company_test_standing_journal
+            tests: test_company_standing_journal.py
+          - suite: execution
+            database: nexus_company_test_execution
+            tests: test_company_execution_store.py test_company_execution_recovery.py test_company_dispatched_recovery.py test_company_terminal_receipt.py test_company_effect_budget.py
+          - suite: transactional-enqueue
+            database: nexus_company_test_enqueue
+            tests: test_company_atomic_enqueue.py test_company_reservation_day.py
+          - suite: clean-profile
+            database: nexus_company_test_release
+            tests: test_company_profile_migrations.py
+          - suite: rls-context
+            database: nexus_company_test_rls_scope
+            tests: test_company_rls_context.py
+          - suite: company-api
+            database: nexus_company_test_api
+            tests: test_company_api.py
+          - suite: offline-worker
+            database: nexus_company_test_worker
+            tests: test_company_worker.py
+          - suite: lease-data-migration
+            database: nexus_company_test_lease_migration
+            tests: test_company_lease_migration.py
+          - suite: owner-reconciliation
+            database: nexus_company_test_owner_reconcile
+            tests: test_company_owner_reconciliation.py
+          - suite: model-request-gate
+            database: nexus_company_test_model_gate
+            tests: test_company_model_authorizer.py
+          - suite: owner-billing
+            database: nexus_company_test_owner_billing
+            tests: test_company_owner_billing.py
+          - suite: governed-model-client
+            database: nexus_company_test_model_client
+            tests: test_company_model_client.py test_company_model_client_cleanup.py test_company_model_client_interrupt.py
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ${{ matrix.database }}
+          # Disposable isolated CI service; no production credential is used.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      COMPANY_TEST_DATABASE_URL: postgresql+asyncpg://postgres@localhost:5432/${{ matrix.database }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install locked dependencies
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
+      - name: Create restricted disposable application role
+        run: |
+          uv run --frozen --extra dev python - <<'PY'
+          import asyncio
+          import asyncpg
+          from nexus.settings import settings
+
+          async def prepare() -> None:
+              url = settings.company_test_database_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+              connection = await asyncpg.connect(url)
+              try:
+                  await connection.execute("CREATE ROLE nexus_company_app LOGIN NOSUPERUSER")
+                  await connection.execute("GRANT USAGE ON SCHEMA public TO nexus_company_app")
+              finally:
+                  await connection.close()
+
+          asyncio.run(prepare())
+          PY
+      - name: Run restricted PostgreSQL acceptance
+        run: |
+          set -- ${{ matrix.tests }}
+          for test_file do
+            uv run --frozen --extra dev pytest "nexus/tests/integration/$test_file" -v --tb=short
+          done
 
   test-behavior:
     name: Behavior Tests
@@ -80,10 +196,12 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
 
       - name: Run behavior tests
-        run: pytest nexus/tests/behavior/ -v --tb=short
+        run: uv run --frozen --extra dev pytest nexus/tests/behavior/ -v --tb=short
 
   test-chaos:
     name: Chaos Tests
@@ -111,10 +229,12 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
 
       - name: Run chaos tests
-        run: pytest nexus/tests/chaos/ -v --tb=short
+        run: uv run --frozen --extra dev pytest nexus/tests/chaos/ -v --tb=short
 
   test-integration:
     name: Integration Tests
@@ -132,10 +252,12 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install uv
+          uv sync --frozen --extra dev
 
       - name: Run integration tests
-        run: pytest nexus/tests/integration/ -v --tb=short
+        run: uv run --frozen --extra dev pytest nexus/tests/integration/ -v --tb=short
 
   frontend-lint:
     name: Frontend Lint

@@ -104,6 +104,18 @@
 | ADR-091 | HTML presentation output — typed `presentation` field, sanitized | proposed | 2026-07-12 |
 | ADR-092 | React Flow for the Co DAG canvas | proposed | 2026-07-12 |
 | ADR-093 | Frontend modernization — React 19 + Compiler, Tailwind v4, Motion | proposed | 2026-07-12 |
+| ADR-094 | DravenIQ company system as the first product | proposed | 2026-10-05 |
+| ADR-095 | One DBOS execution engine for the company profile | proposed | 2026-10-05 |
+| ADR-096 | Governed Pydantic AI 2.x harness and segmented approval | proposed | 2026-10-05 |
+| ADR-097 | Native bounded Pi builder and portable deployment | proposed | 2026-10-05 |
+| ADR-098 | Evaluated multi-provider routing and atomic cost reservations | proposed | 2026-10-05 |
+| ADR-099 | Owner oversight, dashboard/email and deferred Meta Harness | proposed | 2026-10-05 |
+| ADR-100 | Standalone company contracts and PostgreSQL approval/cost journal | accepted | 2026-10-13 |
+| ADR-101 | Independent clean company-profile migration lineage | accepted | 2026-10-13 |
+| ADR-102 | Pin the experimentally verified Pydantic AI 2.54 and DBOS 3.2 runtime | accepted | 2026-10-13 |
+| ADR-103 | Registered authority, lifetime quotas and principal-bound effects | accepted | 2026-10-14 |
+| ADR-104 | One non-retrying effect step for governed offline recovery | accepted | 2026-10-14 |
+| ADR-105 | Required per-request model gate and local wire/schema validation | accepted | 2026-10-14 |
 
 ---
 
@@ -2758,12 +2770,338 @@ most); marketing-kit effects must be quarantined to the hero to protect bundle s
 
 ---
 
-<!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-094 -->
+## ADR-094 — DravenIQ company system as the first product
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Direction confirmed by:** Santapong during the Nexus design discussion\
+**Relates to:** ADR-009, ADR-048, ADR-069, ADR-087; [SDD §§1–8](sdd/NEXUS_SDD_v0.2.md#1-purpose-and-product-direction)\
+**Supersession:** none activated; reframes ADR-087's personal-assistant direction for the company program.
+
+### Context
+
+The owner wants Nexus to operate DravenIQ across management, strategy, engineering, presentation, support and operations, with close initial supervision and periodic board review later. Existing agent-owned memory and chat orchestration do not establish shared evidence-backed company operation.
+
+### Decision
+
+Design an internal Company Brain + management + Action Harness. Use typed PostgreSQL entities, temporal claims with provenance, decisions and commitments, a separate work dependency DAG, and one permission-aware ContextAssembler. Co becomes the owner's entry point into company work. Prove StockFlow customer readiness first. Keep the native builder inside Nexus as selected by the owner.
+
+### Alternatives considered
+
+- A personal assistant is useful as an interface but does not own company goals, commitments and departmental outcomes.
+- Immediate SaaS/marketplace scope adds external tenancy and commercial requirements before internal operation is proven.
+- Neo4j/Graphiti as the initial database adds infrastructure before measured traversal demands justify it; typed PostgreSQL relationships are sufficient for the first acceptance pack.
+
+### Consequences
+
+Existing PostgreSQL/RLS investment is retained. The new company/domain contracts require explicit migration from legacy workspaces, source provenance and evaluation fixtures. Graphiti remains a deferred measured option. A document or generated graph is not proof of operation. Track implementation in BACKLOG-068, 070, 071 and 073.
 
 ---
 
-*Last updated: 2026-07-12*
-*Next ADR ID: ADR-094*
-*Decision count: 60 accepted, 17 proposed (ADR-077…086 redesign + ADR-087…093 "Co" assistant blueprint), 3 superseded*
+## ADR-095 — One DBOS execution engine for the company profile
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Relates to:** ADR-006–009, ADR-016, ADR-038, ADR-065, ADR-076–081; [SDD §9](sdd/NEXUS_SDD_v0.2.md#9-harness-engineering-and-durable-execution)\
+**Supersession:** on validated company-profile cutover, replaces overlapping legacy queue/transport orchestration and the proposed DBOS-plus-Temporal split for that profile. Legacy paths retain their history until migrated.
+
+### Context
+
+The first host is a shared Pi. Kafka, Redis, Taskiq and optional Temporal divide execution ownership and add recovery boundaries. The reviewed Temporal class is rejected by the installed SDK; its presence does not prove durability. A small company profile needs one execution owner.
+
+### Decision
+
+Use DBOS 3.2.0 with dedicated PostgreSQL for the proposed profile, subject to M1 compatibility/recovery validation. Persist business state and continuation enqueue atomically in the same database. Use stable workflow/model IDs, compatible version draining, durable application deduplication, fenced ownership, explicit effect intent and receipt records. Split approval waiting into committed, capacity-releasing segments.
+
+External actions require provider idempotency or reconciliation. Keep `outcome_unknown` when an effect cannot be confirmed; do not claim universally exactly-once external execution. Redis locks/seen markers and queue deduplication cannot replace the ledger.
+
+### Alternatives considered
+
+- Retaining all four legacy systems spreads ownership across unproven boundaries and increases Pi operations cost.
+- DBOS for short tasks plus Temporal for long tasks requires two execution engines without a demonstrated first-pilot requirement.
+- A generic MessageBus/broker PoC does not itself solve durable actions, exact approval or uncertain effects.
+
+### Consequences
+
+DBOS replay and transactional integration must be proven with real PostgreSQL/process-kill tests. PostgreSQL becomes an operationally important execution dependency; backup and upgrade discipline are mandatory. Legacy services are removed from the new profile only after migration gates, never merely because this ADR is written. BACKLOG-069 and 074 own delivery. References: [DBOS outbox](https://docs.dbos.dev/python/examples/outbox), [queues](https://docs.dbos.dev/python/tutorials/queue-tutorial), [upgrades](https://docs.dbos.dev/python/tutorials/upgrading-workflows).
+
+---
+
+## ADR-096 — Governed Pydantic AI 2.x harness and segmented approval
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Relates to:** ADR-001, ADR-014, ADR-019, ADR-022, ADR-024, ADR-028, ADR-057, ADR-061, ADR-073, ADR-079, ADR-080, ADR-086; [SDD §§8–10](sdd/NEXUS_SDD_v0.2.md#8-context-engineering)\
+**Supersession:** on M1 validation, updates the company-profile runtime pin, retry/limit policy and harness design; prior runtime records remain historical.
+
+### Context
+
+The baseline locks Pydantic AI 1.107.1. Context binding, pending approval transactions and optional QA fail-open behavior are not resolved by passing unit checks. Pydantic AI 2.x changes hooks/capabilities and API families, so an untested upgrade is insufficient.
+
+### Decision
+
+Target `pydantic-ai-slim[openai,google,dbos]==2.54.0` with DBOS 3.2.0 after a compatibility spike. Register durability capabilities before launch, checkpoint custom consequential I/O explicitly, and keep all adapters behind one typed harness. The shared stages validate context, authority, cost, action parameters and source preconditions before execution; independent verification follows.
+
+Commit pending approval before ending a segment. Approval binds a canonical proposal revision/hash, approver, expiry and single-use identity; a new segment rechecks policy/resource/budget at execution. Limits default to 12 model requests, 20 tool attempts, two rework rounds and two plan revisions per logical work item across retries, children and segments. Failure or uncertainty never defaults to approval.
+
+### Alternatives considered
+
+- Per-tool optional approval wrappers leave mutation paths inconsistent and cannot prove complete policy coverage.
+- Blocking the only execution queue slot while waiting for the owner starves unrelated work.
+- Similarity-only loop termination can stop valid empty rounds or allow boundedness to depend on model behavior; counters and explicit conditions remain authoritative.
+
+### Consequences
+
+Two-session approval tests, adapter conformance, stable serialization boundaries and crash/replay evidence are M1 gates. Plans and old approvals cannot create standing authority automatically. The dependency dry run resolved, but no upgraded runtime is yet verified. BACKLOG-069 owns implementation. References: [Pydantic AI migration](https://pydantic.dev/docs/ai/overview/migration/), [DBOS integration](https://pydantic.dev/docs/ai/capabilities/durable_execution/dbos/).
+
+---
+
+## ADR-097 — Native bounded Pi builder and portable deployment
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Choices confirmed by:** Santapong: native Nexus builder, Pi first, one bounded worker\
+**Relates to:** ADR-031, ADR-062; [SDD §§12 and 15](sdd/NEXUS_SDD_v0.2.md#12-native-builder-and-tool-harness)\
+**Supersession:** E2B is no longer the primary sandbox for this proposed company profile when M4 activates; optional legacy/cloud use is not removed by this document.
+
+### Context
+
+The owner selected engineering inside Nexus rather than Accretion delegation. The Pi is ARM64 with 16 GiB RAM and existing services. Docker is present; rootless Podman is not installed. The inspected service-data path is root-backed, so an independent backup is still needed.
+
+### Decision
+
+Use a restricted runner and one rootless Podman sandbox, default 2 CPUs/4 GiB plus explicit time/disk/output quotas. Jobs use approved committed revisions, isolated workspaces and narrow mounts/network policy. Keep model/database credentials and production repositories outside jobs. Capture commands, diffs and artifacts for independent verification. Prepare plain-Git review packages; GitHub-only PR creation remains a manual review step until an authorized connector is designed.
+
+Design a private dedicated PostgreSQL/profile, independent encrypted backup and portable cloud/VPS deployment. Install/deploy actions occur only in the separately authorized deployment stage.
+
+### Alternatives considered
+
+- Accretion delegation conflicts with the selected first native builder direction; a future reviewed adapter remains possible.
+- A cloud-only E2B dependency bypasses the owner's Pi-first choice and adds initial operating cost.
+- Privileged host builds with owner-home/production mounts defeat the intended isolation boundary.
+
+### Consequences
+
+ARM64 toolchains, Playwright, representative StockFlow builds and resource fit require live proof. Rootless Podman is a proposed prerequisite, not a claim of an installed service or hardened hostile tenancy. Resource-heavy jobs block or move through a revised approved hosting plan. BACKLOG-072 and 074 own delivery.
+
+---
+
+## ADR-098 — Evaluated multi-provider routing and atomic cost reservations
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Choices confirmed by:** Santapong: multiple providers and US$5/day initial cap\
+**Relates to:** ADR-017–019, ADR-043, ADR-053–055; [SDD §11](sdd/NEXUS_SDD_v0.2.md#11-model-methods-routing-and-cost-control)\
+**Supersession:** none activated; refines company-profile routing and accounting after conformance tests.
+
+### Context
+
+Provider availability and model capabilities differ. Historical prefixes and prices cannot be assumed valid after an SDK upgrade. Concurrent workers, retries and uncertain billing need a shared allowance rather than independent per-agent estimates.
+
+### Decision
+
+Register explicit model IDs/API families, capabilities, data-policy eligibility, dated price versions and evaluation evidence. Define Reasoning, Engineering, Routine, Verification and Embeddings profiles. Filter eligible models and select the lowest estimated cost with stable tie priority; use at most two registered fallback alternatives under unchanged policy and counters.
+
+Atomically reserve estimated upper-bound call cost against the Asia/Bangkok daily ledger and work lineage before calling. Proposed work cap is US$1; the owner-confirmed company cap is US$5/day. Include embeddings/failures/rework, hold uncertain charges and stop paid routing when pricing is unsupported. A new day never resets a work item's request/tool limits.
+
+### Alternatives considered
+
+- One provider conflicts with the selected provider-neutral direction.
+- Automatic cheapest-model discovery risks adopting unevaluated capabilities/prices and silently weakening policy.
+- Post-hoc alerts alone cannot prevent concurrent over-allocation.
+
+### Consequences
+
+Conformance and budget-race tests are M1 gates. Provider billing remains externally determined; local reservations are not a promise of exact final invoice totals. No model or paid provider is activated by this documentation change. BACKLOG-069 owns delivery.
+
+---
+
+## ADR-099 — Owner oversight, dashboard/email and deferred Meta Harness
+
+**Date:** 2026-10-05\
+**Status:** proposed\
+**Choices confirmed by:** Santapong: internal work/drafts first, dashboard/email, defer self-improvement\
+**Relates to:** ADR-024, ADR-052, ADR-056, ADR-087, ADR-091, ADR-092; [SDD §§2, 13 and 18](sdd/NEXUS_SDD_v0.2.md#2-company-organization-and-authority)\
+**Supersession:** none activated; company-profile scheduling/notification authority becomes explicit at M3/M5.
+
+### Context
+
+The owner expects increasingly independent operation and meaningful reports. The current email adapter is unconfigured. Automatic prompt activation or self-assessed authority expansion would contradict the selected initial scope.
+
+### Decision
+
+Use Supervised, Delegated and Board oversight policies with explicit owner-approved transitions. Show goals, decisions, work, verified outcomes and exceptions in the dashboard. Use a durable notification ledger and configured Resend sender/allowlisted owner for meaningful alerts and digests, with delivery reconciliation. Approval links require authenticated dashboard decisions and cannot grant authority by email reply.
+
+Require at least 20 reviewed completed work items, recovery drills and no unresolved unauthorized/missing outcomes before an owner decision on Delegated mode. Board oversight follows stable approved cycles. Collect versioned feedback, but defer Meta Harness optimization, prompt promotion and fine-tuning. Future promotion needs frozen offline evaluation plus explicit owner review.
+
+### Alternatives considered
+
+- Notifying every idle cycle creates noise without new company information.
+- Provider acceptance alone cannot establish delivery or long-term deduplication.
+- Automatic self-improvement and autonomy promotion conflict with the owner's chosen first-period supervision and deferral.
+
+### Consequences
+
+Notification configuration/live proof and authority-delta review remain delivery gates. Customer messaging and deployment stay separately governed actions. BACKLOG-071, 073, 074 and deferred 075 own delivery. Reference: [Resend idempotency retention](https://resend.com/docs/dashboard/emails/idempotency-keys).
+
+---
+
+## ADR-100 — Standalone company contracts and PostgreSQL approval/cost journal
+
+**Date:** 2026-10-13
+**Status:** accepted for the initial implementation slice
+**Decided by:** Codex under Santapong's request to implement the company-system plan
+**Relates to:** ADR-094–099; BACKLOG-068–069
+
+### Context
+
+The owner authorized implementation and requested feature/time estimates. The existing runtime remains at July HEAD; a simultaneous full SDK/engine/API cutover would obscure the first proof of exact approvals and cost persistence.
+
+### Decision
+
+Implement strict versioned company contracts, validated work DAGs, source/context manifests, server-owned canonical action snapshots, exact approval policy, fail-closed lifecycle and serializable loop counters. Freeze synthetic Brain questions and the StockFlow readiness checklist before retrieval/prompt optimization.
+
+Add a standalone PostgreSQL journal via additive migration 017. Company-scoped row policies, immutable action/decision snapshots, single-use consumption, persisted owner pause, and daily/work cost holds protect the foundation. Serialize mutations through a company-row transaction lock for the one-worker pilot. Retain holds for unknown billing and reconcile actual cost idempotently; record real cost even if it exceeds an earlier estimate.
+
+Keep this component unmounted from legacy endpoints and agents. Its input scope is trusted internal context, not a self-issued external authority token. DBOS integration, request authentication, standing department grants, fenced effect execution, parent quotas and live provider conformance remain M1 work. No dependency or production schema cutover occurs in this slice.
+
+### Alternatives considered
+
+- An in-memory approval or cost fixture cannot prove cross-session visibility or concurrency.
+- Upgrading every engine and provider before freezing business contracts makes regression causes harder to isolate.
+- Fine-grained budget locks offer more throughput, but increase lock-order complexity before the single Pi worker needs it.
+
+### Consequences
+
+Real disposable PostgreSQL tests must prove separate sessions, competing consumers, spend races, persisted pause, immutable snapshots, RLS and unknown-cost reconciliation. The migration and its metadata must stay consistent. Coarse locking limits per-company throughput; partition lock ownership when measured concurrency requires it. These tests do not prove DBOS replay, complete HTTP authorization or external exactly-once effects. The full runtime gate remains open.
+
+---
+
+## ADR-101 — Independent clean company-profile migration lineage
+
+**Date:** 2026-10-13
+**Status:** accepted for release implementation
+**Decided by:** root after the release-planner's independent source review and real migration preflight
+**Relates to:** ADR-095, ADR-100; release execution plan
+
+### Context
+
+Fresh 001–017 replay on disposable PostgreSQL 17 fails at 003: a VARCHAR task foreign key references a UUID primary key. Further source defects include 006 policies using missing workspace columns and additional incompatible identity keys. A later revision cannot repair an earlier revision that never executes. Existing merged migrations must remain immutable; evolving ORM create_all plus stamp would not install migration-managed security/schema behavior.
+
+### Decision
+
+Use `alembic_company.ini`, `company_alembic/`, and `company_alembic_version` for the new profile. Install an explicit reviewed baseline of company-owned directory, registered-work, journal, quota and later execution tables with consistent native UUID FKs, RLS and immutable identities. Apply future additive company revisions normally. Scope autogeneration to owned objects and reject unversioned conflicting company tables.
+
+Preserve legacy 001–016 bytes and their version history. Migration 017's standalone evidence remains valid within its recorded scope, but the supervised company profile uses the independent baseline. Legacy tables are not implicitly imported; an explicit idempotent import preserves source IDs/provenance and does not promote seen markers or old approvals to verified completion/authority. The clean profile does not start legacy Kafka/Redis agents or require their migration chain.
+
+### Alternatives considered
+
+- Repairing old files rewrites published history and hides uncertainty about existing deployments.
+- A late 018 cannot be reached after the 003 failure.
+- Intercepting/reinterpreting historical operations creates a second implicit migration language.
+- Whole-application squash is larger than the supervised release and needs a full RLS/partition/FK inventory.
+- ORM create_all plus stamp falsely certifies absent security behavior and is rejected.
+
+### Consequences
+
+Prove clean install, idempotent upgrade, metadata/FK consistency, non-superuser RLS and downgrade on disposable DBs; also prove additive preservation of unrelated legacy sentinel data/version history. Legacy fresh-replay defects remain open. Real import needs a read-only source snapshot and separate evidence before production activation. Profile configuration must select its database explicitly; no silent fallback to the legacy URL.
+
+References: [Alembic independent bases](https://alembic.sqlalchemy.org/en/latest/branches.html#working-with-multiple-bases), [version table configuration](https://alembic.sqlalchemy.org/en/latest/api/runtime.html), [stamp](https://alembic.sqlalchemy.org/en/latest/api/commands.html#alembic.command.stamp).
+
+---
+
+## ADR-102 — Pin the experimentally verified Pydantic AI 2.54 and DBOS 3.2 runtime
+
+**Date:** 2026-10-13
+**Status:** accepted for implementation after isolated compatibility/recovery proof
+**Relates to:** ADR-095, ADR-096, ADR-100; SDK spike evidence
+
+### Context
+
+The selected SDK combination now passes an actual 15-assertion PostgreSQL process-kill/restart test, registered model/tool execution, one-slot approval segmentation, version isolation and transactional enqueue. This is stronger than dependency resolution, but does not establish whole-application compatibility or live provider behavior.
+
+### Decision
+
+Pin Pydantic AI 2.54.0, DBOS 3.2.0 and Pydantic 2.13.4 with the validated API/ORM versions; update the lockfile. Preserve legacy chat API semantics through explicit OpenAIChatModel; support Responses only through an explicit binding. Replace removed Google aliases. Migrate usage property/input-output token names with regression tests so a SDK error cannot fabricate zero cost.
+
+Register named agents/steps before DBOS launch, queues after launch through the actual pinned async API, and pin application/executor recovery policy. Custom I/O steps remain explicit. Keep portable application contracts separate from native trusted DBOS agent history. Paid provider conformance and governed effect replay remain gates.
+
+### Consequences
+
+Run the whole relevant unit/type/lint regression against the new lockfile and retain isolated spike evidence. Resolve compatibility failures before activating the company profile. The successful test reused completed model/tool checkpoints; interrupted steps may rerun, so external idempotency/reconciliation remains required.
+
+Evidence: `/mnt/data/nexus-implementation-evidence-2026-10-13/dbos-spike/README.md` and acceptance result. Primary reference: [Pydantic migration map](https://pydantic.dev/docs/ai/overview/migration/).
+
+---
+
+## ADR-103 — Registered company authority, lifetime quotas and principal-bound effects
+
+**Status:** accepted
+**Date:** 2026-10-14
+**Context:** user-authorized supervised company implementation and milestone integration review; complements target ADR-095/096. This accepts a local implementation boundary, not production or Board activation.
+
+### Decision
+
+Derive company/work scope from signed identity and current directory/membership. Register immutable work and permanently partition parent USD and per-kind attempt slices. CompanyControl is the first lock. Owner controls use a distinct operation identity before work exists; owner READ can audit inactive work while new execution remains denied.
+
+Exact approvals and explicit standing capabilities authorize immutable action snapshots once. Standing grants bind owner/actor/work, owner-declared plan/charter revisions, exact reviewed internal tool/resource versions, expiry and price/policy; model/extracted content never creates grants. Persist which grant authorized an action. At effects, recheck current authority, resource state, owner pause, counters, lease principal/fence and actual Bangkok-day allowance. Unknown effects and billing retain holds until evidence-based reconciliation.
+
+Commit permanent action-to-segment dispatch and DBOS SQL enqueue together with consumed authority/source/cost hold. A new segment/run ID cannot create allowance or repeat authorization. Trusted per-request validators compose under the same transaction before intent; no network I/O or serialized callables are allowed there.
+
+### Consequences and evidence
+
+Company001–006 extends the independent lineage with native scoped FKs, RLS, immutable snapshots/history, monotone counters/fences and explicit lease principal. Upgrading a populated installation requires drained workers and refuses live leases; expired old owners are fenced/unknown rather than assumed current. Blocked work persists honestly; rollback deactivates blocked work instead of allowing an older worker to restart it.
+
+Registered/control42PG, standing55unit+11PG, consumed standing5PG, exact/standing atomic queue/day12PG, runtime27PG, owner-reconcile/hook12PG, actual API16PG and clean/populated migration tests prove their individual offline boundaries. Counts overlap; whole final integration is tracked separately. Known-receipt cost-only evidence and persistent model gating are still being completed. Owner-declared plan/charter binding is not an M3 plan proof; candidates are not independent completed-work evidence.
+
+---
+
+## ADR-104 — One fresh non-retrying effect step for the first governed offline worker
+
+**Status:** accepted
+**Date:** 2026-10-14
+**Context:** real SDK/DBOS spike showed replay of completed steps and possible repeat of interrupted I/O; caching a one-time permit independently would create unsafe recovery.
+
+### Decision
+
+Register a named portable-JSON company workflow and ordinary TestModel before DBOS launch; register its bounded single queue afterward. The first offline integration uses one non-retrying DBOS I/O step for fresh dispatch/lease/authority checks, committed intent/attempt, bounded fake invocation, saved result and receipt. Do not checkpoint permit=True as a reusable authorization token.
+
+Protect/hash a command/proposal-bound output envelope before recording its receipt. After a real process kill, missing output remains unknown and produces no new model/tool call; a preserved result can be reconciled under a new fence without invoking again. Resource revisions come from the server registry, never echoed caller preconditions. Keep verifier candidates inconclusive/verifying until independent acceptance exists.
+
+### Consequences and evidence
+
+Nine initial worker cases (two contract + seven actual DBOS/process cases) cover exact/standing authority, three SIGKILL points, pause and stale-source denial. A subsequent seven-process-case c006 regression proves persistent blocked state and lease-principal compatibility. This is ordinary TestModel inside a durable effect step, not Pydantic durability-capability replay inside that governed path, live vendor conformance, receiver fencing or completed company operation. The separate SDK spike's replay result remains separately scoped.
+
+Evidence: `/mnt/data/nexus-implementation-evidence-2026-10-13/company-worker/README.md`; source manifests record their checked versions. Workflow version/drain, ARM64 and live adapter gates remain.
+
+---
+
+## ADR-105 — Required per-request model gate and local schema/wire validation
+
+**Status:** accepted
+**Date:** 2026-10-14
+**Context:** SDK usage defaults and multi-call/retry behavior cannot serve as price or attempt evidence. Native Model.request returns parts without full application schema/semantic validation.
+
+### Decision
+
+Use explicit OpenAI Responses and Google GenerateContent adapters for the new two-provider package; preserve legacy Chat behavior in its existing factory. Each governed call makes one SDK Model.request, with no Agent.run, SDK retries, implicit fallback or tool execution. A mandatory trusted authorizer binds the exact request/scope/action/attempt/catalog/price/reservation; it must implement persistent intent/counter/cost before wire I/O. Caller-declared input tokens alone cannot prove the reservation covers rendered text/tools/schema/SDK framing.
+
+Validate actual provider wire model/usage before SDK default extraction; missing/malformed/unsupported counts produce unknown billing. Preserve supported known usage even when business output fails. Return function proposals; actual tools use a separate policy gate. Resolve secrets/endpoints only from server configuration and exclude them from serialized outputs, metadata and error logs.
+
+Add jsonschema4.26.0 for bounded native/function schema validation plus its typing dependency. Canonicalize schemas, permit local pointer references only, forbid remote retrieval/cycles/oversized or nonfinite structures. Pydantic domain validation still enforces semantic invariants; a schema match alone cannot establish goal/authority/verification truth. [JSON Schema validation reference](https://python-jsonschema.readthedocs.io/en/stable/validate/).
+
+### Consequences and evidence
+
+Fifty-six actual-SDK/offline-HTTP cases prove two explicit families, one request, output caps, retries0/attempts1, missing wire usage/timeout/cancellation, native/function validation and credential exclusion. Coverage92.46% across four modules. No live model, price or alias is enabled. Persistent per-request authorizer/result envelopes and current input-estimator conformance are in progress; budgeted live activation remains separate.
+
+---
+
+<!-- New ADR entries go above this line, with the next ID number -->
+<!-- Next ID: ADR-106 -->
+
+---
+
+*Last updated: 2026-10-14 (supervised company integration)*
+*Next ADR ID: ADR-106*
+*Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*

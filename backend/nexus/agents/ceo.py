@@ -38,6 +38,7 @@ from nexus.core.kafka.meeting import (
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
+from nexus.core.llm.run_usage import UsageUnavailableError, extract_run_tokens
 from nexus.core.llm.usage import calculate_cost, record_usage
 from nexus.db.models import AgentRole, ApprovalStatus, HumanApproval, Task, TaskStatus
 from nexus.memory.episodic import write_episode
@@ -244,9 +245,9 @@ class CEOAgent(AgentBase):
 
             # Record LLM usage
             try:
-                usage = result.usage()
-                input_tokens = usage.request_tokens or 0
-                output_tokens = usage.response_tokens or 0
+                usage = extract_run_tokens(result)
+                input_tokens = usage.input_tokens
+                output_tokens = usage.output_tokens
                 model_obj = self.llm_agent.model
                 model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
                 await record_usage(
@@ -260,6 +261,7 @@ class CEOAgent(AgentBase):
                 )
             except Exception as exc:
                 logger.warning("ceo_requirements_usage_failed", task_id=task_id, error=str(exc))
+                raise UsageUnavailableError("Requirements usage accounting failed") from exc
 
             raw = result.output.strip()
             if raw.startswith("```"):
@@ -278,6 +280,8 @@ class CEOAgent(AgentBase):
 
             return requirements
 
+        except UsageUnavailableError:
+            raise
         except Exception as exc:
             logger.warning("ceo_requirements_extraction_failed", task_id=task_id, error=str(exc))
             return {
@@ -796,9 +800,9 @@ class CEOAgent(AgentBase):
 
             # Record planning LLM usage
             try:
-                usage = result.usage()
-                input_tokens = usage.request_tokens or 0
-                output_tokens = usage.response_tokens or 0
+                usage = extract_run_tokens(result)
+                input_tokens = usage.input_tokens
+                output_tokens = usage.output_tokens
                 model_obj = self.llm_agent.model
                 model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
                 await record_usage(
@@ -812,6 +816,7 @@ class CEOAgent(AgentBase):
                 )
             except Exception as exc:
                 logger.warning("ceo_plan_usage_tracking_failed", task_id=task_id, error=str(exc))
+                raise UsageUnavailableError("Planning usage accounting failed") from exc
 
             raw = result.output.strip()
             if raw.startswith("```"):
@@ -831,6 +836,8 @@ class CEOAgent(AgentBase):
 
             return plan
 
+        except UsageUnavailableError:
+            raise
         except Exception as exc:
             logger.warning("ceo_planning_failed", task_id=task_id, error=str(exc))
             # Fallback: assume moderate risk
@@ -895,9 +902,9 @@ class CEOAgent(AgentBase):
 
             # Record LLM usage
             try:
-                usage = result.usage()
-                input_tokens = usage.request_tokens or 0
-                output_tokens = usage.response_tokens or 0
+                usage = extract_run_tokens(result)
+                input_tokens = usage.input_tokens
+                output_tokens = usage.output_tokens
                 model_obj = self.llm_agent.model
                 model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
                 await record_usage(
@@ -911,6 +918,7 @@ class CEOAgent(AgentBase):
                 )
             except Exception as exc:
                 logger.warning("ceo_usage_tracking_failed", task_id=task_id, error=str(exc))
+                raise UsageUnavailableError("Decomposition usage accounting failed") from exc
 
             # Parse JSON from LLM response
             raw = result.output.strip()
@@ -940,6 +948,8 @@ class CEOAgent(AgentBase):
                 )
             return validated
 
+        except UsageUnavailableError:
+            raise
         except (json.JSONDecodeError, KeyError) as exc:
             logger.warning("ceo_decomposition_parse_error", task_id=task_id, error=str(exc))
             return []

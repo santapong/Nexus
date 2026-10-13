@@ -1,6 +1,6 @@
 """Row-Level Security session context for multi-tenant workspace isolation.
 
-Sets `nexus.workspace_id` as a PostgreSQL session variable via `SET LOCAL`
+Sets `nexus.workspace_id` with bound, transaction-local PostgreSQL `set_config`
 at the start of every database session within a request. This ensures all
 queries are automatically filtered by the RLS policies defined in migration 006.
 
@@ -18,7 +18,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
-from sqlalchemy import text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.db.session import get_session_factory
@@ -30,16 +30,13 @@ async def set_rls_context(session: AsyncSession, workspace_id: str) -> None:
     """Set the RLS workspace context for the current database transaction.
 
     Must be called within an active transaction (session.begin() or autobegin).
-    Uses SET LOCAL so the setting is scoped to the current transaction only.
+    Uses bound set_config with is_local=True so the value is confined to this transaction.
 
     Args:
         session: Active async database session.
         workspace_id: Workspace UUID string, or 'superuser' for admin access.
     """
-    await session.execute(
-        text("SET LOCAL nexus.workspace_id = :ws_id"),
-        {"ws_id": workspace_id},
-    )
+    await session.execute(select(func.set_config("nexus.workspace_id", workspace_id, True)))
 
 
 async def clear_rls_context(session: AsyncSession) -> None:

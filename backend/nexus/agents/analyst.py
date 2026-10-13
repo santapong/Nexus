@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse
+from nexus.core.llm.run_usage import extract_run_tokens
 from nexus.core.llm.usage import calculate_cost, record_usage
 
 logger = structlog.get_logger()
@@ -65,9 +66,9 @@ class AnalystAgent(AgentBase):
         # Extract usage info
         total_tokens = 0
         try:
-            usage = result.usage()
-            input_tokens = usage.request_tokens or 0
-            output_tokens = usage.response_tokens or 0
+            usage = extract_run_tokens(result)
+            input_tokens = usage.input_tokens
+            output_tokens = usage.output_tokens
             total_tokens = input_tokens + output_tokens
 
             model_obj = self.llm_agent.model
@@ -87,6 +88,7 @@ class AnalystAgent(AgentBase):
                 task_id=task_id,
                 error=str(exc),
             )
+            raise
 
         logger.info(
             "analyst_task_completed",

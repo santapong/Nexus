@@ -16,6 +16,10 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = "postgresql+asyncpg://nexus:nexus_dev@localhost:5432/nexus"
+    # Standalone journal acceptance only: opt-in disposable DB, never the application DB.
+    company_test_database_url: str = ""
+    # Dedicated company profile: never silently reuse the legacy application URL.
+    company_database_url: str = ""
 
     # Redis
     redis_url: str = "redis://localhost:6379"

@@ -29,6 +29,7 @@ from nexus.integrations.temporal.schemas import (
     SynthesisInput,
     SynthesisOutput,
 )
+from nexus.verification.legacy_qa import parse_polled_review
 
 logger = structlog.get_logger()
 
@@ -352,18 +353,19 @@ async def qa_review_activity(input_data: ReviewInput) -> ReviewOutput:
         )
 
         if result:
+            decision = parse_polled_review(result)
             return ReviewOutput(
                 task_id=input_data.task_id,
-                approved=result.get("approved", True),
-                feedback=result.get("feedback", ""),
+                approved=decision.approved,
+                feedback=decision.feedback,
                 final_output=result.get("final_output", input_data.output),
             )
 
-        # Timeout — auto-approve to avoid blocking
+        # An absent result is inconclusive, never approval.
         return ReviewOutput(
             task_id=input_data.task_id,
-            approved=True,
-            feedback="QA review timed out — auto-approved",
+            approved=False,
+            feedback="QA review timed out or returned no decision; approval remains unresolved",
             final_output=input_data.output,
         )
 
@@ -371,8 +373,8 @@ async def qa_review_activity(input_data: ReviewInput) -> ReviewOutput:
         logger.error("qa_review_failed", task_id=input_data.task_id, error=str(exc))
         return ReviewOutput(
             task_id=input_data.task_id,
-            approved=True,
-            feedback=f"QA review failed: {exc} — auto-approved",
+            approved=False,
+            feedback=f"QA review is inconclusive: {exc}",
             final_output=input_data.output,
         )
 

@@ -33,6 +33,7 @@ from nexus.core.kafka.meeting import ConvergenceReport
 from nexus.core.kafka.producer import publish
 from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage
 from nexus.core.kafka.topics import Topics
+from nexus.core.llm.run_usage import UsageUnavailableError, extract_run_tokens
 from nexus.core.llm.usage import calculate_cost, record_usage
 from nexus.core.presentation import (
     PRESENTATION_PROMPT_INSTRUCTIONS,
@@ -526,9 +527,9 @@ class DirectorAgent(AgentBase):
 
             # Record LLM usage
             try:
-                usage = result.usage()
-                input_tokens = usage.request_tokens or 0
-                output_tokens = usage.response_tokens or 0
+                usage = extract_run_tokens(result)
+                input_tokens = usage.input_tokens
+                output_tokens = usage.output_tokens
                 model_obj = self.llm_agent.model
                 model_name = getattr(model_obj, "model_name", str(model_obj))[:100]
                 await record_usage(
@@ -542,9 +543,12 @@ class DirectorAgent(AgentBase):
                 )
             except Exception as exc:
                 logger.warning("director_usage_tracking_failed", task_id=task_id, error=str(exc))
+                raise UsageUnavailableError("Synthesis usage accounting failed") from exc
 
             return cast(str, result.output)
 
+        except UsageUnavailableError:
+            raise
         except Exception as exc:
             logger.error(
                 "director_synthesis_failed",

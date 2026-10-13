@@ -1,0 +1,47 @@
+{
+  "schema_version": "nexus.fake-scenario.v1",
+  "workflow_version": "company-worker-v1",
+  "model_version": "fake-model-v1",
+  "recorded_at": "2026-10-13T10:00:00Z",
+  "work": {
+    "company_id": "00000000-0000-0000-0000-000000000001",
+    "task_id": "00000000-0000-0000-0000-000000000004",
+    "trace_id": "00000000-0000-0000-0000-000000000005",
+    "goal_id": "00000000-0000-0000-0000-000000000010",
+    "department": "builder",
+    "title": "Draft StockFlow readiness evidence",
+    "acceptance": ["synthetic-readiness-file"],
+    "budget_usd": "1.00"
+  },
+  "action": {
+    "company_id": "00000000-0000-0000-0000-000000000001",
+    "action_id": "00000000-0000-0000-0000-000000000006",
+    "task_id": "00000000-0000-0000-0000-000000000004",
+    "trace_id": "00000000-0000-0000-0000-000000000005",
+    "actor_id": "00000000-0000-0000-0000-000000000003",
+    "revision": 1,
+    "tool": "fake.workspace.patch",
+    "tool_version": "fake-tool-v1",
+    "resource": "stockflow:fixture",
+    "parameters": {"path": "readiness.md", "text": "synthetic draft"},
+    "preconditions": [{"resource": "stockflow:fixture", "revision": "fixture-1"}],
+    "policy_version": "policy-1",
+    "price_version": "prices-1",
+    "estimated_cost_usd": "0.00"
+  },
+  "limits": {"model_requests": 12, "tool_attempts": 20, "rework_rounds": 2, "plan_revisions": 2},
+  "model_output": "Generated draft only; the fixture never executes it.",
+  "requires_approval": true,
+  "model_fails": false,
+  "tool_outcome": "succeeded",
+  "verification": {
+    "company_id": "00000000-0000-0000-0000-000000000001",
+    "verification_id": "00000000-0000-0000-0000-000000000011",
+    "action_id": "00000000-0000-0000-0000-000000000006",
+    "verifier_id": "00000000-0000-0000-0000-000000000012",
+    "verdict": "pass",
+    "criterion_ids": ["synthetic-readiness-file"],
+    "evidence_ids": ["00000000-0000-0000-0000-000000000013"],
+    "limitations": ["Synthetic offline fixture; not a StockFlow build or production acceptance"]
+  }
+}

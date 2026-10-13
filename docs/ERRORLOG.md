@@ -74,6 +74,352 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-050 — Earlier same-day tool reservations bypassed current spend overages
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent combined M1 reviewer, with real restricted PostgreSQL reproductions
+**Affected files:** `journal_reservations.py`, reservation-day and effect-budget integration tests
+
+### What happened
+
+After an issued request truthfully settled above its reservation, shared spent4.95+held0.10 exceeded the5.00 daily cap, yet another preauthorized same-day tool received a fresh permit. Separate reproductions showed current own-work and ancestor partition overages below the daily limit also allowed fresh generic tool intents. No external request was issued by these probes.
+
+### Root cause
+
+The day-transfer helper returned early for a same-day hold. Current work/ancestor checks existed only in the model-specific hook, rather than at the generic model/tool effect boundary.
+
+### Fix applied
+
+Every fresh generic intent now checks current shared held+spent and current own/ancestor partitioned allowances under CompanyControl before attempts/intent mutate. A same-day hold is counted once; cross-midnight transfer still adds only its transferred amount. Actual recorded charges remain intact. Root tests failed before the fix; enqueue/day14 passes afterward. The reviewer rechecked daily/own/ancestor denial and worker outcome truth together:3 tests pass7.70s. Durable effect-boundary regressions are retained in `test_company_effect_budget.py`.
+
+### Prevention
+
+Exercise already-authorized actions after a truthful overbill, including generic tools and ancestor allocations. Fresh authorization must inspect current ledger state; an earlier quote or cached hold is not current spend permission.
+
+---
+
+## ERROR-049 — Caught post-call failure returned blocked while the ledger retained an unknown effect
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent combined M1 reviewer in an actual registered DBOS workflow
+**Affected files:** `company_worker.py`, worker support/helper and process acceptance
+
+### What happened
+
+A trusted observation hook raised ValueError after the offline model invocation. DBOS completed with WorkerResult blocked, while release correctly retained outcome_unknown work/effect/cost hold with one model attempt and no receipt. The result hid unresolved issued work; it did not repeat the call or refund its hold.
+
+### Root cause
+
+The exceptional result was constructed before finally.release classified the committed intent.
+
+### Fix applied
+
+Return the exceptional result only after release; unresolved issued work returns outcome_unknown. Actual process regression also proves cached restart causes no second call. The complete worker package passes56 checks, including10 PostgreSQL/DBOS process cases, compatible-version recovery and a pending approval that releases capacity before segment2 resumes with the same allowances. Independent probe passes after the fix.
+
+### Prevention
+
+Test returned result, actual persisted effect/work/billing state and released capacity together, with faults after actual invocation. SDK workflow success never implies known effect outcome or completed business work.
+
+---
+
+## ERROR-048 — Blocked worker result and inactive-work audit diverged from persisted/public state
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** Codex integration reviewers and actual HTTP/worker acceptance
+**Affected files:** company access/routes, execution runtime/release, company worker, company006
+
+### What happened
+
+The pure owner READ policy allowed inactive work but HTTP handlers rejected it again; the owner received403/404 for retained history. A stale-source worker returned blocked while its released row remained running. A corrupted false-owner actor role could claim/consume counters despite being denied at API/effect boundaries. Revoked actors also could not classify/reconcile their expired issued intent, leaving the original state unresolved.
+
+### Root cause
+
+Policy was duplicated at HTTP materialization; execution lacked blocked/principal ownership and an independent owner recording path.
+
+### Fix applied
+
+Use one shared fresh actor/owner read policy at materialization. Actual HTTP owner audit now succeeds while actor/mutation access stays denied. Persist blocked release, principal-bound leases, canonical role mapping and explicit current-owner reconcile-only methods with trusted evidence. Worker source-state failures retain blocked and clear ownership. Twelve owner/hook and27 runtime cases pass;16 actual API and7 current worker process cases pass. Known-receipt/unknown-billing cost-only continuation is being completed separately; no amount is invented.
+
+### Prevention
+
+Test the public HTTP path, database state and released capacity together. Audit idempotent lease-return shortcuts as well as write guards; a reactivated actor cannot borrow the owner's recording fence. Candidates and blocked workflow results never count as completed business work.
+
+---
+
+## ERROR-047 — Draft migration ordering and prepared DDL were not replay-safe
+
+**Date:** 2026-10-13–14
+**Severity:** high
+**Status:** fixed
+**Found by:** Codex during real profile replay
+**Affected files:** draft company002/004 migrations and company-profile validation
+
+### What happened
+
+Asyncpg rejected several top-level function/trigger commands in one prepared op.execute. Alembic autogeneration across metadata emitted a referring authority table before the grant's new composite unique key; a concurrently running fixture failed with InvalidForeignKeyError. Downgrade order also needed reversing.
+
+### Root cause
+
+Driver statement semantics and cross-metadata DDL ordering cannot be inferred from generated source or metadata compilation.
+
+### Fix applied
+
+Execute each top-level function/trigger command separately and order the target unique key before its referring FK table. Drop the referring table first on downgrade. Actual full profile install/repeat/metadata/downgrade passes; company006 also has a populated old-lease test proving live drain refusal, fenced expired intent, preserved counters and held unknown cost. Production migration was not performed.
+
+### Prevention
+
+Review generated operations and replay them on real disposable PostgreSQL. Keep source/schema comparisons and populated transition tests; do not stamp around a failure.
+
+---
+
+## ERROR-046 — Initial queue primitive allowed spliced segments and old-day holds
+
+**Date:** 2026-10-13–14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent Codex integration review
+**Affected files:** company dispatch/queue, journal reservations, effect boundary
+
+### What happened
+
+A review probe changed only segment_id to create two DBOS workflows for one authorized action without a registered execution row. Another probe passed prior-day authority while the new day already held the full$5 allowance.
+
+### Root cause
+
+Trusted-caller prerequisites were documented but not enforced in the primitive. Enqueue identity and effect-day spending were checked at different boundaries.
+
+### Fix applied
+
+Persist immutable action→segment dispatch; enforce current run/workspace/version and next persistent segment before SQL enqueue. Transfer only unissued held allowance to actual Bangkok effect day under the same company lock, preserving lifetime work totals and retaining unknown/issued charges. Exact and standing source/hold/dispatch/queue commit together. Twelve real queue/day cases and independent review closure probes pass.
+
+### Prevention
+
+Future gateway composition must use the same transaction for new model quote/catalog/counter/intent checks. Existing queue IDs and cached permits are never reusable authority; real process-kill tests check uncertain outcomes separately from SDK replay.
+
+---
+
+## ERROR-045 — Litestar body decoding relaxed StrictBool
+
+**Date:** 2026-10-13–14
+**Severity:** high
+**Status:** fixed
+**Found by:** actual restricted-database HTTP tests
+**Affected files:** company API payload contracts and tests
+
+### What happened
+
+Despite StrictBool unit contracts, Litestar2.24 decoded Pydantic bodies with strict=False and accepted approved='true'. This turned a string intent into a boolean at the actual authorization HTTP boundary.
+
+### Root cause
+
+Framework decoding can override a field's strict mode; direct model unit validation did not exercise the transport behavior.
+
+### Fix applied
+
+Before-validators require literal JSON booleans for approval/pause; extra identity/cap fields are rejected. Actual signed HTTP tests prove malformed bodies cannot save decisions or pause, while current-owner valid intents succeed. No global schema/decoder relaxation was added.
+
+### Prevention
+
+New approval/control APIs need actual transport tests for boolean/numeric/identity wire types. Do not infer public boundary behavior from Pydantic unit checks alone. Scoped lesson is stored in the Nexus skill.
+
+---
+
+
+## ERROR-044 — Legacy chaos tests patched removed module locations
+
+**Date:** 2026-10-13
+**Severity:** medium
+**Status:** fixed
+**Found by:** Codex during SDK release regression
+**Affected files:** `backend/nexus/tests/chaos/test_chaos_scenarios.py`, `backend/nexus/core/kafka/producer.py`
+
+### What happened
+
+On both SDK1 and SDK2 the legacy chaos suite had six failures and two teardown/setup errors. Redis mocks referenced the removed flat module paths; an async session-factory test incorrectly returned a coroutine rather than an async context manager. Unclosed Kafka producer warnings also surfaced after legacy tests contacted the real client.
+
+### Root cause
+
+Tests had not followed the earlier core-package restructuring. AsyncMock was unsuitable for a synchronous session factory. The producer startup path allocated a client, then failed without stopping it.
+
+### Fix applied
+
+Update the patch targets to the actual core modules and use a synchronous factory mock. These changes preserve assertions and do not widen runtime permissions. Close unsuccessful/cancelled producer startup clients while preserving the original exception; three new tests failed before that correction. The final targeted producer plus complete behavior/chaos regression passes 61 cases. The baseline original-SDK failure log is retained in the implementation evidence folder.
+
+### Prevention
+
+Run behavior/chaos tests during milestone integration; mock the namespace where a dependency is resolved. Passing unit tests alone is insufficient release regression evidence.
+
+---
+
+## ERROR-043 — Weak company JWT configuration reached signature verification
+
+**Date:** 2026-10-13
+**Severity:** high
+**Status:** fixed
+**Found by:** Codex during authenticated company-profile preflight
+**Affected files:** `backend/nexus/api/company_auth.py`, `test_company_auth.py`
+
+### What happened
+
+The unmounted company helper rejected empty/unsigned configuration but accepted a short or known development key. Three new negative cases failed before implementation, including PyJWT's short-key warning.
+
+### Root cause
+
+Configuration checks only tested nonempty key and algorithm != none.
+
+### Fix applied
+
+The supervised pilot requires explicit HS256 configuration and a key of at least 32 characters, excluding the known development secret, in every environment. The complete company-auth unit package now passes 38 cases. No actual signer or credential was changed.
+
+### Prevention
+
+Use the same configuration validator at company-profile startup. Asymmetric signing requires a separate deliberately implemented key/issuer policy; it is not silently selected through the legacy settings field.
+
+---
+
+## ERROR-042 — Legacy RLS setters used invalid parameterized SET LOCAL
+
+**Date:** 2026-10-13
+**Severity:** high
+**Status:** fixed
+**Found by:** Codex multi-agent team during real PostgreSQL preflight
+**Affected files:** `backend/nexus/api/middleware.py`, `backend/nexus/db/rls.py`
+
+### What happened
+
+The first real PostgreSQL test run had 9 failures and 2 passes. Prepared SET LOCAL statements failed with a syntax error. The request-session hook swallowed its failure, leaving an aborted transaction available to downstream code.
+
+### Root cause
+
+PostgreSQL SET syntax does not accept the prepared expression used here; catching all failures hid the binding error.
+
+### Fix applied
+
+Both paths bind values through SELECT set_config(..., true). The hook logs the error type and re-raises. Eleven real PostgreSQL cases now pass, including commit/rollback reset on the same pooled backend, SQL-shaped strings as values and fault propagation. This does not establish correctness of every legacy RLS policy.
+
+### Prevention
+
+Use test_company_rls_context.py against an explicit disposable PostgreSQL database. A mocked SQL session cannot prove prepared-statement syntax or connection-pool scope isolation.
+
+---
+
+## ERROR-041 — SDK 2 usage and legacy QA paths could silently report success
+
+**Date:** 2026-10-13
+**Severity:** high
+**Status:** fixed
+**Found by:** Codex multi-agent team during pinned SDK migration
+**Affected files:** `backend/nexus/core/llm/run_usage.py`, agents, benchmarking, `verification/legacy_qa.py`, Temporal review activity
+
+### What happened
+
+SDK2 exposes RunUsage through a property and input/output token fields; old callable/request/response access could fall back to zero. Legacy QA accepted malformed or missing review fields, while the Temporal activity approved timeouts/errors. Negative usage/QA tests demonstrated these failures before implementation.
+
+### Root cause
+
+Best-effort extraction/default approval treated unavailable evidence as a successful result.
+
+### Fix applied
+
+Typed extraction supports the checked SDK interfaces and raises on unknown usage. Callers propagate that failure. Strict review parsing requires an unambiguous explicit boolean approval; missing/error/timeout/malformed reviews fail or request owner input while preserving raw evidence. 82 targeted cases pass on each SDK version; 59 QA/usage regressions pass. These are legacy review-contract checks, not independent company verification or live provider billing conformance.
+
+### Prevention
+
+Keep explicit API-family construction and version-pinned compatibility tests. Provider-payload missing-usage semantics still require adapter conformance before paid company routing; SDK-default zero alone is not billing proof.
+
+---
+
+## ERROR-040 — Existing legacy migration chain cannot replay on clean PostgreSQL
+
+**Date:** 2026-10-13
+**Severity:** high
+**Status:** mitigated
+**Found by:** Codex during clean company-profile migration preflight
+**Affected files:** historical `backend/alembic/versions/003_*`, `006_*` and the legacy installation path
+
+### What happened
+
+Normal alembic upgrade head on a clean PostgreSQL17 database applied 001/002, then failed in 003: eval_results.task_id VARCHAR(36) references tasks.id UUID. Source inspection also found mismatched UUID references and policies referencing nonexistent columns in 006. The full legacy chain was not repaired or proven.
+
+### Root cause
+
+Historical migrations contain inconsistent foreign-key types and policy column references. Passing current metadata/unit checks did not prove replay of their DDL history.
+
+### Fix applied
+
+Preserve already-merged migrations001–016. ADR-101 introduces a separate company migration lineage/version table with explicit UUID-correct baseline. Its clean install/repeat/metadata/downgrade tests preserve an unrelated legacy data/version marker. This unblocks new company installations; the legacy replay issue remains unresolved for existing legacy operators.
+
+### Prevention
+
+Run actual migration replay against disposable PostgreSQL before release, compare ORM metadata with installed schema, and distinguish fresh company installation from legacy migration repair. Never hide a failed historical chain with create_all plus stamp.
+
+---
+
+
+## ERROR-039 — Typed monetary defaults were not validated in foundation models
+
+**Date:** 2026-10-13
+**Severity:** medium
+**Status:** fixed
+**Found by:** Codex during executable company-contract acceptance
+**Affected files:** `backend/nexus/company/contracts/base.py`, `company.py`, `work.py`
+
+### What happened
+
+The first foundation test run returned the string `"5.00"` from a Decimal-annotated mandate default and raised serializer warnings for a string work-budget default. Three contract tests failed. A field annotation did not establish that the constructor's default value had been validated.
+
+### Root cause
+
+Pydantic default validation was not enabled, and string defaults had been assigned to Decimal fields. Type-ignore annotations concealed the static mismatch in the prototype.
+
+### Fix applied
+
+Use real Decimal defaults and enable default validation on the shared strict Contract. Remove the type ignores. The final 275-unit-test run and 59-case focused suite pass, including money bounds, wire roundtrips and the default mandate cap. No production data was affected.
+
+### Prevention
+
+Keep defaults type-correct and test runtime value/serialization, not just schema annotations. See [foundation validation](company-system/VALIDATION_2026-10-13.md). This is a scoped Pydantic default-value finding, not a claim that all typed models or other libraries behave the same way.
+
+---
+
+## ERROR-038 — Company runtime integration gaps at July HEAD
+
+**Date:** 2026-10-05 (recorded); bounded probes executed 2026-10-04\
+**Severity:** high\
+**Status:** open\
+**Found by:** Codex during the Nexus architecture review\
+**Affected files:** `backend/nexus/tools/adapter.py`, `tools/guards.py`, `tools/workspace.py`, `agents/engineer.py`, `agents/base.py`, `core/kafka/consumer.py`, `integrations/temporal/task_workflow.py`, `integrations/temporal/activities.py` (all under `backend/nexus/`)
+
+### What happened
+
+At `6a8c8ef`, the locked unit/static suite passes but the operating boundary remains incomplete:
+
+- No production caller binds `set_tool_context`; an actual irreversible file-tool probe raises `ToolContextUnsetError` without creating a file.
+- Actual approval functions with a mocked DB flush and poll without a prior commit; a separate PostgreSQL-session visibility failure is inferred and still requires a live test.
+- The installed Temporal SDK rejects `AgentTaskWorkflow` because it lacks workflow metadata. No live Temporal server was used.
+- Actual Engineer prompt assembly includes an attachment sentinel but omits the workspace-file sentinel; semantic memory is outside normal context loading.
+- Source inspection shows Kafka auto-commit/early seen-marker crash risk, optional Temporal QA approval on timeout/error, and `tool_workspace_write` directly persisting without its documented approval gate. These scenarios were not executed against live services.
+
+### Root cause
+
+Existing local tests do not establish cross-session approval, full runtime context delivery, registered durable execution or policy coverage across all mutation entry points. Transport markers and fallback defaults cannot establish verified business completion. The exact live consequences require integration acceptance rather than extrapolation from mocks.
+
+### Fix applied
+
+None. The documentation-only company redesign records remediation in [M1](company-system/IMPLEMENTATION_PLAN.md#m1--prove-one-governed-durable-execution-path), [M2](company-system/IMPLEMENTATION_PLAN.md#m2--build-the-evidence-backed-company-brain), and BACKLOG-069–070. Existing historical fixes in ERROR-027/036 are preserved; this entry describes current integration gaps at the reviewed July source, not a claim that all old fixes were absent.
+
+### Prevention
+
+Require real two-session approval tests, actual prompt/context tests, workflow registration/replay tests, all-entry-point mutation policy tests, crash/effect reconciliation and fail-closed verification. Raw bounded evidence: `/mnt/data/nexus-review-2026-10-04/architecture-probes.json` and companion logs. [SDD §4](sdd/NEXUS_SDD_v0.2.md#4-baseline-assessment-and-validation-limits) states their scope. Keep this error open until the corresponding runtime gates actually pass.
+
+---
+
 ## ERROR-037 — Director loop-prevention false positives on empty meeting rounds
 
 **Date:** 2026-05-19
@@ -1314,8 +1660,8 @@ See ERROR-018 for the original incident.
 
 ---
 
-*Last updated: 2026-03-21*
-*Next error ID: ERROR-026*
+*Last updated: 2026-10-13 (company foundation validation)*
+*Next error ID: ERROR-049*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

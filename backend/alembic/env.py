@@ -19,6 +19,7 @@ from nexus.db.models import (
     Task,
 )
 from nexus.settings import settings
+from nexus.harness.journal_models import JournalBase
 
 # Import base to ensure all models are registered
 from advanced_alchemy.base import UUIDAuditBase, UUIDBase
@@ -31,7 +32,7 @@ if config.config_file_name is not None:
 # Override URL from settings
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-target_metadata = UUIDBase.metadata
+target_metadata = [UUIDBase.metadata, JournalBase.metadata]
 
 
 def run_migrations_offline() -> None:

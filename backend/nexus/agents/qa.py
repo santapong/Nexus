@@ -18,10 +18,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.agents.base import AgentBase
 from nexus.core.kafka.producer import publish
-from nexus.core.kafka.schemas import AgentCommand, AgentResponse, TaskResult
+from nexus.core.kafka.schemas import AgentCommand, AgentResponse, KafkaMessage, TaskResult
 from nexus.core.kafka.topics import Topics
+from nexus.core.llm.run_usage import extract_run_tokens
 from nexus.core.llm.usage import calculate_cost, record_usage
 from nexus.settings import settings
+from nexus.verification.legacy_qa import parse_legacy_review
 
 logger = structlog.get_logger()
 
@@ -83,9 +85,9 @@ class QAAgent(AgentBase):
 
         total_tokens = 0
         try:
-            usage = result.usage()
-            input_tokens = usage.request_tokens or 0
-            output_tokens = usage.response_tokens or 0
+            usage = extract_run_tokens(result)
+            input_tokens = usage.input_tokens
+            output_tokens = usage.output_tokens
             total_tokens = input_tokens + output_tokens
 
             model_obj = self.llm_agent.model
@@ -105,26 +107,36 @@ class QAAgent(AgentBase):
                 task_id=task_id,
                 error=str(exc),
             )
+            raise
 
-        # Parse QA decision — default to approved if parsing fails
+        # A malformed review is inconclusive; it cannot authorize completion.
         qa_output = result.output
-        approved = True
         try:
-            import json
-
-            if isinstance(qa_output, str):
-                # Try to extract JSON from the response
-                # Handle cases where LLM wraps JSON in markdown code blocks
-                clean = qa_output.strip()
-                if clean.startswith("```"):
-                    clean = clean.split("\n", 1)[1] if "\n" in clean else clean[3:]
-                    clean = clean.rsplit("```", 1)[0]
-                parsed = json.loads(clean)
-                approved = parsed.get("approved", True)
-                qa_output = json.dumps(parsed)
-        except (json.JSONDecodeError, AttributeError):
-            # If we can't parse, treat as approved with the raw output
-            pass
+            approved = parse_legacy_review(qa_output).approved
+        except ValueError as exc:
+            logger.warning(
+                "qa_review_inconclusive",
+                task_id=task_id,
+                trace_id=trace_id,
+                error=str(exc),
+            )
+            human_msg = KafkaMessage(
+                task_id=message.task_id,
+                trace_id=message.trace_id,
+                agent_id=self.agent_id,
+                payload={"reason": "qa_review_inconclusive", "qa_review": qa_output},
+            )
+            await publish(Topics.HUMAN_INPUT_NEEDED, human_msg, key=task_id)
+            return AgentResponse(
+                task_id=message.task_id,
+                trace_id=message.trace_id,
+                agent_id=self.agent_id,
+                payload={},
+                status="failed",
+                tokens_used=total_tokens,
+                error="QA review is inconclusive; explicit boolean approval required",
+                output={"approved": False, "verdict": "inconclusive", "qa_review": qa_output},
+            )
 
         # Presentation block produced by the Director (ADR-091) — QA passes
         # it through untouched; sanitization happened at production and is
@@ -188,8 +200,6 @@ class QAAgent(AgentBase):
                 await publish(Topics.TASK_RESULTS, task_result, key=task_id)
 
                 # Also publish to human.input_needed
-                from nexus.core.kafka.schemas import KafkaMessage
-
                 human_msg = KafkaMessage(
                     task_id=message.task_id,
                     trace_id=message.trace_id,

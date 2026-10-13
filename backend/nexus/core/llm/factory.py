@@ -5,6 +5,9 @@ Google (Gemini), OpenAI, Groq, Mistral, Ollama, and any OpenAI-compatible endpoi
 
 Agent code never references a specific provider. All resolution happens here.
 All provider imports are lazy — only loaded when the provider is actually used.
+
+This existing provider-dispatch/role-map module exceeds the file-size guideline;
+the SDK compatibility migration stays narrow to avoid changing unrelated dispatch.
 """
 
 from __future__ import annotations
@@ -67,32 +70,47 @@ def _resolve_anthropic(model_name: str) -> Model:
         msg = (
             f"Cannot load Anthropic provider for '{model_name}'. "
             f"This is likely a version mismatch between pydantic-ai and anthropic SDK. "
-            f"Run: pip install 'anthropic>=0.80.0,<0.83.0' to fix. Original error: {exc}"
+            f"Install the project's locked provider dependencies. Original error: {exc}"
         )
         raise ImportError(msg) from exc
 
 
 def _resolve_gemini(model_name: str) -> Model:
-    from pydantic_ai.models.gemini import GeminiModel
-    from pydantic_ai.providers.google_gla import GoogleGLAProvider
+    from pydantic_ai.models.google import GoogleModel
+    from pydantic_ai.providers.google import GoogleProvider
 
     api_key = settings.google_api_key
     if not api_key:
         msg = f"GOOGLE_API_KEY required to use model '{model_name}'. Set it in .env."
         raise ValueError(msg)
-    return GeminiModel(model_name, provider=GoogleGLAProvider(api_key=api_key))
+    name = model_name.removeprefix("google:").removeprefix("google-gla:").removeprefix("gemini:")
+    return GoogleModel(name, provider=GoogleProvider(api_key=api_key))
 
 
 def _resolve_openai(model_name: str) -> Model:
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
-    name = model_name.removeprefix("openai:")
+    name = model_name.removeprefix("openai:").removeprefix("openai-chat:")
     api_key = settings.openai_api_key
     if not api_key:
         msg = f"OPENAI_API_KEY required to use model '{model_name}'. Set it in .env."
         raise ValueError(msg)
-    return OpenAIModel(name, provider=OpenAIProvider(api_key=api_key))
+    # Legacy Nexus openai: settings always use Chat Completions. SDK2's own
+    # string inference now selects Responses; retain the factory's explicit API.
+    return OpenAIChatModel(name, provider=OpenAIProvider(api_key=api_key))
+
+
+def _resolve_openai_responses(model_name: str) -> Model:
+    """Select Responses only through an explicit prefix, preserving old settings."""
+    from pydantic_ai.models.openai import OpenAIResponsesModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+
+    api_key = settings.openai_api_key
+    if not api_key:
+        raise ValueError(f"OPENAI_API_KEY required to use model '{model_name}'. Set it in .env.")
+    name = model_name.removeprefix("openai-responses:")
+    return OpenAIResponsesModel(name, provider=OpenAIProvider(api_key=api_key))
 
 
 def _resolve_groq(model_name: str) -> Model:
@@ -121,7 +139,7 @@ def _resolve_mistral(model_name: str) -> Model:
 
 def _resolve_ollama(model_name: str) -> Model:
     """Ollama models via OpenAI-compatible API at a local endpoint."""
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
     name = model_name.removeprefix("ollama:")
@@ -129,7 +147,7 @@ def _resolve_ollama(model_name: str) -> Model:
         base_url=settings.ollama_base_url,
         api_key="ollama",
     )
-    return OpenAIModel(name, provider=provider)
+    return OpenAIChatModel(name, provider=provider)
 
 
 def _resolve_cerebras(model_name: str) -> Model:
@@ -142,7 +160,7 @@ def _resolve_cerebras(model_name: str) -> Model:
 
     Format: ``cerebras:<model_name>`` (e.g. ``cerebras:llama-3.3-70b``).
     """
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
     name = model_name.removeprefix("cerebras:")
@@ -157,7 +175,7 @@ def _resolve_cerebras(model_name: str) -> Model:
         base_url=settings.cerebras_base_url,
         api_key=api_key,
     )
-    return OpenAIModel(name, provider=provider)
+    return OpenAIChatModel(name, provider=provider)
 
 
 def _resolve_openrouter(model_name: str) -> Model:
@@ -171,7 +189,7 @@ def _resolve_openrouter(model_name: str) -> Model:
 
     Format: ``openrouter:<vendor>/<model_name>[:free]``.
     """
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
     name = model_name.removeprefix("openrouter:")
@@ -211,7 +229,7 @@ def _resolve_openrouter(model_name: str) -> Model:
         base_url=settings.openrouter_base_url,
         api_key=api_key,
     )
-    return OpenAIModel(name, provider=provider)
+    return OpenAIChatModel(name, provider=provider)
 
 
 def _resolve_test(model_name: str) -> Model:
@@ -227,7 +245,7 @@ def _resolve_openai_compatible(model_name: str) -> Model:
     Format: "openai-compat:<model_name>"
     Uses OPENAI_COMPAT_BASE_URL and OPENAI_COMPAT_API_KEY from settings.
     """
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
     name = model_name.removeprefix("openai-compat:")
@@ -235,7 +253,7 @@ def _resolve_openai_compatible(model_name: str) -> Model:
         base_url=settings.openai_compat_base_url,
         api_key=settings.openai_compat_api_key or "no-key",
     )
-    return OpenAIModel(name, provider=provider)
+    return OpenAIChatModel(name, provider=provider)
 
 
 # Ordered prefix → resolver map. First match wins.
@@ -243,7 +261,11 @@ _PROVIDER_RESOLVERS: list[tuple[str, Any]] = [
     ("test:", _resolve_test),
     ("claude", _resolve_anthropic),
     ("gemini", _resolve_gemini),
+    ("google:", _resolve_gemini),
+    ("google-gla:", _resolve_gemini),
     ("openai-compat:", _resolve_openai_compatible),
+    ("openai-chat:", _resolve_openai),
+    ("openai-responses:", _resolve_openai_responses),
     ("openai:", _resolve_openai),
     ("gpt-", _resolve_openai),
     ("o1-", _resolve_openai),

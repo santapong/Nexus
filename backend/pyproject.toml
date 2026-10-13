@@ -9,18 +9,23 @@ description = "NEXUS - Agentic AI Company as a Service"
 requires-python = ">=3.12"
 dependencies = [
     # API Framework
-    "litestar[standard]>=2.15.0,<3.0",
+    "litestar[standard]==2.24.0",
     # ORM + Database
-    "advanced-alchemy[litestar]>=0.28.0,<1.0",
+    "advanced-alchemy==0.34.0",
+    "sqlalchemy==2.0.51",
     "asyncpg>=0.30.0,<1.0",
     "alembic>=1.14.0,<2.0",
     "pgvector>=0.3.6,<1.0",
     # AI Framework
-    "pydantic-ai[anthropic,google]>=1.102.0,<2.0",
-    "anthropic>=0.116.0,<1.0",
+    "pydantic-ai-slim[anthropic,openai,google,groq,mistral,dbos]==2.54.0",
+    "pydantic-evals==2.54.0",
+    "dbos==3.2.0",
+    "anthropic>=1.9.0,<2.0",
     # Validation
-    "pydantic>=2.10.0,<3.0",
+    "pydantic==2.13.4",
     "pydantic-settings>=2.7.0,<3.0",
+    # Local provider output/tool schema validation; remote reference loading is disabled.
+    "jsonschema==4.26.0",
     # Kafka
     "aiokafka>=0.12.0,<1.0",
     # Redis
@@ -57,6 +62,7 @@ dev = [
     "ruff>=0.9.0,<1.0",
     "mypy>=1.14.0,<2.0",
     "types-croniter>=3.0.0,<7.0",
+    "types-jsonschema>=4.23.0,<5.0",
     "httpx>=0.28.0,<1.0",
 ]
 

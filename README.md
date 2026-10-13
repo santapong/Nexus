@@ -1,5 +1,9 @@
 # NEXUS
 
+**Implementation started (2026-10-13):** [feature roadmap and time estimates](docs/company-system/DELIVERY_ROADMAP.md), [progress](docs/company-system/PROGRESS.md), and [verified foundation](docs/company-system/VALIDATION_2026-10-13.md). The new company contracts and standalone approval/cost journal are implemented; authenticated DBOS execution and operating milestones remain pending.
+
+**Company-system redesign (2026-10-05):** [SDD v0.2](docs/sdd/NEXUS_SDD_v0.2.md) defines Nexus as DravenIQ's internal autonomous company, with a Company Brain, management, and an Action Harness. See the [architecture](docs/company-system/ARCHITECTURE.md) and [milestone plan](docs/company-system/IMPLEMENTATION_PLAN.md). The first operating proof is StockFlow customer readiness with a native bounded builder. This is a documented target; the runtime below has not been migrated by this documentation change.
+
 ![Python](https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=fff)
 ![PostgreSQL](https://img.shields.io/badge/postgres-16+pgvector-336791?logo=postgresql&logoColor=fff)
 ![Redis](https://img.shields.io/badge/redis-7-DC382D?logo=redis&logoColor=fff)

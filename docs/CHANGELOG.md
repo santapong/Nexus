@@ -40,6 +40,84 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Integrate supervised company governance and offline durable execution
+
+### Added
+- Registered company/work directory, current signed identity and owner controls, permanent parent USD/attempt partitions, explicit internal standing grants and immutable action authority provenance.
+- Principal-bound fenced intent/receipt/reconciliation stores, persistent blocked work, owner-only recording of already-issued facts and trusted transaction validation hooks.
+- Atomic exact/standing authorization, cost/source/permanent dispatch and real DBOS SQL scheduling; actual Bangkok effect-day hold transfer.
+- Isolated company read/pause/decision API with no legacy startup or new execution intake.
+- Governed offline DBOS/TestModel worker with protected output envelopes, unknown outcomes and actual SIGKILL recovery; candidates stay verifying.
+- Two explicit provider adapters with actual-SDK/offline-HTTP conformance, required per-request authorizer and local bounded schema/wire/usage validation.
+- Persistent model request/recipe authorization and protected result/cost recording; separate immutable owner billing provenance for already-known receipts.
+- Multi-agent release plan, M2 Brain package plan and frozen-acceptance preparation; ADR-101–105 and scoped regression/learning records.
+
+### Changed
+- Pin/install Pydantic AI slim2.54.0, DBOS3.2.0 and validated API/ORM versions; explicit provider extras, jsonschema4.26.0 and reviewed lock.
+- CI backend regression uses the reviewed lock; isolated PostgreSQL matrix covers new packages. Remote CI is not yet run.
+- M1 whole unit regression703 passes; types/lint/format and independent combined review pass. Brain is a separately prepared unactivated package.
+
+### Fixed
+- SDK API-family/RunUsage changes and unknown billing fallbacks; malformed/error/timeout legacy QA cannot approve.
+- Real PostgreSQL RLS prepared binding and propagated failures; failed/cancelled Kafka initialization cleanup and stale chaos mock namespaces.
+- Reviewed queue identity/midnight-accounting gaps, inactive-owner HTTP audit, false-owner runtime consistency, blocked-row reporting, post-call unknown result truth and generic daily/own/ancestor cap rechecks.
+
+### Database
+- Independent company001–007 lineage/version table adds17 tables/guards, principal ownership and immutable billing evidence. Fresh install/repeat/metadata/downgrade and populated old-lease drain/invalidation tested on PostgreSQL17. Existing merged legacy001–016 are preserved; their failed clean replay remains a documented legacy issue.
+
+Validation receipts are in [M1 offline acceptance](company-system/M1_OFFLINE_ACCEPTANCE_2026-10-14.md) and linked evidence: model gate52, client32, billing17, runtime30, worker56 including10 process/database cases, enqueue/day14 and retained cap negatives3. Counts overlap. The offline M0/M1 exits are verified; Brain and the full release remain open. Live provider/billing, ARM64, customer readiness, email and private deployment/recovery need their own evidence. No push/tag/deploy or live message/provider action occurred.
+
+**Authored by:** Codex multi-agent team
+**Task ID:** Nexus supervised release goal
+**PR:** n/a (local feature branch)
+
+---
+
+## [2026-10-13] — Start the company-system implementation foundation
+
+### Added
+- Strict company contracts, work DAG/source access validation, exact action digests and approval policy, fail-closed lifecycle and serializable limits.
+- Standalone PostgreSQL approval/cost journal with company RLS, immutable snapshots, single-use consumption, owner pause, atomic holds and unknown-billing reconciliation.
+- Frozen contract schemas, synthetic 30-question Brain pack and StockFlow readiness checklist; complete [feature/time roadmap](company-system/DELIVERY_ROADMAP.md), [progress](company-system/PROGRESS.md) and migration inventory.
+- 50 new unit tests and 9 real PostgreSQL acceptance cases; dedicated PostgreSQL 16 CI job (remote execution pending).
+- ADR-100 for the initial isolated implementation slice.
+
+### Changed
+- Settings includes an opt-in disposable company-test database URL; Alembic metadata includes the new journal.
+- BACKLOG-068 records partial executable delivery. Legacy runtime/new intake cutover remains pending.
+
+### Database
+- Migration `017_company_journal.py` adds five new tables and RLS/immutability guards. Tested upgrade/downgrade in disposable PostgreSQL 17 only; not applied to production.
+
+Validation: 275 unit tests pass; focused 59-case foundation suite passes with 94.46% new-module coverage; Ruff and mypy pass. Dependencies retain the original lockfile. No live model, external message, Pi install, push or deployment is included.
+
+**Authored by:** Codex
+**Task ID:** n/a (Nexus company-system implementation)
+**PR:** n/a (local feature branch)
+
+---
+
+## [2026-10-05] — Company-system SDD and implementation handoff
+
+### Added
+- [SDD v0.2](sdd/NEXUS_SDD_v0.2.md) — DravenIQ's internal company, shared Brain, governed actions, native Pi builder, multiple providers, US$5/day and owner oversight.
+- [Architecture views](company-system/ARCHITECTURE.md) and [M0–M6 plan](company-system/IMPLEMENTATION_PLAN.md) — lifecycle, approval/recovery boundaries, delivery tasks and acceptance matrix.
+- [Documentation validation](company-system/VALIDATION_2026-10-05.md) — link, diagram syntax, identifier and scope checks with explicit runtime limits.
+- Proposed ADR-094–099 and BACKLOG-068–076 — decisions, open milestones and explicitly deferred Meta Harness/graph infrastructure.
+- ERROR-038 — scoped current integration findings with evidence levels and remediation gates.
+
+### Changed
+- README and CLAUDE pointers distinguish the company-system target from the legacy runtime and historical design-only wording.
+- ADR/backlog next IDs reflect the added entries; prior decisions and runtime history remain intact.
+
+This is documentation only. No dependency upgrade, application change, database migration, model call, email, Pi installation, push or deployment is included. SDD revision numbering is independent of the product release version.
+
+**Authored by:** Codex
+**Task ID:** n/a (Nexus company-system design discussion)
+**PR:** n/a (local reviewable documentation)
+
+---
+
 ## [0.9.0-audit-hardening] - 2026-05-21 — Audit war room: 6 audits + 11 fix PRs merged
 
 A 4-area audit followed by an 18-agent fix war room (May 19–21) shipped seven security and

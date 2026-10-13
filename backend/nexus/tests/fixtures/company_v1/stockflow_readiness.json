@@ -1,0 +1,23 @@
+{
+  "fixture_version": "stockflow-readiness-v1",
+  "status": "frozen acceptance checklist; no pilot execution",
+  "source_checked_at": "2026-10-13",
+  "repository": "Smart-Inventory",
+  "committed_base_candidate": "bb7cc00848bb650069543e843f826703d468058c",
+  "exclude_uncommitted_changes": true,
+  "runtime": {"node": ">=20.10.0", "pnpm": "9.12.0"},
+  "checks": [
+    {"id": "SF-01", "criterion": "Goal, mandate, source revision and bounded plan are recorded", "evidence": ["mandate", "plan", "source_manifest"]},
+    {"id": "SF-02", "criterion": "Readiness findings cite current product evidence and identify historical claims", "evidence": ["assessment", "source_references"]},
+    {"id": "SF-03", "criterion": "One scoped change has an isolated workspace and exact patch", "evidence": ["job_specification", "patch", "workspace_manifest"]},
+    {"id": "SF-04", "criterion": "Relevant baseline and post-change checks have actual exit codes and logs", "candidate_commands": ["pnpm lint", "pnpm typecheck", "pnpm test", "pnpm build"], "evidence": ["command_receipts", "logs"]},
+    {"id": "SF-05", "criterion": "Independent verifier checks changed behavior and reports baseline failures separately", "evidence": ["verification", "behavior_artifacts"]},
+    {"id": "SF-06", "criterion": "Demo/readiness presentation derives statements from verified outcomes", "evidence": ["presentation", "cited_outcomes"]},
+    {"id": "SF-07", "criterion": "Support response is an access-controlled draft with product sources", "evidence": ["support_draft", "source_references"]},
+    {"id": "SF-08", "criterion": "Budget spent/held totals and action approvals match ledger records", "evidence": ["budget_ledger", "approval_decisions", "receipts"]},
+    {"id": "SF-09", "criterion": "Owner report distinguishes completed, blocked and unknown results", "evidence": ["operating_report", "dashboard_events"]},
+    {"id": "SF-10", "criterion": "Configured owner notification records acceptance and delivery separately", "evidence": ["notification_ledger", "provider_reference"]}
+  ],
+  "authority": {"internal_work_and_drafts": true, "customer_send": false, "git_push": false, "production_deployment": false},
+  "limitations": ["No listed command has been run by this fixture", "No dirty source has been copied", "ARM64/resource feasibility is an M4 gate", "Deployment status cannot be inferred from a release note"]
+}

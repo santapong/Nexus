@@ -14,7 +14,7 @@ Scenarios from CLAUDE.md section 14:
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -56,7 +56,7 @@ class TestRedisWiped:
     """When Redis is wiped, system should recover from PostgreSQL."""
 
     @pytest.mark.asyncio
-    @patch("nexus.llm.usage.redis_cache")
+    @patch("nexus.core.llm.usage.redis_cache")
     async def test_daily_spend_returns_true_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When Redis has no spend counter, check_daily_spend allows work."""
         mock_redis.get = AsyncMock(return_value=None)
@@ -67,7 +67,7 @@ class TestRedisWiped:
         assert result is True
 
     @pytest.mark.asyncio
-    @patch("nexus.llm.usage.redis_cache")
+    @patch("nexus.core.llm.usage.redis_cache")
     async def test_task_budget_returns_ok_on_empty_redis(self, mock_redis: AsyncMock) -> None:
         """When Redis has no task budget key, check_task_budget allows work."""
         mock_redis.get = AsyncMock(return_value=None)
@@ -125,7 +125,7 @@ class TestTokenBudgetExceededError:
     """Budget exhaustion should pause task and escalate to human."""
 
     @pytest.mark.asyncio
-    @patch("nexus.llm.usage.redis_cache")
+    @patch("nexus.core.llm.usage.redis_cache")
     async def test_daily_spend_rejects_over_limit(self, mock_redis: AsyncMock) -> None:
         """check_daily_spend returns False when over the daily limit."""
         from nexus.settings import settings
@@ -138,7 +138,7 @@ class TestTokenBudgetExceededError:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch("nexus.llm.usage.redis_cache")
+    @patch("nexus.core.llm.usage.redis_cache")
     async def test_task_budget_rejects_over_limit(self, mock_redis: AsyncMock) -> None:
         """check_task_budget returns False when tokens exceed budget."""
         mock_redis.get = AsyncMock(return_value="60000")
@@ -237,7 +237,7 @@ class TestDBPoolExhausted:
     @pytest.mark.asyncio
     async def test_session_factory_error_is_catchable(self) -> None:
         """When DB pool is exhausted, the error is a normal Exception."""
-        mock_factory = AsyncMock(side_effect=Exception("connection pool exhausted"))
+        mock_factory = MagicMock(side_effect=Exception("connection pool exhausted"))
 
         with pytest.raises(Exception, match="connection pool exhausted"):
             async with mock_factory() as _session:
@@ -251,7 +251,7 @@ class TestAgentSilence:
     """Health monitor should auto-fail tasks when agents go silent."""
 
     @pytest.mark.asyncio
-    @patch("nexus.redis.clients.redis_cache")
+    @patch("nexus.core.redis.clients.redis_cache")
     async def test_heartbeat_stored_in_redis(self, mock_redis: AsyncMock) -> None:
         """Heartbeat is stored as a Redis key with TTL."""
         mock_redis.set = AsyncMock()
@@ -262,7 +262,7 @@ class TestAgentSilence:
         mock_redis.set.assert_called_with(key, "alive", ex=600)
 
     @pytest.mark.asyncio
-    @patch("nexus.redis.clients.redis_cache")
+    @patch("nexus.core.redis.clients.redis_cache")
     async def test_missing_heartbeat_detected(self, mock_redis: AsyncMock) -> None:
         """Missing heartbeat key means agent is silent."""
         mock_redis.get = AsyncMock(return_value=None)

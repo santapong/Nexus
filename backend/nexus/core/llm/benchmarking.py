@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.core.llm.factory import resolve_model
+from nexus.core.llm.run_usage import extract_run_tokens
 from nexus.core.llm.usage import calculate_cost
 from nexus.db.models import ModelBenchmark, PromptBenchmark
 
@@ -65,14 +66,9 @@ async def run_model_benchmark(
     output_text = run_result.output
 
     # Extract token usage
-    input_tokens = 0
-    output_tokens = 0
-    try:
-        usage = run_result.usage()
-        input_tokens = usage.request_tokens or 0
-        output_tokens = usage.response_tokens or 0
-    except Exception:
-        pass
+    usage = extract_run_tokens(run_result)
+    input_tokens = usage.input_tokens
+    output_tokens = usage.output_tokens
 
     cost = calculate_cost(model_name, input_tokens, output_tokens)
 

@@ -61,7 +61,21 @@ async def _create_producer() -> AIOKafkaProducer:
         retry_backoff_ms=500,
         max_batch_size=16384,
     )
-    await producer.start()
+    try:
+        await producer.start()
+    except BaseException:
+        # Startup/cancellation can allocate transports before it fails. Close
+        # that unregistered client; never replace the original failure.
+        try:
+            await producer.stop()
+        except Exception as cleanup_error:
+            logger.warning(
+                "kafka_failed_start_cleanup_failed",
+                task_id=None,
+                trace_id=None,
+                error_type=type(cleanup_error).__name__,
+            )
+        raise
     logger.info("kafka_producer_started")
     return producer
 

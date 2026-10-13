@@ -1,0 +1,48 @@
+{
+  "schema_version": "nexus.stockflow-source.v1",
+  "prepared_date": "2026-10-14",
+  "nomination": {
+    "kind": "implementation_selected_committed_base",
+    "selected_by": "Codex root integrator under the authorized StockFlow pilot",
+    "owner_review": "included in the concrete release review; no external action authority is granted"
+  },
+  "repository": "https://github.com/santapong/Smart-Inventory",
+  "commit": "bb7cc00848bb650069543e843f826703d468058c",
+  "tree": "e0ed0e5618d3dda4d0cde0fd2cdc5642a99c8ac2",
+  "commit_timestamp": "2026-09-01T13:56:41+07:00",
+  "selection": "read committed Git objects only; concurrent working-tree changes are excluded",
+  "files": [
+    {
+      "path": "README.md",
+      "git_blob": "3ab0332e498908986f956d71021dae3e63f27ff9",
+      "sha256": "f4dff5f6d19ce398482d96c353c7e24345e67eed35c48402fb5c93c54e39aabf",
+      "bytes": 9830
+    },
+    {
+      "path": "package.json",
+      "git_blob": "c089ab7eb9f5859a6556d42fdc8c9643eca43e16",
+      "sha256": "e3418c2356327cd1519eb58aea500b327c7dcaba378af755b7bc0b7e15a3ec5a",
+      "bytes": 899
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "git_blob": "4e90255b3a5aca102d36f6d38c44d1649fb2e8b5",
+      "sha256": "57846422cd13346efdaf12bcde91d4d9e42c18eee21d7aafd5fa69b4a49877b3",
+      "bytes": 206893
+    },
+    {
+      "path": "apps/web/package.json",
+      "git_blob": "29ca7dad790e42632e21d2715f66a76dc88eac69",
+      "sha256": "63ee89bf7b149ec491776061da932e869faf221613d5ee273dda124a72b378a3",
+      "bytes": 1376
+    },
+    {
+      "path": "docs/RELEASE_v0.4.0.md",
+      "git_blob": "fd6f6e29e258d9370b62dc7e11db6a7a33ccd5a5",
+      "sha256": "c65c79911ac413d467b9f04ab0a2c036eaa57131b4711ddd9e0ef05df541b3a4",
+      "bytes": 4887
+    }
+  ],
+  "scope": "Immutable product source baseline, not deployment/customer/readiness proof",
+  "activation": "No builder, provider, notification or production change is enabled by this manifest"
+}

@@ -7,6 +7,14 @@
 
 ---
 
+## Company-system program (2026-10-05)
+
+[SDD v0.2](sdd/NEXUS_SDD_v0.2.md) and the [implementation plan](company-system/IMPLEMENTATION_PLAN.md) define the new target. BACKLOG-068–074 track M0–M6; BACKLOG-075–076 are deferred. Documentation and the offline M0/M1 exits are verified; Brain and operating/release milestones remain open. Older snapshots below are historical and are not a freshly verified implementation inventory. Some July Co/upload/UI code exists despite older design-only wording; reconcile exact source and acceptance before closing older entries.
+
+**Implementation update (2026-10-14):** [M1 offline acceptance](company-system/M1_OFFLINE_ACCEPTANCE_2026-10-14.md) records the governed runtime exit, independent review and committed StockFlow source nomination. Brain preparation is active; live model/effect activation and full operating/release milestones remain open. [Roadmap/estimates](company-system/DELIVERY_ROADMAP.md) retain the engineering assumptions.
+
+---
+
 ## Status Snapshot (2026-05-19)
 
 ```mermaid
@@ -46,6 +54,97 @@ presentation output, React-Flow Co canvas, frontend modernization). New totals: 
 ## Backlog Items
 
 <!-- New items go here, newest first -->
+
+### BACKLOG-076 — Dedicated temporal graph engine if measured limits justify it
+**Suggested phase:** after company operating proof, conditional
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** DEFERRED
+**Source:** SDD §§7, 18; ADR-094
+**Description:** Evaluate Graphiti or another graph store only after PostgreSQL traversal/retrieval measurements identify a concrete limitation. Preserve temporal claim/provenance contracts; no graph service is part of the first deployment.
+
+---
+
+### BACKLOG-075 — Meta Harness with offline evaluation and owner promotion
+**Suggested phase:** future, after stable operating cycles
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** DEFERRED — owner selected deferral
+**Source:** SDD §18; ADR-099
+**Description:** Future observe/propose/evaluate/review/promote/rollback workflow. No automatic optimizer, prompt activation, fine-tuning or self-granted authority in V1.
+
+---
+
+### BACKLOG-074 — M6 delegation, recovery and cloud portability
+**Suggested phase:** M6
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OPEN
+**Source:** IMPLEMENTATION_PLAN.md M6; ADR-095, 097, 099
+**Description:** Reviewed outcome metrics, owner-approved authority changes, independent encrypted backups and disposable restore, Pi soak/recovery evidence, workflow drain/version runbook and a portable cloud/VPS profile. Board oversight remains an explicit later owner decision.
+
+---
+
+### BACKLOG-073 — M5 StockFlow customer-readiness operating cycle
+**Suggested phase:** M5
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OPEN
+**Source:** IMPLEMENTATION_PLAN.md M5; ADR-094, 099
+**Description:** Join strategy, native engineering, independent verification, presentation, support draft, truthful owner report, dashboard and configured email in one goal/plan lineage. Separate external/customer delivery from internal completion.
+
+---
+
+### BACKLOG-072 — M4 one native bounded Pi builder
+**Suggested phase:** M4
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OPEN
+**Source:** IMPLEMENTATION_PLAN.md M4; ADR-097
+**Description:** Restricted rootless Podman runner, approved committed source, isolated workspaces, resource/path/network limits, command/artifact receipts and independent StockFlow checks on ARM64. Deployment and installation are separate authorized work.
+
+---
+
+### BACKLOG-071 — M3 company management and departmental mandates
+**Suggested phase:** M3
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OPEN
+**Source:** IMPLEMENTATION_PLAN.md M3; ADR-094, 096, 099
+**Description:** Goals, charters, bounded plan DAGs, inherited quotas, event-driven eligibility, commitment tracking, Today/work/approval views and ledger-derived operating reports. Idle cycles use no model calls.
+
+---
+
+### BACKLOG-070 — M2 ontology, evidence and unified context
+**Suggested phase:** M2
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OPEN
+**Source:** IMPLEMENTATION_PLAN.md M2; ADR-094
+**Description:** Typed PostgreSQL company entities, temporal source-backed claims, conflicts, permission-aware hybrid retrieval and a ContextAssembler that includes actual attachment/workspace evidence. Pass the frozen company-question pack before claiming Brain readiness.
+
+---
+
+### BACKLOG-069 — M1 governed DBOS runtime and model/cost gateway
+**Suggested phase:** M1
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OFFLINE EXIT VERIFIED — live activation gated
+**Source:** IMPLEMENTATION_PLAN.md M1; ADR-095, 096, 098; ERROR-038
+**Description:** Validate Pydantic AI 2.x/DBOS pins, exact segmented approval, complete tool-policy coverage, atomic enqueue/cost reservations, persistent deduplication/fencing, bounded provider fallback and crash/upgrade recovery with real PostgreSQL. Replace company-profile execution only after gates pass.
+
+---
+
+### BACKLOG-068 — M0 baseline, contracts and frozen acceptance fixtures
+**Suggested phase:** M0
+**Added by:** Codex
+**Date:** 2026-10-05
+**Status:** OFFLINE EXIT VERIFIED — reproducible fixtures/contracts/checklists and committed StockFlow source nomination
+**Source:** IMPLEMENTATION_PLAN.md M0; SDD v0.2; ADR-094–099
+**Description:** Preserve baseline evidence, freeze schemas/action hashing, Brain questions and StockFlow readiness checklist, create fake-model/crash-injection fixtures, inventory legacy consumers/migrations and nominate a committed pilot source. Documentation does not complete runtime preparation.
+**Progress (2026-10-14):** [M1 offline acceptance](company-system/M1_OFFLINE_ACCEPTANCE_2026-10-14.md) proves segmented approval/capacity release, actual process/version recovery, persistent model/client/billing and generic current spend gates. Independent combined review closed reproduced faults. Models/prices/live tools, intake, M2–M6 and private deployment remain gated; the release goal is incomplete.
+
+---
 
 ### BACKLOG-067 — Frontend modernization: React 19 + Compiler, Tailwind v4, Motion
 **Suggested phase:** Assistant MVP-1 / Phase C
@@ -901,8 +1000,8 @@ annotations to the MCP package before Phase 1 adapter work begins.
 
 ---
 
-*Last updated: 2026-05-19 (audit war room)*
-*Next item ID: BACKLOG-053*
+*Last updated: 2026-10-13 (company-system foundation)*
+*Next item ID: BACKLOG-077*
 *Phase 4 items (029-033) all resolved.*
 *Phase 5 Track A resolved: BACKLOG-007, 038, 039, 040, 045, 046.*
 *Phase 5 Track B resolved: BACKLOG-013, 014, 022, 023, 024, 036, 049.*

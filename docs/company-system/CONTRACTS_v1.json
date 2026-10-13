@@ -1,0 +1,1553 @@
+{
+  "schema_version": "nexus.company.v1",
+  "freeze_date": "2026-10-13",
+  "pydantic_version": "2.13.4",
+  "scope": "Wire shapes; semantic rules also require acceptance tests",
+  "contracts": {
+    "CompanyMandate": {
+      "additionalProperties": false,
+      "description": "Owner-authored company direction; decoding is not proof of authority.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "owner_id": {
+          "format": "uuid",
+          "title": "Owner Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "purpose": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "goals": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Goals",
+          "type": "array"
+        },
+        "oversight": {
+          "default": "supervised",
+          "enum": [
+            "supervised",
+            "delegated",
+            "board"
+          ],
+          "title": "Oversight",
+          "type": "string"
+        },
+        "daily_cap_usd": {
+          "anyOf": [
+            {
+              "maximum": 5.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "default": "5.00",
+          "title": "Daily Cap Usd"
+        },
+        "work_cap_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "default": "1.00",
+          "title": "Work Cap Usd"
+        },
+        "self_improvement_enabled": {
+          "const": false,
+          "default": false,
+          "title": "Self Improvement Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "company_id",
+        "owner_id",
+        "version",
+        "purpose"
+      ],
+      "title": "CompanyMandate",
+      "type": "object"
+    },
+    "DepartmentCharter": {
+      "additionalProperties": false,
+      "description": "Versioned responsibilities and explicit tool eligibility for one role.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "department_id": {
+          "format": "uuid",
+          "title": "Department Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "responsibilities": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Responsibilities",
+          "type": "array"
+        },
+        "allowed_tools": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Allowed Tools",
+          "type": "array"
+        },
+        "resource_scopes": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Resource Scopes",
+          "type": "array"
+        },
+        "deliverables": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Deliverables",
+          "type": "array"
+        },
+        "verifier_id": {
+          "format": "uuid",
+          "title": "Verifier Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "company_id",
+        "department_id",
+        "name",
+        "version",
+        "responsibilities",
+        "deliverables",
+        "verifier_id"
+      ],
+      "title": "DepartmentCharter",
+      "type": "object"
+    },
+    "WorkItem": {
+      "additionalProperties": false,
+      "description": "One logical work identity, retained across retries and execution segments.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "trace_id": {
+          "format": "uuid",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "goal_id": {
+          "format": "uuid",
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "department": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Department",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "acceptance": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Acceptance",
+          "type": "array"
+        },
+        "depends_on": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "budget_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "default": "1.00",
+          "title": "Budget Usd"
+        }
+      },
+      "required": [
+        "company_id",
+        "task_id",
+        "trace_id",
+        "goal_id",
+        "department",
+        "title",
+        "acceptance"
+      ],
+      "title": "WorkItem",
+      "type": "object"
+    },
+    "WorkPlan": {
+      "$defs": {
+        "WorkItem": {
+          "additionalProperties": false,
+          "description": "One logical work identity, retained across retries and execution segments.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "task_id": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            },
+            "trace_id": {
+              "format": "uuid",
+              "title": "Trace Id",
+              "type": "string"
+            },
+            "goal_id": {
+              "format": "uuid",
+              "title": "Goal Id",
+              "type": "string"
+            },
+            "department": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Department",
+              "type": "string"
+            },
+            "title": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Title",
+              "type": "string"
+            },
+            "acceptance": {
+              "items": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "title": "Acceptance",
+              "type": "array"
+            },
+            "depends_on": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Depends On",
+              "type": "array"
+            },
+            "budget_usd": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+                  "type": "string"
+                }
+              ],
+              "default": "1.00",
+              "title": "Budget Usd"
+            }
+          },
+          "required": [
+            "company_id",
+            "task_id",
+            "trace_id",
+            "goal_id",
+            "department",
+            "title",
+            "acceptance"
+          ],
+          "title": "WorkItem",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A non-empty company/goal-bound DAG frozen at one plan revision.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "plan_id": {
+          "format": "uuid",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "goal_id": {
+          "format": "uuid",
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/WorkItem"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "company_id",
+        "plan_id",
+        "goal_id",
+        "revision",
+        "items"
+      ],
+      "title": "WorkPlan",
+      "type": "object"
+    },
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "description": "Addressable immutable content; actual access remains a runtime check.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "artifact_id": {
+          "format": "uuid",
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Reference",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "revision": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        },
+        "allowed_principals": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Allowed Principals",
+          "type": "array"
+        }
+      },
+      "required": [
+        "company_id",
+        "artifact_id",
+        "reference",
+        "sha256",
+        "revision"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Evidence": {
+      "$defs": {
+        "ArtifactRef": {
+          "additionalProperties": false,
+          "description": "Addressable immutable content; actual access remains a runtime check.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "artifact_id": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            },
+            "reference": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Reference",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            },
+            "revision": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Revision",
+              "type": "string"
+            },
+            "allowed_principals": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Allowed Principals",
+              "type": "array"
+            }
+          },
+          "required": [
+            "company_id",
+            "artifact_id",
+            "reference",
+            "sha256",
+            "revision"
+          ],
+          "title": "ArtifactRef",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A sourced observation with distinct source-event and ingestion times.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "format": "uuid",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "event_at": {
+          "format": "date-time",
+          "title": "Event At",
+          "type": "string"
+        },
+        "ingested_at": {
+          "format": "date-time",
+          "title": "Ingested At",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "company_id",
+        "evidence_id",
+        "source",
+        "event_at",
+        "ingested_at",
+        "summary"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Claim": {
+      "additionalProperties": false,
+      "description": "Typed claim; a hypothesis or plan is never a verified outcome.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "claim_id": {
+          "format": "uuid",
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "observation",
+            "decision",
+            "hypothesis",
+            "plan",
+            "commitment",
+            "verified_outcome"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "allowed_principals": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Allowed Principals",
+          "type": "array"
+        },
+        "verification_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verification Id"
+        },
+        "supersedes": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Supersedes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "company_id",
+        "claim_id",
+        "kind",
+        "text"
+      ],
+      "title": "Claim",
+      "type": "object"
+    },
+    "ContextBundle": {
+      "$defs": {
+        "ArtifactRef": {
+          "additionalProperties": false,
+          "description": "Addressable immutable content; actual access remains a runtime check.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "artifact_id": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            },
+            "reference": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Reference",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            },
+            "revision": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Revision",
+              "type": "string"
+            },
+            "allowed_principals": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Allowed Principals",
+              "type": "array"
+            }
+          },
+          "required": [
+            "company_id",
+            "artifact_id",
+            "reference",
+            "sha256",
+            "revision"
+          ],
+          "title": "ArtifactRef",
+          "type": "object"
+        },
+        "Claim": {
+          "additionalProperties": false,
+          "description": "Typed claim; a hypothesis or plan is never a verified outcome.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "claim_id": {
+              "format": "uuid",
+              "title": "Claim Id",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "observation",
+                "decision",
+                "hypothesis",
+                "plan",
+                "commitment",
+                "verified_outcome"
+              ],
+              "title": "Kind",
+              "type": "string"
+            },
+            "text": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Text",
+              "type": "string"
+            },
+            "evidence_ids": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Evidence Ids",
+              "type": "array"
+            },
+            "allowed_principals": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Allowed Principals",
+              "type": "array"
+            },
+            "verification_id": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Verification Id"
+            },
+            "supersedes": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Supersedes",
+              "type": "array"
+            }
+          },
+          "required": [
+            "company_id",
+            "claim_id",
+            "kind",
+            "text"
+          ],
+          "title": "Claim",
+          "type": "object"
+        },
+        "Evidence": {
+          "additionalProperties": false,
+          "description": "A sourced observation with distinct source-event and ingestion times.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "evidence_id": {
+              "format": "uuid",
+              "title": "Evidence Id",
+              "type": "string"
+            },
+            "source": {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            "event_at": {
+              "format": "date-time",
+              "title": "Event At",
+              "type": "string"
+            },
+            "ingested_at": {
+              "format": "date-time",
+              "title": "Ingested At",
+              "type": "string"
+            },
+            "summary": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Summary",
+              "type": "string"
+            }
+          },
+          "required": [
+            "company_id",
+            "evidence_id",
+            "source",
+            "event_at",
+            "ingested_at",
+            "summary"
+          ],
+          "title": "Evidence",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "One context manifest shared by all roles, with bounded artifact references.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "trace_id": {
+          "format": "uuid",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "principal_id": {
+          "format": "uuid",
+          "title": "Principal Id",
+          "type": "string"
+        },
+        "mandate_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Mandate Version",
+          "type": "string"
+        },
+        "policy_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "budget_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Budget Version",
+          "type": "string"
+        },
+        "acceptance": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Acceptance",
+          "type": "array"
+        },
+        "claims": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Claim"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "attachments": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "workspace_files": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Workspace Files",
+          "type": "array"
+        },
+        "omitted_references": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Omitted References",
+          "type": "array"
+        },
+        "token_limit": {
+          "exclusiveMinimum": 0,
+          "title": "Token Limit",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "company_id",
+        "task_id",
+        "trace_id",
+        "principal_id",
+        "mandate_version",
+        "policy_version",
+        "budget_version",
+        "acceptance",
+        "token_limit"
+      ],
+      "title": "ContextBundle",
+      "type": "object"
+    },
+    "ActionProposal": {
+      "$defs": {
+        "JsonValue": {},
+        "ResourceRevision": {
+          "additionalProperties": false,
+          "description": "An opaque resource identity and its expected revision.",
+          "properties": {
+            "resource": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Resource",
+              "type": "string"
+            },
+            "revision": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Revision",
+              "type": "string"
+            }
+          },
+          "required": [
+            "resource",
+            "revision"
+          ],
+          "title": "ResourceRevision",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Exact actor, tool, resource, cost and preconditions requiring authorization.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "canonicalization": {
+          "const": "nexus-action-v1",
+          "default": "nexus-action-v1",
+          "title": "Canonicalization",
+          "type": "string"
+        },
+        "action_id": {
+          "format": "uuid",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "trace_id": {
+          "format": "uuid",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "actor_id": {
+          "format": "uuid",
+          "title": "Actor Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "tool": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Tool",
+          "type": "string"
+        },
+        "tool_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Tool Version",
+          "type": "string"
+        },
+        "resource": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Resource",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "preconditions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ResourceRevision"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "policy_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "price_version": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Price Version",
+          "type": "string"
+        },
+        "estimated_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "title": "Estimated Cost Usd"
+        }
+      },
+      "required": [
+        "company_id",
+        "action_id",
+        "task_id",
+        "trace_id",
+        "actor_id",
+        "revision",
+        "tool",
+        "tool_version",
+        "resource",
+        "parameters",
+        "policy_version",
+        "price_version",
+        "estimated_cost_usd"
+      ],
+      "title": "ActionProposal",
+      "type": "object"
+    },
+    "ApprovalDecision": {
+      "additionalProperties": false,
+      "description": "Owner decision for one exact proposal, with a finite aware-time validity window.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "decision_id": {
+          "format": "uuid",
+          "title": "Decision Id",
+          "type": "string"
+        },
+        "action_id": {
+          "format": "uuid",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Action Revision",
+          "type": "integer"
+        },
+        "action_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Action Hash",
+          "type": "string"
+        },
+        "approver_id": {
+          "format": "uuid",
+          "title": "Approver Id",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "issued_at": {
+          "format": "date-time",
+          "title": "Issued At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "company_id",
+        "decision_id",
+        "action_id",
+        "action_revision",
+        "action_hash",
+        "approver_id",
+        "decision",
+        "issued_at",
+        "expires_at"
+      ],
+      "title": "ApprovalDecision",
+      "type": "object"
+    },
+    "ActionReceipt": {
+      "$defs": {
+        "ArtifactRef": {
+          "additionalProperties": false,
+          "description": "Addressable immutable content; actual access remains a runtime check.",
+          "properties": {
+            "schema_version": {
+              "const": "nexus.company.v1",
+              "default": "nexus.company.v1",
+              "title": "Schema Version",
+              "type": "string"
+            },
+            "company_id": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            },
+            "artifact_id": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            },
+            "reference": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Reference",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            },
+            "revision": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Revision",
+              "type": "string"
+            },
+            "allowed_principals": {
+              "default": [],
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "title": "Allowed Principals",
+              "type": "array"
+            }
+          },
+          "required": [
+            "company_id",
+            "artifact_id",
+            "reference",
+            "sha256",
+            "revision"
+          ],
+          "title": "ArtifactRef",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Recorded effect status, distinct from business acceptance or email delivery.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "receipt_id": {
+          "format": "uuid",
+          "title": "Receipt Id",
+          "type": "string"
+        },
+        "action_id": {
+          "format": "uuid",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "trace_id": {
+          "format": "uuid",
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "proposal_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposal Hash",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "outcome_unknown"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "recorded_at": {
+          "format": "date-time",
+          "title": "Recorded At",
+          "type": "string"
+        },
+        "external_id": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "External Id"
+        },
+        "artifacts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "company_id",
+        "receipt_id",
+        "action_id",
+        "task_id",
+        "trace_id",
+        "proposal_hash",
+        "outcome",
+        "recorded_at"
+      ],
+      "title": "ActionReceipt",
+      "type": "object"
+    },
+    "VerificationResult": {
+      "additionalProperties": false,
+      "description": "Explicit acceptance verdict with criterion identities and source evidence.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "verification_id": {
+          "format": "uuid",
+          "title": "Verification Id",
+          "type": "string"
+        },
+        "action_id": {
+          "format": "uuid",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "verifier_id": {
+          "format": "uuid",
+          "title": "Verifier Id",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "pass",
+            "reject",
+            "inconclusive"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "criterion_ids": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Criterion Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "limitations": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "company_id",
+        "verification_id",
+        "action_id",
+        "verifier_id",
+        "verdict",
+        "criterion_ids"
+      ],
+      "title": "VerificationResult",
+      "type": "object"
+    },
+    "OperatingReport": {
+      "additionalProperties": false,
+      "description": "Typed output for management reporting; factual reconciliation is a later gate.",
+      "properties": {
+        "schema_version": {
+          "const": "nexus.company.v1",
+          "default": "nexus.company.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "company_id": {
+          "format": "uuid",
+          "title": "Company Id",
+          "type": "string"
+        },
+        "report_id": {
+          "format": "uuid",
+          "title": "Report Id",
+          "type": "string"
+        },
+        "period_start": {
+          "format": "date-time",
+          "title": "Period Start",
+          "type": "string"
+        },
+        "period_end": {
+          "format": "date-time",
+          "title": "Period End",
+          "type": "string"
+        },
+        "receipt_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Receipt Ids",
+          "type": "array"
+        },
+        "verified_work_ids": {
+          "default": [],
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Verified Work Ids",
+          "type": "array"
+        },
+        "blockers": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "owner_decisions": {
+          "default": [],
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Owner Decisions",
+          "type": "array"
+        },
+        "spent_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "title": "Spent Usd"
+        },
+        "held_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,19}0*$)\\d{0,12}\\.\\d{0,6}0*$)",
+              "type": "string"
+            }
+          ],
+          "title": "Held Usd"
+        }
+      },
+      "required": [
+        "company_id",
+        "report_id",
+        "period_start",
+        "period_end",
+        "spent_usd",
+        "held_usd"
+      ],
+      "title": "OperatingReport",
+      "type": "object"
+    }
+  }
+}

@@ -1,6 +1,8 @@
 # NEXUS — Agentic AI Company as a Service
 ## CLAUDE.md — Master Project Document
 
+> **Company-system target (2026-10-05):** Read [SDD v0.2](docs/sdd/NEXUS_SDD_v0.2.md), [implementation gates](docs/company-system/IMPLEMENTATION_PLAN.md), and proposed ADR-094–099 in [DECISIONS.md](docs/DECISIONS.md) before company-system work. They capture the owner's internal-company direction, native Pi builder, multiple providers, US$5/day cap and deferred self-improvement. This file otherwise describes legacy behavior and policies. New target authority and transport changes activate only through their tracked implementation/cutover gates; a plan is not execution proof or permission to deploy.
+
 > **This file is the single source of truth for this project.**
 > Every developer, every AI agent, and every automated tool that touches this codebase
 > must read and follow everything in this document before writing a single line of code.

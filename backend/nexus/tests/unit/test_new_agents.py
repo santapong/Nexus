@@ -201,7 +201,7 @@ async def test_qa_rejects_bad_output(mock_usage: AsyncMock, mock_publish: AsyncM
 @patch("nexus.agents.qa.publish", new_callable=AsyncMock)
 @patch("nexus.agents.qa.record_usage", new_callable=AsyncMock)
 async def test_qa_handles_non_json_response(mock_usage: AsyncMock, mock_publish: AsyncMock) -> None:
-    """QA should default to approved when LLM returns non-JSON output."""
+    """QA preserves an invalid review as inconclusive without approving it."""
     agent = QAAgent(
         role=AgentRole.QA,
         agent_id="qa-1",
@@ -217,4 +217,5 @@ async def test_qa_handles_non_json_response(mock_usage: AsyncMock, mock_publish:
     response = await agent.handle_task(command, session)
 
     assert response.output is not None
-    assert response.output["approved"] is True
+    assert response.output["approved"] is False
+    assert response.status == "failed"
