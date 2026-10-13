@@ -432,20 +432,51 @@ class PersistentCompanyDirectory:
             task_id=registration.task_id,
             trace_id=registration.trace_id,
         ) as session:
-            control, company = await self._owner(session, scope)
-            if (
-                control.paused
-                or company is None
-                or company.workspace_id != registration.workspace_id
-            ):
-                raise DirectoryDeniedError(
-                    "company intake is paused or workspace binding disagrees"
-                )
-            existing = await _work(session, scope.company_id, registration.task_id)
-            if existing is not None:
-                await self._require_same_registration(session, registration, existing)
-                return await _allocation(session, existing)
-            return await _register_new(session, registration, scope, control)
+            return await self._register_work_locked(session, registration, scope)
+
+    async def register_work_in_transaction(
+        self,
+        session: AsyncSession,
+        registration: WorkRegistration,
+        scope: CompanyControlScope,
+        identity: VerifiedIdentity,
+    ) -> WorkAllocation:
+        """Register in the caller's scoped transaction; never commit a partial plan.
+
+        The management service supplies the actual verified identity and locks
+        CompanyControl first. Reacquiring that same row here also preserves the
+        existing standalone owner's current directory checks.
+        """
+        identity = VerifiedIdentity.model_validate(identity.model_dump())
+        if not session.in_transaction() or (identity.principal_id, identity.workspace_id) != (
+            scope.principal_id,
+            registration.workspace_id,
+        ):
+            raise DirectoryDeniedError("registration transaction or signed identity is invalid")
+        return await self._register_work_locked(session, registration, scope)
+
+    async def _register_work_locked(
+        self,
+        session: AsyncSession,
+        registration: WorkRegistration,
+        scope: CompanyControlScope,
+    ) -> WorkAllocation:
+        """Shared current-owner mutation; standalone trusted scope creates no signed identity."""
+        registration = WorkRegistration.model_validate(registration.model_dump())
+        if (
+            not session.in_transaction()
+            or registration.company_id != scope.company_id
+            or registration.task_id == scope.operation_id
+        ):
+            raise DirectoryDeniedError("registration transaction or audit scope is invalid")
+        control, company = await self._owner(session, scope)
+        if control.paused or company is None or company.workspace_id != registration.workspace_id:
+            raise DirectoryDeniedError("company intake is paused or workspace binding disagrees")
+        existing = await _work(session, scope.company_id, registration.task_id)
+        if existing is not None:
+            await self._require_same_registration(session, registration, existing)
+            return await _allocation(session, existing)
+        return await _register_new(session, registration, scope, control)
 
     async def _require_same_registration(
         self, session: AsyncSession, request: WorkRegistration, existing: RegisteredWork

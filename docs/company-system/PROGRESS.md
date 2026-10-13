@@ -117,3 +117,11 @@ critical: M2 acceptance remains open. Preserve its first matrix and improve
 generic production/capture handling without relaxing source/golden criteria.
 M3 planning can proceed independently; management activation still depends on
 the accepted M2 gate. No full release or live-model quality is claimed.
+
+### M3 local preparation — 2026-10-14
+
+[Management implementation plan](MANAGEMENT_IMPLEMENTATION_PLAN.md) selects
+atomic bounded DAG registration, explicit independent acceptance, deterministic
+eligibility and truthful reporting/views. Separate DTO/metadata preparation and
+the same-session registration bridge are in progress. This does not enable
+management or close M3; M2's original answer gate still fails17/30,14/16critical.

@@ -40,6 +40,27 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Prepare atomic management registration and bounded plan interfaces
+
+### Added
+- Selected M3 implementation plan: full approval manifest, permanent per-goal procedure root, independent acceptance/invalidation, verification triggers and deterministic eligibility/reporting.
+- Same-session directory registration boundary for the future atomic plan transaction; it requires the supplied verified owner and retains current directory/parent checks.
+- Actual all-or-nothing USD/runtime quota and exact replay tests; a failing second child leaves no partial registrations or delegated allowance.
+
+### Changed
+- Existing standalone directory registration shares the current-owner mutation helper without synthesizing a signed identity; its public behavior is preserved.
+- Directory CI matrix includes atomic registration scenarios.
+
+### Validation and limits
+- Three new scenarios plus11 existing real restricted-PG directory cases pass14/8.54s; strict types2files and Ruff pass.
+- M3 DTO/metadata preparation remains in progress, normal009 uninstalled, no scheduler/completed work or M3 acceptance claimed. M2 first answer gate remains17/30,14/16critical; improvements are separate.
+
+**Authored by:** Codex, supervised multi-agent implementation
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local preparation
+
+---
+
 ## [2026-10-14] — Add permission-bound persistent Company Brain components
 
 ### Added

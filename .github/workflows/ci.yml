@@ -71,7 +71,7 @@ jobs:
             tests: test_company_journal.py
           - suite: directory
             database: nexus_company_test_directory
-            tests: test_company_directory.py
+            tests: test_company_directory.py test_company_atomic_registration.py
           - suite: registered-authority
             database: nexus_company_test_governance
             tests: test_company_registered_authorization.py
