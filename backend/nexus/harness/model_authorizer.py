@@ -25,6 +25,7 @@ from nexus.core.llm.company_registry import DataClassification, ModelRegistry
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.effect_support import effect_row
 from nexus.execution.intent_checks import BeforeIntentCheck, CompositeBeforeIntentCheck
+from nexus.execution.management_services import ManagementExecutionServices
 from nexus.execution.runtime_contracts import EffectRecord, ExecutionLease
 from nexus.execution.runtime_support import (
     db_now,
@@ -71,6 +72,7 @@ class PersistentModelCallAuthorizer:
         allowed_classification: DataClassification,
         evidence_store: ModelEvidenceStore,
         additional_before_intent: BeforeIntentCheck | None = None,
+        management: ManagementExecutionServices | None = None,
     ) -> None:
         self._lease = ExecutionLease.model_validate_json(lease.model_dump_json())
         self._identity = VerifiedIdentity.model_validate(identity.model_dump())
@@ -79,7 +81,10 @@ class PersistentModelCallAuthorizer:
             lease.workspace_id,
         ):
             raise ValueError("Model calls require the registered actor's execute lease")
-        self._factory, self._effects = factory, EffectStore(factory)
+        self._factory = factory
+        self._effects = (
+            management.effect_store(factory) if management is not None else EffectStore(factory)
+        )
         self._registry = ModelRegistry.model_validate_json(registry.model_dump_json())
         self._resources = tuple(
             ResourceRevision.model_validate(row.model_dump()) for row in resources

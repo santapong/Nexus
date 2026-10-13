@@ -60,6 +60,7 @@ class ModelIntentCheck:
         self.billing_at: datetime | None = None
         self.hold: CostHold | None = None
         self.owner_id: UUID | None = None
+        self._prepared_policy: ModelPolicy | None = None
 
     async def validate(
         self,
@@ -81,7 +82,8 @@ class ModelIntentCheck:
         )
         if model is None:
             raise ValueError("Model is absent from the trusted catalog")
-        plan = route_models(self.registry, self._policy(control, work, model, hold), now=now)
+        policy = self._policy(control, work, model, hold)
+        plan = route_models(self.registry, policy, now=now)
         if (
             plan.primary.model.registry_id != self.call.registry_id
             or plan.primary.quote != self.quote
@@ -96,6 +98,21 @@ class ModelIntentCheck:
             hold,
         )
         self.owner_id = control.owner_id
+        self._prepared_policy = policy
+
+    def validate_time(self, now: datetime) -> None:
+        """Recheck exact price/health/evaluation window at the final intent clock.
+
+        The prepared policy describes the one unconsumed call under the company
+        mutex; our transactional quota mutation must not look like a second call.
+        This performs no input estimation, DB query or provider request.
+        """
+        if self._prepared_policy is None or self.model is None or self.estimate is None:
+            raise ValueError("Model temporal qualification has not been prepared")
+        current = route_models(self.registry, self._prepared_policy, now=now)
+        if current.primary.model != self.model or current.primary.quote != self.quote:
+            raise ValueError("Prepared model or quote changed before final intent")
+        self.billing_at = now
 
     def _require_binding(
         self,

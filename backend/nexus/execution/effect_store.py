@@ -10,15 +10,21 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.company.access import VerifiedIdentity
-from nexus.company.contracts.actions import ResourceRevision
+from nexus.company.brain.artifact_store import BoundedArtifactReader
+from nexus.company.contracts.actions import ActionProposal, ResourceRevision
 from nexus.company.contracts.results import ActionReceipt, VerificationResult
+from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.execution.effect_support import (
     effect_record,
     effect_row,
     require_effect_authority,
     require_receipt_binding,
 )
-from nexus.execution.intent_checks import BeforeIntentCheck
+from nexus.execution.intent_checks import BeforeIntentCheck, FinalIntentTimeCheck
+from nexus.execution.management_checks import (
+    ManagementArtifactFreshness,
+    require_management_execution,
+)
 from nexus.execution.runtime_contracts import (
     AttemptKind,
     EffectRecord,
@@ -43,8 +49,18 @@ from nexus.harness.journal_reservations import hold_to_effect_day
 class EffectStore:
     """No HTTP/provider execution, no receiver fencing and no exactly-once effect promise."""
 
-    def __init__(self, factory: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(
+        self,
+        factory: async_sessionmaker[AsyncSession],
+        *,
+        management_catalog: PlanAdmissionCatalog | None = None,
+        management_artifacts: BoundedArtifactReader | None = None,
+        management_freshness: ManagementArtifactFreshness | None = None,
+    ) -> None:
         self._factory = factory
+        self._management_catalog = management_catalog
+        self._management_artifacts = management_artifacts
+        self._management_freshness = management_freshness
 
     # Keep this >50-line transaction boundary together: current authority, held
     # cost, lifetime attempt and committed intent must share the company lock.
@@ -97,6 +113,17 @@ class EffectStore:
                 )
             # The company lock serializes writes, but wall-clock authority/lease
             # expiry can cross a bounded estimator or provenance check.
+            await require_management_execution(
+                session,
+                control,
+                work,
+                identity,
+                self._management_catalog,
+                self._management_artifacts,
+                self._management_freshness,
+                ActionProposal.model_validate_json(action.proposal_json),
+                kind,
+            )
             now = await db_now(session)
             require_lease(work, lease, now, execute=True)
             action = await require_effect_authority(
@@ -123,6 +150,10 @@ class EffectStore:
             )
             session.add(row)
             await session.flush()
+            if isinstance(before_intent, FinalIntentTimeCheck):
+                final = await db_now(session)
+                require_lease(work, lease, final, execute=True)
+                before_intent.validate_time(final)
             return EffectStart(record=effect_record(row), permit_external_call=True)
 
     async def get(

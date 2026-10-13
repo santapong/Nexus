@@ -75,6 +75,8 @@ class OperatingReportReader(Protocol):
         scope: BrainReadScope,
         identity: VerifiedIdentity,
         declared: StructuredInternalReport,
+        *,
+        output: ArtifactRevisionRef,
     ) -> OperatingProjection | None: ...
 
 
@@ -192,7 +194,9 @@ class PersistentReportInputLoader:
         require_acceptance(
             binding == target.author and row.registration_hash == target.work_snapshot_sha256
         )
-        operating = await self.reports.current_projection(session, control, scope, identity, report)
+        operating = await self.reports.current_projection(
+            session, control, scope, identity, report, output=output
+        )
         snapshot = (
             ReportCheckSnapshot(
                 company_id=scope.company_id,

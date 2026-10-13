@@ -119,13 +119,13 @@ jobs:
             tests: test_company_model_client.py test_company_model_client_cleanup.py test_company_model_client_interrupt.py
           - suite: brain-access-and-schema-guards
             database: nexus_company_test_brain_access
-            tests: test_company_brain_access.py test_company_brain_guards.py
+            tests: test_company_brain_access.py test_company_brain_guards.py test_company_management_transactions.py
           - suite: brain-ingestion
             database: nexus_company_test_brain_ingest
             tests: test_company_brain_ingestion.py test_company_brain_events.py test_company_brain_derivations.py test_company_brain_parse_history.py
           - suite: brain-retrieval-context
             database: nexus_company_test_brain_retrieval
-            tests: test_company_brain_retrieval.py
+            tests: test_company_brain_retrieval.py test_company_brain_artifact_revalidation.py
           - suite: brain-api
             database: nexus_company_test_brain_api
             tests: test_company_brain_api.py test_company_brain_api_graph.py test_company_brain_fixture_seed.py test_company_brain_case_observer.py
@@ -138,6 +138,24 @@ jobs:
           - suite: brain-claim-ontology-publication
             database: nexus_company_test_brain_publication
             tests: test_company_brain_claim_publication.py test_company_brain_claim_links.py test_company_brain_ontology_publication.py test_company_brain_publication_access.py test_company_brain_publication_races.py test_company_brain_candidate_verification.py
+          - suite: management-schema-guards
+            database: nexus_company_test_management_guards
+            tests: test_company_management_guards.py
+          - suite: management-owner-controls-goals
+            database: nexus_company_test_management_controls
+            tests: test_company_management_controls.py test_company_management_goals.py test_company_management_goal_expiry.py
+          - suite: management-plan-registration
+            database: nexus_company_test_management_plans
+            tests: test_company_management_plans.py
+          - suite: management-independent-acceptance
+            database: nexus_company_test_management_acceptance
+            tests: test_company_management_acceptance.py test_company_management_acceptance_denials.py test_company_management_acceptance_expiry.py test_company_management_acceptance_lifecycle.py test_company_management_acceptance_final_grants.py test_company_management_acceptance_replay_expiry.py
+          - suite: management-model-gateway
+            database: nexus_company_test_management_model
+            tests: test_company_managed_model.py test_company_managed_model_price_expiry.py
+          - suite: management-owner-api
+            database: nexus_company_test_management_api
+            tests: test_company_management_api.py
     services:
       postgres:
         image: postgres:16-alpine

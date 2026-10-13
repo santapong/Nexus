@@ -74,6 +74,74 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-060 — Model price expired after preparation and before final intent
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed and independently rechecked
+**Found by:** independent current-price expiry during managed effect preparation
+**Affected files:** `execution/intent_checks.py`, `execution/effect_store.py`, `harness/model_intent.py`, retained managed price test
+
+### What happened
+An immutable declared price was valid at the initial native model gate. Awaited
+management checks crossed its deadline; the final generic authority check did not
+recheck model price/health/evaluation windows, and the offline mock wire issued.
+The original probe retains an actual wire timestamp after the declared expiry.
+
+### Root cause
+Model quotation and temporal qualification used the initial database clock; the
+later effect clock covered only generic versions/lease/action authority.
+
+### Fix applied
+The model gate retains its exact pre-consumption policy. A pure final-clock hook
+rechecks exact model qualification and quote after intent flush, along with the
+execute lease. Composite hooks forward that check without repeating estimation,
+database reads or provider calls. Expiry rolls back intent/counter writes and
+keeps the existing held cost.
+
+### Prevention
+Original unchanged independent price probe1PG6.83s passes with no wire; normal
+three gateway modes independently pass3PG11.71s. Retained combined4PG11.95s
+asserts zero intent/attempt/new billing on expired price. Original gateway45unit/PG33.22s passes on the frozen source snapshot after this
+fix; no live call is claimed.
+
+---
+
+## ERROR-059 — Acceptance omitted input grant expiry at the final write boundary
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed and independently rechecked
+**Found by:** root independent restricted-PG commit probe
+**Affected files:** `management/acceptance_store.py`, retained acceptance final-grant test
+
+### What happened
+A legitimate verifier grant on the report's supporting source remained valid
+during input preparation and final revalidation. It expired during an awaited
+outbox write; independent acceptance still committed. The original isolated
+probe failed with DID NOT RAISE.
+
+### Root cause
+Final timed permission checks covered the protected result artifact's contributors
+but omitted the complete contributor snapshots of each actual input artifact.
+The company mutex prevents concurrent changes and does not stop time-only expiry.
+
+### Fix applied
+The final check covers the protected result and every prepared input artifact's
+complete contributors, alongside registered freshness and the actual execute
+lease. A denial rolls back acceptance, proof and outbox writes without changing
+already-issued M1 receipts, counters or billing.
+
+### Prevention
+The unchanged original separate-database probe now passes1PG8.83s. Retained probe
+and complete publisher integrity/native matrix28pass96.41s; scoped strict6/lint
+pass. Exact replay also refreshes clock/lease/all prepared timed grants after awaited
+lookup before returning the retained record. Original replay probe1PG14.57s
+passes, preserving the immutable original record; retained replay/final-grant/
+publication7PG47.29s. Preserve original C freeze as historical before root deltas.
+
+---
+
 ## ERROR-058 — Goal publication reused permissions after final awaited proof
 
 **Date:** 2026-10-14
@@ -1893,7 +1961,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-059*
+*Next error ID: ERROR-061*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

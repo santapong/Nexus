@@ -40,6 +40,30 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Integrate approved-plan model calls and close final input permission expiry
+
+### Added
+- Trusted process-local management catalog/artifact/freshness composition for native execution and effect stores, explicitly injected into the existing per-request model gateway.
+- Actual public owner-approved plan plus SDK MockTransport test: one configured request records known cost; missing services or revoked mandate emits no wire call and consumes no attempt.
+- Protected report reader ABI carries the exact output artifact reference for controlled verifier sharing.
+- Optional current signed-owner management API publishes mandate/charter/goal, proposes/approves/revokes exact plans; literal revision/quota/money intent survives HTTP decoding. No scheduler/provider starts from mounting.
+
+### Fixed
+- Final acceptance/replay checks include all input contributor grant expiries after awaited writes/lookups (ERROR-059), preserving rollback and issued M1 history.
+- Final model intent refreshes exact price/health/evaluation/quote at current DB clock without repeating estimation or I/O (ERROR-060).
+
+### Validation and limits
+- Frozen core40source strict/lint/format and whole1015unit13.62s pass with19existingwarnings. Actual ownerAPI/auth41checks9.59s (3PG/38unit) and original modelgate45unit/PG33.22s after temporalfix pass. Snapshot excludes active scheduler/report/cancellation/view packages.
+- Managed gateway3PG9.59s, existing gateway45unit/PG38.90s; publisher root closure28unit/PG96.41s; original independent final-grant expiry1PG8.83s; strict6/lint pass.
+- M3-B plan/shared guards frozen41PG101.80s and13unmanaged11.88s. C author freeze27tests/18PG is historical before root permission/replay corrections; retained replay/publication7PG47.29s and price/gateway4PG11.95s pass. Independent scoped review approves corrected offline C/mock gateway, with unchanged price1PG6.83s and normal3PG11.71s.
+- Historical synthetic worker remains pinned. Native report store/procedure, scheduler execution, cancellation/commitment controls and dashboard views remain in progress. Full M3/release and provider activation are unclaimed.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local integration
+
+---
+
 ## [2026-10-14] — Record the reviewed management controls and protected report loader checkpoint
 
 ### Added

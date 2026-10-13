@@ -163,3 +163,49 @@ publisher workers continue their boundary tests. M3–M6/release goal stays acti
 The selected closed checkpoint146unit1.59s, strict50source files and Ruff54files
 passes together. This excludes actively written plan/publisher/scheduler services
 and shared runtime delta; a whole evolving-tree gate is still pending.
+
+### Managed gateway and final acceptance permission — 2026-10-14
+
+Root trusted management service composition now reaches the existing exact
+model-request gate. Actual public owner/goal/approved-plan/M1 action/lease plus
+SDK MockTransport3PG9.59s proves one configured wire request and actual known
+billing; missing services/revoked mandate produce zero requests/attempts.
+Original gateway45unit/PG38.90s remains green. This is offline SDK conformance,
+not live-provider or report-worker qualification.
+
+Root independently reproduced final input source grant expiry during acceptance
+outbox write (ERROR-059); unchanged probe closes1PG8.83s. The protected result
+and all input contributor expiries are now checked at final timed boundaries.
+Retained probe plus full C matrix28unit/PG96.41s, strict6/lint pass. C's original
+freeze27/18PG is retained as historical before this delta. B's frozen41PG101.80s
+and13unmanaged11.88s are scoped approval/guard evidence. Combined review remains
+in progress; native reports/scheduler/cancellation/commitment/UI and full M3
+procedure are incomplete. Protected report ABI now passes exact outputRef to the
+mandatory native reader so verifier sharing cannot rely on a declared reportId.
+
+### Frozen management core integration — 2026-10-14
+
+Frozen treee2fbebd62c3542fea59f94662e9ac7da1b41262f at the isolated task snapshot
+contains the prior718fe91 plus40 explicit B/C/Root gateway/API files. Whole unit
+1015pass13.62s with19 existing warnings, strict40/Ruff40/format40 pass. Original
+model gateway45unit/PG33.22s passes after the final temporal hook; owner HTTP/API
+plus auth41checks9.59s (3actualPG +38unit) pass. Snapshot excludes actively written
+scheduler/report/cancellation/view packages, so this is a coherent core gate,
+not the whole evolving source tree or M3 exit.
+
+Independent review approves the corrected offline C/mock gateway after original
+price1PG6.83s, replaygrant1PG14.57s and inputcommitgrant1PG8.94s. Retained price+
+normalgateway4PG11.95s and replay/finalgrant/publication7PG47.29s pass. Root now
+has literal-number-safe current signed-owner optional mandate/charter/goal/plan
+publication and exact approval/revocation HTTP routes; they admit bounded work
+but start no execution, scheduler or provider. Default company intake remains
+disabled. Numeric revision/CAS tests and unknown baseline/date retention are real
+HTTP cases. Source40manifest and independent review2 retain exact scope/hashes.
+
+Scheduler D freeze separately19checks65.21s (5unit/14PG including realDBOS
+OSkill/restart), strict15/Ruff/format is ready for next boundary review. Its process
+proof is claim-only, not a report/effect/acceptance completion. Native report store
+is being built with explicit selected-work-lifetime ledger basis and current
+protected output/verifier sharing; owner day totals are a separate live ledger.
+Authoritative cancellation + commitments/owner read views are separate ongoing
+packages. Full native research/report workflow, UI, M4–M6 and release remain.

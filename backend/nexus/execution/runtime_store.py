@@ -10,7 +10,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.company.access import VerifiedIdentity
+from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.contracts.actions import ActionProposal
+from nexus.company.management.plan_support import PlanAdmissionCatalog
+from nexus.execution.management_checks import (
+    ManagementArtifactFreshness,
+    require_management_execution,
+)
 from nexus.execution.runtime_contracts import (
     AttemptKind,
     ExecutionDeniedError,
@@ -102,8 +108,18 @@ async def _waiting_authorized(session: AsyncSession, row: ExecutionWork) -> None
 class ExecutionStore:
     """Transactions own CompanyControl first; DBOS queue/workflow integration is external."""
 
-    def __init__(self, factory: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(
+        self,
+        factory: async_sessionmaker[AsyncSession],
+        *,
+        management_catalog: PlanAdmissionCatalog | None = None,
+        management_artifacts: BoundedArtifactReader | None = None,
+        management_freshness: ManagementArtifactFreshness | None = None,
+    ) -> None:
         self._factory = factory
+        self._management_catalog = management_catalog
+        self._management_artifacts = management_artifacts
+        self._management_freshness = management_freshness
 
     async def recover_dispatched(
         self,
@@ -177,9 +193,20 @@ class ExecutionStore:
             identity,
             allow_paused=reconcile_only,
             allow_inactive=reconcile_only,
-        ) as (session, _, _):
+        ) as (session, control, _):
             row = await execution_row(session, scope)
             now = await db_now(session)
+            if not reconcile_only:
+                await require_management_execution(
+                    session,
+                    control,
+                    row,
+                    identity,
+                    self._management_catalog,
+                    self._management_artifacts,
+                    self._management_freshness,
+                )
+                now = await db_now(session)
             if row.state == "blocked" and not reconcile_only:
                 raise ExecutionDeniedError(
                     "Blocked work requires a later explicit controlled resume"
