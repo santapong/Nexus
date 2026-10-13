@@ -12,6 +12,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 from nexus.company.brain.models import BrainBase
 from nexus.company.directory_models import DirectoryBase
+from nexus.company.management.models import ManagementBase
+from nexus.company.management.scheduling_models import SchedulingBase
 from nexus.execution.billing_models import BillingEvidenceBase
 from nexus.execution.dispatch_models import DispatchBase
 from nexus.execution.runtime_models import ExecutionBase
@@ -32,6 +34,8 @@ target_metadata = [
     DispatchBase.metadata,
     BillingEvidenceBase.metadata,
     BrainBase.metadata,
+    ManagementBase.metadata,
+    SchedulingBase.metadata,
 ]
 
 

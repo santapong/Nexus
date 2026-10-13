@@ -20,8 +20,8 @@ This is the root-selected local implementation plan, not executed management, an
   author acceptance to initiate the independent read/check procedure.
 - Independent acceptance and its invalidation history are separate from M1
   receipt/candidate/ExecutionState. No raw completed-state mutation is added.
-- Initial metadata consists of21 tables: the19 record groups below plus owner
-  administrative revision events and acceptance invalidation history. Metadata
+- Initial metadata consists of22 tables: the19 record groups below plus owner
+  administrative revision events, acceptance invalidation history and explicit owner control-change history. Metadata
   declarations do not count as normal migration installation or acceptance.
 - Root owns normal company009, forced RLS/immutable guards, atomic registration,
   current authority/effect integration and final acceptance. The contract worker
@@ -104,3 +104,70 @@ Owner review belongs at initial mandate/material scope or authority changes, con
 Planning estimate after M2 acceptance:12–18 focused engineering days, with A/B then C/D dependency overlap and E started on frozen query DTOs. A supervised offline report procedure is the first coherent slice; the actual duration depends on how much independent verifier/report infrastructure proves reusable. ARM64 builder, full StockFlow readiness, live provider/email and restore/private-access qualification are excluded from this estimate. This is a forecast, not elapsed execution evidence.
 
 Root should freeze: management approval/canonicalization ABI; exact measured-goal metrics; one parent procedure allowance and child allocation rules; same-session registration wrappers; trusted verifier interface/evidence and completion schema; verification initiation trigger distinct from accepted dependencies; event/cursor/enqueue composition; report scopes and commitment due-time policy. Root owns resulting migration/profile/API integration. No new code/schema/activation starts from this proposal alone.
+
+## Owner transaction preparation — verified2026-10-14
+
+The management owner transaction reuses the current signed/current-owner Brain
+company mutex primitive. Six actual restricted-PG cases pass4.18s: owner control
+does not grant source access, member/principal/workspace splices deny, cached
+identity cannot override current owner revocation, and paused admission denies
+while explicit owner maintenance remains available. This creates no work or
+allowance. The helper is separate from verifier/actor publication and runtime
+effect gates; management stores and normal009 are still being integrated.
+
+The registered pure internal-report checker separately passes55 focused cases
+and strict3-file types/lint. It binds actual M1 registration hash independently
+from full input-snapshot hash, exact source/time/ledger/status/criterion/output
+identities, and rejects or reports inconclusive for unsupported/tampered inputs.
+These pure declarations/results cannot confer acceptance or prove runtime input
+authentication. The real publisher must resolve and protect fresh actual inputs.
+
+## Persistent schema integration — verified2026-10-14
+
+Normal company009 adds22management tables to the43-table profile. StaticDDL
+contains54indexes (48new FK-coverage declarations),8deferred native FK clauses,
+forced companyUUID RLS and immutable historical guards. Current pointers preserve
+tenant/logical identity; plan roots/revisions cannot roll back. Fresh/repeat/
+all65metadata/downgrade proof passes1realPG1.82s;5raw restricted-SQL guard cases
+pass4.62s, including explicitly granted DELETE denied by the actual trigger.
+Metadata FK coverage/native constraints5focused checks pass0.47s. This is schema
+and boundary proof, not a completed management workflow.
+
+The public same-session artifact revalidation gate now compares exact current
+artifact metadata, raw UTF8 slice/hash, complete contributors/grants/heads/class
+and fresh signed scope. Source TTL/availability is checked with a fresh DB clock
+after preparation. Four new current/tamper/revoke/time-only TTL cases plus10
+existing retrieval cases pass14/30.05s; scoped strict5-file checks pass. It creates
+no effect/acceptance permit and performs no blob/network I/O under the lock.
+
+Owner controls/goals, exact atomic plan registration and independent acceptance
+stores are being tested in separate private databases. Their fields/fixtures
+cannot substitute for the eventual public goal-to-plan-to-verified-report flow.
+The root still owes effect/claim guards, actual input/evidence resolver, durable
+eligibility/enqueue, reports/UI and coherent M3 operational acceptance.
+
+## Owner control/goal store checkpoint — verified2026-10-14
+
+Frozen actual management owner stores pass20restrictedPG31.82s, strict7/lint/
+format and92.7%411statement coverage. Initial/active mandate publication updates
+actualcaps under the same owner mutex while preserving charges/counters/versions.
+Replacing a revoked mandate/charter/goal preserves inactivity; only explicit
+current-version reactivation restores it. Inactive mandate replacement cannot
+apply saved caps. Historical replay does not restore old heads/caps/dates.
+Protected baseline evidence is read outside the mutex and rechecked for current
+owner/resource/provenance inside; unknown values/time remain unknown.
+
+The source/test manifest is management-stores-freeze-v1.json in the dated
+evidence directory. Independent schema/control scope review is underway; this
+checkpoint does not include active plan/execution/acceptance/scheduler packages.
+
+## Final source permission correction — verified2026-10-14
+
+The original reviewer goal-publication expiry probe failed before correction and
+nowpasses1/4.48s. Complete contributor grants are reread with fresh DB clocks
+after awaited proof; exact snapshots and final expiry are checked before commit.
+Retained expiry plus20store regressions pass21/26.55s with rollback assertions.
+The original goal_store author hash is historical; Rootintegration receipts
+supersede only that source delta. Current-slice/reference artifact validation
+passes7realPG12.91s; the reference path checks full contributor closure without
+reading blob bytes under the company lock.

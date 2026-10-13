@@ -3137,12 +3137,43 @@ See M2_INTEGRATION_2026-10-14.md and ERROR-051–054 for executed scope and fixe
 
 ---
 
+## ADR-107 — Supervised management contracts, stable procedure allowance and independent acceptance
+
+**Date:** 2026-10-14
+**Status:** Accepted for local supervised implementation; execution packages still being qualified
+
+A goal has one non-executing procedure root. Approved plan revisions preserve
+that root's lifetime USD and per-kind quota partitions. Initial approval uses no
+revision attempt; later actual owner revisions consume bounded immutable
+administrative events. Proposed plans and Brain statements confer no execution
+or management authority. Charter/goals/mandate replacement preserves revoked
+heads until an explicit current-version owner operation.
+
+Verification is a separate approved child with actual receipt/protected evidence
+bindings and a trusted publisher. Pure checks, verifier candidates and successful
+effect receipts cannot satisfy independently accepted dependencies. Scope/source
+permission and registered freshness must still hold at actual intents and result
+publication. Native report loaders use actual signed readers and native ledgers;
+no synthesized owner identity or caller-supplied verdict is accepted.
+
+Normal company009 holds22 management tables; additive010 holds one immutable
+scheduler receipt. Existing opaque company/consumer/recipe cursors use separate
+Brain/control namespaces. Atomic dispatch identity is retained by M1; scheduler
+scan records confer no call permit. Bounded due scans cover changes without a
+sequenced outbox until their real emitters are integrated.
+
+M3-A owner/schema review and normal profile tests are scoped evidence. Plan,
+acceptance, event/dispatch, report/UI and the full offline workflow require their
+own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
+
+---
+
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-107 -->
+<!-- Next ID: ADR-108 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-107*
+*Next ADR ID: ADR-108*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*

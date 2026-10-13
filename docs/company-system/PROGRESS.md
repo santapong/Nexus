@@ -134,3 +134,32 @@ First17/30 remains unchanged and B06 remains a visible second-run failure.
 Native source/ACL/publication/context/SDK and nominated actual product-source
 evidence complete this offline milestone; live LLM quality/business completion
 and M3–M6/full release remain unproven. No execution activation accompanies it.
+
+### Current M3 preparation — 2026-10-14
+
+Owner transaction6realPG4.18s and independent pure report checker55unit0.88s
+pass, with scoped strict/lint checks. DTO/native22-table declarations and pure
+eligibility/report rules are being finalized. These remain uninstalled and
+unactivated; no trusted acceptance publisher/scheduler/management UI or complete
+internal operating workflow is claimed. Root next integrates normal009 with
+forcedRLS/immutable guards, actual fresh-profile proof and owner control stores.
+
+### Reviewed M3-A checkpoint and scheduler schema — 2026-10-14
+
+Independent review approves only owner controls/goals/schema after ERROR-058:
+original goal-grant expiry reproduction1pass4.48s; retained expiry plus20stores
+21pass26.55s. Complete current artifact slice/reference revalidation7PG12.91s.
+Normal company010 adds one immutable scheduler receipt, while namespaced existing
+cursors track Brain/control offsets;66-table fresh/repeat/metadata/downgrade
+1PG1.82s,23table forced policies/current/history guards7PG6.24s. Scheduler
+services and real dispatch/process recovery remain separate active work.
+
+Production report input loader binds complete protected UTF8/hash/citations and
+native author registration, with no owner impersonation or blob I/O under the
+mutex.22unit0.88s and strict3/lint pass; its mandatory actual operating report
+reader is pending. This does not claim a full production report flow. Plan and
+publisher workers continue their boundary tests. M3–M6/release goal stays active.
+
+The selected closed checkpoint146unit1.59s, strict50source files and Ruff54files
+passes together. This excludes actively written plan/publisher/scheduler services
+and shared runtime delta; a whole evolving-tree gate is still pending.

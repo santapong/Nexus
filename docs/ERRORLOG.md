@@ -74,6 +74,60 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-058 — Goal publication reused permissions after final awaited proof
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent M3-A restricted-PG final source-grant expiry probe
+**Affected files:** `management/goal_store.py`, retained goal expiry integration test
+
+### What happened
+A legitimate owner source grant expired after awaited final handle validation;
+the fresh clock checked source TTL only, so a known-baseline goal still committed.
+
+### Root cause
+Complete contributor grant snapshots were not reread at the final return/commit
+boundary. CompanyControl serializes writes but does not stop time-only expiry.
+
+### Fix applied
+Recheck every contributor at fresh database clocks, compare exact grant snapshots
+and deny final expiry before accepting source proof. All writes roll back.
+
+### Prevention
+Original independent probe passes1/4.48s after failure. Retained expiry plus20
+owner/goal regressions pass21/26.55s; no goal revision/head survives the denied
+publication. Scoped checks and evidence retain the original failure.
+
+---
+
+## ERROR-057 — Replacing revoked management documents implicitly reactivated them
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** current-owner store negative PostgreSQL probes
+**Affected files:** `management/control_store.py`, `management/goal_store.py`, controls/goals tests
+
+### What happened
+Publishing a new mandate, charter or goal version set its existing revoked head
+active again. Inactive mandate replacement could also apply new operating caps.
+
+### Root cause
+New publication and explicit current-head reactivation used the same state write.
+
+### Fix applied
+Preserve existing head activity on replacement. Inactive mandate publication
+leaves actual M1 caps untouched; explicit exact-current reactivation applies its
+saved caps in the audited owner transaction. Historical replay restores nothing.
+
+### Prevention
+Original2control and1goal failures are retained; the final20restricted-PG suite
+passes31.82s with92.7%411statement coverage, strict7/lint/format. Holds/spend/
+counters and policy/price versions stay intact; no live authority is activated.
+
+---
+
 ## ERROR-056 — Offline answer extraction overstated conditional and co-occurring dates
 
 **Date:** 2026-10-14
@@ -1839,7 +1893,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-057*
+*Next error ID: ERROR-059*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

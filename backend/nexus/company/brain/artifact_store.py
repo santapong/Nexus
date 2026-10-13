@@ -30,8 +30,10 @@ from nexus.company.brain.scope_support import (
     BrainConflictError,
     BrainDeniedError,
     brain_transaction,
+    revalidate_brain_scope,
 )
 from nexus.company.brain.sources import ArtifactRevisionRef, SourceHead, SourceRevisionRef, UTF8Span
+from nexus.harness.journal_models import CompanyControl
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,75 @@ class _Snapshot:
 class BoundedArtifactReader:
     def __init__(self, factory: async_sessionmaker[AsyncSession], blobs: BlobReader) -> None:
         self.factory, self.blobs = factory, blobs
+
+    async def revalidate_artifact(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        scope: BrainReadScope,
+        identity: VerifiedIdentity,
+        prepared: ArtifactSlice,
+        now: datetime,
+    ) -> None:
+        """Recheck a protected current slice under the caller's existing company mutex."""
+        prepared = ArtifactSlice.model_validate_json(prepared.model_dump_json())
+        if (
+            not session.in_transaction()
+            or control.company_id != scope.company_id
+            or prepared.company_id != scope.company_id
+            or prepared.source_state != "current"
+        ):
+            raise BrainDeniedError("Current artifact publication scope is unavailable")
+        await revalidate_brain_scope(session, control, scope, identity)
+        current = await self._snapshot(
+            session, scope, prepared.artifact.artifact_revision_id, await _clock(session), False
+        )
+        _require_exact_prepared(current, prepared)
+        checked_at = await _clock(session)
+        if any(
+            head.availability != "available"
+            or (head.fresh_until is not None and head.fresh_until <= checked_at)
+            for head in current.heads
+        ):
+            raise BrainConflictError("Artifact contributing source is unavailable or stale")
+        await require_resources(
+            session, scope, tuple(row.resource_id for row in current.grants), checked_at
+        )
+
+    async def revalidate_artifact_reference(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        scope: BrainReadScope,
+        identity: VerifiedIdentity,
+        reference: ArtifactRevisionRef,
+        now: datetime,
+    ) -> None:
+        """Validate an exact current native reference without reading a blob under the lock."""
+        reference = ArtifactRevisionRef.model_validate_json(reference.model_dump_json())
+        if not session.in_transaction() or control.company_id != scope.company_id:
+            raise BrainDeniedError("Current artifact reference requires its company transaction")
+        await revalidate_brain_scope(session, control, scope, identity)
+        current = await self._snapshot(
+            session, scope, reference.artifact_revision_id, await _clock(session), False
+        )
+        raw = current.raw_text.encode()
+        if (
+            current.artifact != reference
+            or len(raw) != reference.byte_length
+            or hashlib.sha256(raw).hexdigest() != reference.sha256
+        ):
+            raise BrainConflictError("Artifact reference/hash differs from its immutable bytes")
+        checked_at = await _clock(session)
+        if any(
+            head.availability != "available"
+            or (head.fresh_until is not None and head.fresh_until <= checked_at)
+            for head in current.heads
+        ):
+            raise BrainConflictError("Artifact contributing source is unavailable or stale")
+        await require_resources(
+            session, scope, tuple(row.resource_id for row in current.grants), checked_at
+        )
 
     # The 51-line two-phase gate keeps its final snapshot comparison adjacent to
     # the returned slice; protected byte validation is isolated outside the lock.
@@ -188,6 +259,25 @@ def _checked_slice(
         return end, raw[start_byte:end].decode("utf-8", errors="strict")
     except UnicodeDecodeError as exc:
         raise BrainDeniedError("Artifact byte boundary splits UTF8 content") from exc
+
+
+def _require_exact_prepared(snapshot: _Snapshot, prepared: ArtifactSlice) -> None:
+    """Compare actual stored UTF8 bytes and the complete current provenance snapshot."""
+    raw = snapshot.raw_text.encode()
+    start, end = prepared.span.start_byte, prepared.span.end_byte
+    expected = raw[start:end]
+    if (
+        not 0 <= start < end <= len(raw)
+        or prepared.artifact != snapshot.artifact
+        or prepared.source_contributors != snapshot.refs
+        or prepared.contributors != snapshot.grants
+        or prepared.source_heads != snapshot.heads
+        or prepared.data_classification != snapshot.classification
+        or prepared.has_more != (end < len(raw))
+        or prepared.text.encode() != expected
+        or prepared.span_sha256 != hashlib.sha256(expected).hexdigest()
+    ):
+        raise BrainConflictError("Prepared artifact bytes/source/access snapshot changed")
 
 
 async def _artifact_roots(

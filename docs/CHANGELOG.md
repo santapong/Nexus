@@ -40,6 +40,80 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Record the reviewed management controls and protected report loader checkpoint
+
+### Added
+- Strict management contracts, pure eligibility/report/check rules, native owner transactions and immutable owner control/goal stores.
+- Normal company010 immutable scheduler scan receipt; opaque existing cursor namespaces keep separate Brain/control stream offsets. Scheduler services remain in progress.
+- Production report input loader: exact protected output, bounded complete UTF8 source pages, native author registration/hash and DB-only source revalidation. A mandatory server operating-report reader is still being implemented; missing projections remain unknown.
+
+### Fixed
+- Goal publication rereads complete contributor grants and expiry after final awaited evidence preparation (ERROR-058). The original independent expiry probe now passes.
+
+### Validation and limits
+- Reviewed M3-A controls/goals: retained expiry plus20 store cases21pass26.55s; original reviewer probe1pass4.48s. Current slice/reference artifact boundary7PG12.91s.
+- Normal66-table fresh/repeat/metadata/downgrade1PG1.82s;23 management table policies and raw immutable/current guards7PG6.24s. Native scheduler declaration1unit; report input selection/page/hash/binding22unit0.88s; Selected coherent checkpoint146unit1.59s, strict50 source files and Ruff54files pass.
+- Plan/action guards, independent acceptance, scheduler execution, native operating report reads, UI and complete M3 procedure are separate unfinished packages. No provider/email/production/Pi activation or remote release follows from this checkpoint.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
+## [2026-10-14] — Persist actual owner mandates, charters and measured goals
+
+### Added
+- Current signed-owner mandate/charter/goal publication with immutable payloads, exact CAS, explicit activity changes and transactional control events.
+- Protected known baseline evidence lookup and current permission/provenance checks; unknown baseline/date stays explicit.
+
+### Fixed
+- New versions of revoked documents preserve inactive heads; inactive mandate updates cannot silently change caps. Explicit current-version reactivation is separate (ERROR-057).
+
+### Validation and limits
+- 20actual restricted-PG cases31.82s, strict7/lint/format pass;92.7%411statement coverage. Replay, splices, scope, staleCAS, rollback, caps/holds preservation and explicit reactivation are checked.
+- Actual plan approval, execution guard, independent acceptance and the full management workflow remain in progress, with a combined schema/control review underway.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local implementation
+
+---
+
+## [2026-10-14] — Install the local management profile schema and artifact read boundary
+
+### Added
+- Normal company009 static22-table management schema,54indexes/8deferred FK clauses, forced company RLS, immutable history/current identity and rollback guards.
+- Public current artifact same-session validation for protected acceptance input/output, including exact byte/hash/provenance/access and time-only source freshness expiry.
+- Actual65-table migration/metadata/downgrade, FK index coverage and restricted direct-SQL guard tests.
+
+### Validation and limits
+- Normal profile1PG1.82s, raw guards5PG4.62s, metadata/index5unit0.47s and new/existing artifact/retrieval14PG30.05s pass; targeted strict5 files/lint pass.
+- Stores and full management execution remain in progress. No scheduler, acceptance authority or M3 completion follows from schema or pure checks; already-merged migrations remain unchanged.
+
+**Authored by:** Codex, supervised integration
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local implementation
+
+---
+
+## [2026-10-14] — Prepare management owner transactions and independent report checks
+
+### Added
+- Management owner transaction reuses actual signed/current-owner company locking; explicit paused maintenance remains separate from fresh intake.
+- Pure management DTO/metadata, deterministic eligibility/ledger reporting and mechanical internal-report checks are being prepared in disjoint packages.
+
+### Validation and limits
+- Owner transaction6actual restricted-PG checks pass4.18s; strict2files and Ruff/format pass. Spliced/revoked identities deny and owner control grants no source access.
+- Pure checker55focused cases pass0.88s; strict3files/lint/format pass. Exact M1 registration hash and full input-snapshot hash remain separate.
+- Declaration/rule packages are still in progress; normal009/stores/real independent publication/scheduler/UI are uninstalled/unverified. Pure rule/check output conveys no runtime authority.
+
+**Authored by:** Codex, bounded multi-agent preparation
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local preparation
+
+---
+
 ## [2026-10-14] — Close the frozen offline Brain answer gate
 
 ### Changed

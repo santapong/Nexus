@@ -234,6 +234,22 @@ class PersistentBrainRetriever:
             include_history=include_history,
         )
 
+    async def revalidate_artifact(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        scope: BrainReadScope,
+        identity: VerifiedIdentity,
+        prepared: ArtifactSlice,
+        now: datetime,
+    ) -> None:
+        """Public same-session current artifact boundary; it creates no effect permit."""
+        from nexus.company.brain.artifact_store import BoundedArtifactReader
+
+        await BoundedArtifactReader(self.factory, self.blobs).revalidate_artifact(
+            session, control, scope, identity, prepared, now
+        )
+
     async def _ranked(
         self,
         session: AsyncSession,
