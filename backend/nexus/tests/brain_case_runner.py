@@ -24,7 +24,7 @@ from nexus.company.brain.retrieval import (
     SearchRequest,
 )
 from nexus.company.brain.retrieval_store import PersistentBrainRetriever
-from nexus.company.brain.scope_support import BrainDeniedError
+from nexus.company.brain.scope_support import BrainConflictError, BrainDeniedError
 from nexus.company.brain.sources import EvidenceRef
 from nexus.tests.brain_answer_baseline import produce
 from nexus.tests.brain_case_observations import database_state, state_surfaces
@@ -204,6 +204,14 @@ async def _derived(
                 max_bytes=1024,
                 include_history=False,
             )
+        except BrainConflictError:
+            result.append(
+                {
+                    "status": "changed_or_historical",
+                    "artifact_revision_id": str(artifact.reference().artifact_revision_id),
+                }
+            )
+            continue
         except BrainDeniedError:
             continue
         result.append(payload.model_dump(mode="json"))

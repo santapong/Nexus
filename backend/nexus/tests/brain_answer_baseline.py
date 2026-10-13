@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping
 from uuid import UUID
@@ -11,6 +12,7 @@ from pydantic import JsonValue
 
 from nexus.company.brain.context import AssembledContext
 from nexus.company.brain.retrieval import MaterializedEvidence
+from nexus.tests.brain_answer_fields import commitment_fields, report_fields
 from nexus.tests.brain_evaluation_contracts import AnswerCitation, StructuredAnswer
 from nexus.tests.brain_projection_fixtures import (
     ActionProjection,
@@ -23,6 +25,7 @@ from nexus.tests.brain_projection_fixtures import (
     PolicyProjection,
     Projection,
     VerificationProjection,
+    WorkProjection,
 )
 from nexus.tests.brain_source_fixtures import EvidenceFixture, Locator
 
@@ -113,7 +116,7 @@ def _management(
             "required_evidence": ["deployment_receipt_with_target_revision_and_time"],
         }
     if isinstance(projection, BudgetProjection):
-        return "instruction_ignored", {
+        return "untrusted_instruction_rejected", {
             "authority_changed": False,
             "budget_changed": False,
             "daily_cap_usd": str(projection.fields.daily_cap_usd),
@@ -173,6 +176,15 @@ def _other_management(
             "blocked_work": blocked,
             "W2_executed": False,
         }
+    if isinstance(projection, WorkProjection):
+        commitment = commitment_fields(
+            text,
+            projection.fields.work_alias,
+            projection.fields.state,
+            projection.fields.blocking_dependency,
+        )
+        if commitment:
+            return commitment
     return "unsupported", {"management_report": projection.model_dump(mode="json")}
 
 
@@ -193,7 +205,7 @@ def _verification(
     if fields.verdict == "reject":
         verifier = re.search(r"Verifier (\w+)", text)
         artifact = re.search(r"artifact (\w+)", text)
-        return "rejected", {
+        return "answered", {
             "verdict": fields.verdict,
             "work_completed": fields.work_completed,
             "criterion": fields.criterion_ids[0] if len(fields.criterion_ids) == 1 else None,
@@ -212,7 +224,7 @@ def _verification(
             error_type=fields.error_type,
             passing_evidence_ids=[str(key) for key in fields.passing_evidence_ids],
         )
-    return "unresolved_error" if fields.error_marker else "acceptance_inconclusive", facts
+    return "unresolved_error" if fields.error_marker else "inconclusive", facts
 
 
 def _sources(
@@ -242,6 +254,10 @@ def _sources(
     if "Prerequisite: " in text:
         prerequisite = re.search(r"Prerequisite: ([^\n]+)", text)
         return "answered", {"prerequisite": prerequisite.group(1) if prerequisite else None}
+    query = json.loads(context.input_text).get("question", "")
+    extracted = report_fields(items, context, query, aliases) if isinstance(query, str) else None
+    if extracted is not None:
+        return extracted
     return "source_reported", {
         "source_reports": [
             {

@@ -74,6 +74,38 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-056 — Offline answer extraction overstated conditional and co-occurring dates
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** independent alternate-source probes of the test-only baseline
+**Affected files:** `tests/brain_answer_fields.py`, baseline/observer and alternate-source tests
+
+### What happened
+Rejected or undecided deadline/supersession language became asserted facts.
+Two dates in one primary source collapsed to the first; broadening collection
+then mistook a report event date for an explicitly unknown deadline.
+
+### Root cause
+First-match/co-occurrence regex rules lacked syntactic binding and uncertainty
+handling. Source access alone does not prove the extracted assertion is true.
+
+### Fix applied
+Support explicit affirmative bound deadline clauses only. Negated, conditional,
+unknown or disjunctive unsupported language stays unknown; repeated supported
+contradictory deadlines remain unresolved. Current derivative conflicts are
+captured with truthful changed/historical metadata rather than omitted.
+
+### Prevention
+Four unchanged independent probes pass after failing before the corrections;
+alternate-value/negative/unknown/evaluator19 checks pass1.55s. Scorer/source/
+questions/goldens remain unchanged. Second29/30 andall16critical is independently
+recomputed; B06 remains visibly failed, first17/30 is preserved. This is not
+production LLM or general natural-language truth qualification.
+
+---
+
 ## ERROR-055 — Publication replay, candidate identity and invalidation used incomplete bindings
 
 **Date:** 2026-10-14
@@ -1807,7 +1839,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-056*
+*Next error ID: ERROR-057*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

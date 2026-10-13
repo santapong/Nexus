@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Close the frozen offline Brain answer gate
+
+### Changed
+- Test-only baseline derives supported fields/status from authorized source material and sealed typed reports; unsupported conditional/unknown clauses stay unknown and bound contradictory deadlines remain unresolved.
+- Observer captures changed/historical derivative lookup outcomes without publishing stale content as current.
+- Offline M2 acceptance records second29/30 andall16critical, independently recomputed; first17/30 and visible B06 failure are preserved.
+
+### Validation and limits
+- Alternate-value/unknown/negation/conflict/evaluator19 checks pass1.55s; changed4files strict types/Ruff/format pass. Second30 actual restricted-PG/offline-SDK observation cases pass44.34s; source/questions/goldens/scorer remain unchanged.
+- This verifies the source-only offline pipeline alongside the reviewed persistent foundation and real nominated source access. Live LLM quality, business completion, M3–M6 and full supervised release remain required.
+
+**Authored by:** Codex with independent milestone verification
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Prepare atomic management registration and bounded plan interfaces
 
 ### Added

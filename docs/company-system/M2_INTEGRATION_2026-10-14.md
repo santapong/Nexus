@@ -75,3 +75,13 @@ production findings. Publication6source/8test/4log hashes match the final accept
 Claim/ontology publication passes30 focused real/unit checks with93% coverage of505 new statements; its frozen combined review is approved for the offline foundation. It validates exact evidence, active actor/owner scope, output-reader intersection, immutable revisions/CAS and bounded supersession. The separate source/golden30-case pack is unchanged. Its first source-derived offline baseline scores17/30 and14/16critical, failing the unchanged ≥27/all16 threshold. The observer driver itself passes29 cases and fails B06 capture; that pytest count is not the answer score. The full first receipt/matrix/observations are preserved in brain-api/original30-first/. The evaluator must observe independently produced structured answers and actual SDK inputs; prompt inclusion alone or copying expected answers cannot pass the gate. Full M2 requires ≥27/30 and all16 critical rubrics, combined provenance/permission review and real-source acceptance with explicit limitations.
 
 M3–M6 remain: actual management/plan/scheduler, native ARM64 builder, full StockFlow cycle, dashboard/email, private authenticated access, independent backup/restore and operational recovery/release. The full release goal is active. No paid model, connector/vector activation, external notification, Pi service mutation, push/tag or deployment occurred in this checkpoint.
+
+## Offline exit — subsequent verified checkpoint, 2026-10-14
+
+The earlier first17/30 failure remains historical evidence. Second29/30 andall16
+critical satisfies the unchanged offline threshold; all30 observations and14
+freeze5 code hashes match and the separate scorer recomputes exactly. B06 remains
+visibly failed. [Offline acceptance](M2_OFFLINE_ACCEPTANCE_2026-10-14.md) consolidates
+this answer evidence with the persistent schema/ACL/publication/context/API/model
+and actual product-source checks. No live LLM quality, business completion,
+management activation or full release follows from this milestone.

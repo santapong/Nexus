@@ -24,7 +24,7 @@ RISK: medium/high at approval and spend boundaries; mitigate with immutable payl
 | M0 documentation | Delivered 2026-10-05 | SDD, architecture and ADR/backlog proposals |
 | M0 executable foundation | Offline exit verified | 13 schemas, frozen scenarios/questions/checklist, fake-worker44 and committed StockFlow nomination; no business completion claim |
 | M1 governed runtime | Offline exit verified; live activation gated | [M1 acceptance](M1_OFFLINE_ACCEPTANCE_2026-10-14.md): real segmented approval/process/version recovery, provider gate/client and independent combined review |
-| M2 Company Brain | In progress | [Integration checkpoint](M2_INTEGRATION_2026-10-14.md):43-table profile, current ACL, source/derivation/FTS/context/API/model-claim checks and real committed product source; publication/combined scope review pending; first answer score17/30,14/16critical fails the unchanged gate |
+| M2 Company Brain | Offline exit verified | [Acceptance](M2_OFFLINE_ACCEPTANCE_2026-10-14.md): reviewed43-table provenance/ACL/context/API/model boundary, real nominated source access; second29/30/all16critical, first failure preserved. Live quality and full release remain open |
 | M3 management | Pending | No live scheduler/company-operation claim |
 | M4 native builder | Pending | Pi setup and sandbox proof remain separate |
 | M5 full pilot | Pending | No StockFlow/customer/email execution claim |
@@ -125,3 +125,12 @@ atomic bounded DAG registration, explicit independent acceptance, deterministic
 eligibility and truthful reporting/views. Separate DTO/metadata preparation and
 the same-session registration bridge are in progress. This does not enable
 management or close M3; M2's original answer gate still fails17/30,14/16critical.
+
+### M2 offline exit — 2026-10-14
+
+[Offline acceptance](M2_OFFLINE_ACCEPTANCE_2026-10-14.md) records second29/30,
+all16critical, independently recomputed fromall30hash-verified observations.
+First17/30 remains unchanged and B06 remains a visible second-run failure.
+Native source/ACL/publication/context/SDK and nominated actual product-source
+evidence complete this offline milestone; live LLM quality/business completion
+and M3–M6/full release remain unproven. No execution activation accompanies it.
