@@ -24,7 +24,7 @@ RISK: medium/high at approval and spend boundaries; mitigate with immutable payl
 | M0 documentation | Delivered 2026-10-05 | SDD, architecture and ADR/backlog proposals |
 | M0 executable foundation | Offline exit verified | 13 schemas, frozen scenarios/questions/checklist, fake-worker44 and committed StockFlow nomination; no business completion claim |
 | M1 governed runtime | Offline exit verified; live activation gated | [M1 acceptance](M1_OFFLINE_ACCEPTANCE_2026-10-14.md): real segmented approval/process/version recovery, provider gate/client and independent combined review |
-| M2 Company Brain | In progress | Shared bounded contracts/models and current ACL service in preparation; persistent retrieval/ontology/30-case acceptance remain open |
+| M2 Company Brain | In progress | [Integration checkpoint](M2_INTEGRATION_2026-10-14.md):43-table profile, current ACL, source/derivation/FTS/context/API/model-claim checks and real committed product source; publication/combined scope review pending; first answer score17/30,14/16critical fails the unchanged gate |
 | M3 management | Pending | No live scheduler/company-operation claim |
 | M4 native builder | Pending | Pi setup and sandbox proof remain separate |
 | M5 full pilot | Pending | No StockFlow/customer/email execution claim |
@@ -101,3 +101,19 @@ The latest [M1 acceptance](M1_OFFLINE_ACCEPTANCE_2026-10-14.md) closes the offli
 [Committed StockFlow nomination](STOCKFLOW_SOURCE_MANIFEST_v1.json) fixes bb7cc00848bb650069543e843f826703d468058c and five Git blobs; dirty working-tree changes were excluded. This is an implementation source choice within the authorized pilot, not external action/deployment authority.
 
 M2 uses four disjoint lanes: model worker owns shared strict contracts/metadata; replay worker owns deterministic source/blob/parser/ingestion/outbox; planner owns permission-filtered retrieval/context; root owns current locked scope/ACL, migrations, API and acceptance integration. Mandatory server context byte limits and data classification are frozen; unqualified read-only rendering cannot claim token allowance. Actual model use still requires M1's full-input estimator/profile/recipe and current USD gate. No Brain migration or score is claimed from source preparation.
+
+The later [M2 integration checkpoint](M2_INTEGRATION_2026-10-14.md) replaces that source-only state with actual company00843-table install/compare/downgrade, access7/guards5, ingestion36, retrieval20, model-context28/default108 and whole unit847 evidence. Full30-answer acceptance is still open; natural-language model quality and production operation are not inferred. A fresh API/evaluator worker and independent combined reviewer now handle those lanes; root still integrates shared release gates.
+
+### M2 reviewed foundation checkpoint — 2026-10-14
+
+Five independent production findings are reproduced and closed; root retained
+ACL/schema13, context-model30, shared execution33, default model45, client21
+and real DBOS worker10 checks pass. Optional company-app integration7 and normal
+43-table profile proof pass. Whole current unit847 passes with19 existing
+warnings. Strict changed-package types pass; full thin-profile strict traversal
+reports10 absent optional legacy SDK imports, with existing CI type semantics
+recorded separately. Original30 source-derived answer score is17/30 with14/16
+critical: M2 acceptance remains open. Preserve its first matrix and improve
+generic production/capture handling without relaxing source/golden criteria.
+M3 planning can proceed independently; management activation still depends on
+the accepted M2 gate. No full release or live-model quality is claimed.

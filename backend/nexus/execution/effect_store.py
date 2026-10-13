@@ -46,6 +46,8 @@ class EffectStore:
     def __init__(self, factory: async_sessionmaker[AsyncSession]) -> None:
         self._factory = factory
 
+    # Keep this >50-line transaction boundary together: current authority, held
+    # cost, lifetime attempt and committed intent must share the company lock.
     async def begin(
         self,
         lease: ExecutionLease,
@@ -93,6 +95,13 @@ class EffectStore:
                 raise ExecutionDeniedError(
                     "Another unresolved intent requires reconciliation first"
                 )
+            # The company lock serializes writes, but wall-clock authority/lease
+            # expiry can cross a bounded estimator or provenance check.
+            now = await db_now(session)
+            require_lease(work, lease, now, execute=True)
+            action = await require_effect_authority(
+                session, control, work, action_id, now, resources, lease_scope(lease), identity
+            )
             try:
                 await hold_to_effect_day(session, control, lease_scope(lease), action_id, now)
             except ValueError as exc:

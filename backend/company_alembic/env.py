@@ -10,6 +10,7 @@ from sqlalchemy import Connection, pool
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
+from nexus.company.brain.models import BrainBase
 from nexus.company.directory_models import DirectoryBase
 from nexus.execution.billing_models import BillingEvidenceBase
 from nexus.execution.dispatch_models import DispatchBase
@@ -30,6 +31,7 @@ target_metadata = [
     AuthorityBase.metadata,
     DispatchBase.metadata,
     BillingEvidenceBase.metadata,
+    BrainBase.metadata,
 ]
 
 

@@ -40,6 +40,33 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Add permission-bound persistent Company Brain components
+
+### Added
+- Twenty-six company-scoped Brain tables: immutable sources, artifacts, parse/evidence history, typed entities/claims/relationships, derivations and transactional events.
+- Trusted registry/blob/parser ingestion, explicit source dates and quarantined parse failures; exact committed-Git snapshot access with source/blob/hash validation.
+- Current per-resource ACL/CAS history, complete contributor filtering before retrieval rank, bounded native FTS/graph/exact-ID reads, source-head checks and actual-text context assembly.
+- Signed read-only Brain routes optionally composed in the isolated company app; execution intake stays disabled.
+- Frozen test-only source/evaluation pipeline, original30-question scorer and independent offline SDK observations; first original30 answer score17/30 and14/16critical, so the unchanged acceptance gate fails.
+
+### Changed
+- Normal company008 joins the independent lineage; fresh/repeat/all43-table metadata/downgrade proof preserves unrelated legacy history.
+- Model context checks compose before and after input validation; shared effects refresh DB time, lease and exact/standing authority before mutation.
+- PostgreSQL CI matrix separates Brain databases; local package evidence and combined review are recorded in M2_INTEGRATION_2026-10-14.md.
+
+### Fixed
+- Company-first composite PK ordering, SQL UNKNOWN allowing missing parsed offsets, large Git PIPE read/cleanup, and grant/approval expiry after bounded preparation (ERROR-051–053).
+
+### Validation and limits
+- Root ACL/schema13, final Brain model30, default model45 and optional-app7 checks pass; types/lint green for these packages. Actual five StockFlow blobs pass ingestion/retrieval, with three recorded restricted EXPLAIN ANALYZE plans.
+- The combined offline foundation review is approved; generic source-derived answer acceptance remains open. Whole unit847 passes; DBOS worker10 cases pass after the expiry fix; all five reproduced review findings are closed. No live model, production deployment or completed business outcome is claimed.
+
+**Authored by:** Codex with a small supervised multi-agent team
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local implementation
+
+---
+
 ## [2026-10-14] — Integrate supervised company governance and offline durable execution
 
 ### Added

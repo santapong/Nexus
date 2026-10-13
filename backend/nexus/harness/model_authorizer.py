@@ -24,6 +24,7 @@ from nexus.core.llm.company_pricing import CostQuote, ModelContract, reconcile_c
 from nexus.core.llm.company_registry import DataClassification, ModelRegistry
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.effect_support import effect_row
+from nexus.execution.intent_checks import BeforeIntentCheck, CompositeBeforeIntentCheck
 from nexus.execution.runtime_contracts import EffectRecord, ExecutionLease
 from nexus.execution.runtime_support import (
     db_now,
@@ -69,6 +70,7 @@ class PersistentModelCallAuthorizer:
         input_recipe: ModelInputRecipe,
         allowed_classification: DataClassification,
         evidence_store: ModelEvidenceStore,
+        additional_before_intent: BeforeIntentCheck | None = None,
     ) -> None:
         self._lease = ExecutionLease.model_validate_json(lease.model_dump_json())
         self._identity = VerifiedIdentity.model_validate(identity.model_dump())
@@ -85,6 +87,7 @@ class PersistentModelCallAuthorizer:
         self._estimator = input_estimator
         self._recipe = ModelInputRecipe.model_validate_json(input_recipe.model_dump_json())
         self._classification, self._evidence = allowed_classification, evidence_store
+        self._additional_check = additional_before_intent
         self._claims: dict[UUID, _ClaimedRequest] = {}
 
     async def claim(self, request: CompanyModelRequest, quote: CostQuote) -> AuthorizedModelAttempt:
@@ -106,7 +109,13 @@ class PersistentModelCallAuthorizer:
             request.action_id,
             resources=self._resources,
             kind="model_requests",
-            before_intent=check,
+            # Reject stale context early and recheck after input/model validation,
+            # whose bounded work can cross an independently expiring read grant.
+            before_intent=CompositeBeforeIntentCheck(
+                (self._additional_check, check, self._additional_check)
+            )
+            if self._additional_check is not None
+            else check,
         )
         if not start.permit_external_call or check.hold is None:
             raise ValueError("Model intent already exists; invocation cannot be repeated")

@@ -74,6 +74,152 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-055 — Publication replay, candidate identity and invalidation used incomplete bindings
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** replay_worker tests-first publication probes; independently reviewed
+**Affected files:** `brain/claim_links.py`, `brain/ontology_support.py`, publication tests
+
+### What happened
+Same-ID replay could project caller endpoint references instead of stored ones.
+A stored pass candidate could initially publish verified_by as a source report;
+duplicate candidate UUIDs also lacked unambiguous native/action binding. Links
+between distinct resources invalidated only the subject view.
+
+### Root cause
+Replay helpers trusted requested projections, candidate existence was confused
+with trusted acceptance, and event emission omitted the second endpoint.
+
+### Fix applied
+Compare immutable stored endpoint IDs/kinds before replay. Require unambiguous
+same-company candidate/action lookup; verified_by source-report promotion stays
+disabled. Emit bounded ID-only events for both endpoint resources atomically.
+
+### Prevention
+Original failing probes and focused fixes are retained in the publication work
+receipt. Final7unit+23restricted-PG checks pass30/98.88s with93%505statement
+coverage. Independent review matched6source/8test/4log hashes and approved the
+scoped foundation; this cannot substitute for the failed original answer gate.
+
+---
+
+## ERROR-054 — Current entity read hid superseded supporting sources
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** independent M2 review using actual source R1→R2 ingestion
+**Affected files:** `brain/api_services.py`, Brain API graph tests
+
+### What happened
+The current entity endpoint returned an R1-derived source-report after R2
+withdrew its support, without a stale/history label.
+
+### Root cause
+It requested historical evidence internally and discarded the materialized
+source-state/freshness classification.
+
+### Fix applied
+The current endpoint rejects historical or stale supporting material with a
+revision conflict. Explicit historical evidence reads retain their labels.
+
+### Prevention
+The retained real-ingestion HTTP test observes200 before update,409 afterward
+without the old label, and200 for the explicitly historical citation. Three
+graph/expiry/staleness cases pass9.07s; independent original probe passes1case
+5.25s separately before final combined acceptance.
+
+---
+
+## ERROR-053 — Large committed-Git reads truncated or hung during PIPE cleanup
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** root's large-stream source-reader tests
+**Affected files:** `company/brain/git_source.py`, its unit tests
+
+### What happened
+A single bounded stream read returned partial content; waiting for a terminated
+child with unread PIPE output hung the original oversized-source test.
+
+### Root cause
+StreamReader.read(n) does not promise n bytes or EOF. Child exit and output drain
+are separate lifecycle conditions.
+
+### Fix applied
+Drain to EOF with a strict byte cap and drain child output during kill cleanup.
+Keep exact company/path/commit/blob/hash checks and argv-only Git execution.
+
+### Prevention
+Twelve source-reader cases pass, including multibyte and oversized PIPE output.
+Actual nominated StockFlow five-blob ingestion also passes. Only the confirmed
+task-owned hung test process was terminated; no shared service was changed.
+
+---
+
+## ERROR-052 — Time-only expiry crossed protected read and effect preparation
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent combined M2 review with original restricted-PG probes
+**Affected files:** `brain/api_services.py`, `harness/model_authorizer.py`,
+`execution/effect_store.py`, Brain model/API regression tests
+
+### What happened
+An entity's separate grant expired during evidence checking. A legitimately
+assembled source grant and an immutable exact approval could expire during
+input estimation while the SDK request still issued.
+
+### Root cause
+CompanyControl prevents concurrent authority writes but cannot stop the clock.
+Earlier timestamps/checks were reused after awaited preparation.
+
+### Fix applied
+Refresh entity-resource checks at the final read. Run the Brain check before and
+after model input validation. Refresh database time, execute lease and exact or
+standing authority after all preparatory hooks before effect mutation.
+
+### Prevention
+Original independent entity/source/approval probes now deny without disclosure
+or wire issuance. Retained Brain gate30 checks pass, including both estimator
+expiry cases with unchanged ledger; shared default model45 checks pass. Issued
+effects remain recorded honestly; these gates cannot undo an external request.
+
+---
+
+## ERROR-051 — Brain composite PK ordering and nullable CHECK weakened schema assumptions
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** root metadata tests and independent M2 restricted-SQL review
+**Affected files:** `brain/model_base.py`, `brain/evidence_models.py`, normal
+`company_008_brain.py`, metadata/schema guard tests
+
+### What happened
+Inherited company columns sorted after local identity columns. A parsed evidence
+row with non-null parse/chunk IDs and null parsed offsets also passed SQL CHECK,
+then failed typed read reconstruction.
+
+### Root cause
+ORM mixin declaration order did not guarantee the expected composite key order.
+SQL CHECK accepts UNKNOWN; numeric bounds alone do not reject NULL.
+
+### Fix applied
+Explicit company-first mapped-column ordering; require both parsed offsets
+IS NOT NULL in the parsed branch. Mirror the ORM in the unmerged normal008 DDL.
+
+### Prevention
+Metadata ordering tests, retained direct restricted-insert denial,13 combined
+ACL/schema checks and fresh/repeat/all43-table metadata/downgrade proof pass.
+Already-merged legacy and company001–007 migrations remain unchanged.
+
+---
+
 ## ERROR-050 — Earlier same-day tool reservations bypassed current spend overages
 
 **Date:** 2026-10-14
@@ -1661,7 +1807,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-049*
+*Next error ID: ERROR-056*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

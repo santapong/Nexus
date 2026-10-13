@@ -3096,12 +3096,53 @@ Fifty-six actual-SDK/offline-HTTP cases prove two explicit families, one request
 
 ---
 
+## ADR-106 — Native permission-bound Brain provenance with separate execution authority
+
+**Date:** 2026-10-14
+**Status:** accepted for local implementation; release activation remains gated
+**Relates to:** ADR-095/096/101/103/105; M2 integration checkpoint
+
+### Decision
+
+Use26 native company-scoped PostgreSQL tables in normal company008 for immutable
+source/artifact/parse/evidence/claim/entity/relationship/derivation/event history,
+with mutable heads, ACL generations and consumer cursors. Current signed
+membership plus explicit resource grants and complete contributor intersection
+filter candidates before rank, counts or traversal. Blob reads happen outside
+the company lock; final publication rechecks current provenance and access.
+
+The first retrieval recipe uses bounded simple FTS, exact IDs and closed typed
+relationships. Vectors, reranking and Thai semantic search remain unqualified.
+Server policy supplies source classification, authority and context byte limits.
+Readonly rendering does not invent token allowance; model use still requires
+M1's exact approved request/profile/recipe, full-input estimator and USD hold.
+
+Model-derived claims/relationships remain proposed. Native budget/policy/work
+references do not mutate their authoritative stores. A stored verification
+candidate is representational, not completed work; verified_outcome and
+source-report verified_by publication stay disabled until an independent trusted
+publisher validates actual acceptance. Current entity endpoints conflict when
+support becomes historical/stale; explicit history remains labelled.
+
+### Consequences and evidence
+
+The normal43-table company install/repeat/metadata/downgrade and actual restricted
+ACL/SQL/SDK probes provide offline integration evidence. The original30 scorer
+stays independent of its source-derived baseline; live model quality, full
+business operation and release approval are separate gates. Company locks do not
+freeze time: refresh distinct resource grants and exact/standing authority after
+bounded preparation, before returning protected content or creating an intent.
+
+See M2_INTEGRATION_2026-10-14.md and ERROR-051–054 for executed scope and fixes.
+
+---
+
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-106 -->
+<!-- Next ID: ADR-107 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-106*
+*Next ADR ID: ADR-107*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*

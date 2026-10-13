@@ -117,6 +117,27 @@ jobs:
           - suite: governed-model-client
             database: nexus_company_test_model_client
             tests: test_company_model_client.py test_company_model_client_cleanup.py test_company_model_client_interrupt.py
+          - suite: brain-access-and-schema-guards
+            database: nexus_company_test_brain_access
+            tests: test_company_brain_access.py test_company_brain_guards.py
+          - suite: brain-ingestion
+            database: nexus_company_test_brain_ingest
+            tests: test_company_brain_ingestion.py test_company_brain_events.py test_company_brain_derivations.py test_company_brain_parse_history.py
+          - suite: brain-retrieval-context
+            database: nexus_company_test_brain_retrieval
+            tests: test_company_brain_retrieval.py
+          - suite: brain-api
+            database: nexus_company_test_brain_api
+            tests: test_company_brain_api.py test_company_brain_api_graph.py test_company_brain_fixture_seed.py test_company_brain_case_observer.py
+          - suite: brain-model-context-gate
+            database: nexus_company_test_brain_model_gate
+            tests: test_company_brain_model_gate.py
+          - suite: brain-company-app
+            database: nexus_company_test_brain_app
+            tests: test_company_brain_app.py
+          - suite: brain-claim-ontology-publication
+            database: nexus_company_test_brain_publication
+            tests: test_company_brain_claim_publication.py test_company_brain_claim_links.py test_company_brain_ontology_publication.py test_company_brain_publication_access.py test_company_brain_publication_races.py test_company_brain_candidate_verification.py
     services:
       postgres:
         image: postgres:16-alpine
