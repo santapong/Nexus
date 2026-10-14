@@ -671,3 +671,12 @@ quiet; actual daily02:17Bangkok is no-due, not positive daily proof. Empty model
 zero holds/effects/attempts/counters and absent approvals remain. No accepted
 report output or business completion. Digest temporal/stale-retention/rollover
 and durable send remain separate.
+
+
+### Checked 2026-10-15 — Public CSV fixture persistence and release index
+
+Eight frozen public native CSV fixture/test files are integrated with the corrected
+future knownclaim execute assertion. Root16pure/1.19s, strict/Ruff/format8 pass;
+no actual pair/database rerun. Existing failures/replay/proof/unknown cost and
+outer containment gap retain their original scope. See [current release evidence](RELEASE_GATES_CURRENT.md)
+for remaining full StockFlow, ARM64, model, owner/email and recovery/deployment gates.

@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Reproducible public native CSV fixture and release evidence index
+
+### Added
+- Eight frozen public CSV fixture/test helpers retain exact DB/source/runtime/argv
+  and current scope qualification with no production credential or private source.
+- Correct future known-result claim assertion to actual execute mode; original
+  failed pair and staged saved-state recovery receipts remain unchanged.
+- Current release-gate evidence index distinguishes local proof from pending
+  full StockFlow/ARM64/provider/owner/operations acceptance.
+
+### Validation
+- Root16fixture units/1.19s, strict/Ruff/format8 pass. No jobs or database rerun.
+  Existing actual CSV evidence is scoped in its dated checkpoint.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Known execute-lease engineering cleanup and digest expiry
 
 ### Fixed
