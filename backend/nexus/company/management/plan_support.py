@@ -42,6 +42,11 @@ from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.governance import CharterRevision
 from nexus.company.management.governance_models import ManagementGoalHead
 from nexus.company.management.lifecycle import PlanRevisionRef
+from nexus.company.management.model_observations import (
+    ModelEligibilityObservation,
+    validate_model_observations,
+)
+from nexus.company.management.model_profile_checks import validate_model_profile
 from nexus.company.management.plans import ChildAllocation, PlanPayload
 from nexus.company.management.transactions import ManagementDeniedError
 from nexus.core.llm.company_registry import ModelRegistry, Profile
@@ -77,10 +82,14 @@ class PlanAdmissionCatalog(ManagementContract):
     models: ModelRegistry
     admitted_profiles: frozenset[Profile]
     check_recipes: frozenset[Symbol]
+    model_observations: tuple[ModelEligibilityObservation, ...] = Field(
+        default=(), max_length=32, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def exact_catalog(self) -> Self:
         require_company(self.company_id, self.models, *(row.resource for row in self.resources))
+        validate_model_observations(self.models, self.model_observations)
         if len({row.tool for row in self.tools}) != len(self.tools):
             raise ValueError("One exact configured tool version per admission symbol is required")
         if len({row.symbol for row in self.resources}) != len(self.resources):
@@ -169,33 +178,11 @@ async def _resource(
             )
 
 
-def _model(catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime) -> None:
-    binding = child.binding
-    if (
-        binding.model_registry_version != catalog.models.revision
-        or binding.model_profile not in catalog.admitted_profiles
-    ):
-        raise ManagementDeniedError("Plan model/profile is not exactly registered")
-    if not any(
-        model.enabled
-        and model.health.status == "healthy"
-        and model.health.checked_at <= now < model.health.expires_at
-        and any(
-            e.profile == binding.model_profile
-            and e.conformance_passed
-            and e.evaluated_at <= now < e.expires_at
-            for e in model.evaluations
-        )
-        for model in catalog.models.models
-    ):
-        raise ManagementDeniedError("Plan profile has no current registered model evidence")
-
-
 def validate_plan_profile(
     catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
 ) -> None:
     """Pure current-clock registry/profile eligibility, never action or execution permission."""
-    _model(catalog, child, now)
+    validate_model_profile(catalog, child, now)
 
 
 async def _child(
@@ -213,7 +200,7 @@ async def _child(
     await _actor(session, control, charter.charter.verifier_id)
     if item.department != charter.charter.name:
         raise ManagementDeniedError("Work department differs from its exact current charter")
-    _model(catalog, child, now)
+    validate_model_profile(catalog, child, now)
     tools = {row.tool: row for row in catalog.tools}
     resources = {row.symbol: row.resource for row in catalog.resources}
     if (
@@ -341,7 +328,7 @@ async def _final_expiry_check(
     if any(value is not None and value <= now for value in (grant_expiry, source_expiry)):
         raise ManagementDeniedError("Plan resource eligibility expired during admission")
     for child in payload.children:
-        _model(catalog, child, now)
+        validate_model_profile(catalog, child, now)
 
 
 def validate_plan_action(
@@ -366,9 +353,14 @@ def validate_plan_action(
         selected = next((row for row in catalog.models.models if row.registry_id == model_id), None)
         if selected is None:
             raise ManagementDeniedError("Managed model request names an unregistered model")
-        _model(
+        validate_model_profile(
             catalog.model_copy(
-                update={"models": catalog.models.model_copy(update={"models": (selected,)})}
+                update={
+                    "models": catalog.models.model_copy(update={"models": (selected,)}),
+                    "model_observations": tuple(
+                        row for row in catalog.model_observations if row.registry_id == model_id
+                    ),
+                }
             ),
             child,
             now,

@@ -74,6 +74,56 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-074 — Direct model observation helper ignored a later conflicting record
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, independently reproduced and rechecked
+**Found by:** independent combined eligibility review
+**Affected files:** management/model_observations.py
+
+### What happened and fix
+The complete PlanAdmissionCatalog constructor rejected duplicate observations,
+but its standalone resolver selected and validated only the first matching row.
+Two individually valid same-model observations, healthy then unhealthy, returned
+the first positive through unchecked direct/helper configuration. This is a
+helper fail-closed gap, not demonstrated HTTP observation authority. The exact
+original probe fails then passes unchanged after complete-tuple validation before
+selection. Explicit32 bound and unknown/duplicate/company/revision/hash checks
+now apply to every direct resolver invocation. Selected model request admission
+narrows both registrations and observations together, retaining multi-model use.
+
+### Prevention
+Keep exact original adversarial probe and valid conflicting-record regression;
+constructor validation does not replace direct public helper checks. Evidence:
+model-gate/observations-review-duplicate-valid-records{,-fixed}.log.
+
+---
+
+## ERROR-073 — Management canonical hashing omitted date-only price metadata
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, scoped canonical encoding
+**Found by:** explicit immutable model registration observation tests
+**Affected files:** management/canonical.py
+
+### What happened and fix
+Hashing a complete model registration reached PriceCard.as_of, a Python date.
+The management encoder handled aware datetime but left date unchanged; JSON
+raised TypeError instead of producing a registration pin. Root's first11-case
+implementation run failed and remains in observations-implemented.log. Add ISO
+date encoding after the datetime branch, preserving timezone normalization for
+instants. Focused tests now retain the exact date and a pre-observation no-price
+catalog golden SHA340636ac…cca8. No previously encodable value or hash changes.
+
+### Prevention
+Complete typed boundary hashing includes nested dated pricing, not only hand-made
+string references. Preserve old catalog golden and actual observation expiry
+denial; source receipt dates remain separate from observation dates.
+
+---
+
 ## ERROR-072 — Notification precall used a captured target grant after revocation
 
 **Date:** 2026-10-14

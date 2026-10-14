@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -36,6 +36,8 @@ def _value(value: Any, key: str = "") -> Any:
         if value.utcoffset() is None:
             raise ValueError("Management instants must be explicitly aware")
         return value.astimezone(UTC).isoformat(timespec="microseconds")
+    if isinstance(value, date):
+        return value.isoformat()
     return value
 
 

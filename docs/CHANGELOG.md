@@ -1,6 +1,28 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Current model eligibility observations
+
+### Added
+- Bounded explicit current health/evaluation observations pin exact original model
+  registration bytes and registry revision. Existing work and allowance identities
+  remain intact; default catalogs have unchanged encoding and no implicit refresh.
+- Managed native admission and final fact/notification deadlines use the same
+  current observation. Negative, expired, future or conflicting observations deny.
+
+### Fixed
+- Canonical hashing supports date-only price metadata (ERROR-073).
+- Direct resolver validates the complete observation tuple (ERROR-074); the
+  independent original conflicting-record probe closes unchanged.
+
+### Validation
+- Focused18unit, actual restricted015 final-expiry1PG32.19s, coherent1362unit20.66s
+  and strict8/lint/format pass. Offline routine TestModel requalification is separate
+  evidence; live quality, gateway observation routing and release remain open.
+
+**Authored by:** Codex with independent boundary review
+**PR:** not published
+
 ## [2026-10-14] — Existing managed owner notification preparation
 
 ### Added

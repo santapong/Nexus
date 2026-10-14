@@ -116,6 +116,7 @@
 | ADR-103 | Registered authority, lifetime quotas and principal-bound effects | accepted | 2026-10-14 |
 | ADR-104 | One non-retrying effect step for governed offline recovery | accepted | 2026-10-14 |
 | ADR-105 | Required per-request model gate and local wire/schema validation | accepted | 2026-10-14 |
+| ADR-106 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
 
 ---
 
@@ -3224,3 +3225,31 @@ daily budgets. New kinds carry state hashes, never arbitrary body/owner authorit
 Downgrade refuses existing new-kind events before removing their columns, retaining
 durable evidence. Real source emitters, final privacy/time checks and delivery
 remain separate required implementation gates.
+
+## ADR-106 — Separate current model eligibility from immutable registrations
+
+**Status:** accepted
+**Date:** 2026-10-14
+
+### Context
+An actual next sibling plan denied after its offline registry eligibility expired.
+Every existing child pins the original registry revision and permanent registration;
+relabeling the registry or replacing those children would erase identity continuity.
+Original positive observation dates cannot be silently extended.
+
+### Decision
+Allow bounded explicit server catalog ModelEligibilityObservation records pinned
+to company, original registry revision/model ID and full original registration SHA.
+Keep original registry bytes intact. Resolve only fresh health/profile evaluations,
+retaining new observation/receipt identity and clocks. Current negative/stale/future
+observations deny rather than falling back to the original positive observation.
+No default observations, automatic refresh, allowance, authority or model call.
+Current native admission and final notification/fact deadlines share the resolver.
+
+### Consequences
+Existing work, parent slices and registration hashes remain unchanged. Trusted
+configuration must accompany genuine newly checked evidence; decoding an observation
+is not evidence of checking a provider. Actual routine TestModel conformance cannot
+prove live provider quality, code/reasoning or structured-output capability. Model
+routing/client evidence integration remains separately qualified before use; no
+observation silently changes a request's registered model/endpoint/price/schema.

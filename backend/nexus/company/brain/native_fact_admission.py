@@ -11,13 +11,17 @@ from nexus.company.brain.native_fact_services import NativeFactServices
 from nexus.company.brain.scope_support import BrainDeniedError
 from nexus.company.management.control_support import charter_record
 from nexus.company.management.governance_models import ManagementCharterRevision
+from nexus.company.management.model_observations import effective_model_registration
 from nexus.company.management.plan_models import ManagementPlanRevision
 from nexus.company.management.revision_store import plan_record
 
 
 def profile_deadline(services: NativeFactServices, profile: str, now: datetime) -> datetime:
     candidates = []
-    for model in services.catalog.models.models:
+    for original in services.catalog.models.models:
+        model = effective_model_registration(
+            services.catalog.models, services.catalog.model_observations, original
+        )
         if (
             not model.enabled
             or model.health.status != "healthy"

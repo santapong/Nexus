@@ -13,6 +13,7 @@ from nexus.company.brain.access_support import require_resources
 from nexus.company.brain.base import BrainReadScope
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
 from nexus.company.management.control_support import current_charter
+from nexus.company.management.model_observations import effective_model_registration
 from nexus.company.management.native_profile_admission import control_scope
 from nexus.company.management.operating_report_resources import report_resources
 from nexus.company.management.plan_support import PlanAdmissionCatalog, validate_plan_profile
@@ -80,7 +81,10 @@ def profile_deadlines(
         validate_plan_profile(catalog, child, now)
         available = [
             min(model.health.expires_at, evaluation.expires_at)
-            for model in catalog.models.models
+            for original in catalog.models.models
+            for model in (
+                effective_model_registration(catalog.models, catalog.model_observations, original),
+            )
             for evaluation in model.evaluations
             if model.enabled
             and model.health.status == "healthy"
