@@ -4,7 +4,6 @@ import asyncio
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.company.access import CompanyControlScope, VerifiedIdentity
@@ -19,8 +18,8 @@ from nexus.company.notifications.contracts import (
     NotificationPolicy,
     OwnerRecipientPolicy,
 )
-from nexus.company.notifications.draft_models import NotificationDraftRow, NotificationEventLinkRow
-from nexus.company.notifications.draft_persistence import draft_row, stored_draft
+from nexus.company.notifications.draft_models import NotificationDraftRow
+from nexus.company.notifications.draft_persistence import persist_draft_locked, stored_draft
 from nexus.company.notifications.native_facts import (
     NativeNotificationFact,
     NotificationUnavailableError,
@@ -144,41 +143,7 @@ class NotificationDraftStore:
     async def _persist(
         self, session: AsyncSession, prepared: NotificationDraft, event_id: UUID
     ) -> NotificationDraft:
-        row = await session.scalar(
-            select(NotificationDraftRow).where(
-                NotificationDraftRow.company_id == prepared.company_id,
-                NotificationDraftRow.trigger_sha256 == prepared.trigger_sha256,
-                NotificationDraftRow.recipient_class == "owner",
-            )
-        )
-        saved = stored_draft(row) if row is not None else prepared
-        if row is None:
-            session.add(draft_row(saved))
-        elif (
-            saved.provenance != prepared.provenance
-            or saved.recipient_policy != prepared.recipient_policy
-        ):
-            raise NotificationUnavailableError("Native notification draft requires refresh")
-        event = await session.get(BrainEvent, (prepared.company_id, event_id))
-        if event is None:
-            raise NotificationUnavailableError("Native notification event is unavailable")
-        link = await session.get(NotificationEventLinkRow, (prepared.company_id, event_id))
-        if link is not None and (link.draft_id, link.event_sequence) != (
-            saved.draft_id,
-            event.sequence,
-        ):
-            raise NotificationUnavailableError("Native notification event is already linked")
-        if link is None:
-            session.add(
-                NotificationEventLinkRow(
-                    company_id=saved.company_id,
-                    event_id=event_id,
-                    event_sequence=event.sequence,
-                    draft_id=saved.draft_id,
-                )
-            )
-        await session.flush()
-        return saved
+        return await persist_draft_locked(session, prepared, event_id)
 
     async def _final(
         self,

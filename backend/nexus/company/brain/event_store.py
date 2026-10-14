@@ -126,6 +126,12 @@ class BrainEventHandler(Protocol):
     async def apply(self, session: AsyncSession, event: OutboxEvent) -> None: ...
 
 
+class BrainEventFinalizer(Protocol):
+    """Trusted same-session final clock/scope gate after actual last cursor flush; no paid I/O."""
+
+    async def finalize(self, session: AsyncSession) -> None: ...
+
+
 class BrainEventStore:
     def __init__(self, factory: async_sessionmaker[AsyncSession]) -> None:
         self._factory = factory
@@ -139,6 +145,7 @@ class BrainEventStore:
         handler: BrainEventHandler,
         *,
         max_events: int = 32,
+        finalizer: BrainEventFinalizer | None = None,
     ) -> EventCursor:
         """A rollback cannot acknowledge publication; the next run sees the same pending event."""
         if type(max_events) is not int or not 1 <= max_events <= 32:
@@ -168,6 +175,8 @@ class BrainEventStore:
                 await handler.apply(session, record)
                 cursor.last_sequence = record.sequence
             await session.flush()
+            if finalizer is not None:
+                await finalizer.finalize(session)
             return EventCursor(
                 company_id=scope.company_id,
                 consumer=consumer,

@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Qualified native drafts and atomic notification cursor
+
+### Added
+- Decision, blocked work, own/company cap and daily/weekly report facts render
+  deterministic owner drafts with exact source dates and explicit unknown billing.
+- Drafts, event links and cursor acknowledgement share one transaction and final
+  source/recipient expiry check. Licensed obsolete notices can disappear; private
+  or unavailable inputs deny reads and acknowledgement, including skipped rows.
+
+### Validation
+- Worker28unique checks17restricted015PG+11unit185.07s; Root6 unchanged boundaryPG
+  98.58s, coherent1414unit56.37s and strict26/Ruff/format pass. Old serialization,
+  trigger and rendering compatibility are retained. Sending/timers remain separate.
+
+**Authored by:** Codex and supervised native notification agent
+**PR:** not published
+
 ## [2026-10-14] — Offline Node toolchain and bounded qualification
 
 ### Added

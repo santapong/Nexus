@@ -21,18 +21,23 @@ from pydantic import (
 
 from nexus.company.brain.base import Count, Flag, Ordinal, exact_count
 from nexus.company.brain.sources import ArtifactRevisionRef, SourceHead
-from nexus.company.management.acceptance import WorkAcceptance
-from nexus.company.management.base import SHA256, SourceTime, Symbol, ValueContract, require_company
+from nexus.company.management.base import SHA256, Symbol, ValueContract, require_company
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.plans import RunBinding
+from nexus.company.notifications.digest_bindings import NativeDigestBinding as NativeDigestBinding
+from nexus.company.notifications.notification_base import (
+    NotificationContract as NotificationContract,
+)
+from nexus.company.notifications.signal_contracts import (
+    CurrentWorkAcceptance as CurrentWorkAcceptance,
+)
+from nexus.company.notifications.signal_contracts import (
+    NativeNotificationSignal as NativeNotificationSignal,
+)
+from nexus.company.notifications.signal_contracts import SignalKind as SignalKind
 
 Mailbox = Annotated[str, StringConstraints(min_length=3, max_length=254)]
 IdempotencyKey = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_.:-]{1,256}$")]
-
-
-class NotificationContract(ValueContract):
-    schema_version: Literal["nexus.company.notification.v1"] = "nexus.company.notification.v1"
-    company_id: UUID
 
 
 def require_mailbox(value: str) -> str:
@@ -87,63 +92,6 @@ class NotificationPolicy(ValueContract):
     def exact_major_selection(self) -> Self:
         if len(set(self.major_completion_task_ids)) != len(self.major_completion_task_ids):
             raise ValueError("Major work notification selection must be unique")
-        return self
-
-
-class CurrentWorkAcceptance(NotificationContract):
-    """Resolved native facts declaration; the resolver must recheck actual protected proof."""
-
-    acceptance: WorkAcceptance
-
-    @model_validator(mode="after")
-    def exact_work(self) -> Self:
-        require_company(self.company_id, self.acceptance)
-        if self.acceptance.verdict != "pass":
-            raise ValueError("Current accepted work requires exact native independent pass shape")
-        return self
-
-    @property
-    def work(self) -> RunBinding:
-        return self.acceptance.target.author
-
-    @property
-    def acceptance_sha256(self) -> str:
-        return canonical_sha256(self.acceptance)
-
-
-SignalKind = Literal[
-    "decision_required",
-    "blocked",
-    "failed",
-    "cap_exhausted",
-    "work_accepted",
-    "idle",
-    "unchanged",
-    "candidate",
-    "metric_satisfied",
-]
-
-
-class NativeNotificationSignal(NotificationContract):
-    """Trusted resolver input, never a caller-produced meaningfulness assertion."""
-
-    event_ids: tuple[UUID, ...] = Field(min_length=1, max_length=32)
-    subject_id: UUID
-    kind: SignalKind
-    state_sha256: SHA256
-    source_event: SourceTime
-    observed_at: AwareDatetime
-    acceptance: CurrentWorkAcceptance | None = None
-
-    @model_validator(mode="after")
-    def exact_subject(self) -> Self:
-        require_company(self.company_id, self.acceptance)
-        if len(set(self.event_ids)) != len(self.event_ids):
-            raise ValueError("Notification event identities must be unique")
-        if self.acceptance is not None and (
-            self.kind != "work_accepted" or self.subject_id != self.acceptance.work.task_id
-        ):
-            raise ValueError("Acceptance must bind the exact notified native work")
         return self
 
 
@@ -212,6 +160,13 @@ class NotificationDraft(NotificationContract):
     operation_id: UUID
     audit_trace_id: UUID
     recorded_at: AwareDatetime
+    kind: Literal["routine", "daily", "weekly"] = Field(
+        default="routine", exclude_if=lambda value: value == "routine"
+    )
+    due_bucket: Symbol | None = Field(default=None, exclude_if=lambda value: value is None)
+    scheduled_for: AwareDatetime | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def exact_draft(self) -> Self:
@@ -225,7 +180,20 @@ class NotificationDraft(NotificationContract):
             != (self.recipient_policy.sender, self.recipient_policy.recipient)
         ):
             raise ValueError("Draft differs from its exact registered payload")
+        self._due_shape()
         return self
+
+    def _due_shape(self) -> None:
+        digest = self.signal.digest
+        if self.kind == "routine":
+            if digest is not None or self.due_bucket is not None or self.scheduled_for is not None:
+                raise ValueError("Routine draft cannot carry digest fields")
+        elif digest is None or (self.kind, self.due_bucket, self.scheduled_for) != (
+            digest.kind,
+            digest.due_bucket,
+            digest.scheduled_for,
+        ):
+            raise ValueError("Digest draft must retain its exact native kind/bucket/schedule")
 
 
 class NotificationEventLink(NotificationContract):

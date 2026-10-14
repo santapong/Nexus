@@ -52,6 +52,12 @@ def signal_admission(
         return NotificationAdmission(state="blocked", reason="acceptance_unavailable")
     if signal.kind == "work_accepted" and signal.subject_id not in policy.major_completion_task_ids:
         return NotificationAdmission(state="suppressed", reason="minor_completion")
+    if signal.kind == "digest_due" and (
+        signal.digest is None
+        or not getattr(policy, f"{signal.digest.kind}_digest")
+        or signal.digest.policy_sha256 != canonical_sha256(policy)
+    ):
+        return NotificationAdmission(state="blocked", reason="invalid_snapshot")
     if existing_trigger_sha256 == trigger_sha256(signal):
         return NotificationAdmission(state="suppressed", reason="coalesced")
     return NotificationAdmission(state="eligible", reason="meaningful")
