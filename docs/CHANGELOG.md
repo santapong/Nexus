@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain first actual durable notification SDK outcome
+
+### Validation
+- Corrected frozen local packet runs once: first accepted case reaches actual
+  SDK SUCCESS/submitted, one mock POST and native receipt/tool1/model0/unknown.01.
+- Full test fails16.66s during post-SDK shutdown evidence; native replay and later
+  rejected/unknown parameters remain unrun. ERROR-100 and original DB/tree/log
+  retained. No reset, repeated send, real delivery or release completion claim.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-15] — Conservative final spawn temporal bridge
 
 ### Added

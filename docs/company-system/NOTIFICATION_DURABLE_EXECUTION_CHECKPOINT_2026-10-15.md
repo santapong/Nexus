@@ -63,3 +63,18 @@ PENDING and MockTransport accepted/rejected/unknown outcomes. It must retain one
 tool1/model0, positive unknown cost and unchanged native replay. Actual OS barriers
 and immediate restart follow separately. No real email, timer, billing, owner UAT,
 deployment, ARM64, StockFlow or complete release claim follows from this checkpoint.
+
+## First actual SDK run
+
+Corrected test fixture freeze55100e4b and packetb3079e23 were independently reviewed
+and launched once. The first accepted case reached SDK SUCCESS/submitted with one
+mock POST, one native succeeded receipt, tool1/model0 and .01 unknown cost/null actual.
+The full test FAILED16.66s at post-destroy asyncio.to_thread shutdown-evidence write;
+native replay and rejected/unknown parameters were not reached. DBOS had installed
+its now-closed executor as the adopted host loop's default (ERROR-100).
+
+Original normal015 database and run tree remain, with no retry/reset. Terminal
+receipt b251e99a retains the original log, portable output and safe native scalar
+readback. Actual app backends are absent after the process exits; the failed fixture
+did not export a complete in-process shutdown witness. Lifecycle correction and a
+separately reviewed historical continuation are required before further execution.

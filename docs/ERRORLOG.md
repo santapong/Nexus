@@ -74,6 +74,27 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-100 — SDK shutdown left the adopted host loop using a closed executor
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** open; original actual database/run retained
+**Found by:** first actual durable notification SDK qualification
+**Affected files:** tests/notification_durable_pg_fixture.py lifecycle composition
+
+The first accepted case reached actual SDK SUCCESS/submitted with one synthetic
+POST and native succeeded receipt/tool1/model0/positive unknown billing hold. The
+test then failed after DBOS.destroy at asyncio.to_thread writing shutdown evidence:
+RuntimeError cannot schedule new futures after shutdown. Native replay and the
+other two outcomes were not reached. No fresh operation was retried or reset.
+
+Pinned DBOS3.2 _configure_asyncio_thread_pool installs its executor as the adopted
+running loop's default. Destroy shuts that executor; subsequent host to_thread
+calls still target it. This supports a fixture lifecycle cause, not a provider
+or authority failure. A bounded isolated lifecycle or explicit host-owned executor
+restoration needs a new reviewed test before continuing. Preserve the original
+SUCCESS/receipt/observation/hold and qualify any continuation as historical replay.
+
 ## ERROR-099 — Fresh acquisition added a clock after closing admission windows
 
 **Date:** 2026-10-15 (Asia/Bangkok)
