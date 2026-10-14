@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify preserved notification native replay
+
+### Validation
+- One actual known-issued historical replay passes2.20s with unchanged receipt,
+  observation, originalf1/tool1/model0/unknown.01/null and zero additional HTTP.
+- Original config/decision pins and original expiry/current audit clock proven;
+  bodySQL observer167 checks/zero projections, blob/getter0; currentf2→4 released.
+- Original DB/tree/full SDK shutdown failure retained. NEW4 fixture/static and
+  Root SQL guard/type checks pass; corrected SDK lifecycle/fresh outcomes remain open.
+
+**Authored by:** Codex and supervised recovery agent; independent evidence review
+**PR:** not published
+
 ## [2026-10-15] — Compile fixed contained runtime descriptions
 
 ### Added

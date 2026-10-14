@@ -78,3 +78,22 @@ receipt b251e99a retains the original log, portable output and safe native scala
 readback. Actual app backends are absent after the process exits; the failed fixture
 did not export a complete in-process shutdown witness. Lifecycle correction and a
 separately reviewed historical continuation are required before further execution.
+
+## Preserved native replay qualification
+
+One reviewed historical-only continuation passed1PG/2.20s without resetting the
+original database. New current synthetic audit credentials were explicit; actual
+DB clock proved the original token expired. Original registration raw SHA and
+approval SHA matched retained phase evidence, and recipient canonical policy/dates
+matched the issued slot. No source/approval/configuration dates were refreshed.
+
+Actual replay retained SDK SUCCESS/portable output, original intent fence1, receipt
+and observation, one intent/attempt/slot/observation, tool1/model0 and .01 unknown
+hold/null actual. Current lease fence advanced2→4 and released. HTTP/blob/getter
+counts were zero; the runtime SQL observer checked167 statements with zero private
+draft-body projections. Proof84537f0d is retained outside the original tree.
+The original normal015 database stays installed with no application backends.
+
+This proves known-issued native replay, not a second SDK run or the corrected SDK
+shutdown lifecycle. Fresh rejected/uncertain outcomes and OS barriers remain open.
+The first full fixture's original failure remains unchanged.
