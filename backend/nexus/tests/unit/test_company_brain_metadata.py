@@ -16,7 +16,7 @@ _DIALECT = cast(Callable[[], Dialect], PGDialect)
 
 
 def test_every_table_and_revision_fk_preserves_native_company_scope() -> None:
-    assert len(BrainBase.metadata.tables) == 26
+    assert len(BrainBase.metadata.tables) == 28  # Additive012 retains all26 prior Brain tables.
     for table in BrainBase.metadata.sorted_tables:
         assert isinstance(table.c.company_id.type, Uuid)
         assert table.c.company_id.primary_key

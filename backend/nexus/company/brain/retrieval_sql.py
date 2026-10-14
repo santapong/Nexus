@@ -9,6 +9,7 @@ from sqlalchemy import Select, and_, func, literal, or_, select, union
 from sqlalchemy.sql.selectable import CTE
 
 from nexus.company.brain.access_support import readable_resource_ids
+from nexus.company.brain.artifact_input_sql import artifact_closure, artifact_input_denials
 from nexus.company.brain.base import BrainReadScope
 from nexus.company.brain.models import (
     BrainArtifactRevision,
@@ -35,11 +36,12 @@ def source_dependencies(company: UUID) -> CTE:
     direct = BrainDerivationSource.__table__.alias("dependency_source")
     linked = BrainDerivationEvidence.__table__.alias("dependency_evidence")
     evidence = BrainEvidence.__table__.alias("dependency_citation")
-    parent = revision.join(
+    lineage = artifact_closure(company)
+    parent = revision.join(lineage, lineage.c.root == revision.c.artifact_revision_id).join(
         artifact,
         and_(
             artifact.c.company_id == revision.c.company_id,
-            artifact.c.artifact_revision_id == revision.c.artifact_revision_id,
+            artifact.c.artifact_revision_id == lineage.c.node,
         ),
     )
     sources = (
@@ -85,7 +87,27 @@ def source_dependencies(company: UUID) -> CTE:
         )
         .where(revision.c.company_id == company)
     )
-    return union(sources, citations).cte()
+    inherited = BrainSourceRevision.__table__.alias("artifact_input_source_dependency")
+    originals = (
+        select(
+            revision.c.source_revision_id.label("parent"),
+            inherited.c.source_revision_id.label("child"),
+        )
+        .select_from(
+            parent.join(
+                inherited,
+                and_(
+                    inherited.c.company_id == company,
+                    inherited.c.artifact_revision_id == artifact.c.artifact_revision_id,
+                ),
+            )
+        )
+        .where(
+            revision.c.company_id == company,
+            inherited.c.source_revision_id != revision.c.source_revision_id,
+        )
+    )
+    return union(sources, citations, originals).cte()
 
 
 def source_closure(company: UUID) -> CTE:
@@ -152,7 +174,8 @@ def eligible_sources(scope: BrainReadScope, now: datetime) -> Select[tuple[UUID]
         )
     )
     derived = _bad_derivations(scope, closure, readable)
-    bad = union(unreadable, excessive, derived).cte()
+    artifact_inputs = artifact_input_denials(scope, closure, readable)
+    bad = union(unreadable, excessive, derived, *artifact_inputs.selects).cte()
     return select(BrainSourceRevision.source_revision_id).where(
         BrainSourceRevision.company_id == scope.company_id,
         BrainSourceRevision.source_revision_id.not_in(select(bad.c.root)),

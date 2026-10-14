@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.contracts.actions import ActionProposal
+from nexus.company.management.cancellation_support import require_not_cancelled
 from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.execution.management_checks import (
     ManagementArtifactFreshness,
@@ -266,6 +267,8 @@ class ExecutionStore:
             row = await execution_row(session, lease_scope(lease))
             now = await db_now(session)
             require_lease(row, lease, now)
+            if lease.mode == "execute":
+                await require_not_cancelled(session, row.company_id, row.task_id)
             row.lease_until = (
                 max(row.lease_until, now + duration) if row.lease_until else now + duration
             )
@@ -284,6 +287,7 @@ class ExecutionStore:
             row = await execution_row(session, lease_scope(lease))
             now = await db_now(session)
             require_lease(row, lease, now, execute=True)
+            await require_not_cancelled(session, row.company_id, row.task_id)
             await reserve_locked_attempt(session, row, kind, attempt_id, now)
             return snapshot(row)
 

@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import command
 from nexus.company.brain.models import BrainBase
 from nexus.company.directory_models import DirectoryBase
+from nexus.company.management.cancellation_models import CancellationBase
 from nexus.company.management.models import ManagementBase
 from nexus.company.management.scheduling_models import SchedulingBase
 from nexus.execution.billing_models import BillingEvidenceBase
@@ -73,6 +74,7 @@ def verify_profile(connection: Connection) -> None:
         BrainBase.metadata,
         ManagementBase.metadata,
         SchedulingBase.metadata,
+        CancellationBase.metadata,
     ):
         for table in metadata.sorted_tables:
             table.to_metadata(combined)

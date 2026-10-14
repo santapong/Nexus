@@ -209,3 +209,15 @@ is being built with explicit selected-work-lifetime ledger basis and current
 protected output/verifier sharing; owner day totals are a separate live ledger.
 Authoritative cancellation + commitments/owner read views are separate ongoing
 packages. Full native research/report workflow, UI, M4–M6 and release remain.
+
+
+### Native cancellation and artifact input checkpoint — 2026-10-14
+
+Owner cancellation and additive011/012 artifact input permissions are ready for a local
+checkpoint. [Evidence and limits](M3_PROVENANCE_CANCELLATION_CHECKPOINT_2026-10-14.md)
+retain independent original failures and the six unchanged passing ancestry probes.
+Root artifact/target10PG37.81s and existing Brain17PG103.84s pass. This does not
+qualify the in-progress native publisher/DBOS report procedure or complete M3.
+Native report preparation/check preparation2PG32.52s and scheduler cancellation plus
+existing scheduling8PG58.28s are separate active integration evidence. Owner UI/action
+review and actual private/dev session composition continue with the bounded workers.

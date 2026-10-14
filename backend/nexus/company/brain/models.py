@@ -1,6 +1,7 @@
 """Explicit complete Brain metadata import; not wired to the company Alembic environment."""
 
 from nexus.company.brain.access_models import BrainAccessEvent, BrainResource, BrainResourceAccess
+from nexus.company.brain.artifact_input_models import BrainArtifactInput, BrainArtifactResourceInput
 from nexus.company.brain.claim_models import (
     BrainClaimEvidence,
     BrainClaimHead,
@@ -37,6 +38,8 @@ from nexus.company.brain.source_models import (
 
 __all__ = [
     "BrainAccessEvent",
+    "BrainArtifactInput",
+    "BrainArtifactResourceInput",
     "BrainArtifactRevision",
     "BrainBase",
     "BrainChunk",

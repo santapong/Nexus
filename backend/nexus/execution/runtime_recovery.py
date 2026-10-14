@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.access import VerifiedIdentity
+from nexus.company.management.cancellation_support import require_not_cancelled
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_models import SegmentDispatch
 from nexus.execution.runtime_contracts import ExecutionDeniedError
@@ -101,6 +102,7 @@ async def recover_locked(
     if not same_segment and issued:
         raise ExecutionDeniedError("A fresh segment cannot inherit unresolved issued effects")
     if not issued:
+        await require_not_cancelled(session, row.company_id, row.task_id)
         await require_runtime_scope(
             session, control, scope, identity, allow_inactive=False, owner_read=False
         )

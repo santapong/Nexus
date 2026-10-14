@@ -15,6 +15,9 @@ def _value(value: Any, key: str = "") -> Any:
         return _value(value.model_dump(), key)
     if isinstance(value, dict):
         return {name: _value(item, name) for name, item in value.items()}
+    if isinstance(value, (set, frozenset)):
+        items = [_value(item) for item in value]
+        return sorted(items, key=lambda item: json.dumps(item, sort_keys=True, ensure_ascii=False))
     if isinstance(value, (tuple, list)):
         return [_value(item) for item in value]
     if isinstance(value, Decimal):

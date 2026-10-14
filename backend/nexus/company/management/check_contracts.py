@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, Field, StringConstraints, model_validator
 
+from nexus.company.brain.source_registry import SourcePolicy
 from nexus.company.brain.sources import ArtifactRevisionRef, EvidenceRecord, SourceHead
 from nexus.company.management.acceptance import VerificationSpec
 from nexus.company.management.base import (
@@ -40,6 +41,7 @@ class CitationCheckSource(ValueContract):
 
     evidence: EvidenceRecord
     head: SourceHead
+    source_policy: SourcePolicy | None = None
     raw_text: Annotated[str, StringConstraints(max_length=2_097_152)]
 
 

@@ -14,6 +14,7 @@ from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.access_contracts import ResourceGeneration
 from nexus.company.brain.access_support import readable_resource_ids, require_resources
 from nexus.company.brain.artifact_contracts import ArtifactSlice
+from nexus.company.brain.artifact_input_support import artifact_input_closure
 from nexus.company.brain.base import BrainReadScope
 from nexus.company.brain.blob_store import BlobReader
 from nexus.company.brain.models import (
@@ -193,7 +194,13 @@ class BoundedArtifactReader:
         )
         if row is None:
             raise BrainDeniedError("Artifact is unavailable")
-        roots = await _artifact_roots(session, scope, row)
+        lineage = await artifact_input_closure(session, scope, (key,))
+        roots: set[UUID] = set()
+        for input_id in lineage.artifact_revision_ids:
+            parent = await session.get(BrainArtifactRevision, (scope.company_id, input_id))
+            if parent is None:
+                raise BrainDeniedError("Artifact input is unavailable")
+            roots.update(await _artifact_roots(session, scope, parent))
         if not roots or len(roots) > 32:
             raise BrainDeniedError("Artifact provenance is unavailable")
         allowed = set(
@@ -208,8 +215,8 @@ class BoundedArtifactReader:
         if allowed != roots:
             raise BrainDeniedError("Artifact contributing provenance is unavailable")
         all_refs: dict[UUID, SourceRevisionRef] = {}
-        resources = {row.resource_id}
-        classes: list[str] = []
+        resources = set(lineage.resource_ids)
+        classes: list[str] = list(lineage.classifications)
         for root in sorted(roots):
             refs, required, sources = await contributors(session, scope, root)
             all_refs.update({ref.source_revision_id: ref for ref in refs})

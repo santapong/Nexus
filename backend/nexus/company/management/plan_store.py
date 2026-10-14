@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.directory_store import PersistentCompanyDirectory
+from nexus.company.management.cancellation_support import require_plan_not_cancelled
 from nexus.company.management.control_support import ManagementConflictError, db_clock, require_cas
 from nexus.company.management.lifecycle import PlanRevision
 from nexus.company.management.plan_models import (
@@ -77,6 +78,7 @@ class ManagementPlanStore:
             control,
             _,
         ):
+            await require_plan_not_cancelled(session, scope.company_id, payload)
             await validate_plan(
                 session, control, scope, identity, payload, self.catalog, self.source_freshness
             )
@@ -104,6 +106,7 @@ class ManagementPlanStore:
             _,
         ):
             record, head = await self._target(session, scope, plan_revision_id, exact_hash)
+            await require_plan_not_cancelled(session, scope.company_id, record.payload)
             charters = await validate_plan(
                 session,
                 control,

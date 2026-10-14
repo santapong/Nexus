@@ -34,7 +34,13 @@ class BrainArtifactRevision(CompanyRow, RecordedRow, BrainBase):
     sha256: Mapped[str] = mapped_column(String(64))
     byte_length: Mapped[int] = mapped_column(Integer)
     derivation_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    data_classification: Mapped[str | None] = mapped_column(String(16), nullable=True)
     __table_args__ = (
+        CheckConstraint(
+            "data_classification IS NULL OR data_classification IN "
+            "('public','internal','confidential','restricted')",
+            name="ck_brain_artifact_classification",
+        ),
         UniqueConstraint(
             "company_id", "artifact_id", "revision", name="uq_brain_artifact_revision"
         ),

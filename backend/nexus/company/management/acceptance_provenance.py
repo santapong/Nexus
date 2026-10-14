@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.company.brain.artifact_input_support import artifact_input_closure
 from nexus.company.brain.base import BrainReadScope
 from nexus.company.brain.models import (
     BrainArtifactRevision,
@@ -33,7 +34,14 @@ async def reference_sources(
     resource_ids: set[UUID] = set()
     for reference in references:
         artifact = await exact_artifact(session, scope, reference)
-        roots = await artifact_roots(session, scope, artifact)
+        lineage = await artifact_input_closure(session, scope, (artifact.artifact_revision_id,))
+        resource_ids.update(lineage.resource_ids)
+        roots: set[UUID] = set()
+        for input_id in lineage.artifact_revision_ids:
+            parent = await session.get(BrainArtifactRevision, (scope.company_id, input_id))
+            require_acceptance(parent is not None)
+            assert parent is not None
+            roots.update(await artifact_roots(session, scope, parent))
         require_acceptance(0 < len(roots) <= 32)
         allowed = set(
             (

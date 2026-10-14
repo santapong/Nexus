@@ -9,6 +9,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.brain.access_contracts import ResourceRef
+from nexus.company.brain.artifact_input_support import artifact_input_closure
 from nexus.company.brain.base import BrainReadScope, SourceTime
 from nexus.company.brain.models import (
     BrainArtifactRevision,
@@ -228,6 +229,20 @@ async def contributors(
             )
         )
         resources.update(extra.all())
+    artifact_ids = {artifact.artifact_revision_id for _, _, artifact in rows}
+    if derivation_ids:
+        artifact_ids.update(
+            (
+                await session.scalars(
+                    select(BrainDerivation.artifact_revision_id).where(
+                        BrainDerivation.company_id == scope.company_id,
+                        BrainDerivation.derivation_id.in_(derivation_ids),
+                    )
+                )
+            ).all()
+        )
+    lineage = await artifact_input_closure(session, scope, tuple(sorted(artifact_ids)))
+    resources.update(lineage.resource_ids)
     if len(resources) > 32:
         raise BrainDeniedError("Brain provenance exceeds its resource boundary")
     return (

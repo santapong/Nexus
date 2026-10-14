@@ -40,6 +40,31 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Preserve owner stops and complete artifact input permissions
+
+### Added
+- Immutable native owner cancellation and inherited execution/dispatch/plan guards, preserving issued receipts and permanent costs/quotas.
+- Owner artifact target readership provisioning; exact replay preserves later grant revocation.
+- Native artifact-input and resource-input provenance, propagated classification, and mandatory origin validation across byte reads and before-rank source eligibility.
+- Registered no-expiry report input policy checks, production reader ABIs and deterministic exact-byte report renderer.
+
+### Database
+- Normal additive company011 cancellation and company012 artifact-input/classification migrations; forced RLS, immutable history and native company UUID foreign keys. Existing migrations unchanged.
+
+### Fixed
+- Parent artifact source ACL/classification/head requirements could be omitted from source search; source-free leaves could borrow an unrelated output origin (ERROR-061).
+- Restored an accidentally overwritten acceptance provenance module and reapplied only its intended closure delta (ERROR-062).
+
+### Validation and limits
+- Cancellation47 checks (36PG/11unit),64.20s; normal012 schema1PG1.91s; artifact/target10PG37.81s. Independent six unchanged ancestry probes35.19s pass, followed by existing Brain17PG103.84s.
+- Exact scope and limitations: [checkpoint](company-system/M3_PROVENANCE_CANCELLATION_CHECKPOINT_2026-10-14.md). Native publisher/report procedure, scheduler/UI and whole M3/release remain in progress. No live provider, message or deployment was activated.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Integrate approved-plan model calls and close final input permission expiry
 
 ### Added

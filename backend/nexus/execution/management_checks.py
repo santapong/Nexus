@@ -26,6 +26,7 @@ from nexus.company.management.acceptance_models import (
 )
 from nexus.company.management.acceptance_persistence import acceptance_record
 from nexus.company.management.acceptance_support import actual_receipt, receipt_artifacts
+from nexus.company.management.cancellation_support import require_not_cancelled
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_support import db_clock, require_member
 from nexus.company.management.plan_models import (
@@ -317,6 +318,7 @@ async def require_management_execution(
     Old profiles without management tables contain no managed native rows. Issued
     receipt/unknown reconciliation does not call this new-execution gate.
     """
+    await require_not_cancelled(session, work.company_id, work.task_id)
     # Keep legacy discrimination, exact work and every prerequisite in this >50-line gate.
     if (
         await session.scalar(select(func.to_regclass("public.company_management_procedures")))

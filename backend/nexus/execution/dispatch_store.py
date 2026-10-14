@@ -3,6 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.company.management.cancellation_support import require_not_cancelled
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_models import SegmentDispatch
 from nexus.execution.runtime_models import ExecutionWork
@@ -47,6 +48,7 @@ async def reserve_dispatch(
         if existing.binding_json != command.model_dump_json():
             raise ValueError("Action already binds another permanent segment binding")
         return
+    await require_not_cancelled(session, command.company_id, command.task_id)
     if row.worker_id is not None or row.state not in {"eligible", "awaiting_approval"}:
         raise ValueError("Continuation binding requires a released eligible segment")
     if command.segment_id != next_segment_id(snapshot(row)):

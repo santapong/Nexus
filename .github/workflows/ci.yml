@@ -156,6 +156,12 @@ jobs:
           - suite: management-owner-api
             database: nexus_company_test_management_api
             tests: test_company_management_api.py
+          - suite: management-owner-cancellation
+            database: nexus_company_test_management_cancellation
+            tests: test_company_management_cancellation.py test_company_cancellation_boundaries.py test_company_cancellation_schema.py test_company_cancellation_compatibility.py
+          - suite: brain-generated-input-provenance
+            database: nexus_company_test_management_artifacts
+            tests: test_company_artifact_input_provenance.py test_company_artifact_targets.py
     services:
       postgres:
         image: postgres:16-alpine

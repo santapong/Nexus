@@ -144,7 +144,12 @@ def _citation_matches(
     freshness = "fresh"
     if head.availability != "available":
         freshness = "unavailable"
-    elif head.fresh_until is None or head.fresh_until <= command.snapshot.observed_at:
+    elif head.fresh_until is None:
+        if source.source_policy is None or source.source_policy.freshness_seconds is not None:
+            freshness = "stale"
+    elif (
+        source.source_policy is not None and source.source_policy.freshness_seconds is None
+    ) or head.fresh_until <= command.snapshot.observed_at:
         freshness = "stale"
     raw = source.raw_text.encode()
     quoted = raw[evidence.raw_span.start_byte : evidence.raw_span.end_byte]

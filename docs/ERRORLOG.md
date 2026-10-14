@@ -74,6 +74,66 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-062 — Conditional file mutator overwrote the wrong module
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** report test collection during integration
+**Affected files:** `company/management/acceptance_provenance.py`
+
+### What happened
+A local Python edit reused a previous file's text variable when evaluating a conditional.
+It wrote retrieval-record code into the acceptance provenance module, removing three
+public exports. Report test collection failed; no business execution or release occurred.
+
+### Root cause
+The mutation changed the path before refreshing its text and used a conditional expression
+against the stale variable. The editor assumed the intended replacement had succeeded.
+
+### Fix applied
+Restored the exact committed module, reapplied only the intended artifact ancestry import
+and `reference_sources` delta, checked public imports and reran actual reference/report
+paths. The original collection failure remains in `management-reports/final-pg.log`.
+
+### Prevention
+Use explicit file patches or independently parsed named AST edits. Assert intended public
+exports and review the exact diff before combining modules. Avoid shared stale file variables.
+
+---
+
+## ERROR-061 — Artifact ancestry was omitted from source eligibility
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed and independently rechecked
+**Found by:** independent012 ACL/classification/head and missing-origin probes
+**Affected files:** `brain/artifact_input_support.py`, `brain/artifact_input_sql.py`,
+`brain/retrieval_sql.py`, `brain/artifact_store.py`, complete reference/contributor readers
+
+### What happened
+The initial new artifact byte reader traversed input ancestry, but source search eligibility
+could omit the same parent's own private source. A readable legacy input leaf without a
+source/derivation origin could also borrow the output's unrelated supported source.
+
+### Root cause
+Byte and SQL source selection used different dependency closures. Origin validation was
+not enforced at every leaf of the new artifact graph.
+
+### Fix applied
+Source dependencies now traverse all ancestor artifact sources/derivation evidence and
+resources before ranking/counts/handles. Stronger input classifications propagate. Both
+native closure and SQL predicates reject unsupported source-free leaves. Six unchanged
+independent probes pass35.19s; Root's existing Brain regression17PG passes103.84s.
+
+### Prevention
+Retain source search and actual byte/reference probes for ACL revocation, source head
+changes, stronger classification, missing origins and cycles. A supported output source
+cannot replace an input's own proof of origin or permissions.
+
+---
+
+
 ## ERROR-060 — Model price expired after preparation and before final intent
 
 **Date:** 2026-10-14
@@ -1961,7 +2021,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-061*
+*Next error ID: ERROR-063*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

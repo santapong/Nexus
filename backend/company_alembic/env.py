@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 from nexus.company.brain.models import BrainBase
 from nexus.company.directory_models import DirectoryBase
+from nexus.company.management.cancellation_models import CancellationBase
 from nexus.company.management.models import ManagementBase
 from nexus.company.management.scheduling_models import SchedulingBase
 from nexus.execution.billing_models import BillingEvidenceBase
@@ -36,6 +37,7 @@ target_metadata = [
     BrainBase.metadata,
     ManagementBase.metadata,
     SchedulingBase.metadata,
+    CancellationBase.metadata,
 ]
 
 
