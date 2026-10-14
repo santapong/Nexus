@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify actual SDK rejected and uncertain outcomes
+
+### Validation
+- Separate rejected1PG/17.15s then uncertain1PG/16.98s pass with one mock POST each,
+  honest receipt/observation mapping and no second call during native replay.
+- Originalf1/tool1/model0/unknown.01/null conserved; currentf2→4 released. Corrected
+  shutdown proves7/8 owned threads stopped, own engine disposed and app backends0.
+- Only new databases returned to normal base; original accepted history remains.
+  Actual OS recovery, live email and operating release remain open.
+- Root coherent2,366unit/22.78s and scoped strict4 pass; independent artifact hashes
+  and native/SDK/shutdown evidence agree.
+
+**Authored by:** Codex and supervised recovery agent; independent evidence review
+**PR:** not published
+
 ## [2026-10-15] — Qualify preserved notification native replay
 
 ### Validation

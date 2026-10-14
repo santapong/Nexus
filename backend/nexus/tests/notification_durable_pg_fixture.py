@@ -11,11 +11,13 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 import httpx
 import pytest
 from dbos import DBOS, _dbos
+from pydantic import TypeAdapter
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -35,7 +37,12 @@ from nexus.tests.notification_worker_enqueue_pg_fixture import (
     atomic_notification_case,
 )
 
-_DATABASE = "nexus_company_test_notification_enqueue_atomic"
+DurableFixtureDatabase = Literal[
+    "nexus_company_test_notification_enqueue_atomic",
+    "nexus_company_test_notification_durable_rejected",
+    "nexus_company_test_notification_durable_unknown",
+]
+_DATABASE: DurableFixtureDatabase = "nexus_company_test_notification_enqueue_atomic"
 _SOCKET = "/tmp/nexus-release-tests-2026-10-13/socket"
 
 
@@ -86,8 +93,9 @@ async def destroy_sdk_on_host_executor(executor: ThreadPoolExecutor) -> None:
         loop.set_default_executor(executor)
 
 
-def qualified_durable_url() -> URL:
+def qualified_durable_url(database: DurableFixtureDatabase = _DATABASE) -> URL:
     """Same one reviewed fixture pair, without printing credentials or opening a connection."""
+    database = TypeAdapter(DurableFixtureDatabase).validate_python(database, strict=True)
     url = make_url(settings.company_test_database_url)
     assert (url.drivername, url.username, url.password, url.host, url.port, url.database) == (
         "postgresql+asyncpg",
@@ -95,26 +103,29 @@ def qualified_durable_url() -> URL:
         None,
         None,
         None,
-        _DATABASE,
+        database,
     )
     assert dict(url.query) == {"host": _SOCKET, "port": "55438"}
     return url
 
 
-@pytest.fixture
-async def durable_notification_environment() -> AsyncIterator[DurableNotificationEnvironment]:
+@asynccontextmanager
+async def durable_notification_database_scope(
+    database: DurableFixtureDatabase = _DATABASE,
+) -> AsyncIterator[DurableNotificationEnvironment]:
     """Normal015/public DBOS installation; teardown only after exported complete success."""
     # Cohesive fixture exception: closed URL/empty-base, public schema installation,
     # restricted role and success-only cleanup establish one task-owned scope.
+    database = TypeAdapter(DurableFixtureDatabase).validate_python(database, strict=True)
     if not settings.company_test_database_url:
         pytest.skip("Explicit owned durable notification DB is not configured")
-    url = qualified_durable_url()
+    url = qualified_durable_url(database)
     admin = create_async_engine(url)
     app = create_async_engine(url.set(username="nexus_company_app"), poolclass=NullPool)
     env: DurableNotificationEnvironment | None = None
     try:
         async with admin.begin() as connection:
-            assert await connection.scalar(text("SELECT current_database()")) == _DATABASE
+            assert await connection.scalar(text("SELECT current_database()")) == database
             assert await connection.scalar(text("SELECT current_user")) == "santapong"
             tables = tuple(
                 (
@@ -143,7 +154,7 @@ async def durable_notification_environment() -> AsyncIterator[DurableNotificatio
         async with admin.begin() as connection:
             await connection.run_sync(migrate, "upgrade")
         async with app.connect() as connection:
-            assert await connection.scalar(text("SELECT current_database()")) == _DATABASE
+            assert await connection.scalar(text("SELECT current_database()")) == database
             assert await connection.scalar(text("SELECT current_user")) == "nexus_company_app"
             assert await connection.scalar(text("SELECT current_setting('port')")) == "55438"
             assert (
@@ -169,15 +180,25 @@ async def durable_notification_environment() -> AsyncIterator[DurableNotificatio
         await admin.dispose()
 
 
+@pytest.fixture
+async def durable_notification_environment() -> AsyncIterator[DurableNotificationEnvironment]:
+    """Original default fixture keeps its exact closed database and lifecycle behavior."""
+    async with durable_notification_database_scope() as environment:
+        yield environment
+
+
 @asynccontextmanager
 async def durable_notification_case(
-    root: Path, outcome: str
+    root: Path,
+    outcome: str,
+    *,
+    database: DurableFixtureDatabase = _DATABASE,
 ) -> AsyncIterator[DurableNotificationCase]:
     """One actual public case, with loop-independent app connections and a closed HTTP mock."""
     # Cohesive fixture exception: the one actual public case and its offline
     # request transcript share the same task-owned runtime factory lifetime.
     runtime = create_async_engine(
-        qualified_durable_url().set(username="nexus_company_app"), poolclass=NullPool
+        qualified_durable_url(database).set(username="nexus_company_app"), poolclass=NullPool
     )
     requests: list[MockNotificationRequest] = []
     provider_id = uuid4()
@@ -227,13 +248,16 @@ async def sdk_notification_result(
     *,
     root: Path,
     databases: AtomicNotificationDatabases,
+    database: DurableFixtureDatabase = _DATABASE,
 ) -> NotificationSegmentResult:
     """SDK alone acquires ENQUEUED/PENDING; destroy only this created fixed worker before return."""
     # Cohesive lifecycle exception: constructor/launch/result and exact owned
     # thread/session shutdown evidence must remain one try/finally boundary.
     assert _dbos._dbos_global_instance is None and worker._services is None
     host_executor = capture_host_executor()
-    url = qualified_durable_url().set(username="nexus_company_app", drivername="postgresql+psycopg")
+    url = qualified_durable_url(database).set(
+        username="nexus_company_app", drivername="postgresql+psycopg"
+    )
     try:
         (root / "sdk-startup-phase.json").write_text('{"phase":"before_constructor"}\n')
         worker.configure_notification_worker(services, url.render_as_string(hide_password=False))

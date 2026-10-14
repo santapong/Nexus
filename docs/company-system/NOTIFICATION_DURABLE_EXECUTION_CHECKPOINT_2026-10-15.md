@@ -97,3 +97,25 @@ The original normal015 database stays installed with no application backends.
 This proves known-issued native replay, not a second SDK run or the corrected SDK
 shutdown lifecycle. Fresh rejected/uncertain outcomes and OS barriers remain open.
 The first full fixture's original failure remains unchanged.
+
+## Actual rejected and uncertain SDK outcomes
+
+Two separate reviewed calls passed: rejected1PG/17.15s, then uncertain1PG/16.98s.
+Each used its own new normal015/DBOS database, current synthetic credentials,
+public prior owner approval and atomic enqueue. The SDK itself acquired the work.
+Rejection produced a failed native receipt plus actual rejected observation;
+uncertainty retained outcome_unknown receipt/observation. SDK checkpoint SUCCESS
+describes workflow completion, not provider acceptance or delivery.
+
+Each run made one synthetic POST and a separate native replay made no additional
+call. Original intent/slot fence1, tool1/model0, one intent/attempt/slot/observation
+and .01 unknown hold/null actual stayed unchanged; current fence2→4 released.
+The corrected host-executor lifecycle ran successfully: seven rejected and eight
+uncertain SDK threads stopped, the exact supplied engine was disposed and actual
+application backends were zero before replay. Both fresh databases returned to
+normal base afterward. The original accepted database remains normal015/SUCCESS.
+
+Proofs b24bc34b and66af6988 retain full safe native/SDK and shutdown evidence.
+Original accepted fixture failure remains historical; no accepted send was rerun.
+These are synthetic transport/SDK qualifications, not real email delivery/billing,
+OS crash barriers, timer activation, StockFlow, ARM64 or supervised release.
