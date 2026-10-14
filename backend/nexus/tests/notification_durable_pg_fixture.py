@@ -41,6 +41,10 @@ DurableFixtureDatabase = Literal[
     "nexus_company_test_notification_enqueue_atomic",
     "nexus_company_test_notification_durable_rejected",
     "nexus_company_test_notification_durable_unknown",
+    "nexus_company_test_notification_process_intent",
+    "nexus_company_test_notification_process_response",
+    "nexus_company_test_notification_process_receipt",
+    "nexus_company_test_notification_process_observation",
 ]
 _DATABASE: DurableFixtureDatabase = "nexus_company_test_notification_enqueue_atomic"
 _SOCKET = "/tmp/nexus-release-tests-2026-10-13/socket"

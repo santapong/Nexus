@@ -1,6 +1,30 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify notification OS crash and immediate recovery
+
+### Added
+- Test-only fixed process/controller fixtures exercise four actual crash barriers:
+  committed intent, accepted response, committed receipt and committed observation.
+- Restarted helpers observe the live prior lease and wait through the existing
+  acquisition path; no second request, reset allowance or fabricated outcome.
+
+### Fixed
+- Retain spawned child ownership before PID-start reads and attempt every owned
+  cleanup despite metadata failures. Keep explicit unknown/mismatch evidence.
+- Pure launch tests use their imported source location, retaining explicit wrong
+  source/runtime denial cases. Actual OS source remains byte frozen.
+
+### Validation
+- Four separate normal015/SDK OS cases pass, with24/23/24/23 live observations
+  and delegated waits, conserved tool1/model0/positive unknown holds and original
+  native receipts/observations where present. All databases and evidence retained.
+- Root2,518unit/24.36s/19 existing warnings; strict/Ruff/format12 pass.
+- Synthetic transport only; real email, builder/ARM64 and full release remain open.
+
+**Authored by:** Codex and supervised recovery/review agents
+**PR:** not published
+
 ## [2026-10-15] — Reconcile next actual qualification gates
 
 ### Documentation

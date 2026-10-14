@@ -14,19 +14,20 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
-The initial foundation lanes below are historical. Current local head724ff1e has
-integrated Brain/management, native engineering acceptance/recovery, notification
-staging/history/atomic SQL enqueue/postqueue expiry and an actually qualified finite
-read-only parent provider. NEW durable notification freeze2 passes Root2,254unit/
-22.88s; it remains unactivated with actual SDK/process qualification pending.
-Actual full business/provider/ARM64 and operational release gates remain separate.
+The initial foundation lanes below are historical. Current local headae7d9b5 plus
+notification OS qualification integrates Brain/management, native engineering
+acceptance/recovery, notification staging/atomic enqueue and configured contained
+runtime source. Root2,518unit/24.36s and strict/Ruff/format12 pass. Four actual
+notification crash/immediate-restart cases qualify no-reissue and conserved native
+history. Actual contained payload M1/timeout, full business/provider/ARM64 and
+operational release gates remain separate; production workers stay unconfigured.
 
 | Owner | Active deliverable | Required next evidence |
 | --- | --- | --- |
-| engineering_resume | Pure contained payload observer, immutable sidecar store and candidate contracts | Complete captured identity/cap evidence and write-once tests; shared runtime/jobs remain disabled |
-| recovery_resume | Durable notification execution and local SDK qualification source | Exact current authority/history/no-second-POST; actual SDK/process packet follows frozen source review |
-| notification_profiles | Independent review at runtime integration milestones | Exact temporal nomination, endpoint/current authority, evidence scope and no duplicate effects |
-| Root | Shared integration, source/evidence reconciliation and release gates | Full StockFlow, owner UAT/email, models, ARM64/private operations and supervised release |
+| engineering_resume | Exact contained M1/outer-timeout fixture and source staging | New public setup packet, actual payload/conmon/caps/sidecar/protected receipt/replay/cleanup, then timeout |
+| recovery_resume | Frozen notification OS fixtures and retained evidence | Four-case terminal inventory and focused source preservation; no real email activation |
+| notification_profiles | Independent review at combined runtime milestones | Actual barrier/liveness/native outcome conservation and no second request |
+| Root | Integration, concrete qualification launches and release gates | Full StockFlow, owner UAT/email, live models, ARM64/private operations and supervised release |
 
 The first OS intent case completed after source expiry and proves historical
 unknown-state conservation only. The saved-result case recovered current protected

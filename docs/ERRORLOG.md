@@ -74,6 +74,34 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-101 — OS fixture could lose a spawned worker before recording its identity
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed in source2; all four actual OS recovery cases qualified
+**Found by:** Root and independent source review before the first OS fixture launch
+**Affected files:** tests/notification_process_controller.py and its unit tests
+
+The first unlaunched controller read `/proc/PID/stat` after `Popen` but before
+retaining the child handle. A failed read could leave a real child outside the
+controller's cleanup inventory. Cleanup also stopped at the first metadata error,
+which could prevent attempts to stop the other owned child.
+
+Source2 retains the strong unreaped `Popen` handle immediately, with start identity
+explicitly unavailable until observed. Cleanup attempts every owned child and
+records each exit or error before failing as a whole. An observed identity mismatch
+prevents a signal; an unavailable start never becomes an invented identity. Pipe
+and log ownership also stays inside the startup cleanup boundary. Retained pure
+probes cover the nominated post-spawn stat failure and two-child cleanup errors.
+Source1 remains unlaunched and unchanged. All four intent/response/receipt/observation
+cases then passed actual kill/immediate restart with both owned children reaped.
+
+Root's coherent-source test run subsequently exposed two pure tests tied to the
+private launch snapshot path (2 failed, 2,514 passed). Their mocked spawn scenarios
+must nominate the test's current source location while retaining explicit wrong-
+source denial tests. The corrected coherent suite passed2,518/24.36s. This test
+portability correction changes no actual worker source, fixture record or runtime authority.
+
 ## ERROR-100 — SDK shutdown left the adopted host loop using a closed executor
 
 **Date:** 2026-10-15 (Asia/Bangkok)

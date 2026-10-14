@@ -693,3 +693,19 @@ expiry3cases are being prepared under closed packets; neither has executed yet.
 Runtimev2 remains description-only/disabled forjobs. Current evidence/release
 index is refreshed; full StockFlow/ARM64/provider/owner/email/operations gates stay
 required.
+
+### Checked 2026-10-15 — Actual notification OS crash and immediate recovery
+
+Four separate actual normal015/SDK cases pass at committed intent, accepted mock
+response, committed receipt and committed observation. Restarted helpers themselves
+observe the old lease live and delegate24/23/24/23 acquisition waits; no manual
+lease-expiry wait or second request. Original intentf1/slot/source/approval, one
+attempt/tool1/model0 and positive unknown billing remain. Missing receipts or
+observations stay missing; known ones are preserved. Eight owned workers exit and
+each database has SDK SUCCESS/appbackends0. All case trees/databases are retained.
+
+Root coherent2,518unit/24.36s/19 existing warnings and strict/Ruff/format12 pass.
+Original pure location-test failure and unlaunched ownership-gap source remain
+preserved. See the [OS checkpoint](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md).
+This closes mechanical synthetic notification recovery; live delivery and full
+StockFlow/ARM64/provider/owner/private operating release gates remain required.
