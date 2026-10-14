@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Expose current owner pause and permanent work cancellation
+
+### Added
+- Optional signed-current-owner cancellation/control endpoints mounted in the actual isolated factory, with exact OpenAPI response types and dashboard controls.
+- Deliberate permanent-stop reason/intent; uncertain browser responses retain the exact operation/audit identity, target and reason for retry.
+- Dedicated owner-control HTTP CI group. Resume preserves cancellation, actual issued results, unknown cost holds and consumed lifetime allowances.
+
+### Validation and limits
+- Isolated committed-base plus final ten Python changes:1,093unit15.07s; strict/lint/format pass. Frozen worker31checks (15PG/16unit); Root actual mounted factory under normal01315PG48.52s; exact runtime JSON/YAML schema1unit3.89s. Final frontend TypeScript/build5.51s and4client identity-race checks pass.
+- Visible synthetic component simulation verified disabled initial cancellation, deliberate inputs, pause/resume and byte-identical retry. It issued no real company effect. Human owner UAT remains pending authentication handoff; no worker/provider/deployment activated.
+
+**Authored by:** Codex with bounded worker
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Integrate native report execution, recovery and the owner workspace
 
 ### Added

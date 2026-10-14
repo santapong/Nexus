@@ -18,6 +18,7 @@ from nexus.company.directory_store import PersistentCompanyDirectory
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
 from nexus.company.management.action_review_store import OwnerActionReviewStore
 from nexus.company.management.api_services import ManagementApiServices
+from nexus.company.management.cancellation_store import WorkCancellationStore
 from nexus.company.management.commitment_store import CommitmentStore
 from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.goal_store import GoalStore
@@ -64,6 +65,7 @@ def compose_pilot(factory: async_sessionmaker[AsyncSession], config: PilotConfig
         views=ManagementOwnerViews(factory, sources),
         commitments=CommitmentStore(factory),
         action_reviews=OwnerActionReviewStore(factory, catalog, sources, reports=reports),
+        cancellations=WorkCancellationStore(factory),
     )
     return PilotServices(
         CompanyServices(directory, CompanyJournal(factory), CompanyControls(factory)),

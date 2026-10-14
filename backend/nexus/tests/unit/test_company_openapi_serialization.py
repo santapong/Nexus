@@ -50,6 +50,15 @@ def test_runtime_schema_matches_serialized_owner_arrays_and_money(
     safe_load = cast(Callable[[str], object], import_module("yaml").safe_load)
     assert safe_load(portable_yaml.text) == reply.json()
     schema = reply.json()["components"]["schemas"]
+    paths = reply.json()["paths"]
+    assert "/api/v2/companies/{company_id}/management/control" in paths
+    assert "/api/v2/companies/{company_id}/management/control/work/{task_id}/cancel" in paths
+    assert schema["ManagementControlDescriptor"]["properties"]["cancellation_is_permanent"] == {
+        "const": True,
+        "default": True,
+        "title": "Cancellation Is Permanent",
+        "type": "boolean",
+    }
     assert schema["PlanView"]["properties"]["work"]["items"] == {
         "$ref": "#/components/schemas/WorkView"
     }

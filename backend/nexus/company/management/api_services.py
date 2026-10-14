@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from nexus.company.access import CompanyDirectory
 from nexus.company.management.action_review_store import OwnerActionReviewStore
+from nexus.company.management.cancellation_store import WorkCancellationStore
 from nexus.company.management.commitment_store import CommitmentStore
 from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.goal_store import GoalStore
@@ -20,3 +21,4 @@ class ManagementApiServices:
     views: ManagementOwnerViews | None = None
     commitments: CommitmentStore | None = None
     action_reviews: OwnerActionReviewStore | None = None
+    cancellations: WorkCancellationStore | None = None

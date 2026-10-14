@@ -2,6 +2,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useCompanyWork } from '@/hooks/useCompany'
 import type { CompanyIdentity } from '@/types/company'
 import { CompanyQueryState, instant, money, StateLabel } from '@/components/company/CompanyStatus'
+import { WorkCancellationPanel } from '@/components/company/WorkCancellationPanel'
 
 export function CompanyWorkPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -45,5 +46,6 @@ export function CompanyWorkPage() {
           <span>{receipt.state.replace(/_/g, ' ')} · {receipt.billing}</span><span>{money(receipt.known_cost_usd)}</span></div>)}
     </section>
     {data.current_plan && <Link className="text-sm text-indigo-400" to={`/company/plans/${data.current_plan.plan_id}`}>Open current plan</Link>}
+    <WorkCancellationPanel key={data.work.run_id} work={data} />
   </div>
 }

@@ -463,6 +463,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/companies/{company_id}/management/control/work/{task_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** CancelWork */
+        post: operations["ApiV2CompaniesCompanyIdManagementControlWorkTaskIdCancelCancelWork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Descriptor */
+        get: operations["ApiV2CompaniesCompanyIdManagementControlDescriptor"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/company-session/login": {
         parameters: {
             query?: never;
@@ -908,6 +942,18 @@ export interface components {
             label: string;
             budget_reference: string;
         };
+        /** CancellationCommand */
+        CancellationCommand: {
+            /**
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /** Format: uuid */
+            company_id: string;
+            target: components["schemas"]["RunBinding"];
+            reason: string;
+        };
         /** CharterPublish */
         CharterPublish: {
             charter: components["schemas"]["DepartmentCharter"];
@@ -1068,9 +1114,7 @@ export interface components {
         /** CommitmentPublish */
         CommitmentPublish: {
             definition: components["schemas"]["CommitmentDefinition"];
-            /** Version */
             version: string;
-            /** Expected Revision Id */
             expected_revision_id: string | null;
         };
         /** CommitmentRevision */
@@ -1680,37 +1724,64 @@ export interface components {
         /** GoalDefinition */
         GoalDefinition: {
             /**
+             * Schema Version
              * @default nexus.company.management.v1
              * @constant
              */
             schema_version: "nexus.company.management.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Goal Id
+             * Format: uuid
+             */
             goal_id: string;
+            /** Title */
             title: string;
-            /** Format: uuid */
+            /**
+             * Owner Id
+             * Format: uuid
+             */
             owner_id: string;
             mandate: components["schemas"]["RevisionRef"];
-            metrics: (components["schemas"]["GoalMetric"] | unknown)[];
+            /** Metrics */
+            metrics: components["schemas"]["GoalMetric"][];
             due: components["schemas"]["DueIntent"];
         };
         /** GoalMetric */
         GoalMetric: {
             /**
+             * Schema Version
              * @default nexus.company.management.v1
              * @constant
              */
             schema_version: "nexus.company.management.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
+            /** Metric Id */
             metric_id: string;
+            /** Unit */
             unit: string;
-            /** @enum {string} */
+            /**
+             * Comparator
+             * @enum {string}
+             */
             comparator: "gt" | "ge" | "eq" | "le" | "lt";
+            /** Target */
             target: string;
+            /** Baseline */
             baseline: components["schemas"]["KnownBaseline"] | components["schemas"]["UnknownBaseline"];
-            observation_recipe?: string | null;
+            /**
+             * Observation Recipe
+             * @default null
+             */
+            observation_recipe: string | null;
         };
         /** GoalMetricView */
         GoalMetricView: {
@@ -1737,27 +1808,45 @@ export interface components {
             version: string;
             expected_revision_id: string | null;
         };
-        /** GoalRevisionRecord */
+        /**
+         * GoalRevisionRecord
+         * @description Owner publication read record, not independent metric satisfaction or work completion.
+         */
         GoalRevisionRecord: {
             /**
+             * Schema Version
              * @default nexus.company.management.v1
              * @constant
              */
             schema_version: "nexus.company.management.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Revision Id
+             * Format: uuid
+             */
             revision_id: string;
+            /** Version */
             version: string;
+            /** Sha256 */
             sha256: string;
-            /** Format: uuid */
+            /**
+             * Goal Id
+             * Format: uuid
+             */
             goal_id: string;
             definition: components["schemas"]["GoalDefinition"];
-            /** Format: uuid */
+            /**
+             * Recorded By
+             * Format: uuid
+             */
             recorded_by: string;
             /**
+             * Recorded At
              * Format: date-time
-             * @description datetime with the constraint that the value must have timezone info
              */
             recorded_at: string;
         };
@@ -1935,6 +2024,47 @@ export interface components {
              */
             plan_revisions: number;
         };
+        /**
+         * ManagementControlDescriptor
+         * @description UI endpoint/intent descriptions are neither an execution permit nor an uncancel operation.
+         */
+        ManagementControlDescriptor: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /** Cancellation Endpoint */
+            cancellation_endpoint: string;
+            /**
+             * Cancellation Intent
+             * @default cancel_work_permanently
+             * @constant
+             */
+            cancellation_intent: "cancel_work_permanently";
+            /** Pause Endpoint */
+            pause_endpoint: string;
+            pause_body: components["schemas"]["PauseRequest"];
+            resume_body: components["schemas"]["PauseRequest"];
+            /**
+             * Cancellation Is Permanent
+             * @default true
+             * @constant
+             */
+            cancellation_is_permanent: true;
+            /**
+             * Resume Preserves Cancellation
+             * @default true
+             * @constant
+             */
+            resume_preserves_cancellation: true;
+        };
         /** MandatePublish */
         MandatePublish: {
             mandate: components["schemas"]["CompanyMandate"];
@@ -2087,20 +2217,23 @@ export interface components {
              */
             recorded_at: string;
         };
-        /** PauseRequest */
+        /**
+         * PauseRequest
+         * @description Owner pause intent without client-supplied actor/company/audit/budget identity.
+         */
         PauseRequest: {
             /**
+             * Schema Version
              * @default nexus.company.api.v1
              * @constant
              */
             schema_version: "nexus.company.api.v1";
+            /** Paused */
             paused: boolean;
         };
         /** PilotLogin */
         PilotLogin: {
-            /** Email */
             email: string;
-            /** Password */
             password: string;
         };
         /** PilotSessionToken */
@@ -2116,11 +2249,8 @@ export interface components {
         };
         /** PilotSignup */
         PilotSignup: {
-            /** Email */
             email: string;
-            /** Password */
             password: string;
-            /** Invitation */
             invitation: string;
         };
         /** PilotUser */
@@ -2147,9 +2277,7 @@ export interface components {
         };
         /** PlanDecision */
         PlanDecision: {
-            /** Exact Hash */
             exact_hash: string;
-            /** Expected Current Revision Id */
             expected_current_revision_id: string | null;
         };
         /** PlanHeadView */
@@ -2803,6 +2931,16 @@ export interface components {
             actor_id: string;
             active: boolean;
             allowed_principals: string[];
+        };
+        /** WorkCancellationIntent */
+        WorkCancellationIntent: {
+            /** @constant */
+            intent: "cancel_work_permanently";
+            command: components["schemas"]["CancellationCommand"];
+            /** Format: uuid */
+            operation_id: string;
+            /** Format: uuid */
+            audit_trace_id: string;
         };
         /**
          * WorkItem
@@ -3986,6 +4124,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanRevision"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementControlWorkTaskIdCancelCancelWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkCancellationIntent"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerCancellation"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementControlDescriptor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagementControlDescriptor"];
                 };
             };
             /** @description Bad request syntax or unsupported method */

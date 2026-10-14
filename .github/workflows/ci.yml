@@ -159,6 +159,9 @@ jobs:
           - suite: management-owner-cancellation
             database: nexus_company_test_management_cancellation
             tests: test_company_management_cancellation.py test_company_cancellation_boundaries.py test_company_cancellation_schema.py test_company_cancellation_compatibility.py
+          - suite: management-owner-control-api
+            database: nexus_company_test_management_control_api
+            tests: test_company_management_control_api.py test_company_management_control_facts.py
           - suite: brain-generated-input-provenance
             database: nexus_company_test_management_artifacts
             tests: test_company_artifact_input_provenance.py test_company_artifact_targets.py

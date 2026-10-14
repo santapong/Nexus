@@ -5,6 +5,7 @@ import type { CompanyIdentity } from '@/types/company'
 import { CompanyBudgetPanel } from '@/components/company/CompanyBudgetPanel'
 import { CompanyQueryState, instant, StateLabel } from '@/components/company/CompanyStatus'
 import { CompanyPageNavigation } from '@/components/company/CompanyPageNavigation'
+import { CompanyPausePanel } from '@/components/company/CompanyPausePanel'
 
 export function CompanyOverviewPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -18,6 +19,7 @@ export function CompanyOverviewPage() {
       <p className="text-gray-400 mt-2">{data.mandate?.revision.mandate.purpose ?? 'No current mandate recorded.'}</p></div>
       <StateLabel warn={data.paused}>{data.paused ? 'Paused' : 'Owner supervised'}</StateLabel></div>
     <CompanyBudgetPanel budget={data.budget} />
+    <CompanyPausePanel key={identity.company_id} companyId={identity.company_id} paused={data.paused} />
     <div className="grid md:grid-cols-2 gap-5">
       <section className="rounded-lg border border-gray-800 bg-gray-900 p-5 space-y-4">
         <h3 className="font-semibold text-white">Goals</h3>

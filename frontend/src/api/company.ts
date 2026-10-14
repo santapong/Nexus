@@ -3,6 +3,7 @@ import type {
   PlanDecision, PlanRevision, PlanView, TodayView, WorkView,
   ActionReview, ActionDecision, ActionDecisionResponse,
   CompanyLogin, CompanySignup, CompanySession,
+  ManagementControlDescriptor, WorkCancellationIntent, OwnerCancellation, CompanyPauseState,
 } from '@/types/company'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -53,6 +54,13 @@ const base = (id: string) => `/api/v2/companies/${encodeURIComponent(id)}/manage
 const query = (after?: string | null) => after ? `?after_id=${encodeURIComponent(after)}` : ''
 
 export const companyApi = {
+  controls: (id: string) => companyFetch<ManagementControlDescriptor>(base(id) + '/control'),
+  pause: (id: string, paused: boolean) => companyFetch<CompanyPauseState>(
+    `/api/v2/companies/${encodeURIComponent(id)}/pause`,
+    { method: 'POST', body: JSON.stringify({ paused }) }),
+  cancelWork: (id: string, body: WorkCancellationIntent) => companyFetch<OwnerCancellation>(
+    `${base(id)}/control/work/${encodeURIComponent(body.command.target.task_id)}/cancel`,
+    { method: 'POST', body: JSON.stringify(body) }),
   login: (body: CompanyLogin) => companyFetch<CompanySession>('/api/v2/company-session/login',
     { method: 'POST', body: JSON.stringify(body) }),
   signup: (body: CompanySignup) => companyFetch<CompanySession>('/api/v2/company-session/signup',

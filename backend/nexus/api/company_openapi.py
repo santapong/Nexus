@@ -8,8 +8,10 @@ from litestar import Request
 from litestar.openapi.plugins import JsonRenderPlugin, YamlRenderPlugin
 from pydantic import BaseModel
 
+from nexus.api.company_management_control_routes import ManagementControlDescriptor
 from nexus.company.access import PrincipalAccess
 from nexus.company.management.action_review_contracts import ActionReview
+from nexus.company.management.cancellation_contracts import OwnerCancellation
 from nexus.company.management.commitment_contracts import CommitmentRevision
 from nexus.company.management.goal_store import GoalRevisionRecord
 from nexus.company.management.governance import CharterRevision, MandateRevision
@@ -37,6 +39,8 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     GoalRevisionRecord,
     PlanRevision,
     PilotSessionToken,
+    ManagementControlDescriptor,
+    OwnerCancellation,
 )
 
 
