@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Check canonical registry preservation in the eligibility test
+
+### Fixed
+- Compare the actual canonical identity bytes rather than unspecified frozenset
+  JSON iteration order; preserve registration equality, binding and golden checks.
+- Retain the original coherent failure and unsuccessful partial seed probes.
+- Corrected coherent integration suite passes2,565/24.80s with19 existing warnings.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Preserve first actual contained M1 qualification failure
 
 ### Evidence

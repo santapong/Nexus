@@ -100,7 +100,8 @@ def test_fresh_explicit_observation_preserves_original_registration_and_binding(
     )
     validate_plan_profile(updated, child(), NOW + timedelta(minutes=10))
     assert updated.models == original.models
-    assert updated.models.model_dump_json() == original.models.model_dump_json()
+    # Registry identity uses canonical bytes; frozenset JSON iteration order is unspecified.
+    assert canonical_json(updated.models) == canonical_json(original.models)
     assert updated.models.revision == child().binding.model_registry_version
 
 

@@ -74,6 +74,25 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-103 — Registry preservation test compared unordered raw JSON
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** low
+**Status:** fixed; coherent integration regression passed2,565/24.80s
+**Found by:** coherent integration suite, 1 failed / 2,564 passed
+**Affected files:** tests/unit/test_company_model_observations.py
+
+The preservation test confirmed equal model registrations, then failed because
+the capability frozenset had a different raw JSON array iteration order after
+reconstruction. The actual identity/signature contract uses canonical_json and
+canonical_sha256. No capability, price or registration-content difference was
+shown. Ten partial subprocess probes with seeds0–9 did not reproduce the full
+suite's ordering difference; retain that negative result and the original failure.
+
+Compare exact canonical bytes while retaining the full registration-equality and
+binding assertions. This changes only the test, not registry serialization,
+production authority, canonical goldens or eligibility behavior.
+
 ## ERROR-102 — Unknown containment result discarded the diagnostic basis
 
 **Date:** 2026-10-15 (Asia/Bangkok)
