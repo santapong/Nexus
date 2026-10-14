@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Validate actual cycle partition rows without mutation
+
+### Added
+- Read-only same-session CompanyControl-first helper checks the full current plan,
+  permanent procedure and complete directory/execution family, immutable registrations,
+  delegated reservations, native zero-model slice and original revision evidence.
+- Value-equal Decimal scales preserve stored registration bytes and hash verification.
+
+### Validation
+- 39 focused source tests and strict/Ruff/format4 pass; original compatibility failure
+  retained and independently reviewed. No PostgreSQL/mutex or activation claim.
+- Helper remains unreferenced by runtime gates pending real StrategyBrief transition proof.
+
+**Authored by:** Codex and supervised planning/review agents
+**PR:** not published
+
 ## [2026-10-15] — Compose complete cycle catalog checks
 
 ### Added
@@ -10,7 +26,7 @@
   configured nonmodel role tuples, preserving current health and effect boundaries.
 
 ### Validation
--117 focused checks and strict/Ruff/format5 pass; coherent2,652unit/25.52s passes.
+- 117 focused checks and strict/Ruff/format5 pass; coherent2,652unit/25.52s passes.
 - Independent review confirms old mixed whole-plan/ancestry denial remains. Actual
   partition SQL and StrategyBrief transition proof are still required for activation.
 
