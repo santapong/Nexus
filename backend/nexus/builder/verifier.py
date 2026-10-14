@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.contracts import BuilderValue
 from nexus.builder.execution_contracts import BuilderRunResult
 from nexus.builder.result_store import BuilderResultStore
@@ -49,7 +50,12 @@ async def independent_candidate(
     author: BuilderRunResult,
     verifier: BuilderRunResult,
     guard: BuilderSourceGuard,
+    *,
+    containment_store: ContainmentEvidenceStore | None = None,
+    execution_method_sha256: str | None = None,
 ) -> BuilderVerificationCandidate:
+    # The >50-line candidate boundary retains current native references around
+    # both protected summaries/sidecar rereads before deriving a pure verdict.
     if (
         guard.spec != verifier.spec
         or guard.identity != identity
@@ -58,7 +64,13 @@ async def independent_candidate(
         raise ValueError("Builder verification binds another actor/job")
     references = await _references(factory, lease, identity, author, verifier, guard)
     for result, reference in zip((author, verifier), references, strict=True):
-        await actual_summary(guard, result, reference)
+        await actual_summary(
+            guard,
+            result,
+            reference,
+            containment_store=containment_store,
+            execution_method_sha256=execution_method_sha256,
+        )
     if await _references(factory, lease, identity, author, verifier, guard) != references:
         raise ValueError("Builder verification current references changed")
     comparable = (

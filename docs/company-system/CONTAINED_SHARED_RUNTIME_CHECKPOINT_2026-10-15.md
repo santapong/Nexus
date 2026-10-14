@@ -1,0 +1,56 @@
+# Configured contained native runtime integration
+
+Checked2026-10-15 againsta2149a6 plus the frozen shared package. The existing
+single native run now accepts optional concrete contained services. DefaultNone
+keeps v1 behavior and denies v2. No runtime services, DB job or container is activated.
+
+The full method digest identifies the complete implementation contract, including
+parent/observer/store, original source-clock windows, task-local final spawn check,
+retained ownership, result binding and fixed cgroupfs cleanup. It is not a successful
+qualification receipt or owner permission. Original policy/spec/action hash binds it.
+Generic and exact Nodev4 configuration are checked before metadata/preparation/intent;
+the Node diamond still uses one common run. Credential wrapping preserves services.
+
+Fresh execution obtains actual parent facts before preparation, composes source
+and fresh parent under the existing EffectStore intent transaction, and retains
+its actual final SQL clock. One committed permit calls the bounded process path.
+Current source/lease/approval windows and parent are checked again before issue.
+No new allowance, retry or refund is introduced. Unresolved spawn handles stay on
+the per-job services after exception handling; known PID is exposed with explicitly
+unknown start/path/reap when those facts are unavailable.
+
+Raw capture decoding uses a private rendering view only. The original v2 spec and
+intent fence are restored before base result/sidecar identity. Runtime PID metadata
+is retained for unknown outcomes. Host uncertainty cannot produce a terminal
+receipt. Sidecar writing and final result validation retain the original job end.
+Known replay checks original issuance and actual sidecar bytes without old live
+parent observations or a second process call.
+
+Protected publication embeds the exact ref/full result hash, rereads actual sidecar
+bytes after native provenance admission and before append, then closes actual final
+clocks. Engineering loading and revalidation reread original sidecars before final
+artifact READ/grant/freshness checks. Unconfigured or mismatched v2 evidence denies;
+v1 protected payload golden remains exact.
+
+Known succeeded cleanup checks current native lease/member/receipt, protected summary
+and original sidecar before fixed cgroupfs inspection/removal of the sealed full ID.
+One cleanup end is capped by five seconds and actual DB-anchored lease expiry;
+the final native fence follows inspection. Complete inventory/pipe/wait evidence is
+required for absence. CachedRunning/deadPID ambiguity is unresolved; no force-rm.
+Known failed commands stay failed and are not automatically cleaned by this protocol.
+
+## Validation and remaining qualification
+
+Shared freeze1c04f79c retains30 source and22 logs; process08511a59, cleanup603f1c52
+and protected854bdbbe retain their original scopes. Root coherent2,486unit/24.42s,
+strict30, formatting30 and final corrected Ruff30 pass. Independent source review
+matched all hashes and closed pre-intent Node configuration, exception-handle lifetime
+and post-validation deadline findings. Retained failures include strict dataclass
+fixture reconstruction, missing snapshot dependency and the original scope-specific
+tests-first negatives; they are not disguised as actual DB/engine failures.
+
+This is source, synthetic OS and actual sidecar-filesystem proof. A fresh normal015
+native M1 job must still prove real parent/payload/conmon identity, numeric limits,
+sidecar/protected receipt, no-invoke replay and receipt-bound cleanup. Outer-timeout
+and representative ARM64 jobs remain required. Full StockFlow, live model quality,
+owner/email UAT, private deployment/disaster recovery/soak and final release remain open.

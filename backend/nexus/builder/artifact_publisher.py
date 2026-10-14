@@ -8,6 +8,7 @@ from uuid import UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.execution_contracts import BuilderRunResult
 from nexus.builder.publication_support import (
     append_inputs,
@@ -17,7 +18,12 @@ from nexus.builder.publication_support import (
     require_replay_manifest,
 )
 from nexus.builder.result_store import BuilderResultStore
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.builder.source_guard import BuilderSourceGuard
+from nexus.builder.verification_support import (
+    require_containment_configuration,
+    require_result_containment,
+)
 from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.brain.access_support import require_resources
@@ -44,10 +50,32 @@ class BuilderArtifactPublisher:
         blobs: ProtectedBlobStore,
         target: ResourceRef,
         policy: SourcePolicy,
+        *,
+        containment_store: ContainmentEvidenceStore | None = None,
+        execution_method_sha256: str | None = None,
     ) -> None:
+        require_containment_configuration(containment_store, execution_method_sha256)
         self.factory, self.blobs, self.target, self.policy = factory, blobs, target, policy
+        self.containment_store, self.execution_method_sha256 = (
+            containment_store,
+            execution_method_sha256,
+        )
 
     def payload(self, result: BuilderRunResult) -> bytes:
+        result = BuilderRunResult.model_validate(result.model_dump())
+        require_containment_configuration(self.containment_store, self.execution_method_sha256)
+        contained = {}
+        if result.spec.runtime_recipe == RUNTIME_V2:
+            if (
+                self.containment_store is None
+                or result.containment is None
+                or (
+                    result.containment.identity.execution_method_sha256
+                    != self.execution_method_sha256
+                )
+            ):
+                raise ValueError("Protected runtime v2 containment is unconfigured or mismatched")
+            contained = {"containment": result.containment.model_dump(mode="json")}
         return json.dumps(
             {
                 "result_sha256": BuilderResultStore.digest(result),
@@ -59,6 +87,7 @@ class BuilderArtifactPublisher:
                 "artifacts": [row.metadata.model_dump(mode="json") for row in result.artifacts],
                 "logs": [row.metadata.model_dump(mode="json") for row in result.logs],
                 "limitations": result.limitations,
+                **contained,
             },
             sort_keys=True,
             separators=(",", ":"),
@@ -117,6 +146,9 @@ class BuilderArtifactPublisher:
                 self.target.resource_id,
                 self.policy,
                 await db_now(session),
+            )
+            await require_result_containment(
+                result, self.containment_store, self.execution_method_sha256
             )
             await self.append(session, result, reference, derivation, originals, resources)
             final = await db_now(session)

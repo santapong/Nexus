@@ -53,7 +53,7 @@ async def read_engineering_dispatch(
         phase = engineering_phase(binding)
         action = ActionProposal.model_validate_json(action_row.proposal_json)
         spec = BuilderExecutionSpec.model_validate_json(json.dumps(action.parameters))
-        spec.require_policy(services.runner.policy)
+        services.runner.require_execution_policy(spec)
         if action_hash(action) != action_row.proposal_hash:
             raise ValueError("Engineering exact action checksum differs")
         require_command_binding(binding, action, command)

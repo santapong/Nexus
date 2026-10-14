@@ -10,6 +10,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.builder.artifact_publisher import BuilderArtifactPublisher
+from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.engineering_contracts import EngineeringSourceWitness
 from nexus.builder.engineering_witness import load_witness
 from nexus.builder.execution_contracts import BuilderRunResult
@@ -33,8 +34,18 @@ class EngineeringArtifactPublisher(BuilderArtifactPublisher):
         target: ResourceRef,
         policy: SourcePolicy,
         jobs_root: Path,
+        *,
+        containment_store: ContainmentEvidenceStore | None = None,
+        execution_method_sha256: str | None = None,
     ) -> None:
-        super().__init__(factory, blobs, target, policy)
+        super().__init__(
+            factory,
+            blobs,
+            target,
+            policy,
+            containment_store=containment_store,
+            execution_method_sha256=execution_method_sha256,
+        )
         if not jobs_root.is_absolute() or jobs_root.resolve(strict=True) != jobs_root:
             raise ValueError("Engineering witness root is not an actual managed directory")
         self.jobs_root, self.witnesses = jobs_root, {}

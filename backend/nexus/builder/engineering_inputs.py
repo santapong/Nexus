@@ -9,6 +9,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.engineering_contracts import (
     EngineeringChangeDeclaration,
     EngineeringCheckInput,
@@ -17,7 +18,12 @@ from nexus.builder.engineering_contracts import (
 from nexus.builder.engineering_metadata import EngineeringMetadata, actual_engineering_metadata
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.result_store import BuilderResultStore
-from nexus.builder.verification_support import actual_result_reference
+from nexus.builder.verification_support import (
+    actual_result_reference,
+    require_containment_configuration,
+    require_result_containment,
+    require_summary_containment,
+)
 from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.artifact_contracts import ArtifactSlice
 from nexus.company.brain.artifact_store import BoundedArtifactReader
@@ -72,7 +78,11 @@ class RegisteredEngineeringInputs:
         results: BuilderResultStore,
         declarations: tuple[EngineeringChangeDeclaration, ...],
         freshness: RegisteredSourceFreshness,
+        *,
+        containment_store: ContainmentEvidenceStore | None = None,
+        execution_method_sha256: str | None = None,
     ) -> None:
+        require_containment_configuration(containment_store, execution_method_sha256)
         if not 0 < len(declarations) <= 32 or len({row.goal_id for row in declarations}) != len(
             declarations
         ):
@@ -84,6 +94,10 @@ class RegisteredEngineeringInputs:
             freshness,
         )
         self.declarations = {row.goal_id: row for row in declarations}
+        self.containment_store, self.execution_method_sha256 = (
+            containment_store,
+            execution_method_sha256,
+        )
 
     async def load(
         self,
@@ -168,6 +182,10 @@ class RegisteredEngineeringInputs:
                 result.intent_fence,
             )
         )
+        require_summary_containment(result, protected.text)
+        await require_result_containment(
+            result, self.containment_store, self.execution_method_sha256
+        )
         witness = EngineeringSourceWitness.model_validate_json(
             json.dumps(value.get("engineering_source_witness"))
         )
@@ -196,6 +214,10 @@ class RegisteredEngineeringInputs:
             and await actual_result_reference(session, prepared.command.verifier)
             == current.verifier_output
         )
+        for result in (prepared.command.author, prepared.command.verifier):
+            await require_result_containment(
+                result, self.containment_store, self.execution_method_sha256
+            )
         for artifact in prepared.artifacts:
             await self.reader.revalidate_artifact(
                 session, control, scope, identity, artifact, await db_now(session)

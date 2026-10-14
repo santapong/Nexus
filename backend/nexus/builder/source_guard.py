@@ -9,8 +9,10 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.policy import BuilderToolPolicy
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.access_support import require_resources
 from nexus.company.brain.artifact_store import BoundedArtifactReader
@@ -46,6 +48,8 @@ class BuilderSourceGuard:
         artifacts: BoundedArtifactReader,
         freshness: RegisteredSourceFreshness,
         catalog: PlanAdmissionCatalog,
+        *,
+        containment: ContainmentServices | None = None,
     ) -> None:
         self.spec, self.policy, self.lease, self.identity = spec, policy, lease, identity
         self.source, self.artifacts, self.freshness, self.catalog = (
@@ -55,6 +59,7 @@ class BuilderSourceGuard:
             catalog,
         )
         self.deadlines: tuple[datetime, ...] = ()
+        self.containment = containment
 
     def scope(self) -> BrainReadScope:
         lease = self.lease
@@ -80,7 +85,12 @@ class BuilderSourceGuard:
         actual = ActionProposal.model_validate_json(action.proposal_json)
         if actual.parameters != self.spec.model_dump(mode="json"):
             raise ValueError("Builder exact proposal descriptor differs")
-        self.spec.require_policy(self.policy)
+        if self.spec.runtime_recipe == RUNTIME_V2:
+            if type(self.containment) is not ContainmentServices:
+                raise ValueError("Builder runtime v2 source guard is not configured")
+            self.containment.require_policy(self.spec, self.policy)
+        else:
+            self.spec.require_policy(self.policy)
         if self.spec.output_resource is not None and tuple(
             row.resource
             for row in self.catalog.resources

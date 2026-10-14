@@ -9,6 +9,10 @@ from uuid import uuid5
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.builder.artifact_publisher import BuilderArtifactPublisher
+from nexus.builder.contained_compiler import described_contained_script
+from nexus.builder.contained_invocation import invoke_contained
+from nexus.builder.contained_plan import describe_contained_selectors
+from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.contracts import BuilderCapabilities
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.node_capture import node_capture_result
@@ -28,6 +32,7 @@ from nexus.builder.public_image import file_sha256
 from nexus.builder.result_store import BuilderResultStore
 from nexus.builder.runner import NativeBuilderRunner
 from nexus.builder.runner_capture import LeaseWatch
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.builder.runtime_plan import PreparedSources
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
@@ -50,6 +55,8 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
         jobs_root: Path,
         publisher: BuilderArtifactPublisher,
         config: NodeRuntimeConfig,
+        *,
+        containment: ContainmentServices | None = None,
     ) -> None:
         super().__init__(
             factory,
@@ -61,6 +68,7 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
             results,
             jobs_root,
             publisher,
+            containment=containment,
         )
         if (
             policy.runtime_inputs != config.pins
@@ -71,7 +79,7 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
         self.config = config
 
     async def prepare(self, spec: BuilderExecutionSpec, guard: BuilderSourceGuard) -> Path:
-        require_node_recipe(spec, self.policy, execution=True)
+        self.require_node_execution_recipe(spec)
         if spec.runtime_inputs != self.config.pins:
             raise ValueError("Native Node runtime pins changed before preparation")
         await self.config.revalidate()
@@ -95,7 +103,10 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
         super().require_binding(lease, identity, spec, guard)
         if spec.job.architecture != self.config.pins.architecture:
             raise ValueError("Native Node job differs from qualified cache/tool platform")
-        require_node_recipe(spec, self.policy, execution=False)
+        if spec.runtime_recipe == RUNTIME_V2:
+            describe_contained_selectors(spec, self.policy)
+        else:
+            require_node_recipe(spec, self.policy, execution=False)
 
     def _prepare_commands(self, base: Path, spec: BuilderExecutionSpec) -> None:
         root = base / "node-commands"
@@ -127,7 +138,11 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
         hosts = base / "loopback-hosts"
         hosts.write_text(loopback_hosts())
         hosts.chmod(0o600)
-        (base / "entrypoint.sh").write_text(node_script(spec, self.policy))
+        (base / "entrypoint.sh").write_text(
+            described_contained_script(spec, self.policy)
+            if spec.runtime_recipe == RUNTIME_V2
+            else node_script(spec, self.policy)
+        )
 
     async def invoke(
         self,
@@ -138,7 +153,11 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
         guard: BuilderSourceGuard,
         base: Path,
     ) -> BuilderRunResult:
-        require_node_recipe(spec, self.policy, execution=True)
+        self.require_node_execution_recipe(spec)
+        if spec.runtime_recipe == RUNTIME_V2:
+            return await invoke_contained(
+                self, lease, identity, action, spec, guard, base, node_config=self.config
+            )
         argv = node_argv(
             spec,
             self.policy,
@@ -162,3 +181,11 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
             watchdog=watch.check,
         )
         return node_capture_result(capture, spec, action, lease.fence, self.image_id, name)
+
+    def require_node_execution_recipe(self, spec: BuilderExecutionSpec) -> None:
+        """Retain existing recipes; contained execution supports only its complete fixed Nodev4."""
+        if spec.runtime_recipe == RUNTIME_V2:
+            self.require_execution_policy(spec)
+            describe_contained_selectors(spec, self.policy)
+        else:
+            require_node_recipe(spec, self.policy, execution=True)

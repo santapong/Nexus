@@ -11,6 +11,7 @@ from nexus.builder.engineering_witness import capture_witness
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.native_state import actual_action, require_record_result
 from nexus.builder.runner import NativeBuilderRunner
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal
@@ -51,7 +52,11 @@ class EngineeringNativeBuilderRunner(NativeBuilderRunner):
             await publisher.prepare_witness(result)
         try:
             disclosed = await super().reconcile(lease, identity, action, spec, guard)
-            if result is not None and result.outcome != "outcome_unknown":
+            if (
+                result is not None
+                and result.outcome != "outcome_unknown"
+                and spec.runtime_recipe != RUNTIME_V2
+            ):
                 await cleanup_known_engineering_container(
                     self.factory,
                     lease,
@@ -60,6 +65,8 @@ class EngineeringNativeBuilderRunner(NativeBuilderRunner):
                     spec,
                     result,
                     self.receipt(result, publisher.reference(result)),
+                    containment=getattr(self, "containment", None),
+                    policy=self.policy,
                 )
             return disclosed
         finally:

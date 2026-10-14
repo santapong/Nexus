@@ -9,6 +9,7 @@ from typing import Literal, Self
 from pydantic import AwareDatetime, Field, model_validator
 
 from nexus.builder.contained_evidence_types import ContainmentRef
+from nexus.builder.contained_process_contracts import RuntimeCapture
 from nexus.builder.contracts import (
     BuilderArtifact,
     BuilderCommandReceipt,
@@ -116,9 +117,12 @@ class BuilderRunResult(BuilderValue):
     elapsed_millis: int = Field(ge=0, strict=True)
     limitations: tuple[str, ...] = Field(default=(), max_length=16)
     containment: ContainmentRef | None = Field(default=None, exclude_if=absent)
+    contained_runtime: RuntimeCapture | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def truthful_success(self) -> Self:
+        if self.spec.runtime_recipe == RUNTIME_V1 and self.contained_runtime is not None:
+            raise ValueError("Legacy builder result cannot attach contained runtime metadata")
         if self.containment is not None:
             identity = self.containment.identity
             base = self.model_copy(update={"containment": None})

@@ -9,7 +9,13 @@ from uuid import uuid5
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.builder.artifact_publisher import BuilderArtifactPublisher
+from nexus.builder.contained_compiler import described_contained_script
+from nexus.builder.contained_intent_check import ContainedParentIntentCheck
+from nexus.builder.contained_invocation import invoke_contained
+from nexus.builder.contained_results import require_contained_result
+from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.contracts import BuilderCapabilities
+from nexus.builder.engineering_cleanup import cleanup_known_engineering_container
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.native_state import (
     actual_action,
@@ -23,6 +29,7 @@ from nexus.builder.process import bounded_call, remove_known_owned
 from nexus.builder.protected_patch import apply_patch, load_protected_patch, parse_patch
 from nexus.builder.result_store import BuilderResultStore
 from nexus.builder.runner_capture import LeaseWatch, capture_result
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.builder.runtime_plan import PreparedSources, runtime_argv, runtime_script
 from nexus.builder.snapshot import committed_archive, extract_source
 from nexus.builder.source_guard import BuilderSourceGuard
@@ -32,6 +39,7 @@ from nexus.company.contracts.actions import ActionProposal
 from nexus.company.contracts.knowledge import ArtifactRef
 from nexus.company.contracts.results import ActionReceipt
 from nexus.execution.effect_store import EffectStore
+from nexus.execution.intent_checks import CompositeBeforeIntentCheck
 from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_store import ExecutionStore
 from nexus.harness.canonical import action_hash
@@ -49,6 +57,8 @@ class NativeBuilderRunner:
         results: BuilderResultStore,
         jobs_root: Path,
         publisher: BuilderArtifactPublisher | None = None,
+        *,
+        containment: ContainmentServices | None = None,
     ) -> None:
         self.factory, self.execution, self.effects, self.policy = (
             factory,
@@ -63,6 +73,7 @@ class NativeBuilderRunner:
             jobs_root,
         )
         self.publisher = publisher
+        self.containment = containment
 
     async def run(
         self,
@@ -72,16 +83,25 @@ class NativeBuilderRunner:
         spec: BuilderExecutionSpec,
         guard: BuilderSourceGuard,
     ) -> BuilderRunResult | None:
+        # Keep the >50-line single native permit path cohesive: parent/source,
+        # issuance, immutable result, protected receipt and cleanup share one job.
         spec = BuilderExecutionSpec.model_validate_json(spec.model_dump_json())
         self.require_binding(lease, identity, spec, guard)
         previous, _ = await actual_action(self.factory, lease, identity, action, spec)
         if previous is not None:
             return await self.reconcile(lease, identity, action, spec, guard)
+        if self.containment is not None and spec.runtime_recipe == RUNTIME_V2:
+            await self.containment.before_prepare(spec)
         require_preparation(spec.job, self.policy, self.capabilities)
         await current_source(self.factory, lease, identity, action, guard, issued=False)
         with self.results.slot():
             base = await self.prepare(spec, guard)
-            begin = await self.effects.begin(lease, identity, action.action_id, before_intent=guard)
+            check = (
+                CompositeBeforeIntentCheck((guard, ContainedParentIntentCheck(self.containment)))
+                if self.containment is not None and spec.runtime_recipe == RUNTIME_V2
+                else guard
+            )
+            begin = await self.effects.begin(lease, identity, action.action_id, before_intent=check)
             if not begin.permit_external_call:
                 return await self.reconcile(lease, identity, action, spec, guard)
             result = await self.invoke(lease, identity, action, spec, guard, base)
@@ -95,9 +115,22 @@ class NativeBuilderRunner:
                 await self.effects.record_receipt(
                     guard.lease, identity, self.receipt(result, protected), actual_usd=None
                 )
-                await remove_known_owned(
-                    result.container_name, str(action.action_id), str(action.company_id)
-                )
+                if spec.runtime_recipe != RUNTIME_V2:
+                    await remove_known_owned(
+                        result.container_name, str(action.action_id), str(action.company_id)
+                    )
+                elif result.outcome == "commands_succeeded":
+                    await cleanup_known_engineering_container(
+                        self.factory,
+                        guard.lease,
+                        identity,
+                        action,
+                        spec,
+                        result,
+                        self.receipt(result, protected),
+                        containment=self.containment,
+                        policy=self.policy,
+                    )
             disclosed = await result_disclosure(self.factory, guard.lease, identity, guard)
             return result if disclosed else None
 
@@ -119,7 +152,11 @@ class NativeBuilderRunner:
             verify_snapshots(base / "baseline", base / "post", before, spec.job.write_paths)
             entry = base / "entrypoint.sh"
             with entry.open("x") as stream:
-                stream.write(runtime_script(spec, self.policy))
+                stream.write(
+                    described_contained_script(spec, self.policy)
+                    if spec.runtime_recipe == RUNTIME_V2
+                    else runtime_script(spec, self.policy)
+                )
             entry.chmod(0o600)
             resolver = base / "resolv.conf"
             with resolver.open("x"):
@@ -138,6 +175,8 @@ class NativeBuilderRunner:
         guard: BuilderSourceGuard,
         base: Path,
     ) -> BuilderRunResult:
+        if spec.runtime_recipe == RUNTIME_V2:
+            return await invoke_contained(self, lease, identity, action, spec, guard, base)
         argv = runtime_argv(
             spec,
             self.policy,
@@ -169,12 +208,25 @@ class NativeBuilderRunner:
         spec: BuilderExecutionSpec,
         guard: BuilderSourceGuard,
     ) -> BuilderRunResult | None:
+        # Keep original result/sidecar, native receipt and exact cleanup in one
+        # >50-line replay boundary; it must never call prepare or invoke.
         spec = BuilderExecutionSpec.model_validate_json(spec.model_dump_json())
         self.require_binding(lease, identity, spec, guard)
         await actual_action(self.factory, lease, identity, action, spec)
         record = await self.effects.get(lease, identity, action.action_id)
         require_record_result(record, action_hash(action), lease.run_id)
         result = await self.results.load(spec)
+        if result is not None and spec.runtime_recipe == RUNTIME_V2:
+            if (result.proposal_sha256, result.intent_fence) != (
+                record.proposal_hash,
+                record.intent_fence,
+            ):
+                raise ValueError("Saved contained result differs from native issuance")
+            assert self.containment is not None
+            if result.containment is not None:
+                await require_contained_result(
+                    result, self.containment.store, self.containment.method_sha256
+                )
         if result is None or result.outcome == "outcome_unknown":
             return (
                 result
@@ -197,6 +249,18 @@ class NativeBuilderRunner:
             await self.effects.reconcile(lease, identity, receipt, actual_usd=None)
         elif record.state == "intent" and lease.fence == record.intent_fence:
             await self.effects.record_receipt(lease, identity, receipt, actual_usd=None)
+        if spec.runtime_recipe == RUNTIME_V2 and result.outcome == "commands_succeeded":
+            await cleanup_known_engineering_container(
+                self.factory,
+                lease,
+                identity,
+                action,
+                spec,
+                result,
+                receipt,
+                containment=self.containment,
+                policy=self.policy,
+            )
         return result if await result_disclosure(self.factory, lease, identity, guard) else None
 
     def require_binding(
@@ -216,11 +280,45 @@ class NativeBuilderRunner:
             )
         ):
             raise ValueError("Builder source guard binds another native execution")
-        spec.require_policy(self.policy)
+        self.require_execution_policy(spec)
+        if (
+            spec.runtime_recipe == RUNTIME_V2
+            and getattr(guard, "containment", None) is not self.containment
+        ):
+            raise ValueError("Builder source guard requires the same contained services")
+        if spec.runtime_recipe == RUNTIME_V2:
+            assert self.containment is not None
+            if (
+                self.publisher is None
+                or getattr(self.publisher, "containment_store", None) is not self.containment.store
+                or getattr(self.publisher, "execution_method_sha256", None)
+                != self.containment.method_sha256
+            ):
+                raise ValueError("Contained builder requires its exact protected result publisher")
         if self.publisher is not None and spec.output_resource != self.publisher.target:
             raise ValueError(
                 "Configured builder publishing needs its exact output target before intent"
             )
+
+    def require_execution_policy(self, spec: BuilderExecutionSpec) -> None:
+        """One policy gate for native work; decoding a digest never configures execution."""
+        if spec.runtime_recipe != RUNTIME_V2:
+            spec.require_policy(self.policy)
+            return
+        services = getattr(self, "containment", None)
+        if type(services) is not ContainmentServices:
+            raise ValueError("Builder runtime v2 execution is not configured")
+        services.require_policy(spec, self.policy)
+        if spec.runtime_inputs is not None:
+            from nexus.builder.node_config import NodeRuntimeConfig
+            from nexus.builder.node_runner import NodeNativeBuilderRunner
+
+            if (
+                not isinstance(self, NodeNativeBuilderRunner)
+                or type(getattr(self, "config", None)) is not NodeRuntimeConfig
+                or self.config.pins != spec.runtime_inputs
+            ):
+                raise ValueError("Contained Node execution requires its exact configured runner")
 
     def receipt(
         self, result: BuilderRunResult, protected: ArtifactRevisionRef | None = None

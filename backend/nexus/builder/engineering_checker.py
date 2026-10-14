@@ -143,6 +143,8 @@ def _receipt(receipt: ActionReceipt, result: BuilderRunResult, output: ArtifactR
 
 
 def _independent(value: EngineeringCheckInput) -> tuple[EngineeringVerdict, str]:
+    # Keep the >50-line complete declared policy/receipt/registration comparison
+    # cohesive; it evaluates loaded evidence and grants no execution capability.
     target = value.target
     if target.check_recipe != ENGINEERING_RECIPE or target.criterion_ids != ENGINEERING_CRITERIA:
         return "reject", "registered_engineering_recipe_or_criteria_differs"
@@ -187,7 +189,24 @@ def _independent(value: EngineeringCheckInput) -> tuple[EngineeringVerdict, str]
         return "reject", "actual_native_output_receipt_differs"
     for spec in (value.author.spec, value.verifier.spec):
         try:
-            spec.require_policy(value.declaration.policy)
+            if spec.runtime_recipe == "nexus.builder.runtime.v2":
+                from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
+
+                spec.require_descriptive_policy(value.declaration.policy)
+                if (
+                    value.declaration.policy.full_execution_method_sha256
+                    != CONTAINED_EXECUTION_METHOD_SHA256
+                ):
+                    raise ValueError("Contained complete method differs")
+                result = value.author if spec == value.author.spec else value.verifier
+                if (
+                    result.containment is None
+                    or result.containment.identity.execution_method_sha256
+                    != CONTAINED_EXECUTION_METHOD_SHA256
+                ):
+                    raise ValueError("Contained registered result reference is unavailable")
+            else:
+                spec.require_policy(value.declaration.policy)
         except ValueError:
             return "reject", "complete_declared_policy_differs"
     return "pass", "distinct_exact_native_author_verifier_receipts"

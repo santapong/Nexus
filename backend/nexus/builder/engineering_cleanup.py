@@ -8,11 +8,17 @@ from uuid import UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.contained_cleanup import CleanupDeadline, CleanupIdentity
+from nexus.builder.contained_query import clock_us
+from nexus.builder.contained_results import require_contained_result
+from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.native_state import actual_action
+from nexus.builder.policy import BuilderToolPolicy
 from nexus.builder.process import owned_engine
 from nexus.builder.result_store import BuilderResultStore
-from nexus.builder.verification_support import actual_result_reference
+from nexus.builder.runtime_identity import RUNTIME_V2
+from nexus.builder.verification_support import actual_result_reference, require_summary_containment
 from nexus.company.access import VerifiedIdentity
 from nexus.company.brain.source_models import BrainArtifactRevision
 from nexus.company.contracts.actions import ActionProposal
@@ -112,6 +118,9 @@ async def cleanup_known_engineering_container(
     spec: BuilderExecutionSpec,
     result: BuilderRunResult,
     expected_receipt: ActionReceipt,
+    *,
+    containment: ContainmentServices | None = None,
+    policy: BuilderToolPolicy | None = None,
 ) -> None:
     """Known receipt and current fenced mode authorize only owned infrastructure cleanup."""
     # Keep this >50-line company-first transaction and final effect fence cohesive:
@@ -151,6 +160,36 @@ async def cleanup_known_engineering_container(
             != (reference.artifact_id, reference.revision, reference.sha256)
         ):
             raise ValueError("Engineering cleanup receipt/result binding differs")
+        if spec.runtime_recipe == RUNTIME_V2:
+            if type(containment) is not ContainmentServices or policy is None:
+                raise ValueError("Contained known cleanup is not configured")
+            containment.require_policy(spec, policy)
+            sidecar = await require_contained_result(
+                result, containment.store, containment.method_sha256
+            )
+            original = sidecar.container
+            anchor = clock_us()
+            final = await db_now(session)
+            require_lease(work, lease, final)
+            delta = lease.expires_at - final
+            remaining_us = (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
+            deadline = CleanupDeadline(
+                started_us=anchor, end_us=min(anchor + 5_000_000, anchor + remaining_us)
+            )
+            captured_v2 = await containment.cleanup.inspect_stopped(
+                CleanupIdentity(
+                    company_id=lease.company_id,
+                    action_id=action.action_id,
+                    container_name=original.container_name,
+                    container_id=original.container_id,
+                    image_id=original.image_id,
+                ),
+                deadline,
+            )
+            require_lease(work, lease, await db_now(session))
+            if captured_v2.state == "stopped":
+                await containment.cleanup.remove_stopped(captured_v2, deadline)
+            return
         captured = await inspect_owned_stopped(
             expected, str(action.action_id), str(action.company_id), result.image_id
         )
@@ -188,3 +227,4 @@ async def require_stored_result_summary(
         result.intent_fence,
     ):
         raise ValueError("Engineering protected result summary binding differs")
+    require_summary_containment(result, raw.decode())

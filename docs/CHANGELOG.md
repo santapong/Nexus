@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Wire configured contained native execution and protected evidence
+
+### Added
+- Concrete per-job services/full implementation identity, fresh parent/source
+  checks at preparation/intent/issue, one common generic/Node/Engineering run.
+- Actual sidecar result publication/loading/replay and receipt-bound fixed-ID
+  cgroupfs cleanup, preserving default v1 payloads and unconfigured v2 denial.
+- Unknown runtime evidence and strong unresolved spawn ownership retention.
+
+### Validation
+- Root2,486unit/24.42s, strict/Ruff/format30 pass; independent hash/source review
+  closes Node admission, handle lifetime and final CPU deadline findings.
+- No actual container/DB job or production activation; native M1/timeout/ARM64
+  and complete business/operational release qualification remain required.
+
+**Authored by:** Codex and supervised engineering/review agents
+**PR:** not published
+
 ## [2026-10-15] — Integrate bounded contained process boundary
 
 ### Added

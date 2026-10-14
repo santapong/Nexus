@@ -8,8 +8,13 @@ import json
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
+from nexus.builder.contained_evidence_types import ContainmentRef
+from nexus.builder.contained_results import require_contained_result
 from nexus.builder.execution_contracts import BuilderRunResult
+from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
 from nexus.builder.result_store import BuilderResultStore
+from nexus.builder.runtime_identity import RUNTIME_V2
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.brain.source_models import BrainArtifactRevision
 from nexus.company.brain.sources import ArtifactRevisionRef
@@ -20,6 +25,49 @@ from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_models import EffectIntent
 from nexus.harness.journal_models import JournalAction
+
+
+def require_containment_configuration(
+    store: ContainmentEvidenceStore | None, method_sha256: str | None
+) -> None:
+    """A closed implementation pin and actual store are configuration, never qualification."""
+    if store is None and method_sha256 is None:
+        return
+    if type(store) is not ContainmentEvidenceStore or method_sha256 != (
+        CONTAINED_EXECUTION_METHOD_SHA256
+    ):
+        raise ValueError("Protected containment configuration is unavailable")
+
+
+async def require_result_containment(
+    result: BuilderRunResult,
+    store: ContainmentEvidenceStore | None,
+    method_sha256: str | None,
+) -> None:
+    """Every configured v2 interpretation rereads original immutable bytes; no cache grants it."""
+    require_containment_configuration(store, method_sha256)
+    value = BuilderRunResult.model_validate(result.model_dump())
+    if value.spec.runtime_recipe != RUNTIME_V2:
+        return
+    if store is None or method_sha256 is None:
+        raise ValueError("Protected runtime v2 containment is unconfigured")
+    await require_contained_result(value, store, method_sha256)
+
+
+def require_summary_containment(result: BuilderRunResult, payload: str) -> None:
+    """Protected summary references must equal the full result, not just its base digest."""
+    value = json.loads(payload)
+    if not isinstance(value, dict):
+        raise ValueError("Builder protected summary is not an object")
+    if result.spec.runtime_recipe != RUNTIME_V2:
+        if "containment" in value:
+            raise ValueError("Legacy protected summary cannot attach containment")
+        return
+    if result.containment is None or "containment" not in value:
+        raise ValueError("Protected runtime v2 summary lacks containment")
+    reference = ContainmentRef.model_validate_json(json.dumps(value["containment"]))
+    if reference != result.containment:
+        raise ValueError("Protected containment reference differs from the full result")
 
 
 async def require_verifier_binding(
@@ -120,8 +168,14 @@ async def actual_result_reference(
 
 
 async def actual_summary(
-    guard: BuilderSourceGuard, result: BuilderRunResult, reference: ArtifactRevisionRef
+    guard: BuilderSourceGuard,
+    result: BuilderRunResult,
+    reference: ArtifactRevisionRef,
+    *,
+    containment_store: ContainmentEvidenceStore | None = None,
+    execution_method_sha256: str | None = None,
 ) -> None:
+    require_containment_configuration(containment_store, execution_method_sha256)
     body = bytearray()
     while len(body) < reference.byte_length:
         value = await guard.artifacts.bounded_artifact(
@@ -154,3 +208,5 @@ async def actual_summary(
         result.intent_fence,
     ):
         raise ValueError("Builder decoded result differs from actual protected native evidence")
+    require_summary_containment(result, body.decode())
+    await require_result_containment(result, containment_store, execution_method_sha256)

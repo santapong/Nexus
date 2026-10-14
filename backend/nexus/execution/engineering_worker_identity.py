@@ -39,6 +39,7 @@ class EngineeringCredentialSourceGuard(BuilderSourceGuard):
             original.artifacts,
             original.freshness,
             original.catalog,
+            containment=getattr(original, "containment", None),
         )
         self.credential = credential
 
