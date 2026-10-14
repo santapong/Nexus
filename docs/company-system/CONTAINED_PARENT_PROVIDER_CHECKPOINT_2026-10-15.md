@@ -53,3 +53,29 @@ Root138focused/1.48s, strict/Ruffformat10 and coherent2,170unit/21.37s/19existin
 warnings pass. Original failedscope1/source/receipt remain historical unchanged.
 New finite-scope2 packet is being prepared; no corrected actual parent positive
 is yet proven and v2 builder execution stays disabled.
+
+
+## Actual current finite parent — scope2
+
+The revised exact packet62f9db9ec72a4c3d8ea3bd8173eb07c443f6bea58cbf69040f334f4f92d85bf3
+ran once. All18 input hashes stayed unchanged; five actual raw query bodies and
+real kernel context/caps were retained before admission. Current user manager
+UID1000/version261.2-1, actual Delegate=true and owned hierarchy/invocation/boot/
+mount/inode matched; marker was explicitly absent_user_manager. Kernel controllers
+cpu/memory/pids and4GiB/cpu200000-per100000/PID256 matched actual unit facts.
+
+ActiveEnter28156428295+Runtime20000000 yielded deadline28176428295. Actual provider
+observation took24.622ms with19.813525s remaining; foreignboot/UID/invocation denied.
+The actual unit timer ended the payload; original PID744769/start2815640 was
+absent and cgroup disappeared. Postexpiryclock28176741748 exceeded the saved
+deadline; current provider denied FileNotFoundError, while the separate pure
+comparison denied actual retained expired facts. No specific expired-current-IO
+branch is claimed beyond those observations. Controllerhandle5604 exited0/waited.
+
+Terminalreceiptb22d32c1c4558991f54c291a1879456ad4cb5347f2800a604d8ab41b63b3fdf7
+retains17 raw query files and complete original hashes. Root independently checked
+actual facts/timing and PID-start absence. Original failedscope1 stays unchanged.
+This qualifies mechanical current-parent observation only: no registered company
+action, Podman payload/conmon/subtree proof, M1 effect or builderv2 activation.
+Observer/evidence-store/process/cleanup integration and fullStockFlow/ARM64 remain
+required. Kernel-thread timeout limitation remains explicit.

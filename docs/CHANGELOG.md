@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Actual finite current-parent qualification
+
+### Validation
+- One revised20s read-only scope records actual daemonUID/version, explicit
+  missing-marker state, Delegate/ownedidentity/controllers/4GiB2CPUPID256 and
+  finite current deadline; foreign boot/UID/invocation deny.
+- Actual unit expiry/PID-start absence/cgroup disappearance and postexpiry
+  current-read denial verified; original failedscope1 preserved. No Podman/M1
+  action/descendant or builderv2 activation claim.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Explicit verified user-manager delegation observations
 
 ### Fixed
