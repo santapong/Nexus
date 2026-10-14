@@ -4,6 +4,8 @@ import type { CompanyIdentity } from '@/types/company'
 import { CompanyQueryState, money, StateLabel } from '@/components/company/CompanyStatus'
 import { PlanDecisionPanel } from '@/components/company/PlanDecisionPanel'
 import { CommitmentForm } from '@/components/company/CommitmentForm'
+import { MetricObservationForm } from '@/components/company/MetricObservationForm'
+import { MetricOutcomeLedger } from '@/components/company/MetricOutcomeLedger'
 
 export function CompanyPlanPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -18,6 +20,8 @@ export function CompanyPlanPage() {
   const data = query.data
   if (!data || !current.data || !company.data) return null
   const declaration = data.declaration
+  const goal = company.data.goals.find(item => item.reference.revision_id === declaration.goal.revision_id
+    && item.reference.sha256 === declaration.goal.sha256)
   return <div className="space-y-5">
     <div className="flex flex-wrap gap-3 justify-between"><div><h2 className="text-2xl font-semibold text-white">Plan revision {data.reference.revision}</h2>
       <p className="text-xs text-gray-500 font-mono break-all mt-2">{data.reference.plan_id}</p></div>
@@ -47,5 +51,8 @@ export function CompanyPlanPage() {
     </details>
     <PlanDecisionPanel key={data.reference.sha256} plan={data} current={current.data} paused={company.data.paused} />
     {data.state === 'approved' && data.is_current_head && <CommitmentForm key={data.reference.sha256} plan={data} paused={company.data.paused} />}
+    {data.state === 'approved' && data.is_current_head && goal && <MetricObservationForm
+      key={data.reference.sha256} plan={data} goal={goal} />}
+    <MetricOutcomeLedger key={declaration.goal.goal_id} company={identity.company_id} goal={declaration.goal.goal_id} />
   </div>
 }

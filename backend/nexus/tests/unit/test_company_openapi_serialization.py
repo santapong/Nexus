@@ -69,3 +69,12 @@ def test_runtime_schema_matches_serialized_owner_arrays_and_money(
         value.get("type")
         for value in schema["CompanyBudget"]["properties"]["actual_total_usd"]["anyOf"]
     } == {"string", "null"}
+    assert schema["MetricSnapshot"]["properties"]["work"]["items"] == {
+        "$ref": "#/components/schemas/MetricWorkFact"
+    }
+    assert schema["KnownMetricValue"]["properties"]["value"]["type"] == "integer"
+    assert schema["MetricComparison"]["properties"]["target"]["type"] == "string"
+    assert {
+        value.get("type")
+        for value in schema["MetricCurrentObservation"]["properties"]["baseline_change"]["anyOf"]
+    } == {"string", "null"}

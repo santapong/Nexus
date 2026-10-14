@@ -22,6 +22,8 @@ from nexus.company.management.cancellation_store import WorkCancellationStore
 from nexus.company.management.commitment_store import CommitmentStore
 from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.goal_store import GoalStore
+from nexus.company.management.metric_queries import MetricQueries
+from nexus.company.management.metric_store import MetricStore
 from nexus.company.management.operating_report_store import OperatingReportStore
 from nexus.company.management.owner_view_sources import OwnerViewSources
 from nexus.company.management.owner_view_store import ManagementOwnerViews
@@ -66,6 +68,8 @@ def compose_pilot(factory: async_sessionmaker[AsyncSession], config: PilotConfig
         commitments=CommitmentStore(factory),
         action_reviews=OwnerActionReviewStore(factory, catalog, sources, reports=reports),
         cancellations=WorkCancellationStore(factory),
+        metrics=MetricStore(factory, catalog, artifacts, freshness),
+        metric_queries=MetricQueries(factory, catalog, artifacts, freshness),
     )
     return PilotServices(
         CompanyServices(directory, CompanyJournal(factory), CompanyControls(factory)),

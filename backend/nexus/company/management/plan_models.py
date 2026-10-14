@@ -72,6 +72,14 @@ class ManagementPlanRevision(CompanyRow, RecordedRow, ManagementBase):
             "company_id", "plan_id", "plan_revision_id", "goal_id", name="uq_management_plan_scope"
         ),
         UniqueConstraint(
+            "company_id",
+            "plan_id",
+            "plan_revision_id",
+            "goal_id",
+            "goal_revision_id",
+            name="uq_management_plan_metric_scope",
+        ),
+        UniqueConstraint(
             "company_id", "plan_revision_id", "goal_id", name="uq_management_revision_goal_scope"
         ),
         CheckConstraint("revision > 0 AND length(sha256) = 64", name="ck_management_plan_shape"),

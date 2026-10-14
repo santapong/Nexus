@@ -1,4 +1,4 @@
-"""Explicit22-table management inventory, uninstalled and not imported by company migrations."""
+"""Explicit23-table management inventory; normal company013 installs its static schema."""
 
 from nexus.company.management.acceptance_models import (
     ManagementAcceptanceInvalidation,
@@ -15,6 +15,7 @@ from nexus.company.management.governance_models import (
     ManagementMandateHead,
     ManagementMandateRevision,
 )
+from nexus.company.management.metric_models import ManagementMetricObservation
 from nexus.company.management.model_base import ManagementBase
 from nexus.company.management.model_indexes import register_indexes
 from nexus.company.management.operation_models import (
@@ -49,6 +50,7 @@ __all__ = [
     "ManagementGoalRevision",
     "ManagementMandateHead",
     "ManagementMandateRevision",
+    "ManagementMetricObservation",
     "ManagementOwnerDecision",
     "ManagementPlanDependency",
     "ManagementPlanHead",

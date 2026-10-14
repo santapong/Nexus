@@ -497,6 +497,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/companies/{company_id}/management/metrics/observations/{observation_id}/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current */
+        get: operations["ApiV2CompaniesCompanyIdManagementMetricsObservationsObservationIdCurrentCurrent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/metrics/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** CurrentPage */
+        get: operations["ApiV2CompaniesCompanyIdManagementMetricsObservationsCurrentPage"];
+        put?: never;
+        /** Observe */
+        post: operations["ApiV2CompaniesCompanyIdManagementMetricsObservationsObserve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/metrics/observations/{observation_id}/recorded": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recorded */
+        get: operations["ApiV2CompaniesCompanyIdManagementMetricsObservationsObservationIdRecordedRecorded"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/company-session/login": {
         parameters: {
             query?: never;
@@ -1966,6 +2018,22 @@ export interface components {
             /** Evidence */
             evidence: components["schemas"]["EvidenceRef"][];
         };
+        /** KnownMetricValue */
+        KnownMetricValue: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "known";
+            /**
+             * Unit
+             * @default count
+             * @constant
+             */
+            unit: "count";
+            /** Value */
+            value: number;
+        };
         /**
          * LifetimeAllowance
          * @description A permanent inherited slice and own task ledger; delegation is not a charge.
@@ -2132,6 +2200,274 @@ export interface components {
             external_key: string;
             contributors: (components["schemas"]["ResourceGeneration"] | unknown)[];
             source_contributors: (components["schemas"]["SourceRevisionRef"] | unknown)[];
+        };
+        /** MetricComparison */
+        MetricComparison: {
+            /** Value */
+            value: components["schemas"]["KnownMetricValue"] | components["schemas"]["UnknownMetricValue"];
+            /**
+             * Comparator
+             * @enum {string}
+             */
+            comparator: "gt" | "ge" | "eq" | "le" | "lt";
+            /** Target */
+            target: string;
+            /** Baseline */
+            baseline: components["schemas"]["KnownBaseline"] | components["schemas"]["UnknownBaseline"];
+        };
+        /** MetricCurrentObservation */
+        MetricCurrentObservation: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            snapshot: components["schemas"]["MetricSnapshot"];
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Snapshot Sha256 */
+            snapshot_sha256: string;
+            /**
+             * Comparison Result
+             * @enum {string}
+             */
+            comparison_result: "satisfied" | "unsatisfied" | "unknown";
+            /** Baseline Change */
+            baseline_change: string | null;
+        };
+        /** MetricObservationIntent */
+        MetricObservationIntent: {
+            request: components["schemas"]["MetricObservationRequest"];
+            /** Format: uuid */
+            operation_id: string;
+            /** Format: uuid */
+            audit_trace_id: string;
+        };
+        /** MetricObservationPage */
+        MetricObservationPage: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Goal Id
+             * Format: uuid
+             */
+            goal_id: string;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /**
+             * Observations
+             * @default []
+             */
+            observations: components["schemas"]["MetricCurrentObservation"][];
+            /**
+             * Next After Id
+             * @default null
+             */
+            next_after_id: string | null;
+        };
+        /** MetricObservationRecord */
+        MetricObservationRecord: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            snapshot: components["schemas"]["MetricSnapshot"];
+            /** Snapshot Sha256 */
+            snapshot_sha256: string;
+            /**
+             * Recorded By
+             * Format: uuid
+             */
+            recorded_by: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Audit Trace Id
+             * Format: uuid
+             */
+            audit_trace_id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /**
+             * Observation Basis
+             * @default current native independent acceptance under company mutex
+             * @constant
+             */
+            observation_basis: "current native independent acceptance under company mutex";
+        };
+        /** MetricObservationRequest */
+        MetricObservationRequest: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            plan: components["schemas"]["PlanRevisionRef"];
+            /** Metric Id */
+            metric_id: string;
+            /** Task Ids */
+            task_ids: string[];
+        };
+        /** MetricSnapshot */
+        MetricSnapshot: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            request: components["schemas"]["MetricObservationRequest"];
+            /** Recipe */
+            recipe: string | null;
+            comparison: components["schemas"]["MetricComparison"];
+            /** Work */
+            work: components["schemas"]["MetricWorkFact"][];
+            /**
+             * Resources
+             * @default []
+             */
+            resources: string[];
+            /**
+             * Sources
+             * @default []
+             */
+            sources: components["schemas"]["MetricSourceFact"][];
+        };
+        /** MetricSourceFact */
+        MetricSourceFact: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            source: components["schemas"]["SourceRevisionRef"];
+            head: components["schemas"]["SourceHead"];
+            source_event: components["schemas"]["SourceTime"];
+            /**
+             * Ingested At
+             * Format: date-time
+             */
+            ingested_at: string;
+        };
+        /** MetricWorkFact */
+        MetricWorkFact: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            work: components["schemas"]["RunBinding"];
+            /** Registration Sha256 */
+            registration_sha256: string;
+            /** Acceptance Id */
+            acceptance_id: string | null;
+            /** Acceptance Sha256 */
+            acceptance_sha256: string | null;
+            /** Receipt Id */
+            receipt_id: string | null;
+            /**
+             * Accepted At
+             * @default null
+             */
+            accepted_at: string | null;
+            /**
+             * Receipt Recorded At
+             * @default null
+             */
+            receipt_recorded_at: string | null;
+            /**
+             * Proof Ids
+             * @default []
+             */
+            proof_ids: string[];
+            /**
+             * Artifacts
+             * @default []
+             */
+            artifacts: components["schemas"]["ArtifactRevisionRef"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "accepted_report" | "not_accepted" | "unknown";
         };
         /**
          * OwnerCancellation
@@ -2746,38 +3082,64 @@ export interface components {
         /** SourceHead */
         SourceHead: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Source Id
+             * Format: uuid
+             */
             source_id: string;
             current: components["schemas"]["SourceRevisionRef"];
+            /** Generation */
             generation: number;
             /**
+             * Observed At
              * Format: date-time
-             * @description datetime with the constraint that the value must have timezone info
              */
             observed_at: string;
-            fresh_until?: string | null;
-            /** @enum {string} */
+            /**
+             * Fresh Until
+             * @default null
+             */
+            fresh_until: string | null;
+            /**
+             * Availability
+             * @enum {string}
+             */
             availability: "available" | "quarantined" | "unavailable";
         };
         /** SourceRevisionRef */
         SourceRevisionRef: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Source Id
+             * Format: uuid
+             */
             source_id: string;
-            /** Format: uuid */
+            /**
+             * Source Revision Id
+             * Format: uuid
+             */
             source_revision_id: string;
+            /** Revision */
             revision: string;
         };
         /**
@@ -2860,6 +3222,19 @@ export interface components {
              * @default []
              */
             evidence: components["schemas"]["EvidenceRef"][];
+        };
+        /** UnknownMetricValue */
+        UnknownMetricValue: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "unknown";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "unsupported_recipe" | "unsupported_unit" | "proof_unavailable" | "scope_unavailable" | "versions_stale" | "baseline_unavailable" | "goal_inactive";
         };
         /**
          * ValidityInterval
@@ -4203,6 +4578,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ManagementControlDescriptor"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementMetricsObservationsObservationIdCurrentCurrent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricCurrentObservation"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementMetricsObservationsCurrentPage: {
+        parameters: {
+            query: {
+                goal_id: string;
+                after_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricObservationPage"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementMetricsObservationsObserve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetricObservationIntent"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricObservationRecord"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementMetricsObservationsObservationIdRecordedRecorded: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricObservationRecord"];
                 };
             };
             /** @description Bad request syntax or unsupported method */

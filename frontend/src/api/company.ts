@@ -4,6 +4,7 @@ import type {
   ActionReview, ActionDecision, ActionDecisionResponse,
   CompanyLogin, CompanySignup, CompanySession,
   ManagementControlDescriptor, WorkCancellationIntent, OwnerCancellation, CompanyPauseState,
+  MetricObservationIntent, MetricObservationRecord, MetricObservationPage,
 } from '@/types/company'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -54,6 +55,12 @@ const base = (id: string) => `/api/v2/companies/${encodeURIComponent(id)}/manage
 const query = (after?: string | null) => after ? `?after_id=${encodeURIComponent(after)}` : ''
 
 export const companyApi = {
+  metrics: (id: string, goal: string, after?: string | null) => companyFetch<MetricObservationPage>(
+    `${base(id)}/metrics/observations?goal_id=${encodeURIComponent(goal)}${after ? `&after_id=${encodeURIComponent(after)}` : ''}`),
+  observeMetric: (id: string, body: MetricObservationIntent) => companyFetch<MetricObservationRecord>(
+    base(id) + '/metrics/observations', { method: 'POST', body: JSON.stringify(body) }),
+  recordedMetric: (id: string, observation: string) => companyFetch<MetricObservationRecord>(
+    `${base(id)}/metrics/observations/${encodeURIComponent(observation)}/recorded`),
   controls: (id: string) => companyFetch<ManagementControlDescriptor>(base(id) + '/control'),
   pause: (id: string, paused: boolean) => companyFetch<CompanyPauseState>(
     `/api/v2/companies/${encodeURIComponent(id)}/pause`,

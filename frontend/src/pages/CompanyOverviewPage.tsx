@@ -6,6 +6,7 @@ import { CompanyBudgetPanel } from '@/components/company/CompanyBudgetPanel'
 import { CompanyQueryState, instant, StateLabel } from '@/components/company/CompanyStatus'
 import { CompanyPageNavigation } from '@/components/company/CompanyPageNavigation'
 import { CompanyPausePanel } from '@/components/company/CompanyPausePanel'
+import { GoalMetricHistory } from '@/components/company/GoalMetricHistory'
 
 export function CompanyOverviewPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -31,6 +32,7 @@ export function CompanyOverviewPage() {
             <p className="text-xs mt-1">{metric.baseline?.kind === 'known' ? `Recorded baseline ${metric.baseline.value}`
               : metric.baseline?.kind === 'unknown' ? metric.baseline.reason : 'Baseline unavailable for current access'}</p></div>)}
           <p className="text-xs text-gray-500">{instant(goal.due.actionable_at)}</p>
+          <GoalMetricHistory company={identity.company_id} goal={goal.reference.goal_id} />
         </div>)}
         {data.goals.length === 0 && <p className="text-sm text-gray-400">No goals in this page.</p>}
       </section>

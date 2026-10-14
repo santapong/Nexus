@@ -162,6 +162,15 @@ jobs:
           - suite: management-owner-control-api
             database: nexus_company_test_management_control_api
             tests: test_company_management_control_api.py test_company_management_control_facts.py
+          - suite: management-metric-schema
+            database: nexus_company_test_metric_schema
+            tests: test_company_metric_schema.py
+          - suite: management-native-metrics
+            database: nexus_company_test_management_metrics
+            tests: test_company_metrics.py test_company_metric_proofs.py test_company_metric_expiry.py test_company_metric_recipe.py test_company_metric_queries.py
+          - suite: management-metric-api
+            database: nexus_company_test_metrics_api
+            tests: test_company_metric_api.py test_company_metric_api_facts.py
           - suite: brain-generated-input-provenance
             database: nexus_company_test_management_artifacts
             tests: test_company_artifact_input_provenance.py test_company_artifact_targets.py

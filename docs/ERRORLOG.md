@@ -74,6 +74,62 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-066 — Metric foreign keys lacked complete covering indexes
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** stable whole unit regression after scoped migration/metric checks
+**Affected files:** `management/metric_models.py`, uncommitted `company_013_metric_observations.py`
+
+### What happened and fix
+The exact selected goal/plan FK was valid, but its initial query index covered
+only the first three of five FK columns. Goal-revision and recorded-owner FKs also
+needed dedicated covering prefixes. The unchanged existing all-management-FK
+test found this in the first whole snapshot:1121pass/1fail. Scoped earlier index
+inspection had checked query access paths and was incomplete for this rule.
+
+Root expanded the plan index to the complete five-column FK and added goal-ref
+and owner indexes in the still-uncommitted migration. No old released migration
+was changed. The original all-FK test remains unchanged; focused3unit0.61s and
+whole1122unit20.46s pass. Fresh/repeat/metadata/downgrade plus seven restricted
+schema cases pass8PG25.89s. The schema-only placeholder is not business proof.
+
+### Prevention
+Run existing repository-wide metadata invariants at the stable integration gate,
+alongside actual fresh-install comparison; a query index alone may not satisfy
+the full FK prefix. Retain the scoped review limitation and original failure.
+
+---
+
+## ERROR-065 — Metric missing-record response was flattened into validation failure
+
+**Date:** 2026-10-14
+**Severity:** low
+**Status:** fixed
+**Found by:** actual restricted PostgreSQL metric HTTP matrix
+**Affected files:** `api/company_metric_routes.py`
+
+### What happened
+The new controller returned422 for a missing observation instead of404. The
+positive observation/replay/current checks and eleven denial cases passed before
+the original missing-record assertion failed. No deployment or data leak occurred.
+
+### Root cause and fix
+Pinned Litestar2.24 NotFoundException also inheritsValueError, so the controller's
+generic validation handler caught it. A specific NotFoundException handler now
+preserves404 with a generic unavailable detail. The unchanged failing real HTTP
+case passes in19.29s; original matrix1fail/11pass61.55s remains in metric-api-first.log.
+
+### Related fixture correction
+The first new source-revocation HTTP test used nonexistent readable/writable
+fields rather than the actual ResourceAccessChange.active flag. It failed at
+fixture construction, while the owner-after-lookup revocation case passed. Read
+the exact typed declaration before building an integration fixture; keep setup
+failure separate from permission rejection evidence.
+
+---
+
 ## ERROR-064 — Runtime schema import interrupted UAT restart
 
 **Date:** 2026-10-14
@@ -2081,7 +2137,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-065*
+*Next error ID: ERROR-067*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

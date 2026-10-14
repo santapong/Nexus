@@ -40,6 +40,25 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Record native measured outcomes with current permission-qualified readings
+
+### Added
+- Owner-only immutable metric observations, exact owner/operation/audit replay binding, bounded licensed history and current native report acceptance counts without invented baselines.
+- Bounded current-page discovery with actual date/UUID pagination, aggregate final grant deadlines, unknown/private masking, and exact runtime JSON/YAML schema and generated client types.
+- Owner plan measurement form and persistent outcome ledger; current/dated/source-event/ingestion times stay distinct and target comparison does not complete a goal.
+- Normal company013: exact selected goal/plan revision scope, forced tenant RLS, immutable history, known-count NULL guard and complete covering FK/query indexes. Three isolated CI groups added.
+
+### Validation and limits
+- Stable committed-base overlay:1122unit20.46s/19existing warnings;36-file strict/lint/format pass. Whole regression corrected the missing FK indexes before checkpoint.
+- Native metric/query freeze40checks13PG+27unit; Root exact integrated API14PG88.29s; independent HTTP review5PG; final schema/profile8PG25.89s. No live-model or business readiness result is inferred.
+- Dashboard build/client race checks pass; visible synthetic fixture simulation verifies selected-work bound, exact retry, known/unknown distinction and denied dated history. Human owner UAT and full operating loop/builder/StockFlow/provider/email/private release remain open.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Expose current owner pause and permanent work cancellation
 
 ### Added

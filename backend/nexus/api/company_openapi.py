@@ -16,6 +16,11 @@ from nexus.company.management.commitment_contracts import CommitmentRevision
 from nexus.company.management.goal_store import GoalRevisionRecord
 from nexus.company.management.governance import CharterRevision, MandateRevision
 from nexus.company.management.lifecycle import PlanRevision
+from nexus.company.management.metric_contracts import (
+    MetricCurrentObservation,
+    MetricObservationRecord,
+)
+from nexus.company.management.metric_query_contracts import MetricObservationPage
 from nexus.company.management.owner_view_contracts import (
     ApprovalPage,
     CompanyView,
@@ -41,6 +46,9 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     PilotSessionToken,
     ManagementControlDescriptor,
     OwnerCancellation,
+    MetricCurrentObservation,
+    MetricObservationRecord,
+    MetricObservationPage,
 )
 
 

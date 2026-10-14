@@ -15,7 +15,7 @@ _DIALECT = cast(Callable[[], Dialect], PGDialect)
 
 def test_management_manifest_is_separate_native_company_first_and_compiles_postgresql() -> None:
     tables = ManagementBase.metadata.tables
-    assert len(tables) == 22
+    assert len(tables) == 23  # Normal013 adds one immutable measured-observation table.
     for table in tables.values():
         assert next(iter(table.primary_key.columns)).name == "company_id"
         assert isinstance(table.c.company_id.type, Uuid)
