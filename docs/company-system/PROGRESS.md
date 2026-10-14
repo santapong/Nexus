@@ -364,3 +364,38 @@ customer readiness or an accepted engineering change. Current business evidence,
 live providers/email, ARM64/Pi memory controller, private deployment/recovery/soak
 and final approval remain open. Human signup and owner email information are pending;
 no credential entry, live send, device change or deployment occurred.
+
+### Checked2026-10-14 — Native notifications and bounded build integration
+
+Local feature/company-foundation now1c03990. Existing governed owner sender5d4739b,
+current eligibility53d86c5, offline Node/cache0aa46df and qualified native drafts/
+atomic cursor1c03990 are committed. Latest coherent1414unit56.37s and independent
+6restricted015PG98.58s/strict26 pass; prior Node gate1403unit75.74s/strict42 is
+scoped to its49-file package.58 CI groups resolve index paths; remote CI unrun.
+
+Actual unchanged nominated historical StockFlow v2 baseline install/typecheck/test/
+build passes; postbuild hits provenENOSPC under the same2GiB scratch. One native
+failed receipt/process/attempt and unknown billing remain. Proposed v3 removes only
+completed baseline copiedscratch while retaining evidence/caps; actual unused
+verifier is denied over failedauthor. Genuine remaining sameparent newpair/second
+revision/freshchecked model/source/newexactprivatepacket remain required. Generic
+runner remains frozen; new phase capture stays Node-specific.
+
+Qualified decision/block/cap/digest drafts, licensed obsolete reads and draft/link/
+cursor final checks are integrated. Owner inbox API26case freeze and optional Root
+mount/schema7units pass in scope; independent revoked-anchor→empty200 metadata gap
+is being corrected with all queried IDs/recipient pins/deadlines and total<=9.
+No sender or timer is activated; digest dispatch quota specialization remains open.
+
+Owner inbox11filefrontend patch is reviewable and gitapply-check green in external
+notifications/owner-inbox-ui.patch (SHA4bf85aa0...). Exact mounted schema/types,
+3GETclient+4session checks and finalbuild69s pass. Separate synthetic preview proves
+accepted submission retains unknown delivery, plain escaping, refresh404 hides body
+and mobile320/360 fits after headerwrap. Primaryfrontend stays untouched while the
+human signup page is held; temporary5314 servers/tabs are closed. This is UI preview,
+not actualowner signup or native provider acceptance/delivery.
+
+CurrentStockFlow readiness/BrainB06/liveprovider quality and owneremail/ARM64Pi memory
+controller/privateaccessbackuprestore/rollbacksoak/finalapproval remain open. Goal
+active; no push/tag/deploy/liveemail/provider/Pi changes. Verified model-observation
+procedure was saved reversibly in the Nexus skill with exact evidence and limitations.
