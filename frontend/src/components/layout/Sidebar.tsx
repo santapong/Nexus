@@ -26,6 +26,7 @@ import { useApprovals } from '@/hooks/useApprovals'
 interface SidebarProps {
   dark: boolean
   onToggleTheme: () => void
+  companyOnly?: boolean
 }
 
 interface NavItem {
@@ -36,6 +37,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { label: 'Company', path: '/company/today', icon: <LayoutDashboard size={18} /> },
   { label: 'Co', path: '/', icon: <Handshake size={18} /> },
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
   { label: 'Live Ops', path: '/live', icon: <Activity size={18} /> },
@@ -56,11 +58,17 @@ const navItems: NavItem[] = [
   },
 ]
 
-export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
+const companyNav: NavItem[] = [
+  { label: 'Today', path: '/company/today', icon: <LayoutDashboard size={18} /> },
+  { label: 'Company', path: '/company/overview', icon: <Users size={18} /> },
+  { label: 'Approvals', path: '/company/approvals', icon: <ListTodo size={18} /> },
+]
+
+export function Sidebar({ dark, onToggleTheme, companyOnly = false }: SidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  const { data: approvals = [] } = useApprovals()
+  const { data: approvals = [] } = useApprovals(!companyOnly)
   const pendingCount = approvals.filter((a) => a.status === 'pending').length
 
   const isSettingsActive = location.pathname.startsWith('/settings')
@@ -69,6 +77,9 @@ export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
     <>
       {/* Mobile toggle */}
       <button
+        aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={mobileOpen}
+        aria-controls="nexus-sidebar"
         className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-md bg-gray-800 text-gray-100 border border-gray-700"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
@@ -85,6 +96,7 @@ export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
+        id="nexus-sidebar"
         className={cn(
           'fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-gray-800 bg-gray-950 transition-transform md:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
@@ -103,7 +115,7 @@ export function Sidebar({ dark, onToggleTheme }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {navItems.map((item) => {
+          {(companyOnly ? companyNav : navItems).map((item) => {
             if (item.children) {
               return (
                 <div key={item.label}>

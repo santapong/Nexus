@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from litestar import Controller, post
+from litestar import post
 from litestar.di import NamedDependency
 from litestar.exceptions import ValidationException
 from litestar.params import FromPath
@@ -11,6 +11,7 @@ from litestar.types import ExceptionHandlersMap
 from pydantic import ValidationError
 
 from nexus.api.company_auth import require_company_identity, resolve_company_control
+from nexus.api.company_management_read_routes import CompanyManagementReadController
 from nexus.api.company_routes import ApiError, CompanyRequest, company_identity_guard
 from nexus.company.access import (
     AccessDeniedError,
@@ -18,6 +19,7 @@ from nexus.company.access import (
     CompanyControlScope,
     VerifiedIdentity,
 )
+from nexus.company.brain.scope_support import BrainConflictError, BrainDeniedError
 from nexus.company.management.api_contracts import (
     CharterPublish,
     GoalPublish,
@@ -34,14 +36,16 @@ from nexus.execution.runtime_contracts import ExecutionDeniedError
 
 
 def unavailable(
-    _: CompanyRequest, __: AccessDeniedError | ExecutionDeniedError
+    _: CompanyRequest, __: AccessDeniedError | ExecutionDeniedError | BrainDeniedError
 ) -> Response[ApiError]:
     return Response(
         ApiError(status_code=403, detail="Management operation unavailable"), status_code=403
     )
 
 
-def conflict(_: CompanyRequest, __: ManagementConflictError) -> Response[ApiError]:
+def conflict(
+    _: CompanyRequest, __: ManagementConflictError | BrainConflictError
+) -> Response[ApiError]:
     return Response(
         ApiError(status_code=409, detail="Management state changed; refresh"), status_code=409
     )
@@ -63,12 +67,14 @@ async def _owner(
     return scope, identity
 
 
-class CompanyManagementController(Controller):
+class CompanyManagementController(CompanyManagementReadController):
     path = "/api/v2/companies/{company_id:uuid}/management"
     guards = (company_identity_guard,)
     exception_handlers: ExceptionHandlersMap = {  # noqa: RUF012
         AccessDeniedError: unavailable,
         ExecutionDeniedError: unavailable,
+        BrainDeniedError: unavailable,
+        BrainConflictError: conflict,
         ManagementConflictError: conflict,
         ValidationError: invalid,
         ValidationException: invalid,

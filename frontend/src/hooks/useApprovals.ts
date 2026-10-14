@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '../api/client'
 
-export function useApprovals() {
+export function useApprovals(enabled = true) {
   return useQuery({
     queryKey: ['approvals'],
     queryFn: api.listApprovals,
     refetchInterval: 5_000,
+    enabled,
   })
 }
 

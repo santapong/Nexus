@@ -40,6 +40,29 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Integrate native report execution, recovery and the owner workspace
+
+### Added
+- Native deterministic report/check compiler, complete private provenance publisher, actual governed durable worker/receipts and independent protected acceptance recovery.
+- Native saved operating reports, scheduler scans/queue binding, immutable commitments and current owner company/Today/plan/work/decision views.
+- Exact action detail review, opt-in disposable session/bootstrap composition and owner workspace frontend with session identity fences.
+- Exact runtime response JSON/YAML schema exports;40isolated PostgreSQL CI groups and client identity race check.
+
+### Fixed
+- Fresh revoked managed dispatch could acquire a lease before a later effect denial; it now revalidates current management before capacity/fence/segment mutation.
+- Final native intent rechecks source/recipient/lease/profile and exact/standing authority windows after awaited writes.
+- Native DBOS startup recovery now uses a stable configured logical-host executor identity; lease wait covers the admitted lifetime.
+
+### Validation and limits
+- Corrected isolated source:1,077unit23.95s, strict/lint/format138Python files; actual4phaseOSkill/restart/replay4PG332.32s;8independent authority/recovery PG; existing unmanaged recovery3PG6.18s. Frontend build11.99s/client race4checks pass.
+- [Checkpoint scope](company-system/M3_NATIVE_CHECKPOINT_2026-10-14.md) retains exact package evidence and original failures. Measured operating proof, owner browser, builder, StockFlow/provider/email and private release remain open. No live provider, Pi mutation or deployment/publication is claimed.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Preserve owner stops and complete artifact input permissions
 
 ### Added

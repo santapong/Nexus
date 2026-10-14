@@ -141,7 +141,17 @@ class ExecutionStore:
             row = await execution_row(session, scope)
             return _lease(
                 await recover_locked(
-                    session, control, row, scope, identity, worker_id, segment_id, duration
+                    session,
+                    control,
+                    row,
+                    scope,
+                    identity,
+                    worker_id,
+                    segment_id,
+                    duration,
+                    management_catalog=self._management_catalog,
+                    management_artifacts=self._management_artifacts,
+                    management_freshness=self._management_freshness,
                 )
             )
 

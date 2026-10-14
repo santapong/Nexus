@@ -162,6 +162,30 @@ jobs:
           - suite: brain-generated-input-provenance
             database: nexus_company_test_management_artifacts
             tests: test_company_artifact_input_provenance.py test_company_artifact_targets.py
+          - suite: management-native-reports
+            database: nexus_company_test_management_reports
+            tests: test_company_operating_reports.py test_company_operating_report_author.py test_company_operating_report_denials.py test_company_operating_report_expiry.py test_company_operating_report_history.py test_company_operating_report_invoices.py test_company_operating_report_no_ttl.py test_company_operating_report_artifact_roots.py test_company_artifact_ancestor_sources.py
+          - suite: management-owner-views-commitments
+            database: nexus_company_test_management_views
+            tests: test_company_management_owner_views.py test_company_management_owner_view_finance.py test_company_management_owner_view_lifecycle.py test_company_management_owner_view_sources.py test_company_management_commitments.py
+          - suite: management-owner-read-api
+            database: nexus_company_test_management_views_api
+            tests: test_company_management_read_api.py test_company_management_action_review_api.py test_company_management_generated_review_api.py
+          - suite: management-event-scheduler
+            database: nexus_company_test_management_scheduler
+            tests: test_company_management_scheduler.py test_company_management_scheduler_boundaries.py test_company_management_scheduler_acceptance.py test_company_management_scheduler_admission.py test_company_management_scheduler_process.py test_company_scheduler_cancellation.py
+          - suite: management-generated-artifacts
+            database: nexus_company_test_generated_artifacts
+            tests: test_company_generated_artifacts.py test_company_generated_artifact_denials.py test_company_generated_artifact_lifecycle.py test_company_generated_artifact_profile_time.py test_company_generated_artifact_production.py
+          - suite: management-native-producer
+            database: nexus_company_test_native_reports
+            tests: test_company_native_report_producer.py
+          - suite: management-native-workflow
+            database: nexus_company_test_native_workflow
+            tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py
+          - suite: disposable-session-service
+            database: nexus_company_test_owner_uat
+            tests: test_company_pilot_session.py
     services:
       postgres:
         image: postgres:16-alpine
@@ -325,6 +349,9 @@ jobs:
 
       - name: Build check
         run: npm run build
+
+      - name: Company session identity race checks
+        run: node scripts/test-company-session.mjs
 
   # ── Security Scanning ─────────────────────────────────────────────────────
 

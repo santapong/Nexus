@@ -9,9 +9,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.access import VerifiedIdentity
+from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.management.cancellation_support import require_not_cancelled
+from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_models import SegmentDispatch
+from nexus.execution.management_checks import (
+    ManagementArtifactFreshness,
+    require_management_execution,
+)
 from nexus.execution.runtime_contracts import ExecutionDeniedError
 from nexus.execution.runtime_models import EffectIntent, ExecutionWork
 from nexus.execution.runtime_store import _unresolved, _waiting_authorized, next_segment_id
@@ -81,6 +87,10 @@ async def recover_locked(
     worker_id: UUID,
     segment_id: UUID,
     duration: timedelta,
+    *,
+    management_catalog: PlanAdmissionCatalog | None = None,
+    management_artifacts: BoundedArtifactReader | None = None,
+    management_freshness: ManagementArtifactFreshness | None = None,
 ) -> ExecutionWork:
     """New fence for the same issued segment; fresh work alone advances its sequence.
 
@@ -108,10 +118,20 @@ async def recover_locked(
         )
         if control.paused:
             raise ExecutionDeniedError("Paused company cannot start a fresh dispatched effect")
+        await require_management_execution(
+            session,
+            control,
+            row,
+            identity,
+            management_catalog,
+            management_artifacts,
+            management_freshness,
+        )
         if row.state == "awaiting_approval":
             await _waiting_authorized(session, row)
         elif row.state not in {"eligible", "running"}:
             raise ExecutionDeniedError("Dispatched work is not eligible for new execution")
+        now = await db_now(session)
     await mark_unknown_intents(session, row, unresolved)
     if unresolved:
         row.state = "outcome_unknown"

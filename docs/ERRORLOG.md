@@ -74,6 +74,66 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-064 — Runtime schema import interrupted UAT restart
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed
+**Found by:** actual UAT startup and schema test collection
+**Affected files:** `api/company_openapi.py`, `company_app.py`
+
+### What happened
+The new response-schema adapter imported GoalRevisionRecord from the wrong module.
+A suggested correction also named a nonexistent module. The local UAT API restart
+failed twice. Root reported import success before awaiting the process's actual result.
+
+### Root cause
+Module location was inferred rather than searched, and a running tool handle was
+mistaken for successful completion.
+
+### Fix applied
+Actual rg located GoalRevisionRecord in goal_store.py:42. The import was corrected;
+separate import process exit0, actual API health200/runtime schema export and the
+JSON response shape unit1pass4.34s confirm correction. Original startup/collection
+failures remain in owner-uat and company-schema evidence logs.
+
+### Prevention
+Search exact definitions first; await the exact tool handle's terminal result before
+claiming a successful import/startup. Keep source presence and process status separate.
+
+---
+
+## ERROR-063 — Native final intent omitted the action authority expiry
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed and independently rechecked
+**Found by:** independent actual EffectIntent.flush expiry probe
+**Affected files:** `execution/native_report_intent.py`
+
+### What happened
+Actual owner approval remained valid through preparation/current authority checks,
+then expired during a real delayed intent flush. The final pure native clock checked
+source/grant/lease/profile windows but omitted the exact/standing authority deadline;
+intent consumption returned normally after expiry (original1PG42.82s failure).
+
+### Root cause
+The compiled native timing snapshot did not capture the immutable approval/grant expiry.
+
+### Fix applied
+Capture public action_expiry(session, JournalAction) during native intent validation
+and include it in the final pure deadline checks after all awaited writes. No approval
+fields, counts or source rules are relaxed. The unchanged authority repro plus pending-blob
+cost confirmation passes2PG45.07s. Full combined review/process proof remains separate.
+
+### Prevention
+Retain the original exact/standing authority-window probe, alongside final source,
+recipient, profile and lease timing cases. A successful publication gate later cannot
+justify an unauthorized already-consumed intent/counter.
+
+---
+
+
 ## ERROR-062 — Conditional file mutator overwrote the wrong module
 
 **Date:** 2026-10-14
@@ -2021,7 +2081,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-063*
+*Next error ID: ERROR-065*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

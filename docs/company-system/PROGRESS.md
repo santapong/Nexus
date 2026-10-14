@@ -221,3 +221,88 @@ qualify the in-progress native publisher/DBOS report procedure or complete M3.
 Native report preparation/check preparation2PG32.52s and scheduler cancellation plus
 existing scheduling8PG58.28s are separate active integration evidence. Owner UI/action
 review and actual private/dev session composition continue with the bounded workers.
+
+
+### Native report/recovery and owner UAT integration — 2026-10-14
+
+Root new native report worker executes deterministic registered report/check tools with
+actual configured actors, dispatch/fences, current compilation before intent, native
+artifact publication, actual receipts and separately trusted acceptance. First fresh
+check1PG30.95s proves one tool attempt/zero model requests; full-pin known receipt
+recovery/replay and wrong selector cases3PG89.99s pass. These are native service/step
+checks, not the still-pending actual DBOS process kill/restart qualification. Root
+acceptance recovery accepts only an actual succeeded verifier check action ID; full
+current target/protected bytes/source/permissions and production input/output/recipe
+pins are independently recomputed. No pending blob or cached permit grants success.
+
+Independent review reproduced a final action approval expiry gap during actual intent
+flush. The intent now retains exact/standing authority expiry alongside lease/source/
+recipient/profile windows for the final pure clock. Original failing probe is retained;
+unchanged corrected probe is pending at this write. Profile expiry probes2PG51.20s and
+pending-blob/forged-or-revoked-scope/reconcile-lease expiry3PG84.38s pass. This does not
+claim the whole worker/release review has finished.
+
+Owner backend API7PG53.53s and frontend build/four actual-client identity race checks
+are frozen; actual member login correctly denies owner content. Actual loopback UAT
+API9188 and frontend5188 expose task-only signup/login and native current company,
+plan, action/commitment/receipt/held-unknown-cost facts. No providers/workers/business
+acceptance were activated. Owner browser flow awaits the human password step; the
+browser page is handed over and remains untouched. SDK TestModel smoke1request,
+no tools/retries and2/2 exact conformance checks backs a named UAT-only4h profile,
+not live-provider quality. Runtime OpenAPI tuple/money response correction has1unit
+pass4.34s; source import errors during restart are retained as failures, then corrected.
+
+Read-only M4 Pi preflight found ARM64 Debian13/Python3.13.5, no Podman/crun/uidmap,
+and cgroup_disable=memory in boot arguments. Required4GiB sandbox enforcement and
+ARM64 qualification remain unproven; agent prepares a concrete setup/rollback packet
+and local native-builder code. No Pi mutations or service repairs were performed.
+
+
+Independent final authority repro closes unchanged:2PG45.07s including the separate
+pending-blob cost conservation confirmation. Root source snapshot2 SHAe29b5415ba7e346714a8e817bbd9477dbf0dd709cc17464555956514e85bbfb3
+is under review; the final combined six-case matrix is running. No actual DBOS
+process completion or full M3/release claim follows from those finite probes.
+
+
+### Actual native durable process qualification — 2026-10-14
+
+Actual owner scheduler→DBOS native workflow→check publication/receipt→OSkill
+before acceptance→same executor restart→trusted acceptance→SDK completed replay
+passes1restrictedPG85.66s. Retained proof SHAfd34027251718469a43b8587ef4e582b09f208f5d802188e2739c2b9736cb402:
+`native-workflow-process/kill-after-check-receipt-proof.json`, SDK SUCCESS with2
+recovery attempts. One tool attempt, zero model requests, same segment/run and
+one acceptance row; original reconciled native charge0 preserved. This scope is
+an offline source fixture and native check workflow, not live-provider/customer
+readiness or the remaining intent/artifact/acceptance interruption cases.
+
+Original process run first reached the actual receipt phase but fixture assertions
+used incorrect ORM names (22.43s failure). Corrected test then reproduced a genuine
+restart timeout (125.55s): the worker used a random process-specific DBOS executor
+identity. Pinned DBOS3.2 recovery code and official workflow recovery documentation
+show startup recovery selects that executor. Native services now use an explicitly
+configured executor identity, stable across restart and unique per logical host;
+M1 worker UUID/fence still changes. Recovery wait covers M1 maximum300s leases
+with a finite310s observation bound instead of30s. The expanded four-phase actual
+OSkill matrix is running; its result is unclaimed at this write.
+
+Fresh dispatch recovery now calls current configured management admission before
+new fence/segment/execute capacity is allocated. Original public-plan revoke probe
+failed1PG8.64s; unchanged corrected probe plus known-issued reconciliation positive
+passes2PG25.99s. Independent eight-case restricted-PG worker boundary review passes
+(six122.92s plus two25.99s), with original failures retained. Known issuance remains
+reconciliation-only and costs/attempts are not reset.
+
+Actual live JSON/YAML response-schema probe now parses port9188 safely and matches
+13 exact response roots after reload. YAML Python tuple tags were independently
+reproduced and removed through the actual JSON serializer normalization. Root full
+Brain+management schema unit1pass3.31s. No user credential entry was automated.
+
+
+Expanded native DBOS four-phase OSkill/restart matrix passes4restrictedPG332.32s:
+intent, artifact publication, receipt and acceptance. Missing published output stays
+unknown with its reservation; preserved native output/receipt/proof resumes without
+another tool/model attempt, segment/run reset or duplicate acceptance. Actual phase
+proofs/config/observations are retained in native-workflow-process/four-phase with
+hash manifest. Pure composition split keeps helpers42/35/18lines and strict/lint
+passes; no authority semantics changed. M3 measured observations, operating profile,
+owner browser and coherent full-source integration remain open.

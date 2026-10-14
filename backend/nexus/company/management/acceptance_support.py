@@ -210,6 +210,19 @@ async def resolve_target(
 ) -> VerificationSpec:
     verifier = await execution_row(session, lease_scope(lease))
     require_lease(verifier, lease, now, execute=True)
+    return await resolve_native_target(session, control, lease, action_id, now)
+
+
+async def resolve_native_target(
+    session: AsyncSession,
+    control: CompanyControl,
+    lease: ExecutionLease,
+    action_id: UUID,
+    now: datetime,
+) -> VerificationSpec:
+    """Read the exact target under a current lease; this does not publish acceptance."""
+    verifier = await execution_row(session, lease_scope(lease))
+    require_lease(verifier, lease, now)
     revision, payload, binding = await native_plan(session, control, lease)
     await current_governance(session, control, payload)
     author, selected_author, author_charter = await current_work(

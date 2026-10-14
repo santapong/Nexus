@@ -191,6 +191,13 @@ def _model(catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime)
         raise ManagementDeniedError("Plan profile has no current registered model evidence")
 
 
+def validate_plan_profile(
+    catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
+) -> None:
+    """Pure current-clock registry/profile eligibility, never action or execution permission."""
+    _model(catalog, child, now)
+
+
 async def _child(
     session: AsyncSession,
     control: CompanyControl,

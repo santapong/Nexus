@@ -12,11 +12,32 @@ import { PromptsPage } from '@/pages/PromptsPage'
 import { BillingPage } from '@/pages/BillingPage'
 import { AuditPage } from '@/pages/AuditPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { Navigate } from 'react-router-dom'
+import { CompanyLayout } from '@/components/company/CompanyLayout'
+import { CompanyTodayPage } from '@/pages/CompanyTodayPage'
+import { CompanyOverviewPage } from '@/pages/CompanyOverviewPage'
+import { CompanyPlanPage } from '@/pages/CompanyPlanPage'
+import { CompanyWorkPage } from '@/pages/CompanyWorkPage'
+import { CompanyApprovalsPage } from '@/pages/CompanyApprovalsPage'
+import { CompanyActionReviewPage } from '@/pages/CompanyActionReviewPage'
+import { CompanyLoginPage } from '@/pages/CompanyLoginPage'
 
 export const router = createBrowserRouter([
+  { path: '/company/login', element: <CompanyLoginPage /> },
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/company', element: <CompanyLayout />, children: [
+      { index: true, element: <Navigate to="today" replace /> },
+      { path: 'today', element: <CompanyTodayPage /> },
+      { path: 'overview', element: <CompanyOverviewPage /> },
+      { path: 'plans/:planId', element: <CompanyPlanPage /> },
+      { path: 'work/:taskId', element: <CompanyWorkPage /> },
+      { path: 'approvals', element: <CompanyApprovalsPage /> },
+      { path: 'actions/:actionId', element: <CompanyActionReviewPage /> },
+    ],
   },
   {
     element: <AppLayout />,
