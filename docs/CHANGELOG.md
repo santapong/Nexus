@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Native notification event selectors with old-profile compatibility
+
+### Database
+- Static company015 adds exact scoped work/action/report/budget selectors and
+  kind-specific NULL/hash guards. Journal action/task unique target and full FK
+  indexes preserve tenant identity. Downgrade refuses existing new-kind evidence.
+
+### Changed
+- Original BrainEvent mapper stays on old columns; qualified separate native
+  mapper uses015. Old event Core insert/replay/consume remains compatible008/014.
+
+### Validation
+- Stable1315unit15.66s; strict10core+6Root;12restricted schemaPG28.02s with2unit
+  target/index checks; fresh/repeat/reflection/downgrade1PG2.07s; oldevent2PG3.34s
+  and014 ingestion1PG3.02s. Real new wakes/emitter/delivery remain mandatory work.
+
+**Authored by:** Codex and supervised event agent
+**PR:** not published
+
 ## [2026-10-14] — Owner saved-report dashboard controls
 
 ### Added

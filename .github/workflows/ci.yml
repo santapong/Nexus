@@ -204,6 +204,12 @@ jobs:
           - suite: owner-notification-schema
             database: nexus_company_test_notification_schema
             tests: test_company_notification_schema.py test_company_notification_intent_schema.py test_company_notification_observation_schema.py
+          - suite: native-event-schema
+            database: nexus_company_test_native_schema
+            tests: test_company_native_event_schema.py test_company_native_event_security.py test_company_native_event_downgrade.py
+          - suite: native-event-old-profile-compatibility
+            database: nexus_company_test_native_events
+            tests: test_company_native_event_compatibility.py
           - suite: management-native-workflow
             database: nexus_company_test_native_workflow
             tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py

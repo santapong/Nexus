@@ -59,7 +59,10 @@ class JournalAction(JournalBase):
     state: Mapped[str] = mapped_column(String(32))
     approval_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    __table_args__ = (UniqueConstraint("company_id", "id", name="uq_company_action_scope"),)
+    __table_args__ = (
+        UniqueConstraint("company_id", "id", name="uq_company_action_scope"),
+        UniqueConstraint("company_id", "id", "task_id", name="uq_company_action_task_scope"),
+    )
 
 
 class DailyBudget(JournalBase):

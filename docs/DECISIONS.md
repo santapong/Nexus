@@ -3174,7 +3174,7 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-109*
+*Next ADR ID: ADR-110*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3200,3 +3200,27 @@ required notification signal remain mandatory before NOTIFY-01 acceptance.
 
 See NOTIFICATION_014_EVENT_PLAN.md and NOTIFICATION_LEDGER_CHECKPOINT_2026-10-14.md
 for schema/effect boundaries, scoped actual evidence and remaining activation gates.
+
+## ADR-109 — Qualified native event mapping preserves older physical profiles
+
+**Date:** 2026-10-14
+**Status:** accepted within the supervised company programme
+
+Keep the original BrainEvent mapper's instrumented columns unchanged. Append
+seven reviewed Core columns and exact constraints to its shared Table, then map
+a separate NativeBrainEvent for full015 reads. Existing old-kind inserts explicitly
+select original columns. New-kind writes and full reads first qualify the actual
+physical columns and independent migration version. Partial schemas fail closed.
+
+Adding nullable/deferred mapped attributes alone was rejected: generated ORM
+INSERT/RETURNING or eager reads can reference columns absent from008/014. Actual
+pinned SQLAlchemy2.0.51 old-profile event SELECT/INSERT/append/replay/consume proof
+passes2PG;014 real ingestion passes separately. Full008 ingestion has an unrelated
+pre-existing012 artifact classification read gap and is not claimed compatible.
+
+Normal015 binds decision events to exact company/action/task, work events to
+RegisteredWork, digest events to saved reports, and company cap events to actual
+daily budgets. New kinds carry state hashes, never arbitrary body/owner authority.
+Downgrade refuses existing new-kind events before removing their columns, retaining
+durable evidence. Real source emitters, final privacy/time checks and delivery
+remain separate required implementation gates.

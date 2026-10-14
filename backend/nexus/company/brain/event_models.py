@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import (
@@ -9,12 +10,14 @@ from sqlalchemy import (
     CheckConstraint,
     ForeignKeyConstraint,
     String,
+    Table,
     UniqueConstraint,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nexus.company.brain.model_base import BrainBase, CompanyRow, RecordedRow
+from nexus.company.brain.native_event_schema import add_native_event_schema
 from nexus.harness.journal_models import JournalAction
 
 
@@ -68,6 +71,9 @@ class BrainEvent(CompanyRow, RecordedRow, BrainBase):
             name="ck_brain_event_binding",
         ),
     )
+
+
+add_native_event_schema(cast(Table, BrainEvent.__table__))
 
 
 class BrainEventCursor(CompanyRow, BrainBase):
