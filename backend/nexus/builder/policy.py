@@ -10,6 +10,7 @@ from uuid import UUID
 from pydantic import Field, model_validator
 
 from nexus.builder.contracts import BuilderCapabilities, BuilderJobSpec, BuilderValue, Symbol
+from nexus.builder.node_contracts import NodeRuntimeInputs, absent
 from nexus.builder.paths import permitted_path, relative_path
 from nexus.company.contracts.actions import ActionProposal
 from nexus.execution.runtime_contracts import ExecutionLease
@@ -38,6 +39,7 @@ class BuilderToolPolicy(BuilderValue):
     commands: tuple[BuilderCommandPolicy, ...] = Field(min_length=1, max_length=8)
     write_paths: tuple[str, ...] = Field(min_length=1, max_length=16)
     artifact_paths: tuple[str, ...] = Field(min_length=1, max_length=16)
+    runtime_inputs: NodeRuntimeInputs | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def exact_policy(self) -> Self:
@@ -45,7 +47,11 @@ class BuilderToolPolicy(BuilderValue):
         if "/" not in reference:
             raise ValueError("Builder image needs a qualified registry and digest")
         registry, path = reference.split("/", 1)
-        if ("." not in registry and not registry.startswith("localhost:")) or ":" in path:
+        if (
+            "." not in registry
+            and registry != "localhost"
+            and not registry.startswith("localhost:")
+        ) or ":" in path:
             raise ValueError("Builder image transport or mutable tag is unsupported")
         if len({row.command_key for row in self.commands}) != len(self.commands):
             raise ValueError("Configured command keys must be distinct")

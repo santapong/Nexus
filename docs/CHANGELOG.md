@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Offline Node toolchain and bounded qualification
+
+### Added
+- Qualified public image, pnpm and read-only offline dependency cache with fixed
+  archives, platform, lock, integrity and workspace envelopes.
+- Node-specific native runner keeps rootless/network-none limits and read-only
+  loopback hosts; old exact recipes support known-result recovery only.
+
+### Validation
+- Coherent1403unit75.74s and strict42/Ruff/format pass. Worker33focused units,
+  3restricted015PG37.66s and actual v1 no-execution recovery remain scoped evidence.
+- Actual nominated historical StockFlow v2 run passes all baseline commands; post
+  build fails with protected ENOSPC evidence under unchanged2GiB workspace limit.
+  One process/attempt, failed native receipt and unknown billing are retained.
+  Independent acceptance, current business readiness and ARM64 remain open.
+
+**Authored by:** Codex and supervised native-builder agent
+**PR:** not published
+
 ## [2026-10-14] — Current model eligibility observations
 
 ### Added

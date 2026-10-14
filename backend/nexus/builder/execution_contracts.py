@@ -15,6 +15,7 @@ from nexus.builder.contracts import (
     BuilderValue,
     Digest,
 )
+from nexus.builder.node_contracts import NodeRuntimeInputs, absent
 from nexus.builder.policy import BuilderToolPolicy
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.brain.sources import ArtifactRevisionRef
@@ -39,6 +40,7 @@ class BuilderExecutionSpec(BuilderValue):
     runtime_recipe: Literal["nexus.builder.runtime.v1"] = RUNTIME_RECIPE
     protected_patch: ArtifactRevisionRef | None = None
     output_resource: ResourceRef | None = None
+    runtime_inputs: NodeRuntimeInputs | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def exact_patch(self) -> Self:
@@ -58,6 +60,8 @@ class BuilderExecutionSpec(BuilderValue):
         return self
 
     def require_policy(self, policy: BuilderToolPolicy) -> None:
+        if self.runtime_inputs != policy.runtime_inputs:
+            raise ValueError("Builder runtime inputs differ from the complete policy")
         if canonical_sha256(policy) != self.policy_sha256:
             raise ValueError("Builder policy changed after the exact proposal")
 
