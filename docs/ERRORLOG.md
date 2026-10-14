@@ -74,6 +74,30 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-097 — User-manager parent validation required an absent delegation xattr
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** open; explicit user-manager evidence correction under review
+**Found by:** first actual finite-parent read-only probe
+**Affected files:** builder/contained_kernel.py and parent contracts/provider evidence
+
+The actual named20s user scope started and bootstrap observed active unit identity.
+Provider denied at getxattr(user.delegate) with ENODATA; controller exited1 and
+original launch PID/start was gone. No positive/foreign/expiry qualification.
+The original bounded logs/packet/bootstrap/terminal receipts are preserved.
+
+Pinned systemd261.2 cgroup.c cgroup_xattr_apply returns for non-system managers
+before cgroup_delegate_xattr_apply; the documented marker is not set on this user
+manager path. Correction must record explicit absent_user_manager rather than
+pretend a marker exists: fixed --user bus, supported actual manager version, exact
+UID/ownedunit/invocation/boot/path/controllers/limits and only ENODATA qualify the
+absence. Other errno/malformed/value0 still deny. No marker writes or arbitrary
+gate bypass. Provider/method identity must reflect the corrected evidence schema.
+Primary: https://raw.githubusercontent.com/systemd/systemd/v261.2/src/core/cgroup.c .
+Evidence: native-builder/root-parent-first-failure-scope.json. No corrected scope
+has run; runtimev2 stays disabled.
+
 ## ERROR-096 — Targeted enqueue replay did not observe DBOS queue status
 
 **Date:** 2026-10-15 (Asia/Bangkok)

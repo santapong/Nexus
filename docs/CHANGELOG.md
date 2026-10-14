@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retained finite-parent compatibility failure
+
+### Qualification result
+- Exact reviewed read-only scope starts, then provider denies missing user.delegate
+  marker with ENODATA before positive/foreign/expiry checks (ERROR-097). Original
+  bootstrap/log/terminal bytes retained; exact launcher/payload PID-start absent.
+- Pinned systemd261.2 source skips delegation xattrs for user managers. Explicit
+  manager-version/absent-marker schema is under review; no marker writes or
+  gate bypass, no corrected scope run, and v2 execution remains disabled.
+
+**Authored by:** Codex and supervised engineering agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Current release-gate reconciliation
 
 ### Documentation

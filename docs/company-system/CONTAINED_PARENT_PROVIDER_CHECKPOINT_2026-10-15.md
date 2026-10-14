@@ -25,3 +25,14 @@ read thread; query reaping failure remains explicit uncertainty. No actual sandb
 job/DB/provider/Pi ran. Full payload+conmon ancestry, bounded process/observer/
 sidecar publication, hard-timeout cleanup and representative StockFlow/ARM64 remain
 separate required gates.
+
+
+## First finite-scope observation failed
+
+The actual20s read-only scope started, then providergetxattr(user.delegate) denied
+ENODATA before positive/foreign checks. Original controllerexit1 and waitedlaunch
+PID/start absence remain; no expiry success is inferred. Pinned systemd261.2 source
+confirms usermanager skips delegationxattrs. An explicit user-manager/absent-marker
+evidence schema is under review (ERROR-097); no kernel marker is written and no
+other xattr failure may be silently ignored. Actual revised finite-parent proof
+and all sandbox execution gates remain open.
