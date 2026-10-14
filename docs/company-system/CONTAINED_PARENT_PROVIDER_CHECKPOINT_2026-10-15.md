@@ -36,3 +36,20 @@ confirms usermanager skips delegationxattrs. An explicit user-manager/absent-mar
 evidence schema is under review (ERROR-097); no kernel marker is written and no
 other xattr failure may be silently ignored. Actual revised finite-parent proof
 and all sandbox execution gates remain open.
+
+
+## Explicit current user-manager observation v2
+
+Frozen10-file correction398bca7ebbf4249b7af9e4ec2f8070e3129969932627d68ed9af0a8227aaa3e6
+adds actual fixed user-bus service-owner UID and daemonVersion queries within the
+same3s total budget. Only supported261.2-1/contextmatchingUID can record exact
+ENODATA as absent_user_manager; present_1 remains distinct. EACCES/ENOTSUP/EIO/
+malformed/0/unknownmanager/version/UID deny. Unit and kernel manager observations
+must agree with euid/owneduserhierarchy and complete prior boot/invocation/path/
+controllers/numeric caps/deadline checks. Schema/provider method identity is v2;
+full builder execution pin remains unissued.
+
+Root138focused/1.48s, strict/Ruffformat10 and coherent2,170unit/21.37s/19existing
+warnings pass. Original failedscope1/source/receipt remain historical unchanged.
+New finite-scope2 packet is being prepared; no corrected actual parent positive
+is yet proven and v2 builder execution stays disabled.

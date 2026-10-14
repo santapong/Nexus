@@ -27,6 +27,8 @@ from nexus.tests.unit.test_contained_scope import (
 def reports() -> list[bytes]:
     """Literal typed busctl reply shapes confirmed on systemd261.2."""
     batches: list[list[tuple[str, object]]] = [
+        [("u", [1000])],
+        [("s", "261.2-1")],
         [("o", [object_path(UNIT)])],
         [
             ("s", UNIT),
@@ -78,7 +80,7 @@ async def read_kernel() -> KernelScopeFacts:
 
 
 @pytest.mark.asyncio
-async def test_three_fixed_read_only_queries_accept_current_synthetic_parent() -> None:
+async def test_five_fixed_read_only_queries_accept_current_synthetic_parent() -> None:
     reader = FakeReader(reports())
     clock = iter((11_000_000, 12_000_000))
     provider = SystemdScopeProvider(
@@ -113,14 +115,14 @@ def test_raw_reply_duplicate_coercion_unlimited_overflow_and_count_denies(body: 
 @pytest.mark.asyncio
 async def test_object_path_splice_denies_before_property_or_kernel_reads() -> None:
     raw = reports()
-    raw[0] = b'{"type":"o","data":["/org/freedesktop/systemd1/unit/foreign"]}'
+    raw[2] = b'{"type":"o","data":["/org/freedesktop/systemd1/unit/foreign"]}'
     reader = FakeReader(raw)
     provider = SystemdScopeProvider(
         reader=reader, kernel_reader=read_kernel, clock_us=lambda: 11_000_000
     )
     with pytest.raises(ValueError):
         await provider.observe(expectation())
-    assert len(reader.calls) == 1
+    assert len(reader.calls) == 3
 
 
 @pytest.mark.asyncio
@@ -138,7 +140,7 @@ async def test_total_provider_deadline_denies_early_good_snapshot() -> None:
 async def test_current_provider_never_reuses_previous_unit_or_kernel_facts() -> None:
     good = reports()
     changed = reports()
-    changed[1] = changed[1].replace(b'"active"', b'"inactive"')
+    changed[3] = changed[3].replace(b'"active"', b'"inactive"')
     reader = FakeReader(good + changed)
     clock = iter((11_000_000, 12_000_000, 13_000_000, 14_000_000))
     provider = SystemdScopeProvider(
@@ -147,7 +149,7 @@ async def test_current_provider_never_reuses_previous_unit_or_kernel_facts() -> 
     await provider.observe(expectation())
     with pytest.raises(ValueError):
         await provider.observe(expectation())
-    assert len(reader.calls) == 6
+    assert len(reader.calls) == 10
 
 
 @pytest.mark.asyncio

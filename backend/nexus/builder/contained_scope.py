@@ -7,6 +7,8 @@ from nexus.builder.contained_contracts import (
     ParentObservation,
     ScopeExpectation,
     SystemdScopeFacts,
+    cgroup_components,
+    require_user_manager,
 )
 
 
@@ -20,6 +22,8 @@ def validate_current_scope(
     """A finite actual monotonic deadline and every exact identity/limit must agree."""
     _require_unit(expected, unit)
     _require_kernel(expected, kernel)
+    if unit.user_manager != kernel.user_manager:
+        raise ValueError("Unit and kernel user manager observations differ")
     deadline = unit.active_enter_us + unit.runtime_us
     remaining = deadline - end_us
     if not unit.active_enter_us <= start_us <= end_us or remaining < expected.minimum_remaining_us:
@@ -36,6 +40,7 @@ def validate_current_scope(
 
 
 def _require_unit(expected: ScopeExpectation, unit: SystemdScopeFacts) -> None:
+    require_user_manager(unit.user_manager, expected.uid)
     wanted = (
         expected.unit,
         "loaded",
@@ -75,6 +80,13 @@ def _require_unit(expected: ScopeExpectation, unit: SystemdScopeFacts) -> None:
 
 
 def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> None:
+    require_user_manager(kernel.user_manager, expected.uid)
+    prefix = ("user.slice", f"user-{expected.uid}.slice", f"user@{expected.uid}.service")
+    if cgroup_components(kernel.cgroup_path)[:3] != prefix or kernel.delegation_marker not in {
+        "present_1",
+        "absent_user_manager",
+    }:
+        raise ValueError("Kernel user hierarchy or marker description differs")
     wanted = (
         expected.uid,
         expected.uid,
@@ -85,7 +97,6 @@ def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> Non
         expected.cgroup_path,
         expected.cgroup_path,
         expected.cgroup_inode,
-        True,
         expected.memory_bytes,
         expected.cpu_quota_us,
         expected.cpu_period_us,
@@ -101,7 +112,6 @@ def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> Non
         kernel.cgroup_path,
         kernel.self_cgroup_path,
         kernel.cgroup_inode,
-        kernel.delegation_marker,
         kernel.memory_bytes,
         kernel.cpu_quota_us,
         kernel.cpu_period_us,

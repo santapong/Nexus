@@ -8,6 +8,11 @@ from uuid import UUID
 from pydantic import ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest
+from nexus.builder.user_parent_identity import (
+    SUPPORTED_USER_SYSTEMD_VERSION,
+    USER_PARENT_METHOD_SHA256,
+    USER_PARENT_PROVIDER_VERSION,
+)
 
 UInt = Annotated[int, Field(ge=0, lt=2**64 - 1, strict=True)]
 Positive = Annotated[int, Field(gt=0, lt=2**64 - 1, strict=True)]
@@ -18,6 +23,15 @@ class ContainedValue(BuilderValue):
     """No coercion, unknown fields or mutable descriptions at this internal boundary."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True, validate_default=True)
+
+
+class UserManagerObservation(ContainedValue):
+    """Actual daemon context from the private fixed user bus; descriptive, not authority."""
+
+    manager: Literal["user"]
+    version: Literal["261.2-1"]
+    uid: int = Field(gt=0, lt=2**32, strict=True)
+    query_route: Literal["fixed_local_user_bus"]
 
 
 class ScopeExpectation(ContainedValue):
@@ -74,6 +88,7 @@ class ScopeExpectation(ContainedValue):
 class SystemdScopeFacts(ContainedValue):
     """Actual typed Unit/Scope replies, before independent kernel validation."""
 
+    user_manager: UserManagerObservation
     unit: str
     load_state: str
     active_state: str
@@ -95,6 +110,7 @@ class SystemdScopeFacts(ContainedValue):
 class KernelScopeFacts(ContainedValue):
     """Actual owned descriptor, boot, self-membership and numeric kernel limits."""
 
+    user_manager: UserManagerObservation
     uid: Positive
     boot_id: UUID
     self_cgroup_path: str
@@ -104,7 +120,7 @@ class KernelScopeFacts(ContainedValue):
     cgroup_path: str
     cgroup_inode: Positive
     directory_uid: UInt
-    delegation_marker: bool
+    delegation_marker: Literal["present_1", "absent_user_manager"]
     controllers: frozenset[str]
     memory_bytes: Positive
     cpu_quota_us: Positive
@@ -115,9 +131,13 @@ class KernelScopeFacts(ContainedValue):
 class ParentObservation(ContainedValue):
     """Historical scope evidence; future effect gates must obtain another fresh observation."""
 
-    schema_version: Literal["nexus.builder.parent-observation.v1"] = (
-        "nexus.builder.parent-observation.v1"
+    schema_version: Literal["nexus.builder.parent-observation.v2"] = (
+        "nexus.builder.parent-observation.v2"
     )
+    provider_version: Literal["nexus.builder.user-parent-provider.v2"] = (
+        USER_PARENT_PROVIDER_VERSION
+    )
+    provider_method_sha256: Digest = USER_PARENT_METHOD_SHA256
     expectation: ScopeExpectation
     unit: SystemdScopeFacts
     kernel: KernelScopeFacts
@@ -125,6 +145,14 @@ class ParentObservation(ContainedValue):
     observed_end_us: UInt
     deadline_us: Positive
     remaining_us: Positive
+
+    @field_validator("provider_method_sha256")
+    @classmethod
+    def fixed_provider_method(cls, value: str) -> str:
+        """This pin describes the provider only, never the unissued full runtime method."""
+        if value != USER_PARENT_METHOD_SHA256:
+            raise ValueError("User-parent provider method differs")
+        return value
 
 
 class ObservationBounds(ContainedValue):
@@ -168,3 +196,15 @@ def cgroup_components(value: str) -> tuple[str, ...]:
     ):
         raise ValueError("Scope cgroup path is not canonical")
     return parts
+
+
+def require_user_manager(manager: UserManagerObservation, uid: int) -> None:
+    """Reject unknown/copied contexts before qualified ENODATA can be described."""
+    if (
+        manager.manager != "user"
+        or manager.version != SUPPORTED_USER_SYSTEMD_VERSION
+        or manager.query_route != "fixed_local_user_bus"
+        or manager.uid != uid
+        or uid <= 0
+    ):
+        raise ValueError("Current supported user manager identity differs")

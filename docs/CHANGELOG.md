@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Explicit verified user-manager delegation observations
+
+### Fixed
+- Read actual daemonVersion and local user-bus owner UID before kernel collection;
+  ENODATA-only absence is explicit absent_user_manager, distinct from present_1.
+  Complete ownedscope/controller/cap/deadline checks and all other marker denials
+  remain (ERROR-097). Provider-only schema/method identity versioned; no activation.
+
+### Validation
+- Root138focused/1.48s/types/Ruffformat10/coherent2,170unit21.37s pass. Original
+  actual failure remains unchanged; revised finite-parent probe is pending.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Actual postqueue expiry atomic rollback
 
 ### Validation

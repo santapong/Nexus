@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** open; explicit user-manager evidence correction under review
+**Status:** source/pure correction verified; revised actual finite-scope qualification pending
 **Found by:** first actual finite-parent read-only probe
 **Affected files:** builder/contained_kernel.py and parent contracts/provider evidence
 

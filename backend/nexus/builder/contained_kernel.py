@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import os
 import re
 from collections.abc import Iterator
@@ -9,7 +10,13 @@ from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID
 
-from nexus.builder.contained_contracts import KernelScopeFacts, ScopeExpectation, cgroup_components
+from nexus.builder.contained_contracts import (
+    KernelScopeFacts,
+    ScopeExpectation,
+    UserManagerObservation,
+    cgroup_components,
+    require_user_manager,
+)
 
 
 @contextmanager
@@ -83,15 +90,18 @@ def _boot() -> UUID:
     return UUID(raw.decode("ascii").strip())
 
 
-def collect_kernel(expected: ScopeExpectation) -> KernelScopeFacts:
+def collect_kernel(expected: ScopeExpectation, manager: UserManagerObservation) -> KernelScopeFacts:
     """Collect/recheck held identities; a to_thread timeout cannot kill a blocked read thread."""
     self_path = _self_path()
     mount_id, boot, uid = _mount_id(), _boot(), os.geteuid()
+    require_user_manager(manager, uid)
     with open_directory(Path("/sys/fs/cgroup"), ()) as mount_fd:
         mount = os.fstat(mount_fd)
     with open_directory(Path("/sys/fs/cgroup"), cgroup_components(expected.cgroup_path)) as fd:
         group = os.fstat(fd)
-        values = _group_values(fd)
+        if group.st_uid != uid or expected.uid != uid:
+            raise ValueError("Scope kernel directory is not owned by the current user")
+        values = _group_values(fd, manager)
         held = os.fstat(fd)
         if (
             (held.st_dev, held.st_ino, held.st_uid) != (group.st_dev, group.st_ino, group.st_uid)
@@ -115,6 +125,7 @@ def collect_kernel(expected: ScopeExpectation) -> KernelScopeFacts:
             raise ValueError("Scope mount was replaced during collection")
     return KernelScopeFacts.model_validate(
         {
+            "user_manager": manager,
             "uid": uid,
             "boot_id": boot,
             "self_cgroup_path": self_path,
@@ -129,18 +140,29 @@ def collect_kernel(expected: ScopeExpectation) -> KernelScopeFacts:
     )
 
 
-def _group_values(fd: int) -> dict[str, object]:
+def _group_values(fd: int, manager: UserManagerObservation) -> dict[str, object]:
     cpu = read_bounded(fd, "cpu.max").strip().split(b" ")
     if len(cpu) != 2:
         raise ValueError("Scope CPU kernel limit shape differs")
-    marker = os.getxattr(fd, "user.delegate")
-    if marker != b"1":
-        raise ValueError("Scope actual delegation marker is unavailable")
     return {
-        "delegation_marker": True,
+        "delegation_marker": _marker(fd, manager),
         "controllers": frozenset(read_bounded(fd, "cgroup.controllers").decode("ascii").split()),
         "memory_bytes": read_uint(read_bounded(fd, "memory.max")),
         "cpu_quota_us": read_uint(cpu[0]),
         "cpu_period_us": read_uint(cpu[1]),
         "pids": read_uint(read_bounded(fd, "pids.max")),
     }
+
+
+def _marker(fd: int, manager: UserManagerObservation) -> str:
+    require_user_manager(manager, os.geteuid())
+    try:
+        value = os.getxattr(fd, "user.delegate")
+    except OSError as error:
+        if error.errno != errno.ENODATA:
+            raise
+        # v261.2 user manager does not apply delegate xattrs; absence stays explicit.
+        return "absent_user_manager"
+    if value != b"1":
+        raise ValueError("Scope actual delegation marker is malformed or false")
+    return "present_1"

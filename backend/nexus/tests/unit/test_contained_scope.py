@@ -11,6 +11,7 @@ from nexus.builder.contained_contracts import (
     ObservationBounds,
     ScopeExpectation,
     SystemdScopeFacts,
+    UserManagerObservation,
 )
 from nexus.builder.contained_scope import validate_current_scope
 
@@ -48,9 +49,17 @@ def expectation() -> ScopeExpectation:
     )
 
 
+def user_manager() -> UserManagerObservation:
+    """Typed synthetic user-daemon evidence; the real provider must read it freshly."""
+    return UserManagerObservation(
+        manager="user", version="261.2-1", uid=1000, query_route="fixed_local_user_bus"
+    )
+
+
 def unit_facts() -> SystemdScopeFacts:
     """Exact finite systemd properties for the synthetic scope."""
     return SystemdScopeFacts(
+        user_manager=user_manager(),
         unit=UNIT,
         load_state="loaded",
         active_state="active",
@@ -73,6 +82,7 @@ def unit_facts() -> SystemdScopeFacts:
 def kernel_facts() -> KernelScopeFacts:
     """Exact current kernel identity and hard limits for the synthetic scope."""
     return KernelScopeFacts(
+        user_manager=user_manager(),
         uid=1000,
         boot_id=BOOT,
         self_cgroup_path=GROUP,
@@ -82,7 +92,7 @@ def kernel_facts() -> KernelScopeFacts:
         cgroup_path=GROUP,
         cgroup_inode=100,
         directory_uid=1000,
-        delegation_marker=True,
+        delegation_marker="present_1",
         controllers=frozenset({"cpu", "memory", "pids"}),
         memory_bytes=4_294_967_296,
         cpu_quota_us=200_000,
@@ -139,7 +149,6 @@ def test_changed_unit_identity_deadline_or_cap_denies(field: str, value: object)
         ("cgroup_inode", 101),
         ("cgroup_path", GROUP + "-other"),
         ("self_cgroup_path", GROUP + "/child"),
-        ("delegation_marker", False),
         ("controllers", frozenset({"cpu", "memory"})),
         ("memory_bytes", 1),
         ("cpu_quota_us", 100_000),

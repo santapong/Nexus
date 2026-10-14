@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from collections.abc import Awaitable, Callable
 from typing import Protocol
 from uuid import UUID
@@ -14,9 +15,12 @@ from nexus.builder.contained_contracts import (
     ParentObservation,
     ScopeExpectation,
     SystemdScopeFacts,
+    UserManagerObservation,
+    require_user_manager,
 )
 from nexus.builder.contained_kernel import collect_kernel
 from nexus.builder.contained_query import (
+    DBUS,
     PREFIX,
     SCOPE_PROPERTIES,
     SERVICE,
@@ -55,26 +59,48 @@ class SystemdScopeProvider:
         deadline = start + ObservationBounds().total_io_us
         async with asyncio.timeout(3):
             queries = query_arguments(expected.unit)
-            resolved = decode_records(await self._reader.query(queries[0], deadline), ("o",))
+            manager = await self._read_manager(queries, deadline, expected.uid)
+            resolved = decode_records(await self._reader.query(queries[2], deadline), ("o",))
             if resolved != ([object_path(expected.unit)],):
                 raise ValueError("Resolved systemd object differs from exact expected scope")
             units = decode_records(
-                await self._reader.query(queries[1], deadline), ("s", "s", "s", "ay", "t")
+                await self._reader.query(queries[3], deadline), ("s", "s", "s", "ay", "t")
             )
             scopes = decode_records(
-                await self._reader.query(queries[2], deadline),
+                await self._reader.query(queries[4], deadline),
                 ("s", "t", "t", "b", "t", "t", "t", "t", "s", "b", "t"),
             )
-            unit = _scope_facts(units, scopes)
+            unit = _scope_facts(units, scopes, manager)
             kernel = (
                 await self._kernel_reader()
                 if self._kernel_reader is not None
-                else await asyncio.to_thread(collect_kernel, expected)
+                else await asyncio.to_thread(collect_kernel, expected, manager)
             )
             end = self._clock()
             if end > deadline:
                 raise ValueError("Scope observation exceeded the total IO deadline")
             return validate_current_scope(expected, unit, kernel, start, end)
+
+    async def _read_manager(
+        self,
+        queries: tuple[tuple[str, ...], ...],
+        deadline: int,
+        uid: int,
+    ) -> UserManagerObservation:
+        owner = decode_records(await self._reader.query(queries[0], deadline), ("u",))[0]
+        version = decode_records(await self._reader.query(queries[1], deadline), ("s",))[0]
+        assert isinstance(owner, list)
+        manager = UserManagerObservation.model_validate(
+            {
+                "manager": "user",
+                "version": version,
+                "uid": owner[0],
+                "query_route": "fixed_local_user_bus",
+            }
+        )
+        require_user_manager(manager, os.geteuid())
+        require_user_manager(manager, uid)
+        return manager
 
 
 def object_path(unit: str) -> str:
@@ -89,6 +115,24 @@ def query_arguments(unit: str) -> tuple[tuple[str, ...], ...]:
     """Fixed read-only argv; only the trusted exact unit determines the object path."""
     path = object_path(unit)
     return (
+        (
+            *PREFIX,
+            "call",
+            DBUS,
+            "/org/freedesktop/DBus",
+            DBUS,
+            "GetConnectionUnixUser",
+            "s",
+            SERVICE,
+        ),
+        (
+            *PREFIX,
+            "get-property",
+            SERVICE,
+            "/org/freedesktop/systemd1",
+            SERVICE + ".Manager",
+            "Version",
+        ),
         (
             *PREFIX,
             "call",
@@ -140,6 +184,13 @@ def _require_type(signature: str, value: object) -> None:
         or (signature == "b" and type(value) is bool)
         or (signature == "t" and type(value) is int and 0 <= value < 2**64 - 1)
         or (
+            signature == "u"
+            and isinstance(value, list)
+            and len(value) == 1
+            and type(value[0]) is int
+            and 0 <= value[0] < 2**32
+        )
+        or (
             signature == "o"
             and isinstance(value, list)
             and len(value) == 1
@@ -156,7 +207,11 @@ def _require_type(signature: str, value: object) -> None:
         raise ValueError("Systemd native property value differs from exact signature")
 
 
-def _scope_facts(units: tuple[object, ...], scopes: tuple[object, ...]) -> SystemdScopeFacts:
+def _scope_facts(
+    units: tuple[object, ...],
+    scopes: tuple[object, ...],
+    manager: UserManagerObservation,
+) -> SystemdScopeFacts:
     invocation = units[3]
     assert isinstance(invocation, list)
     values = dict(
@@ -167,6 +222,7 @@ def _scope_facts(units: tuple[object, ...], scopes: tuple[object, ...]) -> Syste
         )
     )
     values["invocation_id"] = UUID(bytes=bytes(invocation))
+    values["user_manager"] = manager
     values.update(
         zip(
             (

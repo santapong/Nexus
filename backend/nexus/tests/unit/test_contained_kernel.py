@@ -7,8 +7,9 @@ from pathlib import Path
 import pytest
 
 import nexus.builder.contained_kernel as kernel_module
+from nexus.builder.contained_contracts import UserManagerObservation
 from nexus.builder.contained_kernel import collect_kernel, open_directory, read_bounded, read_uint
-from nexus.tests.unit.test_contained_scope import BOOT, GROUP, expectation
+from nexus.tests.unit.test_contained_scope import BOOT, GROUP, expectation, user_manager
 
 
 def test_no_follow_component_walk_and_limit_reads(tmp_path: Path) -> None:
@@ -78,7 +79,7 @@ def test_complete_kernel_collector_reads_actual_owned_tree_without_writes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     group = setup_kernel_tree(tmp_path, monkeypatch)
-    row = collect_kernel(expectation())
+    row = collect_kernel(expectation(), user_manager())
     assert row.cgroup_inode == group.stat().st_ino
     assert row.mount_inode == tmp_path.stat().st_ino
     assert row.controllers == frozenset({"cpu", "memory", "pids"})
@@ -92,22 +93,21 @@ def test_collector_rejects_replaced_directory_while_original_fd_remains_open(
     group = setup_kernel_tree(tmp_path, monkeypatch)
     original = kernel_module._group_values
 
-    def replaced(fd: int) -> dict[str, object]:
-        values = original(fd)
+    def replaced(fd: int, context: UserManagerObservation) -> dict[str, object]:
+        values = original(fd, context)
         group.rename(group.with_name("historical"))
         group.mkdir()
         return values
 
     monkeypatch.setattr(kernel_module, "_group_values", replaced)
     with pytest.raises(ValueError, match="replaced"):
-        collect_kernel(expectation())
+        collect_kernel(expectation(), user_manager())
 
 
-def test_collector_denies_absent_actual_delegation_marker(
+def test_collector_records_actual_absence_under_supported_user_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     group = setup_kernel_tree(tmp_path, monkeypatch)
     os.removexattr(group, "user.delegate")
-    with pytest.raises(OSError):
-        collect_kernel(expectation())
+    assert collect_kernel(expectation(), user_manager()).delegation_marker == "absent_user_manager"

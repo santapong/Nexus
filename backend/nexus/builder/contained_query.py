@@ -18,6 +18,7 @@ PREFIX = (
     "--timeout=3s",
 )
 SERVICE = "org.freedesktop.systemd1"
+DBUS = "org.freedesktop.DBus"
 UNIT_PROPERTIES = (
     "Id",
     "LoadState",
@@ -106,6 +107,16 @@ def _require_argv(argv: tuple[str, ...]) -> None:
     if argv[:6] != PREFIX:
         raise ValueError("Scope query program/options differ")
     tail = argv[6:]
+    if tail == ("call", DBUS, "/org/freedesktop/DBus", DBUS, "GetConnectionUnixUser", "s", SERVICE):
+        return
+    if tail == (
+        "get-property",
+        SERVICE,
+        "/org/freedesktop/systemd1",
+        SERVICE + ".Manager",
+        "Version",
+    ):
+        return
     call = ("call", SERVICE, "/org/freedesktop/systemd1", SERVICE + ".Manager", "GetUnit", "s")
     if (
         tail[:6] == call
