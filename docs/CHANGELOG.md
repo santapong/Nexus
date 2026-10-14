@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Prepare exact native report work from owner commitments
+
+### Added
+- Current owner report/commitment profile resolution and due-only native author/check preparation; exact owner approval remains required and no effect is issued by preparation.
+- Same-session canonical pending journal append shared with CompanyJournal.submit, preserving existing approval/spend behavior and exact replay.
+- Complete current actor/plan/source/audience admission, final profile and actual verifier-lease deadlines, and rollback after interrupted/expired pending writes.
+
+### Validation and limits
+- Frozen30checks18PG+12unit105.80s; Root independent unchanged6PG71.03s; original journal9PG3.05s compatibility. Whole stable1134unit19.78s/19existing warnings; strict/lint/format14files pass.
+- Operating-loop, HTTP/UI owner selection and worker activation remain separate integration gates. No authority, allowance, provider, message, device or deployment action was activated.
+
+**Authored by:** Codex with bounded worker
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Record native measured outcomes with current permission-qualified readings
 
 ### Added

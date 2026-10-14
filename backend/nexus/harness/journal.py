@@ -18,7 +18,6 @@ from nexus.company.contracts.actions import ActionProposal, ApprovalDecision, Re
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dbos_queue import enqueue_authorized_segment
 from nexus.harness.approvals import ApprovalContext, require_exact_approval
-from nexus.harness.canonical import action_hash, canonical_action
 from nexus.harness.journal_budget import (
     budget_snapshot,
     reconcile_cost,
@@ -28,6 +27,7 @@ from nexus.harness.journal_budget import (
 )
 from nexus.harness.journal_contracts import ActionRecord, BudgetSnapshot, CompanyPolicy, LedgerScope
 from nexus.harness.journal_models import CompanyControl, JournalAction
+from nexus.harness.journal_submission import submit_pending_locked
 from nexus.harness.lifecycle import ActionState, require_transition
 
 logger = structlog.get_logger()
@@ -207,46 +207,9 @@ class CompanyJournal:
 
     async def submit(self, action: ActionProposal, scope: LedgerScope) -> ActionRecord:
         """Commit the exact pending proposal before any decision polling can occur."""
-        snapshot = canonical_action(action)
-        action = ActionProposal.model_validate_json(snapshot)
-        if (action.company_id, action.task_id, action.trace_id, action.actor_id) != (
-            scope.company_id,
-            scope.task_id,
-            scope.trace_id,
-            scope.principal_id,
-        ):
-            raise ValueError("Proposal and trusted execution scope disagree")
         async with self._session(scope) as session:
             control = await _control(session, scope)
-            if control.paused or (control.policy_version, control.price_version) != (
-                action.policy_version,
-                action.price_version,
-            ):
-                raise ValueError("Company paused or action uses stale policy/prices")
-            existing = await session.scalar(
-                select(JournalAction).where(
-                    JournalAction.company_id == scope.company_id,
-                    JournalAction.id == action.action_id,
-                )
-            )
-            if existing is not None:
-                if existing.proposal_json != snapshot:
-                    raise ValueError("Action ID already binds another immutable proposal")
-                return _record(existing)
-            row = JournalAction(
-                id=action.action_id,
-                company_id=scope.company_id,
-                task_id=scope.task_id,
-                trace_id=scope.trace_id,
-                proposal_json=snapshot,
-                proposal_hash=action_hash(action),
-                state=ActionState.AWAITING_APPROVAL.value,
-                approval_json=None,
-                consumed_at=None,
-            )
-            session.add(row)
-            await session.flush()
-            return _record(row)
+            return await submit_pending_locked(session, control, action, scope)
 
     async def get_action(self, scope: LedgerScope, action_id: UUID) -> ActionRecord:
         """Read a committed record only for its actor or the company's owner."""
