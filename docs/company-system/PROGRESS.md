@@ -481,3 +481,43 @@ admission and permanent dispatch semantics; it is not activated. Owner signup an
 email remain pending, and the held UAT/frontend are untouched. ARM64/private access,
 real model/business evidence, independent backup/key custody, rollback and24hsoak
 remain required. Goal active; no push/tag/deployment, live email or Pi mutation.
+
+### Checked 2026-10-14 — Engineering, matching recovery and native notification admission
+
+Local0015bfe publishes protected engineering acceptance and durable witness replay;
+d2c3d2f qualifies owner-bound same-source PG/DBOS recovery;8ae3725 integrates
+model-free owner notification admission. Root's final combined snapshot passes
+1,614 units/15.60s (19existing warnings), strict/Ruff/format13notification files,
+after engineering/recovery1,569units/15.70s and strict/lint40files. Source and scoped
+receipts are recorded in their current checkpoints; no release completion claim.
+
+Engineering coherent36checks/164.87s (27unit+9PG) and independent tiny actual
+Podman acceptance1PG/30.21s prove mechanical fixture scope. Procedure, final proof
+READ and fresh-witness replay corrections retain original failures. M1 has no
+completed enum; verifying can coexist with protected acceptance and unknown
+billing. The remaining worker recovery composition is specified separately.
+
+Amended full recovery1/26.67s on fresh pair2 binds owner checks to actual SOURCE,
+conserves the same workflow/intent/one attempt/unknown USD0.03/nullactual cost,
+denies old fence, reissues nothing and preserves source. Both DB pairs/artifacts
+remain protected. This API requires live unchanged source; disaster/older-backup
+recovery, independent storage/key custody and production RTO remain open.
+
+Notification43pure and12distinctPG across11+1calls prove current owner/zero-model
+ancestry and generic exact intent/unknown conservation, with source/role/approval/
+quota/expiry denials. No credential, native draft, provider or durable worker was
+activated. All raw quota fields are checked before JSON normalization.
+
+Temporary test processes/data disappeared between sessions; historical builder
+holds were not recreated. New private HOME PG17.6 has no TCP, app NOSUPER/NOBYPASS
+and durability settings on. Pinned library bytes/132versions are staged locally,
+excluding bytecode/startup hooks; locked Ruff0.15.21 is separately hash-qualified.
+Original import/parser/test-path failures remain recorded, with no deadline/guard
+weakening or isolated causal claim. HOME source snapshots survive continuation;
+sandbox fixture mounts use safe/tmp rather than owner homes.
+
+Next active slices: fixed full-module CSV recipe/parser, actual credential expiry
+witness and engineering/notification durable worker composition. StockFlow's dirty
+checkout, owner signup/email and primary UAT remain untouched. Current real model/
+business evidence, ARM64, private deployment, independent recovery, rollback and
+24hsoak remain mandatory. Goal active; no push/tag/deploy/live email/Pi action.
