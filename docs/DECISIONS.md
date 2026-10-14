@@ -117,6 +117,7 @@
 | ADR-104 | One non-retrying effect step for governed offline recovery | accepted | 2026-10-14 |
 | ADR-105 | Required per-request model gate and local wire/schema validation | accepted | 2026-10-14 |
 | ADR-106 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
+| ADR-107 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
 
 ---
 
@@ -3253,3 +3254,32 @@ is not evidence of checking a provider. Actual routine TestModel conformance can
 prove live provider quality, code/reasoning or structured-output capability. Model
 routing/client evidence integration remains separately qualified before use; no
 observation silently changes a request's registered model/endpoint/price/schema.
+
+## ADR-107 — Bounded authenticated operator backup envelope
+
+**Status:** accepted
+**Date:** 2026-10-14
+
+### Context
+The release requires matching encrypted database/artifact restore. A hash manifest
+alone cannot authenticate a private recovery archive. The verified runtime already
+contains cryptography49.0.0; PostgreSQL client/server is17.6. Production capture,
+key custody and independent storage need separate actual operating evidence.
+
+### Decision
+Pin the existing cryptography version as a direct dependency. Use its AESGCM with
+an externally supplied256-bit key and fresh96-bit nonce per envelope. Authenticate
+format/version/length, verify tag before unpacking, and retain bounded ordinary ZIP
+contents with complete typed dump/artifact SHA/length manifest. Initial packed/plain
+limit256MiB rejects rather than truncates larger captures. Keys never enter bundle,
+manifest, command line or logs. Restore writes only a new private empty tree after
+all contents match; it never overwrites or normalizes unsafe paths.
+
+### Evidence and consequences
+[Version49 primary API](https://cryptography.io/en/49.0.0/hazmat/primitives/aead/)
+and installed API signatures checked2026-10-14. Initial codec header arithmetic
+failed roundtrip and was corrected to derive lengths from magic/nonce/length fields;
+original failure retained. Local codec/path checks are not proof of capture
+consistency, independent devices, production RPO/RTO or durable process recovery.
+Direct pin does not change the already selected runtime package version; lock
+metadata must be checked without upgrading the surrounding SDKs.

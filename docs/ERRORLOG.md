@@ -74,6 +74,32 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-076 — Restore directory replacement redirected output writes
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed, independent unchanged local probe closed
+**Found by:** scoped operator backup path review
+**Affected files:** operations/backup_files.py
+
+### What happened and fix
+After creating the new empty target, restore closed its parent descriptor and
+used pathname writes. Replacing that target with a symlink to another synthetic
+private directory redirected dump/artifact writes before the final nofollow open
+failed. Original unchanged unit probe failed0.35s. Root now opens the target from
+the still-anchored parent before any write, uses directory-relative nofollow
+traversal/file creation throughout and checks final inode/visible namespace.
+The unchanged reviewer probe passes0.26s; Root repeat passes0.17s. Only owned/tmp
+fixture paths were used; no real backup, credential or user-data write occurred.
+
+### Prevention
+Leaf O_NOFOLLOW cannot protect mutable ancestor paths. Retain the created target
+descriptor and relative directory walk through all writes. Preserve the original
+probe/hash and source snapshots in backup-review; no permissions or assertions
+were relaxed. This does not prove database capture consistency or operating restore.
+
+---
+
 ## ERROR-075 — Inbox pagination anchor was outside current licensing
 
 **Date:** 2026-10-14

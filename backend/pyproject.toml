@@ -26,6 +26,8 @@ dependencies = [
     "pydantic-settings>=2.7.0,<3.0",
     # Local provider output/tool schema validation; remote reference loading is disabled.
     "jsonschema==4.26.0",
+    # Authenticated operator backup envelope, already pinned transitively in the runtime.
+    "cryptography==49.0.0",
     # Kafka
     "aiokafka>=0.12.0,<1.0",
     # Redis

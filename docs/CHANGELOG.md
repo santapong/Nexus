@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Bounded encrypted backup format and protected restore tree
+
+### Added
+- Authenticated operator envelope, exact dump/artifact manifest, bounded ordinary
+  archive validation and new private restore-tree writes; key never enters output.
+- Direct cryptography49.0.0 pin promotes the already locked installed dependency;
+  every package version remains unchanged.
+
+### Fixed
+- Directory-descriptor restore confines writes despite target replacement (ERROR-076).
+  Header length derives from actual format fields after initial roundtrip failure.
+
+### Validation
+- Focused28unit, coherent1482unit43.23s/strict8/Ruff/format and unchanged independent
+  path probe pass. This is codec/path qualification; actual database capture/restore,
+  key custody and independent storage/OPS02 remain unverified.
+
+**Authored by:** Codex with independent backup review
+**PR:** not published
+
 ## [2026-10-14] — Permanent native digest dispatch quotas
 
 ### Added
