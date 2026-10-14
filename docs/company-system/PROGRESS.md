@@ -456,3 +456,28 @@ The release still needs genuine model quality, current StockFlow business eviden
 owner setup/email, ARM64 sandbox qualification, private deployment, matching
 database/DBOS recovery, independent backup storage/key custody, rollback and a 24h
 soak. Gateway and operator-local recovery implementation continue in parallel.
+
+### Checked 2026-10-14 — Native profiles and model gateway committed
+
+Local154e5bf integrates native mechanical admission; f68fce4 integrates current
+model observations at SDK issuance. The final isolated combined source passed
+1,516 units in35.14s with19existing warnings. Initial strict28 plus amended2file
+checks pass, as do9active nativePG/26.94s and the gateway's frozen25case matrix
+(12PG+13unit/100.55s). Independent combined review reran3gatewayPG/41.21s and
+closed ERROR-077 with the unchanged coexistence probe and malformed unselected
+tuple denial2/7.19s. Counts overlap; these are separate scoped calls.
+
+Native profiles have explicit closed workflow/tool/recipe identity and zero model
+quota through actual ancestry. Model observations preserve immutable registry and
+original evidence models while current pre-SDK checks retain complete source and
+authority deadlines. Already-issued results and unknown held costs remain distinct
+from accepted work. The dedicated native-profile and observation DBs are released.
+Detailed scope and source manifests are in the two current profile/gateway
+checkpoints. No live provider or engineering/business acceptance is claimed.
+
+Agents continue new engineering proof and operator-local encrypted PG/DBOS recovery.
+The notification event/timer worker is being planned against actual owner/service
+admission and permanent dispatch semantics; it is not activated. Owner signup and
+email remain pending, and the held UAT/frontend are untouched. ARM64/private access,
+real model/business evidence, independent backup/key custody, rollback and24hsoak
+remain required. Goal active; no push/tag/deployment, live email or Pi mutation.
