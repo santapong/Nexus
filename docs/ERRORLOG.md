@@ -74,6 +74,28 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-096 — Targeted enqueue replay did not observe DBOS queue status
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** open; scoped status policy/probe under review
+**Found by:** independent atomic enqueue source and pinned DBOS3.2 review
+**Affected files:** notifications/worker_enqueue.py queue-result observation
+
+Existing public scheduler queue readback pins exact name/queue/version/application/
+serialization/inputs/ID but omits status. Pinned DBOS enqueue conflict updates only
+time, preserving an existing terminal row. Thus targeted exact canonical replay
+can report existing even for CANCELLED/ERROR/SUCCESS without an ENQUEUED operation.
+This is scheduling/liveness metadata scope; no spend/authority bypass is proven.
+The first actual PG positive explicitly observed ENQUEUED and passed1/9.41s.
+
+Review a targeted notification status check in the same transaction after actual
+queue readback and before final clocks. Terminal states must not become enqueued.
+Possible active PENDING race needs explicit policy with actual pins; no generic
+scheduler behavior or terminal resume is changed by assumption. Retain a probe
+using public DBOSClient cancellation rather than seeded workflow status SQL.
+No worker/provider launch or automatic cancelled workflow reset.
+
 ## ERROR-095 — Obsolete digest licensing used current-only historical references
 
 **Date:** 2026-10-15 (Asia/Bangkok)

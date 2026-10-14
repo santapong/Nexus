@@ -32,3 +32,23 @@ and exact replay fixture is pending review/release. Later queue-error/conflict/
 postqueue source/credential/approval expiry rollback and actual durable dispatch/
 OS recovery remain required. Repeated sender lifecycle/cost transition remains
 separate. No timer, live credential issuer/email or release activation.
+
+
+## First actual SQL and replay — 2026-10-15
+
+The frozen NEW2 normal015/publicDBOSmigrate fixture passed1PG/9.41s with no worker
+construction/launch. Actual prior public owner decision remained exact; one
+authorized consumption/positive heldUSD0.010000/nullactual, one permanent native
+dispatch and one ENQUEUED DBOS row had exact command/ABI/input. Repeated call
+returned existing/identical command and unchanged native/queue metadata hashes.
+All five counters and effect/attempt/slot/observation counts remain0; HTTP sentinel0.
+Proofb66b37e1 and receipt73ef383bd0a5c313ce8ff7dc68aa4c999c0d498e7f6af5410a15ed6ef9e94e23
+export actual native IDs before normal owned teardown. AppNOSUPER/NOBYPASS and
+normalbase/noDBOSschema cleanup were observed.
+
+Independent review found targeted replay omits queue status after exact ABI/input
+readback: DBOS conflict preserves terminal status, so a cancelled canonical row
+can incorrectly report existing (ERROR-096). A targeted active-state check and
+retained public-cancellation probe are in tests-first implementation. The positive
+ENQUEUED case remains valid; status-negative and postqueue actual expiry/conflict
+rollback plus durable dispatch/process recovery remain required.

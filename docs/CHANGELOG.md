@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Actual targeted notification SQL enqueue and exact replay
+
+### Validation
+- One normal015/publicDBOSmigrate restricted-PG case passes9.41s: exact prior
+  owner decision/consumption, held0.01USD/null, permanentdispatch1, canonical
+  ENQUEUED DBOSrow1, unchanged replay and zero effects/counters/HTTP.
+- Safe actual command/decision/hold/queue hashes exported before owned normal
+  teardown. No durable worker/transport execution. Queue-status replay finding
+  (ERROR-096), actual postqueue expiry/conflicts and process gates remain open.
+
+**Authored by:** Codex and supervised recovery agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Explicit licensed obsolete digest history
 
 ### Fixed
