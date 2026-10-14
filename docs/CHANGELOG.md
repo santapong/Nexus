@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Define complete company-cycle admission descriptions
+
+### Added
+- Pure fixed11-role cycle contracts and exact two-stage matching with one permanent
+  root, full registry pin, independent edges and bounded model/tool partitions.
+- Complete unselected-layout validation before stage selection; configured mismatches
+  deny and only absent configuration returnsNone.
+
+### Validation
+- Frozen47 focused tests and strict/Ruff/format4 pass; Root coherent2,565unit/24.80s
+  passes. Original unselected-layout failures are retained and independently reviewed.
+- Shared catalog/runtime ancestry/SQL transitions and actual full cycle remain open.
+
+**Authored by:** Codex and supervised planning/review agents
+**PR:** not published
+
 ## [2026-10-15] — Check canonical registry preservation in the eligibility test
 
 ### Fixed
