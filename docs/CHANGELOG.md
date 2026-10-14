@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Reconcile current local qualification gates
+
+### Documentation
+- Release index now records actual finite parent-provider qualification and three
+  postqueue expiry rollbacks, while retaining payload/SDK worker/process gates.
+- Subsequent shared builder and local notification SDK qualification plans are
+  saved as plans; no runtime activation or release completion is implied.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Actual finite current-parent qualification
 
 ### Validation

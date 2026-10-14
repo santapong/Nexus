@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked 2026-10-15 against local862d3bc. This index separates implemented/local
+Checked 2026-10-15 against locala860b67. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -11,8 +11,8 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Management/report/metric/controls | [Native loop](NATIVE_LOOP_CHECKPOINT_2026-10-14.md), [metric](METRIC_CHECKPOINT_2026-10-14.md), [owner controls](OWNER_CONTROLS_CHECKPOINT_2026-10-14.md) | Selected real goal/procedure/customer-readiness outcome and owner populated browser journey |
 | Multi-provider routing | [Governed observations](MODEL_OBSERVATION_GATEWAY_CHECKPOINT_2026-10-14.md), official adapter/usage conformance with mocked transports | Current approved model IDs/prices, genuine quality/usage and budgeted live qualification |
 | Native builder receipt/independent proof | [Engineering acceptance](ENGINEERING_ACCEPTANCE_CHECKPOINT_2026-10-14.md), [CSV PG](NATIVE_CSV_PG_CHECKPOINT_2026-10-15.md) | Full nominated private StockFlow author/verifier body/checks on actual current source |
-| Builder containment/restart | [Five process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [bounded parent provider](CONTAINED_PARENT_PROVIDER_CHECKPOINT_2026-10-15.md); tiny cgroupfs/split candidate | Versioned integrated parent/payload containment and real representative ARM64 job |
-| Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md): first/replay,5matrix,weekly/restart,daily no-due,3expiry | [Actual atomic SQL enqueue](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md) and [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md) are qualified locally; actual postqueue expiry, durable dispatch/process proof, daily-positive and registration retention remain |
+| Builder containment/restart | [Five process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [bounded parent provider](CONTAINED_PARENT_PROVIDER_CHECKPOINT_2026-10-15.md): actual finite scope2 parent/foreign/expiry/PID proof; tiny cgroupfs/split candidate | Versioned integrated payload/conmon observation and containment, full native M1 qualification and real representative ARM64 job |
+| Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md): first/replay,5matrix,weekly/restart,daily no-due,3expiry; [atomic SQL enqueue and postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md): actual3expiry/49.78s; [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md) | Durable SDK dispatch/native replay/process proof, daily-positive and registration retention remain |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
 | Recovery/private access/portability | [Matching recovery](OPERATOR_MATCHING_RECOVERY_CHECKPOINT_2026-10-14.md), [backup codec](BACKUP_CODEC_CHECKPOINT_2026-10-14.md) | Independent storage/key custody/lost-source disaster restore/RPO-RTO/rollback, private access,24h bounded soak |
 | Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces | Strategy→plan→native patch→independent checks→presentation/support→owner report/email in one actual goal lineage |
@@ -20,11 +20,11 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
 ## Current next work
 
-Small existing team: actual postqueue expiry rollback, finite current-parent
-qualification and then contained payload observation/process integration. Native
-atomic SQL enqueue and cancelled history conservation have local proof; recurring
-worker execution remains separate. Real DB execution follows
-concrete source/role/fixture reviews. No extra agents or human review per edit.
+Small existing team: NEW durable notification execution modules and pure contained
+payload observer/immutable evidence store, then shared process integration. Actual
+postqueue expiry rollback and finite current-parent qualification now have retained
+proof. Neither proves the new SDK worker or contained payload. Real DB execution
+follows concrete source/role/fixture reviews. No extra agents or human review per edit.
 
 Preserve seven prepared engineering process DBs, both backup pairs and the new
 CSV known-output DB/tree. Tick disposable database is exclusively owned by its
