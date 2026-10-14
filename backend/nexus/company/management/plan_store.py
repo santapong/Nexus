@@ -11,6 +11,7 @@ from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.directory_store import PersistentCompanyDirectory
 from nexus.company.management.cancellation_support import require_plan_not_cancelled
 from nexus.company.management.control_support import ManagementConflictError, db_clock, require_cas
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.lifecycle import PlanRevision
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
@@ -56,6 +57,7 @@ class ManagementPlanStore:
         *,
         source_freshness: PlanSourceFreshness | None = None,
     ) -> None:
+        validate_cycle_catalog(catalog.cycle_admission, catalog)
         self.factory, self.catalog = (
             factory,
             PlanAdmissionCatalog.model_validate_json(catalog.model_dump_json()),

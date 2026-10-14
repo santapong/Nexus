@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Compose complete cycle catalog checks
+
+### Added
+- Optional server cycle configuration, excluded when absent, with complete registry,
+  tool/resource/recipe and actual native/sender profile validation before selection.
+- Raw-quota checks before store serialization, safe narrowed model views and exact
+  configured nonmodel role tuples, preserving current health and effect boundaries.
+
+### Validation
+-117 focused checks and strict/Ruff/format5 pass; coherent2,652unit/25.52s passes.
+- Independent review confirms old mixed whole-plan/ancestry denial remains. Actual
+  partition SQL and StrategyBrief transition proof are still required for activation.
+
+**Authored by:** Codex and supervised planning/review agents
+**PR:** not published
+
 ## [2026-10-15] — Retain private contained execution diagnostics
 
 ### Added

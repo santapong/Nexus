@@ -38,3 +38,29 @@ brief with findings/options/tradeoffs/unknowns and a real owner decision. Existi
 operating-report current-plan restrictions remain. Live quality, pricing, paid
 provider qualification, real notifications, ARM64 and operational release are
 separate requirements; no completion or delegated authority is granted here.
+
+## Catalog composition — source verified, runtime remains gated
+
+Optional `PlanAdmissionCatalog.cycle_admission` is excluded whenNone. Configured
+catalogs validate the complete original cycle and model registry before either
+native selection or store JSON reconstruction. Every role's tool/resource and
+checker recipe must exist; actual native author/verifier singleton profiles and
+the exact sender profile are required. This is structural configuration, not a
+model-health observation, current permission or registered allocation.
+
+Model actions validate the full original catalog before clearing cycle/native/
+sender metadata from the narrowed selected-model view. Ordinary effects are
+restricted to their exact configured nonmodel role tuple; model calls keep the
+governed model path and quota. Unselected malformed configuration cannot disappear
+through selection or JSON type normalization.
+
+Agent freeze6bd2fcb7 binds3 files; Root freeze39e6da21 binds5 integration files and
+117 focused checks/1.69s, strict/Ruff/format5. Independent review matched all5
+sources/10logs. Root coherent2,652unit/25.52s/19 existing warnings passes with the
+separate diagnostic package. Root catalog receipt is under
+`/home/santapong/.codex/nexus-cycle-catalog-integration-20261015/`.
+
+The old author/verifier-only and one-sender whole-plan rules and zero-model
+ancestry still reject the mixed full plan. No scheduler, worker, SQL transition,
+allowance or StrategyBrief acceptance is enabled. Actual permanent partition and
+trusted strategy proof/owner-choice transition gates remain required.

@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.model_observations import effective_model_registration
 from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plans import ChildAllocation
@@ -19,6 +20,7 @@ def validate_model_profile(
     catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
 ) -> None:
     """Recheck explicit current evidence without renewing any registration or allowance."""
+    validate_cycle_catalog(catalog.cycle_admission, catalog)
     engineering = native_execution_profile(catalog, child)
     notification = native_notification_profile(catalog, child)
     if engineering is not None or notification is not None:

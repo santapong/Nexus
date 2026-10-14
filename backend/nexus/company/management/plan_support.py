@@ -33,6 +33,7 @@ from nexus.company.management.control_support import (
     db_clock,
     require_member,
 )
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.governance import CharterRevision
 from nexus.company.management.governance_models import ManagementGoalHead
@@ -312,6 +313,7 @@ def validate_plan_action(
 ) -> None:
     """Current charter/server tuples narrow actual effects alongside exact M1 approval."""
     # Keep the >50-line native/model/tool narrowing together so none skips the exact ABI.
+    cycle = validate_cycle_catalog(catalog.cycle_admission, catalog)
     require_native_action(catalog, child, proposal, kind)
     require_notification_action(catalog, child, proposal, kind)
     if proposal.tool == "model.request.v1":
@@ -337,12 +339,21 @@ def validate_plan_action(
                     # The original native tuple was checked above; this view selects a model.
                     "native_profiles": (),
                     "notification_profiles": (),
+                    "cycle_admission": None,
                 }
             ),
             child,
             now,
         )
         return
+    if cycle is not None:
+        selected_slot = next((slot for slot in cycle.slots if slot.child == child), None)
+        if selected_slot is None or (proposal.tool, proposal.tool_version, proposal.resource) != (
+            selected_slot.tool.tool,
+            selected_slot.tool.tool_version,
+            selected_slot.tool.resource,
+        ):
+            raise ManagementDeniedError("Cycle effect differs from its exact declared role tuple")
     permission = next(
         (
             row

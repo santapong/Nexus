@@ -12,6 +12,8 @@ from nexus.company.management.base import (
     ValueContract,
     require_company,
 )
+from nexus.company.management.cycle_admission_contracts import StockFlowCycleAdmission
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.model_observations import (
     ModelEligibilityObservation,
     validate_model_observations,
@@ -51,6 +53,10 @@ class PlanAdmissionCatalog(ManagementContract):
         default=(), max_length=1, exclude_if=lambda value: not value
     )
 
+    cycle_admission: StockFlowCycleAdmission | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     @model_validator(mode="after")
     def exact_catalog(self) -> Self:
         require_company(self.company_id, self.models, *(row.resource for row in self.resources))
@@ -61,4 +67,5 @@ class PlanAdmissionCatalog(ManagementContract):
             raise ValueError("One exact configured tool version per admission symbol is required")
         if len({row.symbol for row in self.resources}) != len(self.resources):
             raise ValueError("Admission resources must have unique exact symbols")
+        validate_cycle_catalog(self.cycle_admission, self)
         return self
