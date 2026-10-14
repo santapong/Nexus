@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Integrate bounded contained process boundary
+
+### Added
+- Per-job process/discovery path retains original runtime identity and immutable
+  container/sample evidence under one deadline, with explicit ownership uncertainty.
+- Fixed name discovery seals full ID; no repeated call or force cleanup on missing facts.
+
+### Fixed
+- Final actual clock is rechecked inside the scheduled spawn task before subprocess
+  creation; retained regression proves scheduling-delay expiry issues no process.
+
+### Validation
+- Frozen9files/32logs,142 compatibility cases, scoped strict/Ruff9; Root amended
+  39focused and coherent2,411unit/23.58s pass. No actual container or v2 activation.
+
+**Authored by:** Codex and supervised engineering agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Prepare explicit complete runtime policy identity
 
 ### Added
