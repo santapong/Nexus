@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Process-local verified worker credential deadlines
+
+### Added
+- Explicit disabled-by-default credential verifier checks the existing token's
+  HS256 signature, literal timestamps and UUID identity, retaining aware issue/
+  expiry dates for synchronous final-time checks. Claims confer no owner role.
+- Opaque credential acquisition is bounded/sanitized; no issuer, renewal,
+  settings read, credential file, token serialization or owner-ID shortcut.
+
+### Validation
+- Frozen46synthetic JWT cases/1.74s; Root84identity+existing auth cases/2.42s,
+  strict/Ruff/format2files pass. Actual awaited expiry, tamper/algorithm/claim/
+  configuration/binding failures and cancellation are covered.
+- No native intent/HTTP boundary or production credential provision is asserted;
+  opt-in credential-bound dispatch wrappers are the next separately tested slice.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Explicit model-free owner notification admission
 
 ### Added
