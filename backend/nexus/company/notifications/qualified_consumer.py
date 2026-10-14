@@ -17,6 +17,7 @@ from nexus.company.notifications.qualified_support import (
     require_protection_time,
     require_publication_scope,
 )
+from nexus.company.notifications.worker_guard import NotificationOperationGuard
 from nexus.execution.runtime_support import db_now
 from nexus.harness.journal_models import CompanyControl
 
@@ -34,8 +35,18 @@ ACTIONABLE = frozenset(
 
 class QualifiedNotificationConsumer:
     def __init__(
-        self, store: QualifiedNotificationDraftStore, *, consumer: str, recipe_version: str
+        self,
+        store: QualifiedNotificationDraftStore,
+        *,
+        consumer: str,
+        recipe_version: str,
+        operation_guard: NotificationOperationGuard | None = None,
     ) -> None:
+        if operation_guard is not None and not isinstance(
+            operation_guard, NotificationOperationGuard
+        ):
+            raise ValueError("Native notification operation guard is unavailable")
+        self.operation_guard = operation_guard
         EventCursor(
             company_id=store.loader.catalog.company_id,
             consumer=consumer,
@@ -49,8 +60,14 @@ class QualifiedNotificationConsumer:
     ) -> DraftConsumption:
         """An actionable failure exposes no body and rolls back the complete bounded batch."""
         async with asyncio.timeout(30):
+            if self.operation_guard is not None:
+                self.operation_guard.require_identity(identity)
+                self.operation_guard.require_company(scope.company_id)
+                self.operation_guard.require_company(self.store.loader.catalog.company_id)
             recipient = await self.store.prepare_recipient(scope, identity)
-            handler = _QualifiedHandler(self.store, scope, identity, recipient)
+            handler = _QualifiedHandler(
+                self.store, scope, identity, recipient, self.operation_guard
+            )
             cursor = await BrainEventStore(self.store.factory).consume(
                 owner_scope(scope, identity),
                 identity,
@@ -72,8 +89,10 @@ class _QualifiedHandler:
         scope: CompanyControlScope,
         identity: VerifiedIdentity,
         recipient: OwnerRecipientPolicy,
+        operation_guard: NotificationOperationGuard | None = None,
     ) -> None:
         self.store, self.scope, self.identity, self.recipient = store, scope, identity, recipient
+        self.operation_guard = operation_guard
         self.publications: list[DraftPublication] = []
 
     async def apply(self, session: AsyncSession, event: OutboxEvent) -> None:
@@ -134,3 +153,5 @@ class _QualifiedHandler:
             from nexus.company.notifications.draft_store import require_draft_time
 
             require_draft_time(draft, final)
+        if self.operation_guard is not None:
+            self.operation_guard.require_time(final)

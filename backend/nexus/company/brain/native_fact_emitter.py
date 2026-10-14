@@ -10,13 +10,24 @@ from nexus.company.brain.native_fact_contracts import NativeEventSelector
 from nexus.company.brain.native_fact_reader import NativeFactReader
 from nexus.company.brain.native_fact_wake import wake_key, wake_pins
 from nexus.company.brain.scope_support import BrainDeniedError, brain_transaction
+from nexus.company.notifications.worker_guard import NotificationOperationGuard
 from nexus.execution.runtime_support import db_now
 from nexus.harness.journal_models import CompanyControl
 
 
 class NativeFactEmitter:
-    def __init__(self, factory: async_sessionmaker[AsyncSession], reader: NativeFactReader) -> None:
-        self.factory, self.reader = factory, reader
+    def __init__(
+        self,
+        factory: async_sessionmaker[AsyncSession],
+        reader: NativeFactReader,
+        *,
+        operation_guard: NotificationOperationGuard | None = None,
+    ) -> None:
+        if operation_guard is not None and not isinstance(
+            operation_guard, NotificationOperationGuard
+        ):
+            raise ValueError("Native notification operation guard is unavailable")
+        self.factory, self.reader, self.operation_guard = factory, reader, operation_guard
 
     async def emit(
         self,
@@ -24,6 +35,10 @@ class NativeFactEmitter:
         identity: VerifiedIdentity,
         selector: NativeEventSelector,
     ) -> OutboxEvent | None:
+        if self.operation_guard is not None:
+            self.operation_guard.require_identity(identity)
+            self.operation_guard.require_company(scope.company_id)
+            self.operation_guard.require_company(selector.company_id)
         async with brain_transaction(self.factory, scope, identity, owner=True) as (
             session,
             control,
@@ -39,8 +54,16 @@ class NativeFactEmitter:
         identity: VerifiedIdentity,
         selector: NativeEventSelector,
     ) -> OutboxEvent | None:
+        if self.operation_guard is not None:
+            self.operation_guard.require_identity(identity)
+            self.operation_guard.require_company(scope.company_id)
+            self.operation_guard.require_company(control.company_id)
+            self.operation_guard.require_company(selector.company_id)
+            self.operation_guard.require_company(self.reader.services.catalog.company_id)
         fact = await self.reader.load_locked(session, control, scope, identity, selector)
         if fact is None:
+            if self.operation_guard is not None:
+                self.operation_guard.require_time(await db_now(session))
             return None
         event = await append_event(
             session,
@@ -64,4 +87,6 @@ class NativeFactEmitter:
             value <= final for value in (*fact.protection_deadlines, *current.protection_deadlines)
         ):
             raise BrainDeniedError("Native wake input protection expired after publication")
+        if self.operation_guard is not None:
+            self.operation_guard.require_time(final)
         return event

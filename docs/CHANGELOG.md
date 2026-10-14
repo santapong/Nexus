@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Optional sealed configuration guards at notification final clocks
+
+### Added
+- Strict finite worker declarations, bounded owned-file snapshots and concrete
+  process guard; optional emitter/consumer/preparation final-clock checks preserve
+  default callers and grant no native permission or action allowance.
+
+### Fixed
+- Safe malformed/deep JSON and exact company metadata before guarded reads (ERROR-091).
+
+### Validation
+- Agent128focused/2.12s; Root51newguard/seam/1.27s, strict/Ruff/format9 and coherent
+  1,922units/21.06s with19existing warnings. No actual tick or service activation;
+  corrected distinct source fixture and real PG boundaries remain required.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-15] — Exact CSV role descriptions and restart gate reconciliation
 
 ### Fixed

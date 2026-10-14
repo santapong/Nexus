@@ -74,6 +74,28 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-091 — New worker guard parser and company boundaries were incomplete
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed in pure configuration and optional operation seams
+**Found by:** Root source review and retained notification probes
+**Affected files:** notifications/worker_config.py, native_fact_emitter.py,
+qualified_consumer.py, managed_preparation.py
+
+The new reader allowed nonstandard JSON to reach declaration parsing and exposed
+a RecursionError for bounded deep JSON. Same genuine owner/workspace identity also
+passed the guard's entry check when scope/selector/control/catalog company differed;
+native permission remained separate, with no demonstrated live publication bypass.
+The retained clean red run failed10/passed39 in59.06s.
+
+Reject nonstandard constants and deep recursion with the safe configuration error.
+Require exact guard company metadata on each optional guarded entry before native
+reads, retaining all native authority checks and default None behavior. Agent128
+focused/2.12s and Root51guard/seam/1.27s pass; strict/Ruff/format9 and Root coherent
+1,922units/21.06s pass. Actual tick and PG final-clock tests remain open.
+Evidence: notifications/worker-config-guard-seams-freeze-2.json and original/red logs.
+
 ## ERROR-090 — CSV description helper silently selected a verifier role
 
 **Date:** 2026-10-15 (Asia/Bangkok)

@@ -32,6 +32,7 @@ from nexus.company.notifications.managed_contracts import (
 from nexus.company.notifications.native_facts import NotificationUnavailableError
 from nexus.company.notifications.proposals import NOTIFICATION_TOOL, NotificationDispatchParameters
 from nexus.company.notifications.status_support import current_owner_message
+from nexus.company.notifications.worker_guard import NotificationOperationGuard
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.execution.runtime_support import db_now
 from nexus.harness.journal_contracts import ActionRecord
@@ -49,7 +50,13 @@ class ManagedNotificationPreparation:
         freshness: RegisteredSourceFreshness,
         *,
         policy: NotificationPreparationPolicy,
+        operation_guard: NotificationOperationGuard | None = None,
     ) -> None:
+        if operation_guard is not None and not isinstance(
+            operation_guard, NotificationOperationGuard
+        ):
+            raise ValueError("Native notification operation guard is unavailable")
+        self.operation_guard = operation_guard
         self.factory, self.drafts, self.artifacts, self.freshness = (
             factory,
             drafts,
@@ -67,6 +74,11 @@ class ManagedNotificationPreparation:
         identity: VerifiedIdentity,
         selection: NativeNotificationSelection,
     ) -> PreparedNotification:
+        if self.operation_guard is not None:
+            self.operation_guard.require_identity(identity)
+            self.operation_guard.require_company(scope.company_id)
+            self.operation_guard.require_company(selection.company_id)
+            self.operation_guard.require_company(self.catalog.company_id)
         selection = NativeNotificationSelection.model_validate_json(selection.model_dump_json())
         if (
             selection.company_id != scope.company_id
@@ -103,6 +115,8 @@ class ManagedNotificationPreparation:
             self.drafts.recipients.require_current(draft.recipient_policy, now)
             first.require_time(self.catalog, now)
             final.require_time(self.catalog, now)
+            if self.operation_guard is not None:
+                self.operation_guard.require_time(now)
             return self._result(selection, final, work, record)
 
     @staticmethod

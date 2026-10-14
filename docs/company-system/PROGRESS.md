@@ -590,3 +590,12 @@ goldens preserved. Root's combined1,854units/20.77s and strict/Ruff/format39file
 pass. Synthetic runtime/source/probe/cleanup evidence remains separate from actual
 native PG/process and private StockFlow. See the
 [checkpoint](NODE_CSV_V4_CHECKPOINT_2026-10-15.md). No private job or allowance reset.
+
+### Checked 2026-10-15 — Worker configuration/final clock guard foundation
+
+Pure finite registration, bounded owned-file pins and optional sealed operation
+guards now compose with emitter/consumer/preparation defaults. Root51newguard/seam
+cases/1.27s, strict/Ruff/format9 and combined1,922units/21.06s pass. Retained malformed
+JSON/company boundary failures are corrected (ERROR-091). See the
+[checkpoint](NOTIFICATION_WORKER_GUARD_CHECKPOINT_2026-10-15.md).
+Actual bounded ticks/final PG rollback, real credential/email and activation remain open.
