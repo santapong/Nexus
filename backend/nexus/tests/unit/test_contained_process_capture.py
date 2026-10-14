@@ -8,6 +8,7 @@ import pytest
 
 import nexus.builder.contained_process as module
 from nexus.builder.contained_contracts import ParentObservation
+from nexus.builder.contained_diagnostics import DiscoveryRecorder
 from nexus.builder.contained_discovery import ContainedDiscovery
 from nexus.builder.contained_evidence_types import ExactContainer, ObservationDeadline
 from nexus.builder.contained_observer import ContainmentObserver
@@ -181,6 +182,8 @@ async def test_each_job_uses_distinct_observer(monkeypatch: pytest.MonkeyPatch) 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("failed_sample", [False, True])
+# The cohesive fake discovery/IO lifecycle exceeds 50 lines to verify both actual observer
+# outcomes and their diagnostic summaries under the same shared end.
 async def test_monitor_composes_real_observer_with_one_shared_end(
     monkeypatch: pytest.MonkeyPatch,
     failed_sample: bool,
@@ -198,7 +201,12 @@ async def test_monitor_composes_real_observer_with_one_shared_end(
 
     class Discovery:
         async def discover(
-            self, prepared: PreparedContainedLaunch, runtime_pid: int, deadline_us: int
+            self,
+            prepared: PreparedContainedLaunch,
+            runtime_pid: int,
+            deadline_us: int,
+            *,
+            recorder: DiscoveryRecorder | None = None,
         ) -> ExactContainer:
             assert runtime_pid == 777 and prepared == launch()
             calls.append(deadline_us)
@@ -241,6 +249,13 @@ async def test_monitor_composes_real_observer_with_one_shared_end(
     assert result.infrastructure == ("unresolved" if failed_sample else "known")
     assert len(result.samples) == 1
     assert result.runtime.reap == "waited" and result.sealed_container == exact
+    from nexus.builder.contained_process_contracts import sample_trace
+
+    assert result.diagnostic is not None
+    assert result.diagnostic.samples == sample_trace(result.samples)
+    assert result.diagnostic.samples.first is not None
+    assert result.diagnostic.samples.first.status == result.samples[0].status
+    assert result.diagnostic.samples.first.diagnostics == result.samples[0].diagnostics
 
 
 @pytest.mark.asyncio
@@ -256,7 +271,9 @@ async def test_capture_validation_cpu_crossing_end_cannot_return_known(
         ticks[0] = 13_000_001
         return result
 
-    monkeypatch.setattr(module, "ContainedRunCapture", slow_validation)
+    import nexus.builder.contained_process_contracts as contracts
+
+    monkeypatch.setattr(contracts, "ContainedRunCapture", slow_validation)
     result = await run(driver([], clock=lambda: ticks[0]))
     assert result.infrastructure == "unresolved" and result.runtime.reap == "waited"
     assert result.limitations == ("shared_deadline_expired",)

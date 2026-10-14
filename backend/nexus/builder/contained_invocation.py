@@ -10,6 +10,12 @@ from typing import TYPE_CHECKING
 from uuid import uuid5
 
 from nexus.builder.contained_compiler import described_contained_argv
+from nexus.builder.contained_diagnostic_wiring import persist_final, persist_raw
+from nexus.builder.contained_diagnostics import (
+    DiagnosticIdentity,
+    FinalizationDiagnostic,
+    error_kind,
+)
 from nexus.builder.contained_observer import ContainmentObserver
 from nexus.builder.contained_observer_io import OwnedObservationIO
 from nexus.builder.contained_process import ProcessOwnershipUnresolvedError
@@ -17,6 +23,7 @@ from nexus.builder.contained_process_contracts import (
     ContainedRunCapture,
     PreparedContainedLaunch,
     ProcessRunBinding,
+    sample_trace,
 )
 from nexus.builder.contained_query import clock_us
 from nexus.builder.contained_results import result_evidence_identity
@@ -74,6 +81,10 @@ async def invoke_contained(
     except ProcessOwnershipUnresolvedError as failure:
         services.retain_unresolved(failure)
         raise
+    expected = DiagnosticIdentity.model_validate(
+        {key: getattr(binding, key) for key in DiagnosticIdentity.model_fields}
+    )
+    await persist_raw(raw, expected, services)
     return await _finish(runner, spec, action, lease, raw, services, node_config)
 
 
@@ -142,6 +153,21 @@ async def _finish(
     decoded = decoder(raw.capture, view, action, lease.fence, runner.image_id, name)
     result = decoded.model_copy(update={"spec": spec, "contained_runtime": raw.runtime})
     if raw.infrastructure != "known" or raw.sealed_container is None or not raw.samples:
+        assert raw.diagnostic is not None
+        await persist_final(
+            FinalizationDiagnostic(
+                identity=raw.diagnostic.identity,
+                status="unproven",
+                diagnostics=("no_samples",)
+                if not raw.samples
+                else tuple(dict.fromkeys(d for row in raw.samples for d in row.diagnostics)),
+                sample_count=len(raw.samples),
+                sample_chain_sha256=sample_trace(raw.samples).chain_sha256,
+                error_type=raw.diagnostic.error_type,
+                errno=raw.diagnostic.errno,
+            ),
+            services,
+        )
         return BuilderRunResult.model_validate(
             result.model_copy(
                 update={
@@ -150,13 +176,39 @@ async def _finish(
                 }
             ).model_dump()
         )
-    observation = await ContainmentObserver(OwnedObservationIO()).finish(
-        raw.samples,
-        result_evidence_identity(result, services.method_sha256),
-        spec_sha256=canonical_sha256(spec),
-        proposal_sha256=action_hash(action),
-        selector_sha256=runner.policy.runtime_method_sha256 or "",
-        deadline=services.deadline,
+    assert raw.diagnostic is not None
+    try:
+        observation = await ContainmentObserver(OwnedObservationIO()).finish(
+            raw.samples,
+            result_evidence_identity(result, services.method_sha256),
+            spec_sha256=canonical_sha256(spec),
+            proposal_sha256=action_hash(action),
+            selector_sha256=runner.policy.runtime_method_sha256 or "",
+            deadline=services.deadline,
+        )
+    except (OSError, ValueError, TimeoutError) as failure:
+        await persist_final(
+            FinalizationDiagnostic(
+                identity=raw.diagnostic.identity,
+                status="unproven",
+                diagnostics=("io_unavailable",),
+                sample_count=len(raw.samples),
+                sample_chain_sha256=sample_trace(raw.samples).chain_sha256,
+                error_type=error_kind(failure),
+                errno=failure.errno if isinstance(failure, OSError) else None,
+            ),
+            services,
+        )
+        raise
+    await persist_final(
+        FinalizationDiagnostic(
+            identity=raw.diagnostic.identity,
+            status=observation.status,
+            diagnostics=observation.diagnostics,
+            sample_count=observation.sample_count,
+            sample_chain_sha256=observation.sample_chain_sha256,
+        ),
+        services,
     )
     if observation.status != "observed_contained":
         return BuilderRunResult.model_validate(

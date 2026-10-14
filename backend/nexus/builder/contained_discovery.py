@@ -3,10 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
 import json
 from uuid import UUID
 
 from nexus.builder.contained_contracts import ContainedValue, Positive
+from nexus.builder.contained_diagnostics import (
+    DiscoveryRecorder,
+    InspectAttempt,
+    StreamObservation,
+    error_kind,
+)
 from nexus.builder.contained_evidence_types import ExactContainer
 from nexus.builder.contained_process_contracts import (
     OwnedName,
@@ -15,7 +23,7 @@ from nexus.builder.contained_process_contracts import (
 )
 from nexus.builder.contained_query import clock_us
 from nexus.builder.contracts import Digest
-from nexus.builder.process import engine_environment, limited_stream
+from nexus.builder.process import engine_environment
 
 DISCOVERY_FORMAT = (
     '{"container_id":{{json .Id}},"container_name":{{json .Name}},"image_id":{{json .Image}},'
@@ -42,19 +50,29 @@ class DiscoveryObject(ContainedValue):
 class DiscoveryUnavailableError(ValueError):
     """Inspection transport is not ready; never interpreted as absence or qualification."""
 
+    observation: InspectAttempt | None = None
+
 
 class ContainedDiscovery:
     """Concrete bounded read-only discovery; no arbitrary caller command or mutable ID replay."""
 
+    # This transaction exceeds 50 lines to keep inspect, its original failure, child reaping,
+    # and the final observed-byte record in one try/finally ownership boundary.
     async def discover(
         self,
         launch: PreparedContainedLaunch,
         runtime_pid: int,
         deadline_us: int,
+        *,
+        recorder: DiscoveryRecorder | None = None,
     ) -> ExactContainer:
         argv = discovery_argv(launch.binding)
+        started = clock_us()
+        output, errors = _InspectStream(65536), _InspectStream(4096)
         process: asyncio.subprocess.Process | None = None
         tasks: list[asyncio.Task[bytes] | asyncio.Task[int]] = []
+        failure: BaseException | None = None
+        reaped = False
         try:
             async with asyncio.timeout(_remaining(deadline_us - 100_000)):
                 process = await asyncio.create_subprocess_exec(
@@ -65,10 +83,11 @@ class ContainedDiscovery:
                     env=engine_environment(),
                 )
                 assert process.stdout is not None and process.stderr is not None
-                out = asyncio.create_task(limited_stream(process.stdout, 65536))
-                err = asyncio.create_task(limited_stream(process.stderr, 4096))
-                wait = asyncio.create_task(process.wait())
-                tasks = [out, err, wait]
+                tasks = [
+                    asyncio.create_task(output.read(process.stdout)),
+                    asyncio.create_task(errors.read(process.stderr)),
+                    asyncio.create_task(process.wait()),
+                ]
                 values = await asyncio.gather(*tasks)
                 if process.returncode != 0:
                     raise DiscoveryUnavailableError(
@@ -76,8 +95,36 @@ class ContainedDiscovery:
                     )
                 assert isinstance(values[0], bytes)
                 return decode_discovery(values[0], launch, runtime_pid=runtime_pid)
+        except BaseException as error:
+            failure = error
+            raise
         finally:
-            await _reap(process, tasks, deadline_us)
+            try:
+                await _reap(process, tasks, deadline_us)
+                reaped = process is not None
+            except BaseException as error:
+                failure = error
+                raise
+            finally:
+                if recorder is not None:
+                    attempt = InspectAttempt(
+                        index=recorder.total + 1,
+                        started_us=started,
+                        finished_us=clock_us(),
+                        argv_sha256=hashlib.sha256(
+                            json.dumps(argv, separators=(",", ":")).encode()
+                        ).hexdigest(),
+                        child_pid=process.pid if process else None,
+                        exit_code=process.returncode if process else None,
+                        reaped=reaped,
+                        stdout=output.snapshot(),
+                        stderr=errors.snapshot(),
+                        error_type=error_kind(failure),
+                        errno=failure.errno if isinstance(failure, OSError) else None,
+                    )
+                    recorder.record(attempt)
+                    if isinstance(failure, DiscoveryUnavailableError):
+                        failure.observation = attempt
 
 
 def discovery_argv(binding: ProcessRunBinding) -> tuple[str, ...]:
@@ -156,3 +203,34 @@ def _unique(pairs: list[tuple[str, object]]) -> dict[str, object]:
             raise ValueError("Contained discovery JSON repeats a field")
         value[key] = item
     return value
+
+
+class _InspectStream:
+    """Only fixed inspect captures retain prefixes; SHA/count cover bytes actually observed."""
+
+    def __init__(self, limit: int) -> None:
+        self.limit, self.body, self.observed = limit, bytearray(), 0
+        self.digest = hashlib.sha256()
+        self.complete, self.overflow = False, False
+
+    async def read(self, stream: asyncio.StreamReader) -> bytes:
+        while part := await stream.read(min(65536, self.limit - len(self.body) + 1)):
+            self.digest.update(part)
+            self.observed += len(part)
+            remaining = self.limit - len(self.body)
+            self.body.extend(part[:remaining])
+            if len(part) > remaining:
+                self.overflow = True
+                raise ValueError("Contained fixed inspect output limit reached")
+        self.complete = True
+        return bytes(self.body)
+
+    def snapshot(self) -> StreamObservation:
+        return StreamObservation(
+            observed_bytes=self.observed,
+            observed_sha256=self.digest.hexdigest(),
+            prefix_base64=base64.b64encode(self.body[:4096]).decode(),
+            complete=self.complete,
+            overflow=self.overflow,
+            byte_limit=self.limit,
+        )

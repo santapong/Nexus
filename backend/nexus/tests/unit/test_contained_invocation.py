@@ -1,5 +1,6 @@
 """Synthetic raw capture plus real sidecar storage; no native permit/process/DB is issued."""
 
+import asyncio
 import base64
 import io
 import tarfile
@@ -14,7 +15,13 @@ import nexus.builder.contained_invocation as module
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.contained_evidence_types import ObservationDeadline, ObservedSample
 from nexus.builder.contained_observer import ContainmentObserver
-from nexus.builder.contained_process_contracts import ContainedRunCapture, RuntimeCapture
+from nexus.builder.contained_observer_io import OwnedObservationIO
+from nexus.builder.contained_process_contracts import (
+    ContainedRunCapture,
+    ProcessSampling,
+    RuntimeCapture,
+    process_diagnostic,
+)
 from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
 from nexus.builder.policy import BuilderToolPolicy
@@ -23,6 +30,7 @@ from nexus.builder.runner import NativeBuilderRunner
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
 from nexus.company.management.canonical import canonical_sha256
+from nexus.harness.canonical import action_hash
 from nexus.tests.builder_support import described_binding, synthetic_capabilities
 from nexus.tests.contained_observer_fixture import container, process
 from nexus.tests.contained_process_fixture import binding, launch, parent
@@ -30,12 +38,22 @@ from nexus.tests.unit.test_contained_evidence_types import sample
 from nexus.tests.unit.test_contained_runtime_identity import configured
 
 
-@pytest.mark.parametrize("qualified,late", [(False, False), (True, False), (True, True)])
+@pytest.mark.parametrize(
+    "qualified,late,final_failure",
+    [
+        (False, False, None),
+        (True, False, None),
+        (True, True, None),
+        (True, False, "unproven"),
+        (True, False, "exception"),
+    ],
+)
 async def test_only_actual_complete_host_sample_can_attach_original_result_sidecar(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     qualified: bool,
     late: bool,
+    final_failure: str | None,
 ) -> None:
     # One composed fixture keeps decoded original command bytes, host observation
     # and actual immutable store identity together; no fake terminal receipt exists.
@@ -101,6 +119,37 @@ async def test_only_actual_complete_host_sample_can_attach_original_result_sidec
         samples=(row,) if qualified else (),
         infrastructure="known" if qualified else "unproven",
     )
+
+    async def empty() -> bytes:
+        return b""
+
+    async def stopped() -> int:
+        return 0
+
+    tasks = (
+        asyncio.create_task(empty()),
+        asyncio.create_task(empty()),
+        asyncio.create_task(stopped()),
+    )
+    state = ProcessSampling(*tasks)
+    bound = binding().model_copy(
+        update={
+            "company_id": job.company_id,
+            "action_id": job.action_id,
+            "task_id": job.task_id,
+            "trace_id": job.trace_id,
+            "run_id": job.run_id,
+            "original_intent_fence": lease.fence,
+            "spec_sha256": canonical_sha256(spec),
+            "proposal_sha256": action_hash(action),
+            "execution_method_sha256": services.method_sha256,
+        }
+    )
+    raw = raw.model_copy(update={"diagnostic": process_diagnostic(bound, raw, state)})
+    await asyncio.gather(*tasks)
+    import nexus.builder.contained_diagnostic_wiring as diagnostic_module
+
+    monkeypatch.setattr(diagnostic_module, "clock_us", lambda: 12_040_000)
     monkeypatch.setattr(services.process, "run", AsyncMock(return_value=raw))
     monkeypatch.setattr(module, "described_contained_argv", lambda *a, **k: launch().argv)
     clocks = iter((12_040_000, 12_040_000, 13_000_001))
@@ -111,6 +160,42 @@ async def test_only_actual_complete_host_sample_can_attach_original_result_sidec
         "ContainmentObserver",
         lambda actual: real_observer(actual, clock_us=lambda: 12_040_000),
     )
+    if final_failure is not None:
+        from nexus.builder.contained_evidence_types import ContainedObservation
+
+        async def finish(*args: object, **kwargs: object) -> ContainedObservation:
+            if final_failure == "exception":
+                raise OSError(5, "nominated actual observer failure")
+            actual_observer = real_observer(OwnedObservationIO(), clock_us=lambda: 12_040_000)
+            from nexus.builder.contained_results import result_evidence_identity
+            from nexus.builder.runner_capture import capture_result
+            from nexus.builder.runtime_identity import RUNTIME_V1
+
+            decoded = capture_result(
+                raw.capture,
+                spec.model_copy(update={"runtime_recipe": RUNTIME_V1}),
+                action,
+                lease.fence,
+                "a" * 64,
+                binding().container_name,
+            )
+            restored = decoded.model_copy(update={"spec": spec, "contained_runtime": raw.runtime})
+            assert services.deadline is not None
+            value = await actual_observer.finish(
+                raw.samples,
+                result_evidence_identity(restored, services.method_sha256),
+                spec_sha256=canonical_sha256(spec),
+                proposal_sha256=action_hash(action),
+                selector_sha256=policy.runtime_method_sha256 or "",
+                deadline=services.deadline,
+            )
+            return value.model_copy(
+                update={"status": "unproven", "diagnostics": ("tree_incomplete",)}
+            )
+
+        monkeypatch.setattr(
+            module, "ContainmentObserver", lambda actual: SimpleNamespace(finish=finish)
+        )
     runner = cast(
         NativeBuilderRunner,
         SimpleNamespace(
@@ -127,10 +212,20 @@ async def test_only_actual_complete_host_sample_can_attach_original_result_sidec
         with pytest.raises(ValueError, match="validation crossed"):
             await module.invoke_contained(runner, lease, identity, action, spec, guard, tmp_path)
         return
+    if final_failure == "exception":
+        with pytest.raises(OSError, match="nominated actual observer"):
+            await module.invoke_contained(runner, lease, identity, action, spec, guard, tmp_path)
+        paths = list(services.diagnostics.root.glob("*final*"))
+        assert len(paths) == 1 and b'"error_type":"OSError"' in paths[0].read_bytes()
+        return
     result = await module.invoke_contained(runner, lease, identity, action, spec, guard, tmp_path)
     assert result.spec == spec and result.intent_fence == lease.fence
     assert result.contained_runtime == raw.runtime
-    if qualified:
+    assert len(list(services.diagnostics.root.iterdir())) == 2
+    if final_failure == "unproven":
+        assert result.outcome == "outcome_unknown" and result.containment is None
+        assert b'"tree_incomplete"' in next(services.diagnostics.root.glob("*final*")).read_bytes()
+    elif qualified:
         assert result.outcome == "commands_succeeded" and result.containment is not None
         sidecar = await services.store.load_exact(result.containment, result.containment.identity)
         assert sidecar.identity.original_intent_fence == lease.fence

@@ -7,7 +7,8 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Protocol
 
-from nexus.builder.contained_contracts import ParentObservation, ScopeExpectation, cgroup_components
+from nexus.builder.contained_contracts import ParentObservation, ScopeExpectation
+from nexus.builder.contained_diagnostics import error_kind
 from nexus.builder.contained_discovery import ContainedDiscovery, DiscoveryUnavailableError
 from nexus.builder.contained_evidence_types import (
     ExactContainer,
@@ -21,9 +22,11 @@ from nexus.builder.contained_process_contracts import (
     PreparedContainedLaunch,
     ProcessRunBinding,
     ProcessSampling,
-    RuntimeMembership,
+    assemble_capture,
     capture_limits,
+    process_diagnostic,
     require_spawn_ready,
+    runtime_membership,
 )
 from nexus.builder.contained_process_contracts import (
     StartedContainedProcess as StartedContainedProcess,
@@ -138,7 +141,7 @@ class ContainedProcess:
                 ticks, path = await self._runtime_process(
                     process, min(deadline.end_us, parent.deadline_us)
                 )
-                membership = _runtime_membership(path, parent)
+                membership = runtime_membership(path, parent)
                 return StartedContainedProcess(process, parent, window, ticks, path, membership)
         except BaseException:
             if process is not None:
@@ -225,12 +228,11 @@ class ContainedProcess:
         capture_limits(stdout_limit, stderr_limit)
         started_us = self._clock()
         started = await self.start(launch, binding, expectation, watch, deadline)
-        process = started.process
-        assert process.stdout is not None and process.stderr is not None
+        assert started.process.stdout is not None and started.process.stderr is not None
         stdout_prefix, stderr_prefix = _Prefix(stdout_limit), _Prefix(stderr_limit)
-        out = asyncio.create_task(stdout_prefix.read(process.stdout))
-        err = asyncio.create_task(stderr_prefix.read(process.stderr))
-        wait = asyncio.create_task(process.wait())
+        out = asyncio.create_task(stdout_prefix.read(started.process.stdout))
+        err = asyncio.create_task(stderr_prefix.read(started.process.stderr))
+        wait = asyncio.create_task(started.process.wait())
         observer = ContainmentObserver(OwnedObservationIO())  # NEW instance per issued job.
         state = ProcessSampling(out, err, wait)
         reason: str | None = None
@@ -243,6 +245,8 @@ class ContainedProcess:
                 await self._monitor(started, launch, expectation, watch, deadline, observer, state)
         except (OSError, ValueError, TimeoutError) as failure:
             reason = type(failure).__name__
+            state.error_type = error_kind(failure)
+            state.errno = failure.errno if isinstance(failure, OSError) else None
         finally:
             uncertain = await self._finish_runtime(started, out, err, wait, deadline)
         return _capture(
@@ -257,6 +261,8 @@ class ContainedProcess:
             reason,
             uncertain,
             self._clock,
+            binding,
+            state,
         )
 
     async def _monitor(
@@ -276,24 +282,31 @@ class ContainedProcess:
                 )
             if any(task.done() and task.exception() for task in (state.out, state.err)):
                 raise ValueError("Contained raw process output overflow")
+            state.phase = "watch"
             await watch.check()
             if state.sealed is None:
                 try:
+                    state.phase = "discovery"
                     container = await self.discovery.discover(
                         launch,
                         started.process.pid,
                         min(deadline.end_us, started.parent.deadline_us),
+                        recorder=state.discovery,
                     )
                     state.sealed = container
                 except DiscoveryUnavailableError:
                     await asyncio.wait((state.wait,), timeout=0.1)
                     continue  # Read-only name discovery; never repeat the issued process.
+            state.phase = "parent"
             parent = await self.parents.observe(expectation)
+            state.phase = "sample"
             row = await observer.sample(parent, state.sealed, deadline)
             state.samples.append(row)
             if row.status != "observed_contained" or len(state.samples) >= 12001:
                 raise ValueError("Contained host sample remains incomplete")
+            state.phase = "wait"
             await asyncio.wait((state.wait,), timeout=0.1)
+        state.phase = "complete"
 
     async def _finish_runtime(
         self,
@@ -337,13 +350,6 @@ def _consume_spawn(task: asyncio.Task[asyncio.subprocess.Process]) -> None:
         task.exception()
 
 
-def _runtime_membership(path: str | None, parent: ParentObservation) -> RuntimeMembership:
-    if path is None:
-        return "unavailable"
-    expected, actual = cgroup_components(parent.kernel.cgroup_path), cgroup_components(path)
-    return "observed_path" if actual[: len(expected)] == expected else "foreign_path"
-
-
 def _capture(
     started: StartedContainedProcess,
     deadline: ObservationDeadline,
@@ -356,13 +362,10 @@ def _capture(
     reason: str | None,
     uncertain: bool,
     clock: Callable[[], int],
+    binding: ProcessRunBinding,
+    state: ProcessSampling,
 ) -> ContainedRunCapture:
     process = started.process
-    complete = (
-        sealed is not None
-        and bool(samples)
-        and all(row.status == "observed_contained" for row in samples)
-    )
     capture = ProcessCapture(
         stdout=bytes(stdout_prefix.body),
         stderr=bytes(stderr_prefix.body),
@@ -370,18 +373,22 @@ def _capture(
         elapsed_millis=elapsed_millis,
         interruption=reason or ("capture_or_reap_unresolved" if uncertain else None),
     )
-    result = ContainedRunCapture(
-        capture=capture,
-        runtime=started.runtime(wait),
-        parent=started.parent,
-        deadline=deadline,
-        sealed_container=sealed,
-        samples=tuple(samples),
-        infrastructure="unresolved" if uncertain or reason else "known" if complete else "unproven",
-        limitations=(() if complete and not reason else ("host_containment_unproven",)),
-    )
+    result = assemble_capture(started, deadline, sealed, samples, capture, wait, reason, uncertain)
+    result = result.model_copy(update={"diagnostic": process_diagnostic(binding, result, state)})
     if clock() >= min(deadline.end_us, started.parent.deadline_us):
+        diagnostic = result.diagnostic
+        assert diagnostic is not None
         return result.model_copy(
-            update={"infrastructure": "unresolved", "limitations": ("shared_deadline_expired",)}
+            update={
+                "infrastructure": "unresolved",
+                "limitations": ("shared_deadline_expired",),
+                "diagnostic": diagnostic.model_copy(
+                    update={
+                        "infrastructure": "unresolved",
+                        "phase": "capture",
+                        "error_type": "TimeoutError",
+                    }
+                ),
+            }
         )
     return result

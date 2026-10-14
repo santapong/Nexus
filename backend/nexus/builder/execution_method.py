@@ -13,7 +13,14 @@ from nexus.builder.user_parent_identity import USER_PARENT_METHOD_SHA256
 CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
     json.dumps(
         {
-            "schema": "nexus.builder.contained-execution-method.v1",
+            "schema": "nexus.builder.contained-execution-method.v2",
+            "diagnostics": {
+                "raw": "original_identity_complete_capture_metadata_before_decode",
+                "final": "observer_status_before_any_unknown_or_terminal_result",
+                "store": "nexus.builder.diagnostic-ref.v1",
+                "bytes": 65536,
+                "deadline": "same_original_job_end_no_authority",
+            },
             "selector": RUNTIME_V2_METHOD_SHA256,
             "parent": USER_PARENT_METHOD_SHA256,
             "observer": "nexus.builder.contained-observation.v1",
@@ -62,5 +69,5 @@ class ExecutionMethodCandidate(ContainedValue):
 
 
 def execution_method_candidate() -> ExecutionMethodCandidate:
-    """A candidate never configures execution or replaces actual qualification receipts."""
+    """Candidate identity cannot replace configured execution or actual qualification receipts."""
     return ExecutionMethodCandidate()

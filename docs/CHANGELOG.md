@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain private contained execution diagnostics
+
+### Added
+- Bounded fixed-inspect attempt and raw/final observation records in a private
+  original-fence write-once store, separate from containment and success authority.
+- Actual capture/identity/hash/deadline binding before persistence and a new complete
+  method version requiring raw/final diagnostic wiring within the original job end.
+
+### Validation
+- Agent112 focused checks, Root53 integration checks and strict/lint pass;
+  coherent2,652unit/25.52s passes with the frozen catalog integration package.
+- Outcome/liveness rules remain unchanged. Original failed M1 is preserved; fresh
+  actual diagnostic qualification and deadline-exhausted/hard-kill retention remain open.
+
+**Authored by:** Codex and supervised engineering/review agents
+**PR:** not published
+
 ## [2026-10-15] — Define complete company-cycle admission descriptions
 
 ### Added

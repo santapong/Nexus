@@ -2,6 +2,7 @@
 
 from nexus.builder.contained_cleanup import ContainedCleanup
 from nexus.builder.contained_contracts import ParentObservation, ScopeExpectation
+from nexus.builder.contained_diagnostics import ContainmentDiagnosticStore
 from nexus.builder.contained_discovery import ContainedDiscovery
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.contained_evidence_types import ObservationDeadline
@@ -32,6 +33,9 @@ class ContainmentServices:
             raise ValueError("Contained method or concrete store is unavailable")
         self.expectation = ScopeExpectation.model_validate(expectation.model_dump())
         self.store, self.method_sha256 = store, method_sha256
+        self.diagnostics = ContainmentDiagnosticStore(
+            store.root.parent / (store.root.name + "-diagnostics")
+        )
         self.parents = SystemdScopeProvider()
         self.process = ContainedProcess(self.parents, ContainedDiscovery())
         self.cleanup = ContainedCleanup()
@@ -80,6 +84,8 @@ class ContainmentServices:
             raise ValueError("Contained complete execution method differs")
         if (
             type(self.store) is not ContainmentEvidenceStore
+            or type(self.diagnostics) is not ContainmentDiagnosticStore
+            or self.diagnostics.root == self.store.root
             or type(self.parents) is not SystemdScopeProvider
             or type(self.process) is not ContainedProcess
             or self.process.parents is not self.parents

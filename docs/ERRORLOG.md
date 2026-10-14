@@ -97,7 +97,7 @@ production authority, canonical goldens or eligibility behavior.
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** open; diagnostic-only source scope approved
+**Status:** source correction verified; fresh actual diagnostic qualification pending
 **Found by:** first actual configured contained M1 qualification
 **Affected files:** builder/contained_invocation.py and process/observation diagnostics
 
@@ -117,6 +117,17 @@ The next scoped change records bounded metadata-only raw/final diagnostics in a
 private write-once store. It grants no receipt, cleanup or allowance authority.
 Availability-classification changes, any fresh qualification and positive release
 claims require separate review and evidence; the original action is not retried.
+
+The diagnostic-only source now records bounded fixed-inspect first/last attempts,
+complete counts/observed-byte hashes, raw infrastructure/sample summaries and final
+observer status in separate private write-once records. Root compares actual raw
+identity/runtime/output/sample chain/deadline before saving, then writes final
+metadata before unknown or positive outcome branching. The new complete-method
+version requires this concrete store; no diagnostic reference is a success ref.
+Agent112 focused checks and Root53 integration checks pass; combined coherent
+2,652unit/25.52s and independent source reviews are green. Actual first-run cause
+remains unproven. If the original job end is exhausted, saving still denies:
+there is no extra storage budget, guarantee for hard kills, or retroactive trace.
 
 ## ERROR-101 — OS fixture could lose a spawned worker before recording its identity
 
