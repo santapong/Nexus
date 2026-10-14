@@ -44,6 +44,7 @@ from nexus.execution.runtime_support import (
     snapshot,
 )
 from nexus.harness.journal_budget import reconcile_cost
+from nexus.harness.journal_models import CompanyControl
 from nexus.harness.journal_reservations import hold_to_effect_day
 
 
@@ -116,14 +117,11 @@ class EffectStore:
                 )
             # The company lock serializes writes, but wall-clock authority/lease
             # expiry can cross a bounded estimator or provenance check.
-            await require_management_execution(
+            await self.revalidate_execution_locked(
                 session,
                 control,
                 work,
                 identity,
-                self._management_catalog,
-                self._management_artifacts,
-                self._management_freshness,
                 ActionProposal.model_validate_json(action.proposal_json),
                 kind,
             )
@@ -158,6 +156,33 @@ class EffectStore:
                 require_lease(work, lease, final, execute=True)
                 before_intent.validate_time(final)
             return EffectStart(record=effect_record(row), permit_external_call=True)
+
+    async def revalidate_execution_locked(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        work: ExecutionWork,
+        identity: VerifiedIdentity,
+        proposal: ActionProposal,
+        kind: AttemptKind,
+    ) -> None:
+        """Recheck actual configured managed admission under the caller's company lock.
+
+        This provides no lease, approval or permit. Callers retain those independent
+        checks. It may deny post-intent execution when current governance changed;
+        already-issued terminal receipt/reconciliation does not call this gate.
+        """
+        await require_management_execution(
+            session,
+            control,
+            work,
+            identity,
+            self._management_catalog,
+            self._management_artifacts,
+            self._management_freshness,
+            proposal,
+            kind,
+        )
 
     async def get(
         self, lease: ExecutionLease, identity: VerifiedIdentity, action_id: UUID

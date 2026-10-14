@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-14
 **Severity:** high
-**Status:** open, scoped dispatch correction assigned
+**Status:** fixed, independently validated scoped dispatch correction
 **Found by:** Root independent actual PostgreSQL dispatch boundary probe
 **Affected files:** notification dispatch precall
 
@@ -87,10 +87,12 @@ After a real committed M1 intent, the actual owner revoked READ on the distinct
 notification target through the public access store. The frozen dispatch precall
 rechecked source/action but retained only earlier target deadlines. The original
 normal014 probe did not deny dispatch, failing its expected rejection assertion.
-Re-read current target access and managed execution before HTTP, then retain final
-deadlines after awaits. Preserve the original dispatch freeze/probe; Root will rerun
-unchanged after the narrow amendment. All HTTP here is explicitly mocked, no real
-email was sent. Evidence: notification-review/test_target_before_post.py and target-first.log.
+The correction re-reads current target access and actual configured managed execution
+before HTTP, retaining fresh deadlines and checking the final lease clock after awaits.
+Original unchanged probe passes1PG17.99s; Root corrected coherent13PG passes237.40s.
+The prior freeze is retained; only dispatch_store and an owned regression amend it.
+All HTTP is explicitly mocked, no real email was sent. Evidence:
+notification-review/test_target_before_post.py, target-first.log, target-fixed.log and verdict.json.
 
 ---
 

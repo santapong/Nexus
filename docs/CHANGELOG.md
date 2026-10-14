@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Governed notification dispatch and private provider observations
+
+### Added
+- Disabled current-owner M1 dispatch binds one immutable draft to one committed
+  intent; known/unknown replay never resends. Provider acceptance, delivery status
+  and held unknown billing remain distinct immutable facts.
+- Owner status lookup requires the actual known native receipt/provider identity,
+  exact content and current source/recipient/target permission; unknown without ID
+  has no lookup or invented reconciliation.
+- Public same-session EffectStore managed revalidation retains actual configured
+  catalog/readers; a committed intent cannot replace current plan admission.
+
+### Fixed
+- Post-intent target revocation is rechecked before HTTP (ERROR-072). Final source,
+  recipient, target, approval, lease and Bangkok-day deadlines remain enforced.
+
+### Validation
+- Root13pinned014PG237.40s, unchanged independent P1 probe1PG17.99s, actualmanaged
+  helper2PG11.11s, stable1321unit24.61s; strict20/lint/format. Lower-level sender
+  tests are explicitly unmanaged owner conformance; full native plan/worker/digests/
+  cursor/live delivery/release remain open.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Genuine failed receipts and private owner drafts
 
 ### Added

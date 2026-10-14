@@ -212,7 +212,13 @@ jobs:
             tests: test_company_native_event_compatibility.py
           - suite: native-receipt-event-transaction
             database: nexus_company_test_receipt_events
-            tests: test_company_receipt_event_atomic.py test_company_receipt_event_denials.py test_company_receipt_event_recovery.py test_company_receipt_event_composition.py
+            tests: test_company_receipt_event_atomic.py test_company_receipt_event_denials.py test_company_receipt_event_recovery.py test_company_receipt_event_composition.py test_company_effect_preflight.py
+          - suite: owner-notification-native-drafts
+            database: nexus_company_test_notifications
+            tests: test_company_notification_drafts.py test_company_notification_privacy.py
+          - suite: owner-notification-dispatch
+            database: nexus_company_test_notifications
+            tests: test_company_notification_dispatch.py test_company_notification_delivery.py test_company_notification_intent_expiry.py test_company_notification_action_denials.py test_company_notification_status_privacy.py test_company_notification_daily_cap.py test_company_notification_approval_expiry.py test_company_notification_reconciliation_expiry.py test_company_notification_precall.py
           - suite: management-native-workflow
             database: nexus_company_test_native_workflow
             tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py
