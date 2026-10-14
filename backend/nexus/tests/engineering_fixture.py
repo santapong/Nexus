@@ -98,9 +98,14 @@ class EngineeringScenario:
 
 
 async def engineering_scenario(
-    factory: async_sessionmaker[AsyncSession], root: Path, *, reserve_native_dispatch: bool = False
+    factory: async_sessionmaker[AsyncSession],
+    root: Path,
+    *,
+    reserve_native_dispatch: bool = False,
+    source_ttl: int | None = 300,
 ) -> EngineeringScenario:
     assert type(reserve_native_dispatch) is bool
+    assert source_ttl is None or (type(source_ttl) is int and 1 <= source_ttl <= 300)
     plans, payload = await native_plan(factory, root)
     controls = ManagementControlStore(factory)
     charters = []
@@ -179,9 +184,14 @@ async def engineering_scenario(
     repository, pin, patch_raw = await asyncio.to_thread(generated_repository, root)
     blobs, policies = ProtectedBlobStore(root, storage_symbol="fixture.blobs.v1"), Policies()
     metadata = await protected_text(
-        factory, blobs, policies, json.dumps({"source": pin.model_dump(mode="json")}), 9900
+        factory,
+        blobs,
+        policies,
+        json.dumps({"source": pin.model_dump(mode="json")}),
+        9900,
+        ttl=source_ttl,
     )
-    patch = await protected_text(factory, blobs, policies, patch_raw.decode(), 9500)
+    patch = await protected_text(factory, blobs, policies, patch_raw.decode(), 9500, ttl=source_ttl)
     artifacts, freshness = (
         BoundedArtifactReader(factory, blobs),
         RegisteredSourceFreshness(factory, policies),

@@ -546,3 +546,13 @@ unchanged actual normal015source fixture1/6.76s pass after original1failure/4.70
 The fixture emits a native draft and one mock POST with no second POST; credential
 expiry wrappers and durable activation remain separate unfinished gates. See the
 [checkpoint](NATIVE_DECISION_PROFILE_CHECKPOINT_2026-10-14.md).
+
+### Checked 2026-10-14 — Engineering worker credential and observation boundaries
+
+The fixed worker now composes actual signature-verified sealed credentials and
+known-output native/protected acceptance. Root's frozen integrated1,696units/17.84s
+pass. Actual lease leak and final source TTL observations were reproduced and
+corrected; focused PG calls preserve original receipts/counters/unknown holds.
+See the [checkpoint](ENGINEERING_WORKER_CREDENTIAL_CHECKPOINT_2026-10-14.md).
+Actual fresh-intent expiry and five OS recovery barriers remain unqualified.
+The proposed public pending verifier fixture is the next independent test slice.

@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Known-output engineering worker and sealed credential composition
+
+### Added
+- Fixed engineering worker procedures reconstruct exact permanent dispatch/current
+  signed actor, native source guard, result and protected acceptance. Per-operation
+  sealed credential witnesses bind the lease actor and survive final intent,
+  disclosure, proof and observation clocks; default acceptance APIs remain unchanged.
+- Stable DBOS executor and bounded one-worker queue are drafted for qualification.
+  Constructor failure leaves worker configuration unset; queue poll is1s.
+
+### Fixed
+- Acquired-lease cleanup after context preparation failure (ERROR-085).
+- Source freshness through the final observation billing lookup (ERROR-086).
+
+### Validation
+- Current known/cleanup/default3PG/29.34s; sealed final expiry1PG/11.72s;
+  foreign sealed witness1PG/10.42s; unchanged final-source probe plus known replay
+  2PG/33.75s. Coherent scoped3PG+7unit10/28.59s passes; these calls overlap.
+- Root coherent1,696units/17.84s with19existing warnings; frozen16backend files
+  are independently type/lint checked. Actual fresh-intent credential expiry,
+  five OS barriers, full StockFlow, ARM64 and release remain required.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-14] — Exact native profile deadlines for decision publication
 
 ### Fixed

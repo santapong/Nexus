@@ -32,6 +32,7 @@ from nexus.company.management.acceptance_provenance import reference_sources
 from nexus.company.management.acceptance_support import acceptance_scope
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.plan_support import PlanAdmissionCatalog
+from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.management_checks import require_management_execution
 from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_support import (
@@ -51,8 +52,13 @@ class EngineeringWorkAcceptanceStore:
         catalog: PlanAdmissionCatalog,
         inputs: RegisteredEngineeringInputs,
         proof: EngineeringProofStorage,
+        *,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> None:
+        if credential is not None and not isinstance(credential, AuthenticatedWorkerIdentity):
+            raise ValueError("Engineering authenticated credential witness unavailable")
         self.factory, self.catalog, self.inputs, self.proof = factory, catalog, inputs, proof
+        self.credential = credential
 
     async def _target(
         self,
@@ -186,6 +192,12 @@ class EngineeringWorkAcceptanceStore:
         grants = await require_resources(session, scope, resources, await db_now(session))
         work = await execution_row(session, lease_scope(lease))
         final = await db_now(session)
+        if self.credential is not None:
+            require_acceptance(
+                (self.credential.identity.principal_id, self.credential.identity.workspace_id)
+                == (lease.actor_id, lease.workspace_id)
+            )
+            self.credential.require_time(final)
         require_lease(work, lease, final, execute=True)
         require_acceptance(all(row.expires_at is None or row.expires_at > final for row in grants))
         require_qualified_time(prepared.freshness, final)

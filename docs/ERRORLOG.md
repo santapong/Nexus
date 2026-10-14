@@ -74,6 +74,46 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-086 — Engineering worker observation outlived the source window
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed in the new local worker observation
+**Found by:** Root boundary review and recovery agent actual reproduction
+**Affected files:** execution/engineering_worker_observation.py
+
+Actual public ingestion with20s TTL, two native builder receipts and protected
+acceptance reproduced an accepted observation after its source expired during the
+last CostHold lookup. Original probe failed1/24.01s (DID NOT RAISE), with the nominated
+delay observed once. Earlier freshness validation did not protect subsequent awaits.
+
+Retain actual QualifiedFreshness through the last DB clock alongside proof/source
+grants, lease and sealed credential. Shared freshness behavior is unchanged.
+The unchanged probe plus known-output replay pass2/33.75s on the final stable source.
+A preceding head-deadline correction pass1/24.59s is retained as an earlier source
+version, not evidence for the final amendment. The typed test-only TTL parameter
+preserves default300s and uses real policy/ingestion, without SQL freshness edits.
+Evidence: native-builder/engineering-worker-credential-freeze-1.json and the
+original/fixed final-source logs under the dated implementation evidence directory.
+
+## ERROR-085 — Engineering context failure leaked an acquired lease
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed in the new local worker context
+**Found by:** Root boundary review and recovery agent actual reproduction
+**Affected files:** execution/engineering_worker_context.py
+
+Source resolution failed after actual same-dispatch lease recovery, before the
+outer worker received a context. Its finally block therefore had no lease to
+release. Original actual probe failed1/8.53s with a live worker/expiry still stored.
+Context acquisition now releases its exact current lease on preparation failure,
+propagating a failed release rather than manufacturing successful cleanup.
+The unchanged failure case and known-output worker replay pass2PG/18.94s, with
+M1 facts, attempts and positive unknown billing conserved. The credential amendment
+also passes the current known/cleanup/default three-case gate3PG/29.34s.
+Actual DBOS/process-kill recovery remains a separate unrun gate.
+
 ## ERROR-084 — Native decision publication required irrelevant model evidence
 
 **Date:** 2026-10-14
