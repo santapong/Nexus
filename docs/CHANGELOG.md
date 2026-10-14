@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve first actual contained M1 qualification failure
+
+### Evidence
+- New normal015/public setup and one approved native job executed. Both commands
+  and reports pass, but host-containment qualification remains unknown; no success
+  receipt or protected summary. The original attempt, unknown hold and state remain.
+- First controller failure, source, database, outputs and stopped labelled container
+  are retained. Missing raw/final diagnostics are tracked as ERROR-102; no rerun.
+
+**Authored by:** Codex and supervised engineering/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify notification OS crash and immediate recovery
 
 ### Added

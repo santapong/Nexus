@@ -54,3 +54,43 @@ native M1 job must still prove real parent/payload/conmon identity, numeric limi
 sidecar/protected receipt, no-invoke replay and receipt-bound cleanup. Outer-timeout
 and representative ARM64 jobs remain required. Full StockFlow, live model quality,
 owner/email UAT, private deployment/disaster recovery/soak and final release remain open.
+
+## First actual configured M1 — qualification failed, preserved
+
+The separate frozen local fixture completed actual normal015/public setup, then
+Root launched exactly one approved author job. Setup packet `e7b5d454`, launch
+packet `c82e3771`, corrected controller freeze `217e63d5` and lane freeze `55d1e607`
+bind the exact source, action, method, argv, image and limits. These are fixture
+configuration and integrity checks, not activation of a service.
+
+Actual controller handle82386 exited1. Both baseline/post commands exited0 in
+1,922/1,993ms. Their two/seven quantity cases and fixed SHA-chain reports match
+reviewed bytes; inner memory268435456/cpu100000/100000/pids32 were observed. The
+native result nevertheless remains `outcome_unknown` with `host_containment_unproven`.
+No containment reference, successful native receipt or protected summary exists.
+The result must not be promoted from command success or a later engine inspection.
+
+The permanent original intent fence1/tool1/model0/positive USD0.01 unknown hold
+and null actual cost remain. Current fence2 is released; the verifier is unissued.
+Readonly postconditions confirm appbackends0 and the three known launcher/host/
+runtime PID-start identities absent. The original unit is gone. Exact labelled
+container `8bdad0681dc6905cbd76c1289d5ed3b1dfb28d6d62036067c1930e43fe1399ed`
+is retained with actual exited0/Runningfalse state. It was not removed or rerun.
+
+The raw capture's infrastructure/sample diagnostics and final observer diagnostics
+were discarded before the unknown result was saved (ERROR-102). Their missing
+values cannot be reconstructed from later stopped-state metadata. A fatal discovery
+exception would also have discarded the command records in this decoder, so that
+candidate alone does not fit the saved result. Exact cause remains unproven.
+
+Root terminal receipt `e72cffe6` in
+`/home/santapong/.codex/nexus-contained-native-qualification-20261015/ROOT_M1_FIRST_FAILURE_TERMINAL_1.json`
+binds33 retained files, result `940e0aac`, unchanged26 launch inputs/base1,369
+files, native ledger and readonly inspection `18f1a036`. Preserve the entire
+`nexus_company_test_contained_native_m1` database, private/public roots and stopped
+container. No reset, refund, original-action retry or source-date renewal.
+
+Next: bounded private write-once diagnostic retention and meaningful pure
+regressions before any separately reviewed fresh qualification. Runtime liveness
+classification changes require their own evidence. Positive M1/replay/receipt-bound
+cleanup, outer-timeout, ARM64 and full release remain open.

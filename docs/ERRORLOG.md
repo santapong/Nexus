@@ -74,6 +74,31 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-102 — Unknown containment result discarded the diagnostic basis
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** open; diagnostic-only source scope approved
+**Found by:** first actual configured contained M1 qualification
+**Affected files:** builder/contained_invocation.py and process/observation diagnostics
+
+Both actual command phases completed and supplied correct reports/inner limits,
+but the native result remained unknown with host_containment_unproven. The
+conversion retains neither raw infrastructure/sealed/sample diagnostic state nor
+the final observer's failed qualification details. No containment sidecar or
+successful receipt was produced, so this did not create false success. It prevents
+the retained trace from establishing the exact reason for failed qualification.
+
+Preserve the first failed controller/database/result and unknown cost hold. Do
+not infer past live containment from a later stopped-container inspection. Source
+control flow rules out a fatal discovery exception as the sole explanation for
+this particular saved command envelope; other branches remain unresolved.
+
+The next scoped change records bounded metadata-only raw/final diagnostics in a
+private write-once store. It grants no receipt, cleanup or allowance authority.
+Availability-classification changes, any fresh qualification and positive release
+claims require separate review and evidence; the original action is not retried.
+
 ## ERROR-101 — OS fixture could lose a spawned worker before recording its identity
 
 **Date:** 2026-10-15 (Asia/Bangkok)
