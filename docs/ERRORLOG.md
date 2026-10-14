@@ -74,6 +74,40 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-067 — Native builder recovery accepted a guard for a different identity
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed
+**Found by:** independent actual restricted PostgreSQL builder review
+**Affected files:** native builder runner public reconcile/result disclosure
+
+### Reproduced behavior
+After one actual native run and revoking the actor's source READ, run with the
+same actor/guard returns no result. Public reconcile with that actor's exact
+lease/action/spec but an owner-identity guard returned private saved logs and
+artifacts. The original unchanged probe fails1PG5.14s in builder-review/
+test_reconcile_guard.py and reconcile-first.log. Frozen39source hashes matched.
+This is actual disclosure-boundary evidence, not a theoretical review comment.
+
+### Fix and independent validation
+Run and public reconcile now share exact guard/spec/policy/actual lease/identity/
+output target qualification before saved data reads. Recovery also checks the
+actual current work/action. Guard identity cannot replace the authenticated caller.
+The unchanged original probe passes1PG4.84s. Amendment SHAaf7641c3dbe77b14595fa7a193fcf484d92bf5822e05425d2d9d213e6770ec9d
+and runner SHA72c3718a53b1c629a09faa3f32493896eee3f132ab1ce7957784149e45bcf19a
+match the independently checked files;38 original source files remain unchanged.
+Scoped verdict is builder-review/verdict.json, SHAbc63ac56fcde638875de01531706ba5ef1b66b1037d0b4e89eaf6c5ab0456fa7.
+The combined regression is separate. Historical evidence remains scoped; full
+M4 qualification, engineering acceptance and production activation are unclaimed.
+
+### Prevention
+Retain the original actual source-revocation/guard-splice probe at public recovery,
+alongside normal run permission checks. A guard is bound input, never authority
+to replace the caller at a recovery or disclosure boundary.
+
+---
+
 ## ERROR-066 — Metric foreign keys lacked complete covering indexes
 
 **Date:** 2026-10-14
@@ -2137,7 +2171,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-067*
+*Next error ID: ERROR-068*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

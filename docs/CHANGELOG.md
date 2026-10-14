@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Bounded native builder and protected recovery
+
+### Added
+- Native builder surrounds one committed M1 permit with bounded container execution,
+  source patching, actual lease renewal and protected result publication. Independent
+  verification produces a mechanical candidate for separate engineering acceptance.
+
+### Fixed
+- Recovery binds the actual caller to its exact guard/spec/policy/lease and current
+  action before private result reads (ERROR-067).
+
+### Validation
+- Combined74 checks62unit/12restrictedPG49.17s; unchanged independent recovery
+  probe1PG4.84s; strict38 plus correction2; stable full1291unit14.34s. ARM64,
+  representative StockFlow builds and builder process restart remain open.
+
+**Authored by:** Codex and supervised builder/review agents
+**PR:** not published
+
 > **Every code change must have a CHANGELOG entry before it is committed.**
 > This file is written by both humans and AI agents.
 > Most recent entry at the top.
