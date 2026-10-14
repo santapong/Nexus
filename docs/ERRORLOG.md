@@ -74,6 +74,101 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-082 — Backup owner authorization used an independently supplied database
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, actual unchanged configuration-context probe closed
+**Found by:** independent operator backup review
+**Affected files:** operations/backup_authority.py, backup_capture.py, backup_binding.py
+
+A source-configured coordinator accepted owner pause/quiescence from a TARGET
+factory. This is a trusted configuration defect; no untrusted caller exploitation
+or source-state violation was induced. The unchanged public regression failed
+1/124.54s. The owner transaction now matches actual DB/port/Unix transport to the
+adapter's actual SOURCE and its observation of the owner's live backend PID/start.
+App settings access was denied; no role privilege was added. Pinned asyncpg0.31.0
+transport access is isolated and unsupported interfaces fail closed. Two actual
+read-only PG and seven driver negatives pass9/7.42s. The amended full matching
+drill then passes1/26.67s on fresh pair2, preserving both original databases.
+
+Preserve actual endpoint/context binding at every owner gate. URL strings and
+decoded metadata alone are insufficient. This is local matching recovery, not
+lost-source recovery, cryptographic remote attestation or production RTO.
+
+---
+
+## ERROR-081 — An exited process leader left its owned descendant alive
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed, unchanged owned-process cleanup probe closed
+**Found by:** operator process cleanup verification
+**Affected files:** operations/backup_process.py
+
+Group TERM was followed by group KILL only while the leader remained alive.
+A TERM-ignoring child survived an already-exited leader (original1failed/1.61s).
+Cleanup now makes the final bounded kill/reap decision for the exact owned group
+independently of leader state. Five process cases pass1.99s; an independent
+cancellation case passes1/2.51s, including the TERM-ignoring descendant.
+
+Keep process ownership and group identity explicit; never apply this cleanup to
+unrelated or shared services. An exited leader is not proof of drained descendants.
+
+---
+
+## ERROR-080 — Engineering replay depended on a process-local witness cache
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, unchanged fresh-publisher replay closed
+**Found by:** engineering acceptance integration
+**Affected files:** builder/engineering_runner.py, engineering_artifacts.py
+
+A fresh publisher could not reconcile a known native result because its witness
+cache was empty (original1PGfailed/16.06s). The engineering wrapper now checks
+actual native action/intent/proposal/fence, loads the pinned durable witness, then
+delegates to the unchanged generic runner; terminal entries are cleared. The
+unchanged test passes1PG/14.47s with no reissue, counter, receipt or billing change.
+This is fresh-object recovery, not an OS-process restart proof.
+
+---
+
+## ERROR-079 — Engineering acceptance omitted a proof's final READ deadline
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed, unchanged actual proof-expiry probe closed
+**Found by:** engineering protected publication review
+**Affected files:** builder/engineering_acceptance.py
+
+The proof's unique READ grant expired during the last awaited work lookup, but
+acceptance still committed. The final gate now retains complete proof/source/output
+grants and freshness, awaits the work lookup, then samples the clock and checks
+lease and all retained dates. Publication and replay share this gate. Original
+two-boundary run failed2/63.07s; corrected6PG/122.89s and final coherent27unit+
+9PG/164.87s pass. Immutable acceptance and unknown costs remain on denied replay.
+An independent additional expiry invocation later failed during stale-source setup;
+it does not independently prove this boundary and remains recorded separately.
+
+---
+
+## ERROR-078 — Engineering declaration did not bind the registered procedure
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, unchanged actual procedure mismatch probe closed
+**Found by:** engineering native declaration review
+**Affected files:** builder/engineering_metadata.py, engineering_inputs.py
+
+A declaration naming an unrelated procedure still prepared protected proof.
+Metadata now resolves both actual current child bindings, requires the same plan
+and procedure, and compares the declaration before protected result reads and at
+commit. Original/corrected/final evidence is retained with ERROR-079. No work
+registration, allowance, receipt or schema was rewritten.
+
+---
+
 ## ERROR-077 — Native catalog pins conflicted with a selected model view
 
 **Date:** 2026-10-14

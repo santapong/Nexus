@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Native engineering acceptance and durable witness replay
+
+### Added
+- Seven-criterion mechanical engineering checks bind actual independent author/
+  verifier registrations, succeeded receipts, protected patch/output/witness/
+  behavior evidence, current governance and complete source permissions.
+- Trusted proof preparation and immutable acceptance/replay conserve native
+  counters, receipts and positive unknown costs; generic builder runtime unchanged.
+
+### Fixed
+- Registered procedure binding, final protected proof READ expiry and fresh-
+  publisher durable witness replay (ERROR-078/079/080).
+
+### Validation
+- Coherent36checks/164.87s (27unit+9restrictedPG), strict/Ruff17files.
+- Independent27units/1.05s and actualPG/Podman acceptance1/30.21s; real tiny
+  AMD64 memory/CPU/PID values observed. Additional expiry review failed at source
+  setup, so its nominated boundary remains independently unproven.
+- Combined engineering/recovery1,569units/15.70s and strict/lint40files pass.
+  Accepted projection remains separate from M1verifying/unknown billing; no
+  StockFlow, ARM64, OS-restart or business-release acceptance is claimed.
+
+**Authored by:** Codex and supervised engineering agent with independent review
+**PR:** not published
+
 ## [2026-10-14] — Current observations at the governed model gateway
 
 ### Added
