@@ -334,3 +334,33 @@ post-extraction pnpm resolution/status and representative project checks remain 
 Representative StockFlow/ARM64/engineering acceptance, live provider/email,
 private deployment/backup/restore/rollback/soak and final approval remain open.
 The full supervised release goal stays active.
+
+### Verified continuation — 2026-10-14 07:48 UTC
+
+New local checkpoints bfc0539 and a5548bd commit genuine failed-receipt/private
+draft integration and disabled governed notification dispatch. Actual failed
+process→one native wake→current licensed owner draft passes, with same-transaction
+outcome/cost/event rollback and independent review. Root12PG67.33s, independent
+4PG23.65s, original unconfigured M1 execution13PG31.52s and stable1321unit32.96s
+support that receipt checkpoint. Source-revoked/paused already-issued outcomes
+remain recordable; later protected body disclosure is independently checked.
+
+The dispatch checkpoint passes corrected coherent13restricted pinned014PG237.40s,
+stable1321unit24.61s and strict20. Independent post-intent target revocation exposed
+ERROR-072, then closes unchanged1PG17.99s. Current target and actual configured
+managed admission are rechecked before HTTP; acceptance/delivery/unknown billing
+remain separate.53 CI groups resolve index paths; remote CI unrun. Lower-level
+sender tests are explicitly unmanaged owner conformance. Actual managed preparation,
+new-kind drafts/digests/atomiccursor and worker/API/dashboard integration continue.
+
+The first actual nominated historical StockFlow sandbox run installed offline and
+passed web typecheck, then stopped at test startup EAI_AGAIN localhost. No build or
+post commands ran; one native failed receipt and protected summary are preserved
+with toolattempt1/model0 and unknown billing. A test-only collector PK error was
+corrected without reexecution. Node-only static localhost mapping is being tested
+as a changed harness condition; a later action must use genuine remaining approved
+parent slices, preserving the first action/receipt/holds/counters. This is not current
+customer readiness or an accepted engineering change. Current business evidence,
+live providers/email, ARM64/Pi memory controller, private deployment/recovery/soak
+and final approval remain open. Human signup and owner email information are pending;
+no credential entry, live send, device change or deployment occurred.

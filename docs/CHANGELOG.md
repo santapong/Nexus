@@ -1,6 +1,16 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Reconcile notification and first StockFlow qualification evidence
+
+### Documentation
+- Record committed receipt/dispatch checks and the actual historical-source
+  install/typecheck/test outcome, retaining failed startup, unknown billing,
+  missing build/post and open operational release gates.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-14] — Governed notification dispatch and private provider observations
 
 ### Added
