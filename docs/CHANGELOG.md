@@ -1,6 +1,16 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Reconcile next actual qualification gates
+
+### Documentation
+- Release index records completed shared builder source integration and separate
+  actual M1/replay/timeout/ARM64 qualification requirements.
+- Notification OS crash/recovery remains pending despite qualified SDK outcomes.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Wire configured contained native execution and protected evidence
 
 ### Added

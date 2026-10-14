@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked 2026-10-15 against local0766ad0. This index separates implemented/local
+Checked 2026-10-15 against local0f2f9b6. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -11,7 +11,7 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Management/report/metric/controls | [Native loop](NATIVE_LOOP_CHECKPOINT_2026-10-14.md), [metric](METRIC_CHECKPOINT_2026-10-14.md), [owner controls](OWNER_CONTROLS_CHECKPOINT_2026-10-14.md) | Selected real goal/procedure/customer-readiness outcome and owner populated browser journey |
 | Multi-provider routing | [Governed observations](MODEL_OBSERVATION_GATEWAY_CHECKPOINT_2026-10-14.md), official adapter/usage conformance with mocked transports | Current approved model IDs/prices, genuine quality/usage and budgeted live qualification |
 | Native builder receipt/independent proof | [Engineering acceptance](ENGINEERING_ACCEPTANCE_CHECKPOINT_2026-10-14.md), [CSV PG](NATIVE_CSV_PG_CHECKPOINT_2026-10-15.md) | Full nominated private StockFlow author/verifier body/checks on actual current source |
-| Builder containment/restart | [Five process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [bounded parent provider](CONTAINED_PARENT_PROVIDER_CHECKPOINT_2026-10-15.md): actual finite scope2 proof; [observer/result binding](CONTAINED_OBSERVER_CHECKPOINT_2026-10-15.md): synthetic observer/store/result gate | Shared process/services/full-method and protected publisher/loader integration, actual payload/conmon M1/outer-timeout qualification and real representative ARM64 job |
+| Builder containment/restart | [Five process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [bounded parent provider](CONTAINED_PARENT_PROVIDER_CHECKPOINT_2026-10-15.md): actual finite scope2 proof; [shared contained runtime](CONTAINED_SHARED_RUNTIME_CHECKPOINT_2026-10-15.md): process/services/protected result/loader/cleanup source integration | Actual configured payload/conmon M1/replay/receipt-bound cleanup and outer-timeout qualification, then real representative ARM64 job |
 | Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md), [atomic SQL/postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md), [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md); [durable worker](NOTIFICATION_DURABLE_EXECUTION_CHECKPOINT_2026-10-15.md): preserved replay1PG/2.20s, separate rejected17.15s/uncertain16.98s SDK+lifecycle+native replay | Actual OS crash/restart proof, daily-positive and registration retention remain; live email qualification is separate |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
 | Recovery/private access/portability | [Matching recovery](OPERATOR_MATCHING_RECOVERY_CHECKPOINT_2026-10-14.md), [backup codec](BACKUP_CODEC_CHECKPOINT_2026-10-14.md) | Independent storage/key custody/lost-source disaster restore/RPO-RTO/rollback, private access,24h bounded soak |
@@ -20,10 +20,10 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
 ## Current next work
 
-Small existing team: preserved notification history continuation and corrected
-SDK lifecycle, plus contained process/shared integration. Observer/store/result
-source mechanics pass; runtime v2 remains disabled. First actual SDK case submitted
-once but failed at shutdown before native replay; preserve its database and tree.
+Small existing team: actual contained M1/timeout qualification packet and notification
+OS crash/recovery fixtures. Shared builder integration passes source/static/synthetic
+checks and stays unconfigured. Notification native replay and two corrected SDK
+outcomes pass; preserve the original accepted database and failed fixture tree.
 Real DB execution follows concrete source/role/fixture reviews. No extra agents
 or human review per edit.
 
