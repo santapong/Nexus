@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Owner-bound PostgreSQL and DBOS matching recovery
+
+### Added
+- Disabled operator capture/restore composes the authenticated codec with complete
+  exported PG snapshots, registered immutable artifacts, actual owner pause and
+  exact owned worker drain witnesses. Restore uses only an empty configured target.
+- Actual source-session binding prevents a separate factory from supplying owner
+  authorization; unsupported pinned-driver access fails closed (ERROR-082).
+
+### Fixed
+- Exact owned process-group cleanup reaps descendants after leader exit/cancellation
+  (ERROR-081). Original failures and corrected independent probes are retained.
+
+### Validation
+- Amended full matching drill1/26.67s on fresh pair2 preserves source, same workflow,
+  one attempt/unknown USD0.03/nullactual, and stale-fence/no-reissue behavior.
+- Original matching1/44.40s, retained denials7/4.32s,26unit/3.08s, selector6/1.28s
+  and independent owner-binding9/7.42s remain separate scoped calls.
+- Root combined1,569unit/15.70s, strict/Ruff40files pass. Both DB pairs/artifacts
+  preserved; no raw key stored. Live unchanged-source qualification only, with
+  independent storage/key custody, disaster/service recovery and OPS02 still open.
+
+**Authored by:** Codex and supervised recovery agent with independent review
+**PR:** not published
+
 ## [2026-10-14] — Native engineering acceptance and durable witness replay
 
 ### Added

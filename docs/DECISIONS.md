@@ -123,6 +123,7 @@
 | ADR-110 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
 | ADR-111 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
 | ADR-112 | Explicit model-free mechanical engineering profiles | accepted | 2026-10-14 |
+| ADR-113 | Owner-bound same-source PostgreSQL/DBOS recovery qualification | accepted | 2026-10-14 |
 
 ---
 
@@ -3176,12 +3177,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-113 -->
+<!-- Next ID: ADR-114 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-113*
+*Next ADR ID: ADR-114*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3322,3 +3323,29 @@ positive ancestor separately demonstrates native denial. New private CSV work
 still requires actual module regression, patch, independent process/protected
 proof and recomputed acceptance. No live model quality, ARM64 or release claim
 follows from these profiles. See NATIVE_ENGINEERING_PROFILE_PLAN.md.
+
+## ADR-113 — Owner-bound same-source PostgreSQL/DBOS recovery qualification
+
+**Status:** accepted for the operator-local qualification scope
+**Date:** 2026-10-14
+
+Use one actual exported PostgreSQL snapshot for the complete database/DBOS state
+and registered immutable artifact inventory. Require current native owner pause,
+quiescent leases and exact registered OS-process exit/wait witnesses before and
+after staging; absence of leases alone is insufficient. An external key provider
+seals the existing authenticated envelope. Descriptive metadata grants no authority.
+
+Bind the owner transaction to the adapter's actual SOURCE DB/port/Unix transport
+and live backend. A wrong supplied factory was reproduced and corrected without
+an app-role privilege grant. Private asyncpg0.31 transport access is isolated and
+fails closed when unsupported. Restore into the configured empty target with
+single-transaction fail-on-error semantics and a new protected file tree. Never
+rewrite stored workflow inputs or silently reconnect to the source on replay.
+
+The amended actual pair2 drill passes26.67s: target executes the same workflow,
+conserves the intent/one attempt/unknown cost, advances the fence, denies the old
+lease and issues no new effect. Source fingerprints remain unchanged. Both pairs
+and byte-verified artifacts are preserved. These tests require a live unchanged
+source for authorization and comparison. Lost/changed-source or older-backup
+recovery, independent storage/key custody, production service RTO and OPS02 remain
+unqualified; they require a separate operator authority and operating design.
