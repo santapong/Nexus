@@ -3436,3 +3436,28 @@ test truth. Reviewed source/test bodies and fixed commands remain required. A ne
 runner composes existing Node execution and engineering witness/recovery rather
 than copying generic permits. Native PG/process and full StockFlow evidence must
 follow; unit/synthetic success cannot close those release gates.
+
+
+## ADR-118 — Compose a bounded native notification read/preparation tick
+
+**Date:** 2026-10-15
+**Status:** accepted for local default-disabled implementation; activation gated
+
+Use the existing qualified native stores, concrete sealed configuration/identity
+and current sender admission. One tick emits finite configured facts, consumes one
+bounded cursor batch and prepares at most one existing pending draft. Each operation
+retains its own sender/source/recipient/credential deadlines through the inherited
+final clock. Default consumers keep their original handler through a narrow factory
+seam. Scan progress is private process state, resets on restart/config change/full
+cycle and grants no permission or public cursor.
+
+The tick can commit an earlier phase before a later phase fails; exact persisted
+wake/draft/action identities make the next tick reconcile that progress. This is
+not an all-phases atomic transaction or automatic approval/external send. Transport,
+queue dispatch, work/allowance allocation and daemon activation remain separate.
+Current non-digest subjects use the exact configured facts.resource; dynamically
+mapped actions on another resource deny before emission.
+
+Source/static tests and one real first/replay PG case qualify this slice. Concurrent,
+late-expiry, self-wake, page/restart and digest composition need actual evidence
+before enabling a recurring worker. See the dated notification tick checkpoint.

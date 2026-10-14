@@ -85,3 +85,27 @@ class NotificationWorkerRegistrationFile(ValueContract):
     configuration: NotificationWorkerConfiguration = Field(
         default_factory=NotificationWorkerConfiguration
     )
+
+
+class WorkerTickResult(ValueContract):
+    """Committed bounded metadata only; no message body, portable cursor or effect authority."""
+
+    disposition: Literal["disabled", "quiet", "staged"]
+    new_wakes: int = Field(default=0, ge=0, le=32)
+    replayed_wakes: int = Field(default=0, ge=0, le=32)
+    events_acknowledged: int = Field(default=0, ge=0, le=32)
+    draft_ids: tuple[UUID, ...] = Field(default=(), max_length=32)
+    action_ids: tuple[UUID, ...] = Field(default=(), max_length=1)
+
+    @model_validator(mode="after")
+    def exact_disposition(self) -> Self:
+        staged = bool(self.new_wakes or self.draft_ids or self.action_ids)
+        if (
+            len(set(self.draft_ids)) != len(self.draft_ids)
+            or (self.disposition == "staged") != staged
+            or (
+                self.disposition == "disabled" and (self.replayed_wakes or self.events_acknowledged)
+            )
+        ):
+            raise ValueError("Notification worker result differs from committed metadata")
+        return self

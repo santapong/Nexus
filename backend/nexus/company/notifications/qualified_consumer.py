@@ -65,9 +65,7 @@ class QualifiedNotificationConsumer:
                 self.operation_guard.require_company(scope.company_id)
                 self.operation_guard.require_company(self.store.loader.catalog.company_id)
             recipient = await self.store.prepare_recipient(scope, identity)
-            handler = _QualifiedHandler(
-                self.store, scope, identity, recipient, self.operation_guard
-            )
+            handler = self._handler(scope, identity, recipient)
             cursor = await BrainEventStore(self.store.factory).consume(
                 owner_scope(scope, identity),
                 identity,
@@ -80,6 +78,14 @@ class QualifiedNotificationConsumer:
             return DraftConsumption(
                 company_id=scope.company_id, cursor=cursor, publications=tuple(handler.publications)
             )
+
+    def _handler(
+        self,
+        scope: CompanyControlScope,
+        identity: VerifiedIdentity,
+        recipient: OwnerRecipientPolicy,
+    ) -> "_QualifiedHandler":
+        return _QualifiedHandler(self.store, scope, identity, recipient, self.operation_guard)
 
 
 class _QualifiedHandler:

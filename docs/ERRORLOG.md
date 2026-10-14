@@ -74,6 +74,35 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-092 — Notification tick omitted the configured fact-resource comparison
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed in worker emission binding
+**Found by:** independent frozen tick source review
+**Affected files:** notifications/worker_tick.py; retained expected-resource unit probe
+
+### What happened
+A typed, legitimately readable decision/failed receipt resolving to a second
+catalog resource reached the emitter despite the WorkerSubject expected-resource
+pin. The unchanged pure probe failed2/1.55s at an emitter sentinel. This shows a
+configuration binding omission; native READ remained required and no disclosure
+or protected admission bypass was demonstrated.
+
+### Root cause and fix
+Registration checked the non-digest expected resource against facts.resource,
+while actual action selectors dynamically derive their resource from the immutable
+journal and catalog. Compare the actual qualified projection.resource to the
+configured subject before emission; keep the inherited source/final-clock checks.
+The same retained cases pass2/1.23s. Root coherent1,950units, strict/Ruff14 and the
+actual first positive/sequential replay1PG/8.08s pass. Broader worker boundaries
+remain separate gates.
+
+### Prevention
+Keep the two typed dynamic-selector mismatch cases and the exact single-resource
+configuration limitation. Evidence: notifications/worker-tick-static-review-freeze-2.json
+and worker-expected-resource-retained-red.log/fixed.log.
+
 ## ERROR-091 — New worker guard parser and company boundaries were incomplete
 
 **Date:** 2026-10-15 (Asia/Bangkok)

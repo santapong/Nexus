@@ -1,6 +1,27 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bounded native notification read/preparation tick
+
+### Added
+- Default-disabled composition of configured native fact emission, one event batch
+  and one pending-action preparation, with fresh per-operation sender windows and
+  licensed bounded scan progress. No approval, dispatch or allowance allocation.
+
+### Fixed
+- Compare each resolved decision/failed-receipt resource with its exact configured
+  subject before emission (ERROR-092); complete native READ remains required.
+
+### Validation
+- Retained mismatch2failed/1.55s then2passed/1.23s; author72focused/2.02s.
+- Root21focused/1.27s, strict/Ruff14 and coherent1,950unit/21.75s pass.
+- Actual isolated normal015 restricted-PG first/sequential-replay1passed/8.08s:
+  one wake/draft/pending action, unchanged replay and zero holds/effects/counters.
+  Concurrent/temporal/page/digest and operational release gates remain open.
+
+**Authored by:** Codex and supervised notification agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Bounded immediate engineering restart acquisition
 
 ### Added

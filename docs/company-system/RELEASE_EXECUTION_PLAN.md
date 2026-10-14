@@ -14,16 +14,18 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
-The initial foundation lanes below are historical. Current local head738286f has
-integrated Brain/management, native engineering acceptance/reconciliation and
-credential-bound notification authorization. Root's latest coherent unit gate is
-1,703passed/19.50s; actual model, business and operations gates remain separate.
+The initial foundation lanes below are historical. Current local head65c3a8f has
+integrated Brain/management, native engineering
+acceptance/reconciliation, immediate same-dispatch lease recovery and sealed
+notification configuration/authorization boundaries. Root's latest coherent unit
+gate is1,929passed/21.31s; this predates the uncommitted worker tick package. Actual
+model, business and operations gates remain separate.
 
 | Owner | Active deliverable | Required next evidence |
 | --- | --- | --- |
-| engineering_resume | Opt-in Nodev4 CSV recipe and receipt-backed qualifier in an isolated source snapshot | Legacy/default compatibility, integrated protected inputs, then full current StockFlow before/after with independent author/verifier |
-| recovery_resume | Five bounded engineering OS kill/restart barriers | All five scoped recoveries proven; result/receipt stopped-container cleanup separately corrected; representative product/ARM64 remain open |
-| notification_profiles | Bounded read/preparation tick ABI plan | Exact immutable registration, sealed credential through final clocks, quiet unchanged reads; no autoapproval or new allowance |
+| engineering_resume | Public synthetic native CSV PostgreSQL fixture in a persistent source snapshot | Accepted public source and exact registered job/spec packet, then two bounded native jobs; full current StockFlow remains separate |
+| recovery_resume | Independent review of notification tick source and actual test scope | Resolve the configured fact-resource mismatch, then review bounded PostgreSQL evidence; no database mutation by reviewer |
+| notification_profiles | Bounded read/preparation tick implementation | Corrected resource binding, positive/replay and temporal/concurrent/page evidence; no autoapproval, transport or new allowance |
 | Root | Shared integration, independent review, evidence and release gates | Current scoped source/tests, held owner/email UAT and actual M4–M6 operational/business qualification |
 
 The first OS intent case completed after source expiry and proves historical
