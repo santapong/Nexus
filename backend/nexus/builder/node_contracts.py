@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest, Symbol
+from nexus.builder.csv_report_contracts import CsvRegressionPins
 
 
 class NodeRuntimeInputs(BuilderValue):
-    recipe: Literal["nexus.builder.node.v1", "nexus.builder.node.v2", "nexus.builder.node.v3"] = (
-        "nexus.builder.node.v3"
-    )
+    recipe: Literal[
+        "nexus.builder.node.v1",
+        "nexus.builder.node.v2",
+        "nexus.builder.node.v3",
+        "nexus.builder.node.v4",
+    ] = "nexus.builder.node.v3"
     architecture: Literal["amd64"] = "amd64"
     tool_symbol: Symbol
     cache_symbol: Symbol
@@ -25,6 +29,15 @@ class NodeRuntimeInputs(BuilderValue):
     cache_manifest_sha256: Digest
     lock_sha256: Digest
     command_recipe_sha256: Digest
+    csv_regression: CsvRegressionPins | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
+    @model_validator(mode="after")
+    def exact_csv_recipe(self) -> Self:
+        if (self.recipe == "nexus.builder.node.v4") != (self.csv_regression is not None):
+            raise ValueError("Only Node v4 requires its exact reviewed CSV regression pins")
+        return self
 
 
 def absent(value: object) -> bool:

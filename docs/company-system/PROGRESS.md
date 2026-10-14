@@ -581,3 +581,12 @@ cleanup is separately qualified and preserves all native history (ERROR-089).
 The five-process wave predates this new hook, with no rerun claim. See the
 [checkpoint](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md). Full StockFlow, ARM64,
 live model/business, owner/email UAT and M6 release gates remain required.
+
+### Checked 2026-10-15 — Opt-in Nodev4 CSV source integration
+
+The fixed complete CSV/shared/web recipe and protected receipt/witness/report/
+observation consistency checks are integrated, with v3/default and old wire/recipe
+goldens preserved. Root's combined1,854units/20.77s and strict/Ruff/format39files
+pass. Synthetic runtime/source/probe/cleanup evidence remains separate from actual
+native PG/process and private StockFlow. See the
+[checkpoint](NODE_CSV_V4_CHECKPOINT_2026-10-15.md). No private job or allowance reset.

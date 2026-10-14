@@ -21,7 +21,7 @@ def node_capture_result(
     suffix = b"R phase_cleanup_failed\nEND\n"
     transition_failed = (
         spec.runtime_inputs is not None
-        and spec.runtime_inputs.recipe == "nexus.builder.node.v3"
+        and spec.runtime_inputs.recipe in {"nexus.builder.node.v3", "nexus.builder.node.v4"}
         and capture.exit_code == 0
         and capture.interruption is None
         and capture.stdout.endswith(suffix)

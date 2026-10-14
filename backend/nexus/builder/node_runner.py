@@ -100,7 +100,23 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
     def _prepare_commands(self, base: Path, spec: BuilderExecutionSpec) -> None:
         root = base / "node-commands"
         root.mkdir(mode=0o700)
-        for key, value in wrappers().items():
+        assets = wrappers()
+        if (
+            spec.runtime_inputs is not None
+            and spec.runtime_inputs.recipe == "nexus.builder.node.v4"
+        ):
+            from nexus.builder.node_v4_assets import csv_wrapper_source
+            from nexus.builder.node_v4_recipe import v4_wrappers
+
+            assets = v4_wrappers()
+            assert spec.runtime_inputs.csv_regression is not None
+            (root / "csv-test-wrapper.cjs").write_text(csv_wrapper_source())
+            (root / "csv-test-wrapper.cjs").chmod(0o600)
+            (root / "csv-regression-pins.json").write_text(
+                spec.runtime_inputs.csv_regression.model_dump_json()
+            )
+            (root / "csv-regression-pins.json").chmod(0o600)
+        for key, value in assets.items():
             path = root / f"{key}.sh"
             path.write_text(value)
             path.chmod(0o600)

@@ -13,6 +13,10 @@ from nexus.builder.engineering_contracts import (
 
 
 def check_behavior(value: EngineeringCheckInput) -> tuple[EngineeringVerdict, str]:
+    if value.declaration.csv_regression is not None:
+        from nexus.builder.csv_artifact_loader import check_csv_behavior
+
+        return check_csv_behavior(value)
     path = "post/" + value.declaration.behavior_artifact
     for result in (value.author, value.verifier):
         evidence = next((row for row in result.artifacts if row.metadata.path == path), None)

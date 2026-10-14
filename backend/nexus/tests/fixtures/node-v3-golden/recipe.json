@@ -1,0 +1,9 @@
+{
+  "v3_recipe_sha256": "15bb7b99c9d1fc13f01250515485a0e8807c138c1df56f28a601d6c3043ff189",
+  "wrappers": {
+    "install": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs install --offline --ignore-scripts --ignore-pnpmfile --frozen-lockfile --store-dir /cache/store --package-import-method=copy\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"install\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/install.json\"\nexit \"$code\"\n",
+    "typecheck": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/web typecheck\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"typecheck\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/typecheck.json\"\nexit \"$code\"\n",
+    "test": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/web test\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"test\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/test.json\"\nexit \"$code\"\n",
+    "build": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/web build\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"build\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/build.json\"\nexit \"$code\"\n"
+  }
+}

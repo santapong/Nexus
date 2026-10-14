@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import Field, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest, RepositoryPin
+from nexus.builder.csv_report_contracts import CsvRegressionPins
 from nexus.builder.execution_contracts import BuilderRunResult
 from nexus.builder.paths import relative_path
 from nexus.builder.policy import BuilderToolPolicy
@@ -73,6 +74,9 @@ class EngineeringChangeDeclaration(ManagementContract):
     verifier_profile: Literal["verification.native.v1"] = "verification.native.v1"
     behavior_case_ids: tuple[Name, ...] = Field(min_length=1, max_length=32)
     behavior_artifact: str = "checks/behavior.json"
+    csv_regression: CsvRegressionPins | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def bounded_method(self) -> Self:

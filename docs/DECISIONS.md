@@ -3417,3 +3417,22 @@ grant, work, queue entry or effect is created. Standing sends and non-owner serv
 admission remain outside this slice. Production credential provisioning and durable
 worker activation require their separate gates. Frozen wrapper14checks, actual
 authorization10PG and Root's1,703unit gate support this local implementation only.
+
+## ADR-117 — Explicit complete CSV Node recipe and receipt-backed consistency checks
+
+**Status:** accepted as an opt-in mechanical implementation
+**Date:** 2026-10-15 (Asia/Bangkok)
+
+Keep v3/default and all historical pins unchanged. Nodev4 requires reviewed source/
+test/mapping/wrapper pins, complete shared/web report inventories and fixed methods.
+Use a bounded owned scratch probe for baseline-module/new-test failure, then remove
+it before complete post checks. No Python dependency or secrets enter the Node image.
+
+Qualify actual report bytes against protected source witnesses and actual native
+receipt/output/spec bindings for distinct author/verifier actions. Captured wrapper
+observations bind canonical staged pins and exact paths/hashes/lengths/exits. Reject
+inconsistent captures without claiming that jointly writable outputs authenticate
+test truth. Reviewed source/test bodies and fixed commands remain required. A new
+runner composes existing Node execution and engineering witness/recovery rather
+than copying generic permits. Native PG/process and full StockFlow evidence must
+follow; unit/synthetic success cannot close those release gates.

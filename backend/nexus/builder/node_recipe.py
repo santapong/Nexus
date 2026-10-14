@@ -116,6 +116,11 @@ def require_node_recipe(
     pins = spec.runtime_inputs
     if pins is None:
         raise ValueError("Native Node command recipe differs from approved pins")
+    if pins.recipe == "nexus.builder.node.v4":
+        from nexus.builder.node_v4_recipe import require_v4_recipe
+
+        require_v4_recipe(spec, policy)
+        return
     expected = {
         "nexus.builder.node.v1": LEGACY_RECIPE_SHA256,
         "nexus.builder.node.v2": V2_RECIPE_SHA256,

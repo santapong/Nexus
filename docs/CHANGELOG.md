@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Opt-in complete CSV Node recipe and protected report qualifier
+
+### Added
+- Nodev4 fixed shared/web checks and bounded before-module regression probe,
+  complete actual JSON report/observation qualification and receipt-backed two-file
+  source witnesses. Explicit engineering/Node runner composition preserves permits.
+- Defaultv3 and v1–v3 wire/recipe/replay golden compatibility remains unchanged.
+
+### Validation
+- Actual generated-source runtime/discovery/probe/collision/substitution/outer
+  descendant cleanup receipts retained. Final agent1,817unit/17.91s/types21 pass;
+  Root combined1,854unit/20.77s/types/Ruff/format39 pass with19existing warnings.
+- Writable outputs provide consistency only; a limitation test demonstrates joint
+  rewriting. Actual native PG/processv4, full private StockFlow, ARM64 and business
+  release gates remain open; no private job or new allowance was executed.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Mechanical engineering OS recovery and owned cleanup
 
 ### Added
