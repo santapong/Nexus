@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Compose the contained process source watch
+
+### Added
+- Server-only adapter preserves native renewal/current checks, then obtains a
+  fresh final DB-clock source window using the same fixed operation end.
+- Ongoing process checks continue through the existing native lease/source watch.
+
+### Validation
+- Tests-first missing-module red,3 focused composition cases and strict/Ruff2 pass.
+- No process launch, runtime policy activation or membership authority from a DTO.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Capture current source deadlines at the actual final clock
 
 ### Added
