@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Native decision, blocker, budget and digest wakes
+
+### Added
+- Trusted fact reader and deterministic fallback emitter derive pending decisions,
+  actual blocked/cancelled work, work/Bangkok-day caps, failed receipts and registered
+  daily/weekly digest buckets from real company rows and complete current source scope.
+- Native source-time precision keeps undated occurrences unknown and separates
+  database observation time from source receipt/report instants or budget days.
+
+### Validation
+- Worker33unique checks21restricted015PG+12unit; Root6unchanged boundaryPG72.13s,
+  stable1333unit45.75s and strict21/lint/format. Actual expiry rolls back the outbox
+  without changing work/cost; transient control and forged event records deny.
+  Notification draft adaptation/cursor/sender/timers/live delivery remain separate.
+
+**Authored by:** Codex and supervised native-event agent
+**PR:** not published
+
 ## [2026-10-14] — Reconcile notification and first StockFlow qualification evidence
 
 ### Documentation

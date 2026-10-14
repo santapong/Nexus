@@ -1,4 +1,4 @@
-"""Actual008/014 event ingestion/append/replay/consume and ORM SQL remain old-column compatible."""
+"""Actual008 events and014 ingestion preserve original event append/read/consume SQL."""
 
 from pathlib import Path
 from uuid import uuid4
@@ -48,8 +48,8 @@ async def test_old_profile_real_ingestion_append_replay_consume_and_original_orm
         await store.ingest(
             owner_scope(), identity(OWNER), command(b"Actual old profile source.", "r1")
         )
-    # Current artifact mapping has a pre-existing012 column on008. Root owns
-    # that separate compatibility fix; this008 case proves actual event SQL only.
+    # Current artifact mapping has a pre-existing012 column absent on008.
+    # That historical gap is excluded here; this008 case proves event SQL only.
     async with brain_transaction(old_event_factory, owner_scope(), identity(OWNER), owner=True) as (
         session,
         _,
