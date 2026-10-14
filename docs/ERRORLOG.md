@@ -74,6 +74,63 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-072 — Notification precall used a captured target grant after revocation
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** open, scoped dispatch correction assigned
+**Found by:** Root independent actual PostgreSQL dispatch boundary probe
+**Affected files:** notification dispatch precall
+
+### Reproduced behavior and required correction
+After a real committed M1 intent, the actual owner revoked READ on the distinct
+notification target through the public access store. The frozen dispatch precall
+rechecked source/action but retained only earlier target deadlines. The original
+normal014 probe did not deny dispatch, failing its expected rejection assertion.
+Re-read current target access and managed execution before HTTP, then retain final
+deadlines after awaits. Preserve the original dispatch freeze/probe; Root will rerun
+unchanged after the narrow amendment. All HTTP here is explicitly mocked, no real
+email was sent. Evidence: notification-review/test_target_before_post.py and target-first.log.
+
+---
+
+## ERROR-071 — Receipt event hook needed a final current lease clock
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed, scoped new receipt hook
+**Found by:** actual two-second lease and awaited receipt-event probe
+**Affected files:** shared effect receipt transaction with configured publisher
+
+### Reproduced behavior and fix
+Without the final check, an awaited event hook crossed the actual lease deadline
+and committed the outcome/cost/event. The corrected boundary checks the current
+native lease/fence after the hook and final flush, rolling all three writes back.
+The actual-expiry original probe passes unchanged in the final12PG matrix and
+independent4PG review. An earlier fixture tried renew(ttl=1), which correctly does
+not shorten an existing60s lease; that failed to test expiry and was corrected to
+an actual short initial lease. Default unconfigured receipt behavior is preserved.
+
+---
+
+## ERROR-070 — Receipt publisher accepted a transient invented outcome row
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, scoped new receipt publisher
+**Found by:** direct public publisher probe against actual intent state
+**Affected files:** native failed receipt event publisher
+
+### Reproduced behavior and fix
+A transient copy of the real intent, changed to failed in memory, originally
+created a wake while the database intent still had no receipt. The publisher now
+re-reads persisted native work/intent and requires the actual session-owned rows,
+exact immutable receipt/action/run/trace/resource binding. The unchanged direct
+probe and actual failed-process positive pass, including independent review.
+This closes false event publication; it does not claim an external send happened.
+
+---
+
 ## ERROR-069 — USTAR cannot export pnpm CAS long filenames
 
 **Date:** 2026-10-14
@@ -2212,7 +2269,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-070*
+*Next error ID: ERROR-073*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

@@ -25,6 +25,7 @@ from nexus.execution.management_checks import (
     ManagementArtifactFreshness,
     require_management_execution,
 )
+from nexus.execution.receipt_events import ReceiptEventPublisher
 from nexus.execution.runtime_contracts import (
     AttemptKind,
     EffectRecord,
@@ -56,11 +57,13 @@ class EffectStore:
         management_catalog: PlanAdmissionCatalog | None = None,
         management_artifacts: BoundedArtifactReader | None = None,
         management_freshness: ManagementArtifactFreshness | None = None,
+        receipt_events: ReceiptEventPublisher | None = None,
     ) -> None:
         self._factory = factory
         self._management_catalog = management_catalog
         self._management_artifacts = management_artifacts
         self._management_freshness = management_freshness
+        self._receipt_events = receipt_events
 
     # Keep this >50-line transaction boundary together: current authority, held
     # cost, lifetime attempt and committed intent must share the company lock.
@@ -192,6 +195,8 @@ class EffectStore:
         """Resolve an issued unknown effect under the new fence, including while paused."""
         return await self._record(lease, identity, receipt, actual_usd, reconcile=True)
 
+    # Keep this >50-line atomic receipt/cost/event boundary together: every write
+    # and the final hook lease clock must commit under the same company mutex.
     async def _record(
         self,
         lease: ExecutionLease,
@@ -207,7 +212,7 @@ class EffectStore:
             raise ExecutionDeniedError("Only a failed receipt may request a literal terminal block")
         async with runtime_transaction(
             self._factory, lease_scope(lease), identity, allow_paused=True, allow_inactive=True
-        ) as (session, _, _):
+        ) as (session, control, _):
             work = await execution_row(session, lease_scope(lease))
             require_lease(work, lease, await db_now(session))
             row = await effect_row(session, work, receipt.action_id)
@@ -236,6 +241,12 @@ class EffectStore:
                 work.state = "blocked"
             await reconcile_cost(session, lease_scope(lease), receipt.action_id, actual_usd)
             await session.flush()
+            if self._receipt_events is not None:
+                await self._receipt_events.publish(
+                    session, control, work, row, receipt, identity, await db_now(session)
+                )
+                await session.flush()
+                require_lease(work, lease, await db_now(session))
             return effect_record(row)
 
     async def record_verification_candidate(

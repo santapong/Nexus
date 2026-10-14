@@ -1,6 +1,27 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Genuine failed receipts and private owner drafts
+
+### Added
+- Optional trusted same-transaction receipt event publisher, explicitly wired by
+  native report composition. Actual failed action IDs append atomically with outcome
+  and cost; native owner drafts rederive current private source/recipient access.
+- Immutable current-owner draft storage and private recipient registry, default disabled.
+
+### Fixed
+- Publisher rejects transient invented outcome rows and validates persisted native
+  bindings. Final hook lease clock rolls outcome/cost/event back together.
+
+### Validation
+- Root12normal015PG67.33s, independent4unchangedPG23.65s, original unconfigured
+  M1 execution13PG31.52s, stable1321unit32.96s, strict11Root+10draft sources.
+  Actual failed process→one wake→owner draft passes. Full dispatch/newkind/worker/
+  live-email/release qualification remain separate work.
+
+**Authored by:** Codex and supervised notification/review agents
+**PR:** not published
+
 ## [2026-10-14] — Reconcile local release progress and failed-receipt wiring
 
 ### Documentation

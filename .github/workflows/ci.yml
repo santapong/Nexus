@@ -210,6 +210,9 @@ jobs:
           - suite: native-event-old-profile-compatibility
             database: nexus_company_test_native_events
             tests: test_company_native_event_compatibility.py
+          - suite: native-receipt-event-transaction
+            database: nexus_company_test_receipt_events
+            tests: test_company_receipt_event_atomic.py test_company_receipt_event_denials.py test_company_receipt_event_recovery.py test_company_receipt_event_composition.py
           - suite: management-native-workflow
             database: nexus_company_test_native_workflow
             tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py

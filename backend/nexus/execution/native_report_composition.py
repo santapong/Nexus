@@ -25,6 +25,7 @@ from nexus.company.management.report_artifact_reader import ReportArtifactReader
 from nexus.company.management.report_inputs import PersistentReportInputLoader
 from nexus.company.management.scheduling_contracts import WorkflowRegistration
 from nexus.company.management.scheduling_support import SchedulerIdentities, SchedulerResources
+from nexus.company.notifications.receipt_event_publisher import NativeReceiptEventPublisher
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.native_report_services import (
     NATIVE_APPLICATION,
@@ -135,4 +136,5 @@ def _managed_stores(
         management_catalog=catalog,
         management_artifacts=artifacts,
         management_freshness=freshness,
+        receipt_events=NativeReceiptEventPublisher(catalog),
     )
