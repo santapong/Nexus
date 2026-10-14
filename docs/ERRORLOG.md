@@ -74,6 +74,42 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-099 — Fresh acquisition added a clock after closing admission windows
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed in NEW source and pure nominated-clock regression; actual PG pending
+**Found by:** independent durable notification source review
+**Affected files:** execution/notification_lease_recovery.py
+
+The fresh helper qualified source/grant/approval/recipient deadlines, then its
+caller awaited another db_now and checked only credential/configuration. The
+outer preflight could cross the qualified window at that final await. This was
+an acquisition contract gap; existing dispatcher rechecks mean no POST bypass
+was demonstrated. Return the helper's already-qualified actual final clock and
+perform only synchronous remaining checks afterward. The pure regression denies
+expired returned clocks and asserts no additional clock await. Actual admission
+and natural expiry qualification remain separate.
+
+## ERROR-098 — Notification startup checked only the business database role
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** role/endpoint witness fixed in NEW source/pure ordering; actual SQL/SDK pending
+**Found by:** independent durable notification source review
+**Affected files:** execution/notification_worker.py
+
+The worker checked business-factory NOSUPER/NOBYPASS but accepted a separate DBOS
+system URL without observing that connection. This trusted configuration gap did
+not establish an untrusted exploit. Supply one bounded explicit PostgreSQL engine
+to DBOS and inspect its actual role/database name before launch. Name equality
+alone does not prove cluster identity. Freeze2 requires exact configured endpoint
+and observes the business PID/start/client record through the system engine while
+that business connection stays open. Tests mock this witness; actual SQL visibility
+remains pending. Existing singleton is denied; constructor
+failure disposes the owned engine and keeps local services unset. Mocked role,
+same-database and ordering tests pass; actual startup proof is still pending.
+
 ## ERROR-097 — User-manager parent validation required an absent delegation xattr
 
 **Date:** 2026-10-15 (Asia/Bangkok)

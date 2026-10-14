@@ -3461,3 +3461,31 @@ mapped actions on another resource deny before emission.
 Source/static tests and one real first/replay PG case qualify this slice. Concurrent,
 late-expiry, self-wake, page/restart and digest composition need actual evidence
 before enabling a recurring worker. See the dated notification tick checkpoint.
+
+## ADR-119 — One current native notification effect step and immutable history
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Status:** accepted for local default-disabled implementation; runtime qualification pending
+**Decided by:** Root after independent source review
+**Relates to:** ADR-104, ADR-114, ADR-116, ADR-118
+
+Use one fixed portable command workflow and one nonretry effect step. Reconstruct
+the actual permanent registration/journal/dispatch and genuine sealed credential
+inside the step. Fresh execution requires SDK PENDING on the fixed queue; exact
+issued history may have terminal or cleared queue metadata but grants no fresh call.
+Any original intent suppresses POST regardless of the newly acquired lease mode.
+Bounded acquisition waits for only the same live segment and keeps current owner,
+member/configuration and fresh admission windows through its last actual clock.
+
+Return actual body-free native history before releasing the exact acquired lease.
+Succeeded receipt with an actual UUID remains submitted when observation append
+failed. A collapsed failed receipt is rejected only with a validated rejected
+submission observation; otherwise classification remains unavailable. Missing
+outcome and unknown billing remain explicit, with no retry, allowance reset or refund.
+
+Trusted startup uses one bounded explicit system engine passed to DBOS and requires
+restricted role and actual business/system endpoint/backend identity before launch.
+Freeze2 implements the endpoint witness with mocked qualification; actual SQL/SDK
+proof remains pending. The original passing freeze1 is retained separately.
+An unrelated singleton is denied. Source and pure tests qualify the implementation;
+actual SDK dispatch/replay, OS restart and production email remain separate gates.

@@ -1,6 +1,28 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Default-disabled durable owner notification execution
+
+### Added
+- Six native execution modules reconstruct exact dispatch/current sealed owner,
+  acquire the same segment and derive body-free receipt/observation history.
+- One fixed nonretry DBOS effect step; any prior intent prevents another POST.
+- Current startup engine/role checks, bounded same-segment acquisition and safe
+  failure conservation tests. Exact endpoint/live backend witness source and pure
+  qualification are implemented; actual startup remains pending.
+
+### Validation
+- Original freeze1: Root69focused/1.87s, strict14 and combined2,239unit/22.36s pass;
+  independent14files/10logs/1,310inventory hashes match. No actual worker/HTTP.
+- ERROR-098/099 preserve independently found startup/final-clock gaps and their
+  source/pure corrections; actual SDK/process evidence remains required.
+- Endpoint freeze2 adds84focused/2.27s and strict/Ruff14, with original passing
+  freeze1 retained. These tests do not establish actual SQL or SDK behavior.
+- Root changed-file strict checks and coherent2,254unit/22.88s pass after freeze2.
+
+**Authored by:** Codex and supervised recovery agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Reconcile current local qualification gates
 
 ### Documentation

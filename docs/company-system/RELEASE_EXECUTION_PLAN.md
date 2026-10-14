@@ -14,17 +14,18 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
-The initial foundation lanes below are historical. Current local head862d3bc has
+The initial foundation lanes below are historical. Current local head724ff1e has
 integrated Brain/management, native engineering acceptance/recovery, notification
-staging/history/atomic SQL enqueue and a bounded read-only parent provider. Root's
-latest coherent gate is2,138unit/22.53s; actual full business/provider/ARM64 and
-operational release gates remain separate.
+staging/history/atomic SQL enqueue/postqueue expiry and an actually qualified finite
+read-only parent provider. NEW durable notification freeze2 passes Root2,254unit/
+22.88s; it remains unactivated with actual SDK/process qualification pending.
+Actual full business/provider/ARM64 and operational release gates remain separate.
 
 | Owner | Active deliverable | Required next evidence |
 | --- | --- | --- |
-| engineering_resume | Finite read-only parent qualification, then contained runtime execution ABI | Actual current scope/kernel/deadline proof; payload/conmon/sidecar/process integration remains disabled |
-| recovery_resume | Actual postqueue source/credential/approval expiry matrix | Real SQL happened before captured expiry and complete transaction rollback; durable notification dispatch follows |
-| notification_profiles | Independent review of next runtime/expiry packets | Exact temporal nomination, current authority, evidence scope and no duplicate effects |
+| engineering_resume | Pure contained payload observer, immutable sidecar store and candidate contracts | Complete captured identity/cap evidence and write-once tests; shared runtime/jobs remain disabled |
+| recovery_resume | Durable notification execution and local SDK qualification source | Exact current authority/history/no-second-POST; actual SDK/process packet follows frozen source review |
+| notification_profiles | Independent review at runtime integration milestones | Exact temporal nomination, endpoint/current authority, evidence scope and no duplicate effects |
 | Root | Shared integration, source/evidence reconciliation and release gates | Full StockFlow, owner UAT/email, models, ARM64/private operations and supervised release |
 
 The first OS intent case completed after source expiry and proves historical
