@@ -1,10 +1,12 @@
 """Actual M1 scope/action/intent/fence reads; data alone grants no execution authority."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.contained_query import clock_us
+from nexus.builder.contained_spawn_window import SpawnWindow, capture_spawn_window
 from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
@@ -78,7 +80,8 @@ async def current_source(
     guard: BuilderSourceGuard,
     *,
     issued: bool,
-) -> None:
+    operation_end_us: int | None = None,
+) -> SpawnWindow | None:
     async with runtime_transaction(factory, lease_scope(lease), identity) as (session, control, _):
         work = await execution_row(session, lease_scope(lease))
         now = await db_now(session)
@@ -96,9 +99,19 @@ async def current_source(
             ) != ("intent", lease.fence, lease.run_id, action_hash(action)):
                 raise ValueError("Builder current intent/fence is unavailable")
         await guard.validate(session, control, work, row, now)
+        anchor = clock_us() if operation_end_us is not None else None
         final = await db_now(session)
         require_lease(work, lease, final, execute=True)
         guard.validate_time(final)
+        if anchor is not None and operation_end_us is not None:
+            return capture_spawn_window(
+                database_now=final,
+                monotonic_before_query_us=anchor,
+                utc_after_query=datetime.now(UTC),
+                deadlines=guard.deadlines,
+                operation_end_us=operation_end_us,
+            )
+        return None
 
 
 async def result_disclosure(

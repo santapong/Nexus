@@ -27,3 +27,10 @@ compatible receipt-bound cleanup and actual native M1/outer-timeout qualificatio
 remain required. Kernel thread timeout cannot force-stop blocked filesystem IO;
 short-lived descendants are not claimed exhaustively observed. Missing/raced/late
 facts remain unproven. Full StockFlow and ARM64 remain separate release gates.
+
+The later optional current_source producer captures monotonic before its actual
+final DB clock and returns the original lease/approval/disclosure deadline window
+after transaction exit. Existing callers retain None. Six mocked ordering/default/
+expiry/intent negatives and scoped strict/Ruff pass; independent source review
+verifies freeze3208a8b3. Combined with SDK fixture correction2,347unit/22.77s pass.
+Actual watcher/parent/spawn sequencing remains to be integrated and qualified.

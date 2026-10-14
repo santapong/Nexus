@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Capture current source deadlines at the actual final clock
+
+### Added
+- Trusted optional current_source window anchors monotonic time before the final
+  DB clock, retaining existing lease/approval/source checks and original deadlines.
+- Existing callers return None and perform no additional clock capture.
+
+### Validation
+- Six mocked ordering/default/expiry/issued-intent cases, strict/Ruff2 and independent
+  source review pass; combined2,347unit/22.77s. Actual SQL/spawn integration pending.
+- No source refresh, new permit or runtime v2 activation.
+
+**Authored by:** Codex; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Preserve host I/O after SDK destruction
 
 ### Fixed
