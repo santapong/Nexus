@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Default-disabled targeted notification atomic enqueue
+
+### Added
+- NEW9 composition/contracts/tests bind exact existing owner decision, current
+  sender/credential, permanent dispatch and public queue SQL in one transaction.
+- Deny ambiguous unissued actions before existing-dispatch replay, retain full
+  postqueue source/recipient/approval/credential clocks and exact ABI readback.
+
+### Validation
+- Retained5dependency failures fixed; author45pure/1.65s/types/Ruff/format9 pass.
+  Root45focused/1.30s/strict9/coherent2,013unit21.91s pass. These mocks/static checks
+  do not establish actual atomic SQL; dedicated empty PG fixture gate is pending.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-15] — Reproducible public native CSV fixture and release evidence index
 
 ### Added
