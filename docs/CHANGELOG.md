@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Reconcile local release progress and failed-receipt wiring
+
+### Documentation
+- Reconcile three validated implementation checkpoints and the bounded public
+  dependency cache receipts; retain actual business/ARM64/live/private-release gaps.
+- Plan genuine failed-receipt publication in the actual M1 receipt transaction;
+  declared event kind and manual test append are not operational proof.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-14] — Native notification event selectors with old-profile compatibility
 
 ### Database

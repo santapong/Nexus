@@ -74,6 +74,31 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-069 — USTAR cannot export pnpm CAS long filenames
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed in bounded public-cache helper, not a project-build acceptance
+**Found by:** Root prelaunch review and harmless actual tar reproduction
+**Affected files:** builder cache import plan/archive extraction
+
+### Cause and fix
+Pinned pnpm9.12 uses126-byte SHA512 basename tails, sometimes with-index.json.
+The planned USTAR export cannot encode those names. Harmless reproduction exited2
+with the expected long-name error; GNU format exported the same bytes with exit0.
+The helper now exports normalized GNU entries; extraction rejects unsupported
+PAX/ownership/time/link/sparse metadata while preserving bounded ordinary long
+names and readonly executable files.20helper tests pass; actual complete cache
+import later passed26.22s. Frozen amended package and receipts remain separate
+from project resolution, ARM64 and native engineering acceptance.
+
+### Prevention
+Qualify actual package-store filenames and safe decoder behavior before large
+cache import. Scope source/reproducer/receipts are in native-builder evidence;
+the Nexus skill records the verified format procedure and remaining limits.
+
+---
+
 ## ERROR-068 — Report preparation link used the wrong generated action field
 
 **Date:** 2026-10-14
@@ -2187,7 +2212,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-069*
+*Next error ID: ERROR-070*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

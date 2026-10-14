@@ -306,3 +306,31 @@ proofs/config/observations are retained in native-workflow-process/four-phase wi
 hash manifest. Pure composition split keeps helpers42/35/18lines and strict/lint
 passes; no authority semantics changed. M3 measured observations, operating profile,
 owner browser and coherent full-source integration remain open.
+
+### Verified continuation — 2026-10-14 06:06 UTC
+
+Local commits ce53345 (native builder),17cb8c8 (owner report dashboard) and
+1338684 (native event015 schema) are integrated. Builder recovery privacy issue
+is independently closed by its unchanged PG probe; combined74 checks and stable
+1291unit pass. Owner report controls build and pass18 client/input checks plus4
+session races; backend composition/schema6unit pass. Separate visible synthetic
+preview verifies unknown billing, acceptance separate from receipts, and exactly
+one uncertain snapshot POST. Human sign-in remains handed over and untouched.
+
+Normal015 schema12PG+2unit and separate install/reflection/downgrade1PG pass;
+stable1315unit pass.008/014 event SQL and014 ingestion compatibility are scoped
+separately from a pre-existing008 artifact read gap.50 configured CI groups
+resolve staged paths; remote CI unrun. Real decision/block/cap/digest emitters
+and failed-receipt production wiring remain required. Frozen native draft store
+4PG+6unit awaits integration; new M1 dispatch has one actual-owner/public-M1/mock
+POST positive so far, without a full negative/recovery matrix or real mail.
+
+Public pnpm tiny offline CAS passed. A long-name archive issue was reproduced
+and corrected before full cache launch. Amended exact517-package download/offline
+import completed within fixed local bounds:517 downloads193,711,174bytes40.81s,
+offline import26.22s, store677,763,226bytes and streamed GNU archive725,964,800bytes.
+Qualified extraction has26,721files with bounded normalized metadata. Actual
+post-extraction pnpm resolution/status and representative project checks remain open.
+Representative StockFlow/ARM64/engineering acceptance, live provider/email,
+private deployment/backup/restore/rollback/soak and final approval remain open.
+The full supervised release goal stays active.
