@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -20,19 +21,23 @@ from nexus.tests.stockflow_packet_contracts import PreparedState
 EVIDENCE = Path("/mnt/data/nexus-implementation-evidence-2026-10-14/native-builder")
 
 
-async def build() -> None:
+async def build(
+    destination: Path = ROOT,
+    fixtures_path: Path = EVIDENCE / "model-requalification-existing-fixtures.log",
+    expected_cases: int = 77,
+) -> None:
     state = PreparedState.model_validate_json(
         await asyncio.to_thread((ROOT / "native-state.json").read_bytes)
     )
-    sdk_raw = await asyncio.to_thread((ROOT / "model-requalification-sdk.json").read_bytes)
+    sdk_raw = await asyncio.to_thread((destination / "model-requalification-sdk.json").read_bytes)
     sdk = json.loads(sdk_raw)
-    fixtures_raw = await asyncio.to_thread(
-        (EVIDENCE / "model-requalification-existing-fixtures.log").read_bytes
-    )
+    fixtures_raw = await asyncio.to_thread(fixtures_path.read_bytes)
+    observed_fixtures = re.search(rb"(\d+) passed in ([\d.]+)s", fixtures_raw)
     if (
         not sdk["criteria_passed"] == sdk["criteria_total"]
         or sdk["requests"] != 1
-        or b"77 passed" not in fixtures_raw
+        or observed_fixtures is None
+        or int(observed_fixtures[1]) != expected_cases
     ):
         raise ValueError("Actual complete mechanical fixture receipt unavailable")
     original = state.catalog.models.models[0]
@@ -42,8 +47,8 @@ async def build() -> None:
         **sdk,
         "sdk_receipt_sha256": hashlib.sha256(sdk_raw).hexdigest(),
         "existing_fixture_receipt": {
-            "cases": 77,
-            "seconds": 25.87,
+            "cases": int(observed_fixtures[1]),
+            "seconds": float(observed_fixtures[2]),
             "log_sha256": hashlib.sha256(fixtures_raw).hexdigest(),
             "scope": "new registry/evidence/eligibility/profile mechanical fixture run",
         },
@@ -57,7 +62,7 @@ async def build() -> None:
         ).hexdigest(),
     }
     raw = json.dumps(receipt, sort_keys=True, indent=2).encode()
-    await asyncio.to_thread(write_private, ROOT / "model-requalification-receipt.json", raw)
+    await asyncio.to_thread(write_private, destination / "model-requalification-receipt.json", raw)
     sha = hashlib.sha256(raw).hexdigest()
     checked = datetime.fromisoformat(sdk["observed_at"])
     observation = ModelEligibilityObservation(
@@ -94,11 +99,13 @@ async def build() -> None:
     # This validates profile admission only. It creates no work/permit/spend authority.
     await asyncio.to_thread(
         write_private,
-        ROOT / "model-observation.json",
+        destination / "model-observation.json",
         observation.model_dump_json(indent=2).encode(),
     )
     await asyncio.to_thread(
-        write_private, ROOT / "refreshed-catalog.json", catalog.model_dump_json(indent=2).encode()
+        write_private,
+        destination / "refreshed-catalog.json",
+        catalog.model_dump_json(indent=2).encode(),
     )
 
 

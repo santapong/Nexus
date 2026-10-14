@@ -19,6 +19,7 @@ from nexus.builder.source_guard import BuilderSourceGuard, RegisteredBuilderSour
 from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.brain.blob_store import ProtectedBlobStore
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
+from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.runtime_store import ExecutionStore
 from nexus.execution.runtime_support import lease_scope
@@ -31,6 +32,8 @@ from nexus.tests.integration.test_company_execution_store import identity
 from nexus.tests.local_stockflow_packet import ROOT, write_private
 from nexus.tests.stockflow_packet_contracts import PreparedState
 
+ORIGINAL_RESULT_SHA256 = "861ae1b8ba91a935619c8bc76bdbdc72f9dd70c80733dc976be0d6f6bf764195"
+
 
 class RecoveryOnly(NodeNativeBuilderRunner):
     async def prepare(self, *args: object, **kwargs: object) -> Path:
@@ -40,10 +43,20 @@ class RecoveryOnly(NodeNativeBuilderRunner):
         raise AssertionError("Known recovery cannot invoke a project process")
 
 
-async def recover() -> None:
-    state = PreparedState.model_validate_json(
-        await asyncio.to_thread((ROOT / "native-state.json").read_bytes)
-    )
+async def recover(
+    state_path: Path = ROOT / "native-state.json",
+    catalog_path: Path | None = None,
+    receipt_path: Path = ROOT / "v1-recovery-receipt.json",
+    expected_result_sha256: str = ORIGINAL_RESULT_SHA256,
+) -> None:
+    state = PreparedState.model_validate_json(await asyncio.to_thread(state_path.read_bytes))
+    if catalog_path is not None:
+        catalog = PlanAdmissionCatalog.model_validate_json(
+            await asyncio.to_thread(catalog_path.read_bytes)
+        )
+        if state.catalog.models != catalog.models:
+            raise ValueError("Current observation changed immutable model registrations")
+        state = state.model_copy(update={"catalog": catalog})
     url = make_url(settings.company_test_database_url)
     if url.database != "nexus_company_test_builder":
         raise ValueError("Only retained builder database is supported")
@@ -109,12 +122,9 @@ async def recover() -> None:
         record = await effects.get(lease, identity(ACTOR), state.action.action_id)
         after = await execution.get(scope, identity(ACTOR))
         assert before.counters == after.counters and result is not None
-        assert (
-            BuilderResultStore.digest(result)
-            == "861ae1b8ba91a935619c8bc76bdbdc72f9dd70c80733dc976be0d6f6bf764195"
-        )
+        assert BuilderResultStore.digest(result) == expected_result_sha256
         observation = {
-            "scope": "original v1 current public M1/source/caller recovery; no new commands",
+            "scope": "exact saved recipe current public M1/source/caller recovery; no new commands",
             "result_sha256": BuilderResultStore.digest(result),
             "effect": record.model_dump(mode="json"),
             "before": before.model_dump(mode="json"),
@@ -125,7 +135,7 @@ async def recover() -> None:
         }
         await asyncio.to_thread(
             write_private,
-            ROOT / "v1-recovery-receipt.json",
+            receipt_path,
             json.dumps(observation, indent=2).encode(),
         )
     finally:

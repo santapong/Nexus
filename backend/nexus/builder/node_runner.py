@@ -11,7 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from nexus.builder.artifact_publisher import BuilderArtifactPublisher
 from nexus.builder.contracts import BuilderCapabilities
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
+from nexus.builder.node_capture import node_capture_result
 from nexus.builder.node_config import NodeRuntimeConfig
+from nexus.builder.node_phase_cleanup import cleanup_script
 from nexus.builder.node_recipe import (
     config_text,
     loopback_hosts,
@@ -25,7 +27,7 @@ from nexus.builder.process import bounded_call
 from nexus.builder.public_image import file_sha256
 from nexus.builder.result_store import BuilderResultStore
 from nexus.builder.runner import NativeBuilderRunner
-from nexus.builder.runner_capture import LeaseWatch, capture_result
+from nexus.builder.runner_capture import LeaseWatch
 from nexus.builder.runtime_plan import PreparedSources
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
@@ -103,6 +105,9 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
             path.write_text(value)
             path.chmod(0o600)
         (root / "offline.npmrc").write_text(config_text())
+        cleanup = root / "phase-cleanup.py"
+        cleanup.write_text(cleanup_script())
+        cleanup.chmod(0o600)
         hosts = base / "loopback-hosts"
         hosts.write_text(loopback_hosts())
         hosts.chmod(0o600)
@@ -140,4 +145,4 @@ class NodeNativeBuilderRunner(NativeBuilderRunner):
             stderr_limit=spec.job.limits.log_bytes,
             watchdog=watch.check,
         )
-        return capture_result(capture, spec, action, lease.fence, self.image_id, name)
+        return node_capture_result(capture, spec, action, lease.fence, self.image_id, name)

@@ -8,6 +8,7 @@ import shlex
 
 from nexus.builder.contracts import CommandRef
 from nexus.builder.execution_contracts import BuilderExecutionSpec
+from nexus.builder.node_phase_cleanup import cleanup_script
 from nexus.builder.policy import BuilderCommandPolicy, BuilderToolPolicy
 from nexus.builder.runtime_plan import runtime_script
 
@@ -30,6 +31,7 @@ COMMANDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("build", ("--filter", "@stockflow/web", "build")),
 )
 LEGACY_RECIPE_SHA256 = "93a7fa136d4fed501a7c8887663220bc578653e5dca660029e81282bdab0e1b7"
+V2_RECIPE_SHA256 = "cc147490c889dc0fdf4e188e9b8a1f3e6478c9f6c62e865647ba2ad5f52e39ec"
 
 
 def command_policies() -> tuple[BuilderCommandPolicy, ...]:
@@ -81,6 +83,8 @@ def recipe_sha256() -> str:
         "loopback_hosts": loopback_hosts(),
         "offline_npmrc": config_text(),
         "startup": startup(),
+        "baseline_cleanup_script": cleanup_script(),
+        "phase_transition": phase_transition(),
     }
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
@@ -112,10 +116,14 @@ def require_node_recipe(
     pins = spec.runtime_inputs
     if pins is None:
         raise ValueError("Native Node command recipe differs from approved pins")
-    expected = recipe_sha256() if pins.recipe == "nexus.builder.node.v2" else LEGACY_RECIPE_SHA256
+    expected = {
+        "nexus.builder.node.v1": LEGACY_RECIPE_SHA256,
+        "nexus.builder.node.v2": V2_RECIPE_SHA256,
+        "nexus.builder.node.v3": recipe_sha256(),
+    }[pins.recipe]
     if pins.command_recipe_sha256 != expected:
         raise ValueError("Native Node command recipe differs from approved pins")
-    if execution and pins.recipe != "nexus.builder.node.v2":
+    if execution and pins.recipe != "nexus.builder.node.v3":
         raise ValueError("Legacy Node recipe permits known-result recovery only")
     if policy.commands != command_policies():
         raise ValueError("Native Node commands differ from exact server recipe")
@@ -130,7 +138,17 @@ def node_script(spec: BuilderExecutionSpec, policy: BuilderToolPolicy) -> str:
         .replace("/source/baseline", "/scratch/work/baseline")
         .replace("/source/post", "/scratch/work/post")
     )
-    return original.replace(
+    script = original.replace(
         "mkdir -p /scratch/logs /outputs /tmp/home\n",
         "mkdir -p /scratch/logs /outputs /tmp/home\n" + startup(),
+    )
+    return script.replace(
+        "cd /scratch/work/post\n", phase_transition() + "cd /scratch/work/post\n", 1
+    )
+
+
+def phase_transition() -> str:
+    return (
+        "if ! timeout --signal=KILL 30s /usr/bin/python3 /node-commands/phase-cleanup.py; "
+        "then printf 'R phase_cleanup_failed\\nEND\\n'; exit 0; fi\n"
     )

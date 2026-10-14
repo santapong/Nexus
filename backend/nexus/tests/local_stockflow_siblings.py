@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from decimal import Decimal
+from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -92,7 +93,9 @@ def next_payload(old: PlanPayload) -> PlanPayload:
 
 
 async def partition(
-    factory: async_sessionmaker[AsyncSession], state: PreparedState
+    factory: async_sessionmaker[AsyncSession],
+    state: PreparedState,
+    receipt_path: Path = ROOT / "sibling-revision-receipt.json",
 ) -> PlanRevision:
     views = ManagementOwnerViews(factory)
     company = await views.company(control(), identity(OWNER))
@@ -174,7 +177,7 @@ async def partition(
     }
     await asyncio.to_thread(
         write_private,
-        ROOT / "sibling-revision-receipt.json",
+        receipt_path,
         json.dumps(receipt, indent=2).encode(),
     )
     return approved

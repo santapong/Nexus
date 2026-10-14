@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import func, select
@@ -43,18 +44,22 @@ from nexus.tests.stockflow_packet_contracts import PreparedState
 NEXT_ROOT = ROOT / "node-v2-sibling"
 
 
-async def prepare() -> None:
-    state = PreparedState.model_validate_json(
-        await asyncio.to_thread((ROOT / "accepted-preparation-state.json").read_bytes)
-    )
-    revisions = json.loads(
-        await asyncio.to_thread((ROOT / "sibling-revision-receipt.json").read_bytes)
-    )
+async def prepare(
+    *,
+    preparation_state: Path = ROOT / "accepted-preparation-state.json",
+    partition_receipt: Path = ROOT / "sibling-revision-receipt.json",
+    destination: Path = NEXT_ROOT,
+    policy_symbol: str = "stockflow.nominated.node.v2",
+    model_receipt: Path = ROOT / "model-requalification-receipt.json",
+    source_receipt: Path = ROOT / "source-reobservation-accepted-receipt.json",
+) -> None:
+    state = PreparedState.model_validate_json(await asyncio.to_thread(preparation_state.read_bytes))
+    revisions = json.loads(await asyncio.to_thread(partition_receipt.read_bytes))
     approved = PlanRevision.model_validate_json(json.dumps(revisions["approved"]))
     binding = approved.payload.children[-2].binding
     pins = public_config().pins
     policy = state.policy.model_copy(
-        update={"runtime_inputs": pins, "policy_symbol": "stockflow.nominated.node.v2"}
+        update={"runtime_inputs": pins, "policy_symbol": policy_symbol}
     )
     job = state.spec.job.model_copy(
         update={
@@ -136,8 +141,8 @@ async def prepare() -> None:
         )
         await current_source(factory, lease, identity(ACTOR), action, guard, issued=False)
         await execution.release(lease, identity(ACTOR))
-        NEXT_ROOT.mkdir(mode=0o700)
-        base = NEXT_ROOT / "argv-inspection"
+        destination.mkdir(mode=0o700, exist_ok=True)
+        base = destination / "argv-inspection"
         raw = await committed_archive(REPOSITORY, job.source)
         await asyncio.to_thread(
             inspection_files, base, raw, spec.model_dump_json(), policy.model_dump_json()
@@ -159,7 +164,7 @@ async def prepare() -> None:
             ).model_dump_json()
         )
         state_raw = current.model_dump_json(indent=2).encode()
-        await asyncio.to_thread(write_private, NEXT_ROOT / "native-state.json", state_raw)
+        await asyncio.to_thread(write_private, destination / "native-state.json", state_raw)
         async with runtime_transaction(
             factory, lease_scope(lease), identity(ACTOR), allow_paused=True
         ) as (session, _, _):
@@ -190,7 +195,7 @@ async def prepare() -> None:
             "project_processes_started": 0,
             "parent_and_old_children_preserved": True,
             "sibling_partition_receipt_sha256": hashlib.sha256(
-                (ROOT / "sibling-revision-receipt.json").read_bytes()
+                await asyncio.to_thread(partition_receipt.read_bytes)
             ).hexdigest(),
             "holds": [
                 {
@@ -202,15 +207,15 @@ async def prepare() -> None:
                 for row in holds
             ],
             "model_requalification_receipt_sha256": hashlib.sha256(
-                (ROOT / "model-requalification-receipt.json").read_bytes()
+                await asyncio.to_thread(model_receipt.read_bytes)
             ).hexdigest(),
             "model_expiry": state.catalog.model_observations[0].health.expires_at.isoformat(),
             "source_reobservation_receipt_sha256": hashlib.sha256(
-                (ROOT / "source-reobservation-accepted-receipt.json").read_bytes()
+                await asyncio.to_thread(source_receipt.read_bytes)
             ).hexdigest(),
         }
         await asyncio.to_thread(
-            write_private, NEXT_ROOT / "prelaunch.json", json.dumps(packet, indent=2).encode()
+            write_private, destination / "prelaunch.json", json.dumps(packet, indent=2).encode()
         )
     finally:
         await engine.dispose()

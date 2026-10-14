@@ -201,6 +201,9 @@ jobs:
           - suite: native-builder-node-runtime
             database: nexus_company_test_builder_node_hosts
             tests: test_native_builder_node.py
+          - suite: native-builder-node-phase-cleanup
+            database: nexus_company_test_builder_node_hosts
+            tests: test_native_builder_node_phase_cleanup.py
           - suite: management-native-report-api
             database: nexus_company_test_native_report_api
             tests: test_company_native_report_api.py test_company_native_report_api_owner.py

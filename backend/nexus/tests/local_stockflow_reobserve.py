@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from sqlalchemy.engine import make_url
@@ -59,7 +60,11 @@ class NominatedReader:
 
 
 async def reobserve(
-    factory: async_sessionmaker[AsyncSession], state: PreparedState
+    factory: async_sessionmaker[AsyncSession],
+    state: PreparedState,
+    *,
+    revision: str = "observed-20261014-2",
+    receipt_path: Path = ROOT / "source-reobservation-accepted-receipt.json",
 ) -> ArtifactRevisionRef:
     # Old fixture source-event is unknown; this precise git commit event does not alter its row.
     async with brain_transaction(factory, owner_scope(), identity(OWNER)) as (session, _, _):
@@ -82,7 +87,6 @@ async def reobserve(
             "fresh_until": head.fresh_until.isoformat() if head.fresh_until else None,
         }
     observed = datetime.now(UTC)
-    revision = "observed-20261014-2"
     artifact = state.metadata.model_copy(
         update={"artifact_id": uuid4(), "artifact_revision_id": uuid4(), "revision": revision}
     )
@@ -117,7 +121,7 @@ async def reobserve(
     }
     await asyncio.to_thread(
         write_private,
-        ROOT / "source-reobservation-accepted-receipt.json",
+        receipt_path,
         json.dumps(receipt, indent=2).encode(),
     )
     if result.status != "accepted":

@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from nexus.builder.node_phase_cleanup import cleanup_script
 from nexus.builder.node_recipe import config_text, node_script, wrappers
 from nexus.builder.node_runtime_plan import node_argv
 from nexus.builder.runtime_plan import PreparedSources
@@ -42,6 +43,7 @@ def inspection_files(base: Path, raw: bytes, spec_json: str, policy_json: str) -
     for key, text in wrappers().items():
         (commands / f"{key}.sh").write_text(text)
     (commands / "offline.npmrc").write_text(config_text())
+    (commands / "phase-cleanup.py").write_text(cleanup_script())
     (base / "entrypoint.sh").write_text(node_script(spec, policy))
     (base / "resolv.conf").write_bytes(b"")
     for path in (*commands.iterdir(), base / "entrypoint.sh", base / "resolv.conf"):

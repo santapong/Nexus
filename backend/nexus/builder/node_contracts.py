@@ -10,7 +10,9 @@ from nexus.builder.contracts import BuilderValue, Digest, Symbol
 
 
 class NodeRuntimeInputs(BuilderValue):
-    recipe: Literal["nexus.builder.node.v1", "nexus.builder.node.v2"] = "nexus.builder.node.v2"
+    recipe: Literal["nexus.builder.node.v1", "nexus.builder.node.v2", "nexus.builder.node.v3"] = (
+        "nexus.builder.node.v3"
+    )
     architecture: Literal["amd64"] = "amd64"
     tool_symbol: Symbol
     cache_symbol: Symbol

@@ -8,6 +8,7 @@ from nexus.builder.contracts import BuilderCapabilities
 from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.node_recipe import (
     LEGACY_RECIPE_SHA256,
+    V2_RECIPE_SHA256,
     command_policies,
     command_references,
     node_script,
@@ -71,6 +72,32 @@ def test_exact_v1_recipe_is_recovery_only_and_wrong_version_hash_is_denied(tmp_p
         require_node_recipe(
             spec.model_copy(update={"runtime_inputs": wrong}), policy, execution=False
         )
+
+
+def test_v3_phase_transition_is_after_complete_baseline_and_before_post(tmp_path: Path) -> None:
+    policy, spec = configured(tmp_path)
+    script = node_script(spec, policy)
+    assert spec.runtime_inputs is not None and spec.runtime_inputs.recipe == "nexus.builder.node.v3"
+    transition = script.index("/usr/bin/python3 /node-commands/phase-cleanup.py")
+    assert script.count("/usr/bin/python3 /node-commands/phase-cleanup.py") == 1
+    assert script.index("printf 'E 3 '") < transition < script.index("cd /scratch/work/post")
+    assert script.rindex('if test "$code" -ne 0', 0, transition) < transition
+    assert "R phase_cleanup_failed" in script
+
+
+def test_v2_exact_saved_recipe_is_recovery_only(tmp_path: Path) -> None:
+    policy, spec = configured(tmp_path)
+    assert spec.runtime_inputs is not None
+    pins = spec.runtime_inputs.model_copy(
+        update={"recipe": "nexus.builder.node.v2", "command_recipe_sha256": V2_RECIPE_SHA256}
+    )
+    policy = policy.model_copy(update={"runtime_inputs": pins})
+    spec = spec.model_copy(
+        update={"runtime_inputs": pins, "policy_sha256": canonical_sha256(policy)}
+    )
+    require_node_recipe(spec, policy, execution=False)
+    with pytest.raises(ValueError, match="recovery only"):
+        node_script(spec, policy)
 
 
 def test_node_mount_exec_only_changes_hard_scratch_and_adds_readonly_pinned_inputs(

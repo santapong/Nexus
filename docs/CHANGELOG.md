@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Bounded Node baseline/post qualification
+
+### Added
+- Explicit Nodev3 recipe removes only its completed baseline scratch tree through
+  nofollow directory descriptors before post, retaining logs/checks/RO originals
+  and the same2GiB total workspace envelope.
+- Node-only capture preserves known cleanup failure and original successful
+  baseline receipts; generic decoder remains unchanged, old recipes recovery only.
+
+### Validation
+- All8 actual nominated historical StockFlow commands exit0 in252.422s, one
+  process/attempt, protected output/caps/cleanup verified and unknown billing held.
+- Worker38unit+5restricted015PG75.41s; Root1438unit30.44s/strict22/Ruff/format.
+  Report verifier refuses code acceptance; actual engineering/ARM64/business gates
+  remain separate. No source patch or live provider/production change.
+
+**Authored by:** Codex and supervised native-builder agent
+**PR:** not published
+
 ## [2026-10-14] — Optional current-owner notification inbox API
 
 ### Added

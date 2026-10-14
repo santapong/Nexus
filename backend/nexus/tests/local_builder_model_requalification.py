@@ -7,6 +7,7 @@ import hashlib
 import importlib.metadata
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
@@ -47,7 +48,10 @@ class ObservedTestModel(TestModel):
         return self.reply
 
 
-async def qualify() -> None:
+async def qualify(
+    destination: Path = ROOT,
+    observation_revision: str = "builder-offline-model-refresh-20261014-v1",
+) -> None:
     state = PreparedState.model_validate_json(
         await asyncio.to_thread((ROOT / "native-state.json").read_bytes)
     )
@@ -104,7 +108,7 @@ async def qualify() -> None:
         raise ValueError("Offline same-binding SDK qualification failed")
     observed = datetime.now(UTC)
     artifact = {
-        "observation_revision": "builder-offline-model-refresh-20261014-v1",
+        "observation_revision": observation_revision,
         "company_id": str(state.spec.job.company_id),
         "original_registry_revision": state.catalog.models.revision,
         "registry_id": registration.registry_id,
@@ -140,7 +144,7 @@ async def qualify() -> None:
     }
     await asyncio.to_thread(
         write_private,
-        ROOT / "model-requalification-sdk.json",
+        destination / "model-requalification-sdk.json",
         json.dumps(artifact, indent=2).encode(),
     )
 
