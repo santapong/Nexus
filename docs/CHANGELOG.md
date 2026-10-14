@@ -1,6 +1,30 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Mechanical engineering OS recovery and owned cleanup
+
+### Added
+- Typed pending public fixture and exact configuration reconstruct the same
+  permanent native dispatch/DBOS workflow across five actual kill/restart barriers.
+- Engineering-specific known-receipt cleanup binds current fence and protected
+  result summary before removing an exact stopped container by immutable ID.
+
+### Fixed
+- Two stopped containers remained after result/receipt death before normal-run
+  cleanup (ERROR-089); separately verified exact removal preserves native history.
+
+### Validation
+- Intent unknown recovery uses0containers; four known-result cases each use1
+  original/0second containers and finish with current protected acceptance, one
+  attempt/model0 and positive unknown USD0.01/null actual. All processes are waited.
+- The intent source expires during restart: historical unknown scope only.
+  Four known cases remain source-current at terminal. Cleanup10unit/0.99s,
+  final-fence1PG/10.64s, hook1PG/8.52s and actual retained2removal1.64s pass;
+  the full OS wave predates the cleanup hook. All databases/trees remain retained.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-15] — Credential-bound notification dispatch and exact authorization
 
 ### Added

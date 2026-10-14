@@ -12,6 +12,28 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
+### Active continuation — 2026-10-15
+
+The initial foundation lanes below are historical. Current local head738286f has
+integrated Brain/management, native engineering acceptance/reconciliation and
+credential-bound notification authorization. Root's latest coherent unit gate is
+1,703passed/19.50s; actual model, business and operations gates remain separate.
+
+| Owner | Active deliverable | Required next evidence |
+| --- | --- | --- |
+| engineering_resume | Opt-in Nodev4 CSV recipe and receipt-backed qualifier in an isolated source snapshot | Legacy/default compatibility, integrated protected inputs, then full current StockFlow before/after with independent author/verifier |
+| recovery_resume | Five bounded engineering OS kill/restart barriers | All five scoped recoveries proven; result/receipt stopped-container cleanup separately corrected; representative product/ARM64 remain open |
+| notification_profiles | Bounded read/preparation tick ABI plan | Exact immutable registration, sealed credential through final clocks, quiet unchanged reads; no autoapproval or new allowance |
+| Root | Shared integration, independent review, evidence and release gates | Current scoped source/tests, held owner/email UAT and actual M4–M6 operational/business qualification |
+
+The first OS intent case completed after source expiry and proves historical
+unknown-state conservation only. The saved-result case recovered current protected
+acceptance without another container; neither is full StockFlow or ARM64 evidence.
+Retain all prepared process databases and protected backup pairs. The four known
+cases ran sequentially under reviewed unchanged code, exact pins and source>=180s
+before launch. Actual owned-container cleanup is separately scoped after the wave;
+there is no repeated process-wave claim. Fixture authority does not activate workers.
+
 | Lane | Deliverable | Exit |
 | --- | --- | --- |
 | Models | Registry, dated prices, conservative bounded quotes, deterministic eligible routing/fallback | Negative conformance/cost cases pass; no invented live model or price |

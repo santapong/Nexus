@@ -1,7 +1,8 @@
 """New explicit synthetic engineering procedure through actual public stores on own DB.
 
 Fixture model-free admission is not StockFlow, model quality or private activation.
-The long helper keeps complete real public setup/registration/approval visible.
+The >400-line fixture and >50-line setup retain complete public registration/approval
+ordering for default and pending scenarios; a later shared setup extraction is separate.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal, overload
 from uuid import UUID, uuid4
 
 import pytest
@@ -45,7 +47,10 @@ from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.governance import CharterRevisionRef
 from nexus.company.management.plan_store import ManagementPlanStore
-from nexus.company.management.plan_support import NamedPlanResource, PlanAdmissionCatalog
+from nexus.company.management.plan_support import (
+    NamedPlanResource,
+    PlanAdmissionCatalog,
+)
 from nexus.company.management.plans import PlanPayload, RunBinding
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.runtime_contracts import ExecutionLease
@@ -57,9 +62,19 @@ from nexus.harness.standing_contracts import ToolPermission
 from nexus.settings import settings
 from nexus.tests.builder_node_support import IMAGE, IMAGE_ID
 from nexus.tests.engineering_fixture_source import CASES, generated_repository
-from nexus.tests.integration.management_acceptance_source_fixture import Policies, protected_text
+from nexus.tests.engineering_pending_contracts import PendingEngineeringScenario
+from nexus.tests.integration.management_acceptance_source_fixture import (
+    Policies,
+    protected_text,
+)
 from nexus.tests.integration.test_company_brain_ingestion import owner_scope
-from nexus.tests.integration.test_company_directory import ACTOR, COMPANY, OWNER, control, migrate
+from nexus.tests.integration.test_company_directory import (
+    ACTOR,
+    COMPANY,
+    OWNER,
+    control,
+    migrate,
+)
 from nexus.tests.integration.test_company_execution_store import identity
 from nexus.tests.management_control_support import charter
 from nexus.tests.management_plan_support import VERIFIER
@@ -97,14 +112,37 @@ class EngineeringScenario:
     verifier_guard: BuilderSourceGuard
 
 
+@overload
 async def engineering_scenario(
     factory: async_sessionmaker[AsyncSession],
     root: Path,
     *,
     reserve_native_dispatch: bool = False,
     source_ttl: int | None = 300,
-) -> EngineeringScenario:
-    assert type(reserve_native_dispatch) is bool
+    defer_verifier: Literal[False] = False,
+) -> EngineeringScenario: ...
+
+
+@overload
+async def engineering_scenario(
+    factory: async_sessionmaker[AsyncSession],
+    root: Path,
+    *,
+    reserve_native_dispatch: bool = False,
+    source_ttl: int | None = 300,
+    defer_verifier: Literal[True],
+) -> PendingEngineeringScenario: ...
+
+
+async def engineering_scenario(
+    factory: async_sessionmaker[AsyncSession],
+    root: Path,
+    *,
+    reserve_native_dispatch: bool = False,
+    source_ttl: int | None = 300,
+    defer_verifier: bool = False,
+) -> EngineeringScenario | PendingEngineeringScenario:
+    assert type(reserve_native_dispatch) is bool and type(defer_verifier) is bool
     assert source_ttl is None or (type(source_ttl) is int and 1 <= source_ttl <= 300)
     plans, payload = await native_plan(factory, root)
     controls = ManagementControlStore(factory)
@@ -121,7 +159,11 @@ async def engineering_scenario(
             }
         )
         recorded = await controls.publish_charter(
-            control(), identity(OWNER), declared, mandate=payload.mandate, expected_revision_id=None
+            control(),
+            identity(OWNER),
+            declared,
+            mandate=payload.mandate,
+            expected_revision_id=None,
         )
         charters.append(
             CharterRevisionRef.model_validate_json(
@@ -182,7 +224,10 @@ async def engineering_scenario(
         expected_current_revision_id=proposed.plan_revision_id,
     )
     repository, pin, patch_raw = await asyncio.to_thread(generated_repository, root)
-    blobs, policies = ProtectedBlobStore(root, storage_symbol="fixture.blobs.v1"), Policies()
+    blobs, policies = (
+        ProtectedBlobStore(root, storage_symbol="fixture.blobs.v1"),
+        Policies(),
+    )
     metadata = await protected_text(
         factory,
         blobs,
@@ -216,7 +261,9 @@ async def engineering_scenario(
         image=IMAGE,
         commands=(
             BuilderCommandPolicy(
-                command_key="check", argv=("/usr/local/bin/node", "verify.cjs"), directory="."
+                command_key="check",
+                argv=("/usr/local/bin/node", "verify.cjs"),
+                directory=".",
             ),
         ),
         write_paths=("quantity.cjs",),
@@ -247,7 +294,7 @@ async def engineering_scenario(
         jobs,
         publisher,
     )
-    results = []
+    results: list[BuilderRunResult] = []
     lease = None
     for child in payload.children:
         bound = child.binding
@@ -317,15 +364,32 @@ async def engineering_scenario(
             identity=identity(OWNER),
         )
         await journal.authorize_registered(
-            scope, action.action_id, datetime.now(UTC), (), identity=identity(bound.actor_id)
+            scope,
+            action.action_id,
+            datetime.now(UTC),
+            (),
+            identity=identity(bound.actor_id),
         )
         segment_id = None
         if reserve_native_dispatch:
             segment_id = await reserve_engineering_dispatch(
                 factory, execution, scope, bound, action
             )
+        if defer_verifier and bound.workflow_name == "engineering.verify":
+            assert len(results) == 1
+            pending = (
+                bound,
+                spec,
+                action,
+                RegisteredBuilderSource(repository, metadata),
+            )
+            break
         lease = await execution.claim(
-            scope, identity(bound.actor_id), uuid4(), ttl_seconds=60, segment_id=segment_id
+            scope,
+            identity(bound.actor_id),
+            uuid4(),
+            ttl_seconds=60,
+            segment_id=segment_id,
         )
         guard = BuilderSourceGuard(
             spec,
@@ -354,6 +418,21 @@ async def engineering_scenario(
         factory, artifacts, runner.results, (declaration,), freshness
     )
     proof = EngineeringProofStorage(blobs, proof_target, policies.policy("fixture.source.v1"))
+    if defer_verifier:
+        await execution.release(guard.lease, identity(payload.children[0].binding.actor_id))
+        bound, pending_spec, pending_action, source = pending
+        return PendingEngineeringScenario(
+            acceptance=EngineeringWorkAcceptanceStore(factory, catalog, inputs, proof),
+            runner=runner,
+            author=results[0],
+            catalog=catalog,
+            verifier_binding=bound,
+            verifier_action=pending_action,
+            verifier_spec=pending_spec,
+            source=source,
+            artifacts=artifacts,
+            freshness=freshness,
+        )
     return EngineeringScenario(
         EngineeringWorkAcceptanceStore(factory, catalog, inputs, proof),
         runner,
@@ -391,7 +470,11 @@ async def reserve_engineering_dispatch(
         action_id=action.action_id,
         segment_id=next_segment_id(current),
     )
-    async with runtime_transaction(factory, scope, identity(bound.actor_id)) as (session, _, _):
+    async with runtime_transaction(factory, scope, identity(bound.actor_id)) as (
+        session,
+        _,
+        _,
+    ):
         await reserve_dispatch(
             session,
             command,

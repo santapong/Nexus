@@ -567,3 +567,17 @@ consumption gaps are retained and corrected (ERROR-087/088). Root's coherent
 [checkpoint](NOTIFICATION_WORKER_AUTHORIZATION_CHECKPOINT_2026-10-15.md).
 No real mail, daemon or durable notification worker is active. Read/timer tick,
 restart qualification, production credentials and remaining release gates stay open.
+
+### Checked 2026-10-15 — Five mechanical engineering process barriers
+
+Actual same-workflow kill/wait/restart proves intent unknown conservation and four
+known-result receipt/proof/acceptance recoveries without another container. Every
+case conserves one attempt/model0/positive unknown billing and releases capacity.
+The intent source expires during restart; four known cases are current at terminal.
+Root verified four retained app-role DBs and scoped source/artifact hashes.
+
+Post-run inspection exposed two stopped-container leftovers; exact fenced ID-based
+cleanup is separately qualified and preserves all native history (ERROR-089).
+The five-process wave predates this new hook, with no rerun claim. See the
+[checkpoint](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md). Full StockFlow, ARM64,
+live model/business, owner/email UAT and M6 release gates remain required.

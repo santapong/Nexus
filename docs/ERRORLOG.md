@@ -74,6 +74,34 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-089 — Known engineering recovery left stopped owned containers
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed in the engineering-specific reconciliation cleanup slice
+**Found by:** post-process recovery inspection
+**Affected files:** builder/engineering_cleanup.py, builder/engineering_runner.py
+
+Actual result/receipt kill points occurred before generic normal-run removal.
+Reconciliation rebuilt acceptance and released native capacity, but two exact
+owned containers remained stopped with exit0. The original four recovery facts
+are valid; stopped-container cleanup was incomplete and its inspection is retained.
+
+A separate service requires current membership/reconcile fence, actual succeeded
+receipt and complete protected result summary hash/spec/proposal/intent fence.
+It captures and reinspects exact stopped action/company/image labels, checks the
+final DB lease clock, then removes by immutable full ID without force/prune.
+Missing inventory is idempotent; engine errors, mismatches, live/unknown containers
+and stale leases deny. Infrastructure cleanup can proceed for expired source
+without returning private results or recording new proof/acceptance/spend.
+
+Ten units/0.99s, actual final-fence denial1PG/10.64s and known-hook missing-container
+replay1PG/8.52s pass. Actual removal of only the two retained IDs completes1.64s;
+native before/after history hashes are identical, positive unknown holds remain,
+leases release at fence5. The OS wave predates this hook and was not rerun; do not
+merge those scopes into a repeated process claim. Evidence: engineering-cleanup-
+freeze-1.json and engineering-retained-container-cleanup-outcome.json.
+
 ## ERROR-088 — Notification authorization returned after recipient registry loss
 
 **Date:** 2026-10-15 (Asia/Bangkok)

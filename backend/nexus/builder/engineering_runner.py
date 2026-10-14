@@ -6,6 +6,7 @@ import asyncio
 from pathlib import Path
 
 from nexus.builder.engineering_artifacts import EngineeringArtifactPublisher
+from nexus.builder.engineering_cleanup import cleanup_known_engineering_container
 from nexus.builder.engineering_witness import capture_witness
 from nexus.builder.execution_contracts import BuilderExecutionSpec, BuilderRunResult
 from nexus.builder.native_state import actual_action, require_record_result
@@ -49,6 +50,17 @@ class EngineeringNativeBuilderRunner(NativeBuilderRunner):
                 raise ValueError("Saved engineering result differs from native issuance")
             await publisher.prepare_witness(result)
         try:
-            return await super().reconcile(lease, identity, action, spec, guard)
+            disclosed = await super().reconcile(lease, identity, action, spec, guard)
+            if result is not None and result.outcome != "outcome_unknown":
+                await cleanup_known_engineering_container(
+                    self.factory,
+                    lease,
+                    identity,
+                    action,
+                    spec,
+                    result,
+                    self.receipt(result, publisher.reference(result)),
+                )
+            return disclosed
         finally:
             publisher.witnesses.pop(action.action_id, None)
