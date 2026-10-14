@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Actual postqueue expiry atomic rollback
+
+### Validation
+- Actual3restricted-PG cases pass49.78s: real targetREAD, genuine credential and
+  original immutable approval deadlines crossed after same-session authorized/
+  HELD.01/null/dispatch/ENQUEUEDcanonicalinput observations.
+- Hook1 and exactbefore/expiry/after+approval/witnessdates exported; full rollback
+  retains unconsumed decision/draft/source and zero reservation/queue/effects/
+  counters. Root+independent artifact checks agree; normalbase/app-role verified.
+- NEW3 strict/static checks pass; no worker, transport, paidprovider or activation.
+
+**Authored by:** Codex and supervised recovery agent; independent proof review
+**PR:** not published
+
 ## [2026-10-15] — Retained finite-parent compatibility failure
 
 ### Qualification result

@@ -52,3 +52,10 @@ can incorrectly report existing (ERROR-096). A targeted active-state check and
 retained public-cancellation probe are in tests-first implementation. The positive
 ENQUEUED case remains valid; status-negative and postqueue actual expiry/conflict
 rollback plus durable dispatch/process recovery remain required.
+
+
+Actual postqueue source/credential/original approval expiry3PG/49.78s now qualifies
+full rollback after real queue SQL. Safe original/current dates and native
+uncommitted-before/rolled-back-after proof are exported and independently verified;
+see [expiry checkpoint](NOTIFICATION_POSTQUEUE_EXPIRY_CHECKPOINT_2026-10-15.md).
+Queue-input/action conflicts and durable dispatch/process recovery remain open.
