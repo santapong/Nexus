@@ -16,7 +16,7 @@ INSPECT_PREFIX = (
     "--format",
 )
 INSPECT_FORMAT = (
-    '{"container_id":{{json .Id}},"image_id":{{json .Image}},'
+    '{"container_id":{{json .ID}},"image_id":{{json .Image}},'
     '"company_id":{{json (index .Config.Labels "nexus.builder.company")}},'
     '"action_id":{{json (index .Config.Labels "nexus.builder.action")}},'
     '"running":{{json .State.Running}},"payload_pid":{{json .State.Pid}},'

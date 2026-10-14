@@ -26,7 +26,7 @@ from nexus.builder.contracts import Digest
 from nexus.builder.process import engine_environment
 
 DISCOVERY_FORMAT = (
-    '{"container_id":{{json .Id}},"container_name":{{json .Name}},"image_id":{{json .Image}},'
+    '{"container_id":{{json .ID}},"container_name":{{json .Name}},"image_id":{{json .Image}},'
     '"company_id":{{json (index .Config.Labels "nexus.builder.company")}},'
     '"action_id":{{json (index .Config.Labels "nexus.builder.action")}},'
     '"running":{{json .State.Running}},"payload_pid":{{json .State.Pid}},'

@@ -1,0 +1,39 @@
+{
+  "scope": "actualREADONLYsameownedSTOPPEDobject; nojob/start/remove/statechange",
+  "podman_version": "5.8.6 previously actualmetadataqualified",
+  "rows": [
+    {
+      "variant": "original",
+      "argv": [
+        "/usr/bin/podman",
+        "--remote=false",
+        "--cgroup-manager=cgroupfs",
+        "inspect",
+        "--format",
+        "{\"container_id\":{{json .Id}},\"container_name\":{{json .Name}},\"image_id\":{{json .Image}},\"company_id\":{{json (index .Config.Labels \"nexus.builder.company\")}},\"action_id\":{{json (index .Config.Labels \"nexus.builder.action\")}},\"running\":{{json .State.Running}},\"payload_pid\":{{json .State.Pid}},\"conmon_pid\":{{json .State.ConmonPid}}}",
+        "d5cfbfa911212790e9d5cfc05b7e218df8bed603a15f6788b292875511effff8"
+      ],
+      "exit_code": 125,
+      "stdout_utf8": "{\"container_id\":",
+      "stderr_utf8": "Error: template: inspect:1:34: executing \"inspect\" at <.Id>: can't evaluate field Id in type interface {}\n"
+    },
+    {
+      "variant": "corrected",
+      "argv": [
+        "/usr/bin/podman",
+        "--remote=false",
+        "--cgroup-manager=cgroupfs",
+        "inspect",
+        "--format",
+        "{\"container_id\":{{json .ID}},\"container_name\":{{json .Name}},\"image_id\":{{json .Image}},\"company_id\":{{json (index .Config.Labels \"nexus.builder.company\")}},\"action_id\":{{json (index .Config.Labels \"nexus.builder.action\")}},\"running\":{{json .State.Running}},\"payload_pid\":{{json .State.Pid}},\"conmon_pid\":{{json .State.ConmonPid}}}",
+        "d5cfbfa911212790e9d5cfc05b7e218df8bed603a15f6788b292875511effff8"
+      ],
+      "exit_code": 0,
+      "stdout_utf8": "{\"container_id\":\"d5cfbfa911212790e9d5cfc05b7e218df8bed603a15f6788b292875511effff8\",\"container_name\":\"nexus-builder-73b8761b554352c39a03ed7db5bd12c9\",\"image_id\":\"8f3dff4193637723b9f3f4ded64cccf28c7b35dc1c96d3320b1f5a64ff41e76d\",\"company_id\":\"00000000-0000-0000-0000-000000000001\",\"action_id\":\"9d2d4447-ed82-5e92-b517-2cc4d49a33eb\",\"running\":false,\"payload_pid\":0,\"conmon_pid\":0}\n",
+      "stderr_utf8": ""
+    }
+  ],
+  "official_source": "https://raw.githubusercontent.com/containers/podman/v5.8.0/cmd/podman/inspect/inspect.go",
+  "supported_cause": "Go template fieldID; onlybare .Id is normalized, json-function .Id remainsinvalid",
+  "limits": "stoppedobject doesnotprove livecontainment or originalfirstcasecause"
+}

@@ -65,3 +65,15 @@ Readonly same-object reproduction `ROOT_TEMPLATE_COMPAT_REPRO_1.json` (`23f1dfc6
 records original template exit125 and corrected `json .ID` exit0. This is command
 compatibility, not live containment. ERROR-104 tracks the four-template source
 correction. The older first M1 and its unknown cause remain unchanged.
+
+## Fixed inspection source — live proof pending
+
+The four templates now use Go fieldID; the byte delta is exactly one field
+replacement in discovery, engine reader, observer IO and stopped cleanup. No argv,
+live-state decoder, zero-PID rule, resource bound or authority changes. Freeze871dfd8a
+binds the source and portable actual stopped-object receipt23f1dfc6. Retained4
+failing nominees now pass with existing binding negatives, totaling111 focused
+checks. Root2,701unit/25.89s/19 warnings, strict/Ruff/format6 and independent review
+pass. Method schema v3 separately pins the correction. These checks do not establish
+a successful live job; a distinct reviewed qualification must produce actual host
+samples, protected receipt, cleanup and known replay.

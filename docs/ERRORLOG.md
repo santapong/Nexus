@@ -78,12 +78,12 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** reproduced; narrow four-template source correction in progress
+**Status:** source corrected/verified; fresh live containment qualification pending
 **Found by:** actual diagnostic M1 qualification
 **Affected files:** contained_discovery.py, contained_engine.py, contained_observer_io.py, contained_cleanup.py
 
-The fresh diagnostic case completed both commands but recorded11 failed discovery
-reads, with first/last exit125 and the retained error “can't evaluate field Id”.
+The fresh diagnostic case completed both commands but recorded11 discovery
+attempts, with retained first/last exit125 and the retained error “can't evaluate field Id”.
 No object was sealed and no sample was collected; final diagnostic saysno_samples.
 Native state correctly remains unknown with one attempt and positive unknown hold.
 
@@ -100,6 +100,13 @@ approved scope changes no liveness predicate, allowance, workload, limit or retr
 Both prior M1 actions/databases/results/containers remain preserved. This explains
 the new diagnostic case; missing diagnostics still prevent a causal claim for
 the original first M1. Fresh positive containment remains unqualified.
+
+The exact four fields are corrected. Retained tests go from4 failed/6 passed to111
+focused passes/1.35s, including actual stopped reply projection, zero-PID live
+denial and immutable ID/company/action/image splice denial. Root coherent2,701unit/
+25.89s/19 existing warnings and strict/Ruff/format6 pass. Independent review verifies
+the four changes contain no other source edits. Complete-method v3 identifies the
+Go-ID template correction; prior method/action pins cannot silently adopt it.
 
 ## ERROR-103 — Registry preservation test compared unordered raw JSON
 

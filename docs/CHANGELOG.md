@@ -1,11 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Correct fixed Podman inspect Go fields
+
+### Fixed
+- Four inspection templates use Go fieldID rather than JSON tagId; argv, liveness,
+  resource bounds and authority checks remain identical. Actual stopped-object
+  compatibility evidence and binding/zero-PID denial regressions are retained.
+- Complete-method v3 identifies this correction; old action policies stay pinned.
+
+### Validation
+- 111 focused checks and strict/lint pass; Root coherent2,701unit/25.89s passes.
+- Independent exact-source review is favorable. Fresh live containment is still required.
+
+**Authored by:** Codex and supervised engineering/review agents
+**PR:** not published
+
 ## [2026-10-15] — Diagnose actual contained discovery failure
 
 ### Evidence
-- Fresh diagnostic M1 preserves actual raw/final records and identifies11 failed
-  inspect-template reads. Both command checks pass; native containment remains unknown.
+- Fresh diagnostic M1 preserves actual raw/final records and identifies the inspect-template failure in
+  retained first/last records of11 discovery attempts. Both command checks pass; native containment remains unknown.
 - Same stopped-object read reproduces invalid `json .Id` and validates `json .ID`.
   ERROR-104 tracks the narrow source correction; no action or container is retried.
 
