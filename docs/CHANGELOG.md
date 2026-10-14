@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Existing managed owner notification preparation
+
+### Added
+- Disabled native sender preparation selects an existing approved owner child and
+  appends an exact pending action without creating allowance, approval or execution.
+- Actual M1 effect specialization and precall rederive current plan, source,
+  recipient, charter and model qualification before one simulated provider call.
+
+### Validation
+- Worker21 unique checks (10restricted015PG+11unit); Root4 unchanged boundaryPG
+  92.24s, integrated1344unit29.37s and strict14/lint/format pass. Unknown billing,
+  no sender work acceptance and permanent replay prevention remain explicit.
+  New-kind drafts, cursor, API/worker and live email remain separate gates.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Native decision, blocker, budget and digest wakes
 
 ### Added
