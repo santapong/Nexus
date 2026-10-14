@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Description-only contained runtime v2 contract
+
+### Added
+- Explicit spec/policy selector-version pin and closed cgroupfs/split descriptions
+  for generic/Nodev4, with old v1/default wire and all Node asset hashes preserved.
+- Existing execution denies v2 before store/prepare/invoke; trusted parent/process
+  configuration and full execution-method identity remain unimplemented.
+
+### Validation
+- Pre-edit policy/spec/action and Nodev1-v4 goldens remain exact. Root21NEWunit/
+  1.00s, strict/Ruff/format5 and coherent2,040unit/21.60s pass on the snapshot also
+  containing pending history seam; no runtime or database activation.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Default-disabled targeted notification atomic enqueue
 
 ### Added

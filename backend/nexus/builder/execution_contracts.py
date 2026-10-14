@@ -17,6 +17,7 @@ from nexus.builder.contracts import (
 )
 from nexus.builder.node_contracts import NodeRuntimeInputs, absent
 from nexus.builder.policy import BuilderToolPolicy
+from nexus.builder.runtime_identity import RUNTIME_V1, RuntimeRecipe, require_runtime_method
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.management.canonical import canonical_sha256
@@ -37,7 +38,7 @@ BuilderOutcome = Literal[
 class BuilderExecutionSpec(BuilderValue):
     job: BuilderJobSpec
     policy_sha256: Digest
-    runtime_recipe: Literal["nexus.builder.runtime.v1"] = RUNTIME_RECIPE
+    runtime_recipe: RuntimeRecipe = RUNTIME_RECIPE
     protected_patch: ArtifactRevisionRef | None = None
     output_resource: ResourceRef | None = None
     runtime_inputs: NodeRuntimeInputs | None = Field(default=None, exclude_if=absent)
@@ -60,6 +61,16 @@ class BuilderExecutionSpec(BuilderValue):
         return self
 
     def require_policy(self, policy: BuilderToolPolicy) -> None:
+        """Existing execution stays v1 until a separately qualified trusted runtime is installed."""
+        self.require_descriptive_policy(policy)
+        if self.runtime_recipe != RUNTIME_V1:
+            raise ValueError("Builder runtime v2 execution is not configured")
+
+    def require_descriptive_policy(self, policy: BuilderToolPolicy) -> None:
+        """Pure binding only; it does not authorize a parent, preparation, intent or invocation."""
+        require_runtime_method(policy.runtime_recipe, policy.runtime_method_sha256)
+        if self.runtime_recipe != policy.runtime_recipe:
+            raise ValueError("Builder runtime version differs from the complete policy")
         if self.runtime_inputs != policy.runtime_inputs:
             raise ValueError("Builder runtime inputs differ from the complete policy")
         if canonical_sha256(policy) != self.policy_sha256:

@@ -1,0 +1,18 @@
+{
+  "policy_sha256": "b43a259c8412a538552757bebc35761d3e990d8d2d762174e85e44ddb451b500",
+  "spec_sha256": "71db1143b83894e522ba8badfd12bc9afc85dd170fb6b36a44dcd7bf79e455a6",
+  "action_sha256": "dc7d0453f4dcbaeabebee232cba25ed39ab041916066ac9258493649c9977801",
+  "node_recipe_digests": [
+    "93a7fa136d4fed501a7c8887663220bc578653e5dca660029e81282bdab0e1b7",
+    "cc147490c889dc0fdf4e188e9b8a1f3e6478c9f6c62e865647ba2ad5f52e39ec",
+    "15bb7b99c9d1fc13f01250515485a0e8807c138c1df56f28a601d6c3043ff189",
+    "744347d53bda956fa90fbb638d4287cfff85f7e17613bf1a338a8211b89b2aae"
+  ],
+  "v4_wrappers": {
+    "install": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs install --offline --ignore-scripts --ignore-pnpmfile --frozen-lockfile --store-dir /cache/store --package-import-method=copy\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"install\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/install.json\"\nexit \"$code\"\n",
+    "typecheck": "#!/bin/sh\nset -e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/shared typecheck\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/web typecheck\n",
+    "test": "#!/bin/sh\nset -e\nexec /usr/local/bin/node /node-commands/csv-test-wrapper.cjs\n",
+    "build": "#!/bin/sh\nset +e\n/usr/local/bin/node /tools/package/bin/pnpm.cjs --filter @stockflow/web build\ncode=$?\nset -e\nmkdir -p \"$NEXUS_OUTPUT_DIR/checks\"\nprintf '{\"command_key\":\"build\",\"exit_code\":%s,\"scope\":\"local_mechanical_only\"}\\n' \"$code\" >\"$NEXUS_OUTPUT_DIR/checks/build.json\"\nexit \"$code\"\n"
+  },
+  "csv_wrapper_sha256": "931fa70aa235f02376117e117c4fce7327d3a623371c577e96d6eb39622d1330"
+}

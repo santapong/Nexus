@@ -9,9 +9,21 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
-from nexus.builder.contracts import BuilderCapabilities, BuilderJobSpec, BuilderValue, Symbol
+from nexus.builder.contracts import (
+    BuilderCapabilities,
+    BuilderJobSpec,
+    BuilderValue,
+    Digest,
+    Symbol,
+)
 from nexus.builder.node_contracts import NodeRuntimeInputs, absent
 from nexus.builder.paths import permitted_path, relative_path
+from nexus.builder.runtime_identity import (
+    RUNTIME_V1,
+    RuntimeRecipe,
+    is_legacy_runtime,
+    require_runtime_method,
+)
 from nexus.company.contracts.actions import ActionProposal
 from nexus.execution.runtime_contracts import ExecutionLease
 
@@ -40,9 +52,12 @@ class BuilderToolPolicy(BuilderValue):
     write_paths: tuple[str, ...] = Field(min_length=1, max_length=16)
     artifact_paths: tuple[str, ...] = Field(min_length=1, max_length=16)
     runtime_inputs: NodeRuntimeInputs | None = Field(default=None, exclude_if=absent)
+    runtime_recipe: RuntimeRecipe = Field(default=RUNTIME_V1, exclude_if=is_legacy_runtime)
+    runtime_method_sha256: Digest | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def exact_policy(self) -> Self:
+        require_runtime_method(self.runtime_recipe, self.runtime_method_sha256)
         reference = self.image.split("@", 1)[0]
         if "/" not in reference:
             raise ValueError("Builder image needs a qualified registry and digest")
