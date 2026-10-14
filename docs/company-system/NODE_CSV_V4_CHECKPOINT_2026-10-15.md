@@ -42,3 +42,9 @@ The exact outside-checkout StockFlow two-file candidate is reviewed but unexecut
 Next: actual public native author/verifier PG fixture with canonical preparation,
 then current full StockFlow before/post/independent receipts and business readiness.
 No private checkout change, allowance reset, ARM64 or release activation is claimed.
+
+Independent source review confirmed exact MRO/recovery and no protected admission
+bypass. A pure role selector did accept an extraneous description; ERROR-090 now
+requires exact result/witness pair membership. Retained probe62focused/1.41s and
+Root61loader/observation units/1.13s/types/lint2 pass. This defensive amendment adds
+no native job or stronger writable-output authentication claim.

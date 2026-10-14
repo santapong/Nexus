@@ -1,8 +1,11 @@
 """Wrong-path/receipt/report/witness descriptions cannot qualify CSV behavior."""
 
+from datetime import timedelta
+
 import pytest
 
 from nexus.builder.csv_artifact_loader import actual_csv_behavior
+from nexus.builder.csv_source_checks import observed_csv_sources
 from nexus.builder.engineering_behavior import check_behavior
 from nexus.tests.node_v4_support import described_v4_check
 
@@ -15,6 +18,24 @@ def test_actual_json_and_exact_witness_descriptions_recompute_both_roles() -> No
         "pass",
         "independent_actual_full_csv_regression_reports_passed",
     )
+
+
+def test_extraneous_result_cannot_select_verifier_receipt_branch() -> None:
+    value = described_v4_check()
+    extraneous = value.verifier.model_copy(
+        update={"recorded_at": value.verifier.recorded_at + timedelta(seconds=1)}
+    )
+    with pytest.raises(ValueError, match="exact declared"):
+        observed_csv_sources(value, extraneous, value.verifier_witness)
+
+
+@pytest.mark.parametrize("role", ["author", "verifier"])
+def test_crossed_role_witness_cannot_supply_an_exact_pair(role: str) -> None:
+    value = described_v4_check()
+    result = value.author if role == "author" else value.verifier
+    witness = value.verifier_witness if role == "author" else value.author_witness
+    with pytest.raises(ValueError, match="exact declared"):
+        observed_csv_sources(value, result, witness)
 
 
 @pytest.mark.parametrize(

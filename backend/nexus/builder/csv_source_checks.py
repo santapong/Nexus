@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from nexus.builder.csv_report_contracts import CsvObservedSources, CsvRegressionPins
 from nexus.builder.engineering_contracts import EngineeringCheckInput, EngineeringSourceWitness
 from nexus.builder.execution_contracts import BuilderRunResult
@@ -16,6 +18,12 @@ def observed_csv_sources(
     value: EngineeringCheckInput, result: BuilderRunResult, witness: EngineeringSourceWitness
 ) -> CsvObservedSources:
     """Caller must first materialize actual licensed public native receipts/protected results."""
+    if (result, witness) == (value.author, value.author_witness):
+        role: Literal["author", "verifier"] = "author"
+    elif (result, witness) == (value.verifier, value.verifier_witness):
+        role = "verifier"
+    else:
+        raise ValueError("CSV result/witness must be an exact declared author or verifier pair")
     pins = value.declaration.csv_regression
     if pins is None:
         raise ValueError("CSV source qualifier requires a reviewed declaration")
@@ -27,7 +35,7 @@ def observed_csv_sources(
         result.spec
     ):
         raise ValueError("CSV source witness binds another native result")
-    _receipt_binding(value, result)
+    _receipt_binding(value, result, role)
     if (witness.source, witness.patch_sha256) != (
         result.spec.job.source,
         result.spec.job.patch_sha256,
@@ -60,9 +68,11 @@ def _changed_sources(
     )
 
 
-def _receipt_binding(value: EngineeringCheckInput, result: BuilderRunResult) -> None:
-    receipt = value.author_receipt if result == value.author else value.verifier_receipt
-    output = value.author_output if result == value.author else value.verifier_output
+def _receipt_binding(
+    value: EngineeringCheckInput, result: BuilderRunResult, role: Literal["author", "verifier"]
+) -> None:
+    receipt = value.author_receipt if role == "author" else value.verifier_receipt
+    output = value.author_output if role == "author" else value.verifier_output
     job = result.spec.job
     if (
         (

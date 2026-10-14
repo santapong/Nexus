@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Exact CSV role descriptions and restart gate reconciliation
+
+### Fixed
+- Reject extraneous result/witness pairs before selecting a descriptive CSV role
+  (ERROR-090); actual protected publication authority is unchanged.
+
+### Validation
+- Retained original pure failure1/0.67s, corrected62focused/1.41s; Root61loader/
+  observation units/1.13s, strict/Ruff/format2files pass. No DB or jobs executed.
+- Document immediate automatic restart as open: prior process controllers explicitly
+  wait for lease expiry. Bounded acquisition-only wait and new immediate restart
+  evidence are planned; no stored workflow is reset or relabeled.
+
+**Authored by:** Codex and independent recovery agent
+**PR:** not published
+
 ## [2026-10-15] — Opt-in complete CSV Node recipe and protected report qualifier
 
 ### Added

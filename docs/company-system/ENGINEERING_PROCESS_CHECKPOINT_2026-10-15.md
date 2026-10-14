@@ -11,6 +11,12 @@ Configuration binds the actual action/spec/source/image/policies and closed owne
 private paths. Restart keeps the workflow/command/dispatch and stable executor,
 uses a fresh worker UUID, and waits for the actual old lease expiry.
 
+These controllers explicitly wait before starting the second process. The current
+worker context attempts reacquisition once; an immediate automatic restart while
+the old lease is live remains unqualified. A bounded same-segment wait using current
+authority and the admitted maximum lease lifetime is required before claiming
+automatic production crash recovery. It must never retry an already issued effect.
+
 | Kill boundary | Observed recovery | Container calls |
 | --- | --- | --- |
 | Committed intent, before invocation | Original intent becomes unknown; no receipt/proof/acceptance; released capacity | 0 before and after restart |

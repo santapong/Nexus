@@ -74,6 +74,26 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-090 — CSV description helper silently selected a verifier role
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** low
+**Status:** fixed in exact pair validation
+**Found by:** independent Nodev4 source review
+**Affected files:** builder/csv_source_checks.py
+
+The pure description helper selected the author receipt for result==author and
+the verifier receipt for every other result. A modified result outside both exact
+descriptions, with recorded_at changed1s, passed. Retained pure probe failed1/0.67s.
+No protected publication bypass was demonstrated: actual saved-result/protected
+summary digest and native admission still reject spliced operative inputs.
+
+Require exact (result,witness) membership in the actual author or verifier pair,
+then derive an explicit role before selecting its receipt/output. Extraneous and
+crossed pairs deny. Unchanged probe, two crossed cases and descriptions pass62
+focused checks/1.41s; Root's61loader/observation units/1.13s and strict/lint2 pass.
+Evidence: native-builder/csv-exact-pair-amendment-1.json and retained original probe.
+
 ## ERROR-089 — Known engineering recovery left stopped owned containers
 
 **Date:** 2026-10-15 (Asia/Bangkok)
