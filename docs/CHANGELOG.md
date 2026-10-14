@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve host I/O after SDK destruction
+
+### Fixed
+- TEST fixture captures the original active host executor, destroys SDK on that
+  exact executor and restores it before post-destroy evidence/owned-engine cleanup.
+- Original actual submitted record/failure remains; no SDK or send rerun.
+
+### Validation
+- Four focused lifecycle cases, strict/Ruff NEW4 and Root combined2,347unit/22.77s
+  pass alongside the source-window producer. Actual historical replay remains pending.
+
+**Authored by:** Codex and supervised recovery agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Immutable contained process evidence and result binding
 
 ### Added

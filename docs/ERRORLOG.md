@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** open; original actual database/run retained
+**Status:** TEST-only lifecycle correction pure-qualified; actual SDK/history continuation pending
 **Found by:** first actual durable notification SDK qualification
 **Affected files:** tests/notification_durable_pg_fixture.py lifecycle composition
 
@@ -92,7 +92,9 @@ Pinned DBOS3.2 _configure_asyncio_thread_pool installs its executor as the adopt
 running loop's default. Destroy shuts that executor; subsequent host to_thread
 calls still target it. This supports a fixture lifecycle cause, not a provider
 or authority failure. A bounded isolated lifecycle or explicit host-owned executor
-restoration needs a new reviewed test before continuing. Preserve the original
+restoration now passes four simulated adoption/shutdown regressions: capture the
+active prior host executor, destroy SDK on that explicit executor, restore it
+before later host I/O. No actual SDK rerun follows from this unit proof. Preserve the original
 SUCCESS/receipt/observation/hold and qualify any continuation as historical replay.
 
 ## ERROR-099 — Fresh acquisition added a clock after closing admission windows
