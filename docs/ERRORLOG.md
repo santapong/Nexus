@@ -74,6 +74,37 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-077 — Native catalog pins conflicted with a selected model view
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, unchanged independent coexistence probe closed
+**Found by:** combined native admission and model gateway review
+**Affected files:** company/management/plan_support.py
+
+### What happened and fix
+A valid catalog with two models and unselected native profiles passed construction
+and current profile admission, but model action admission narrowed its models to
+one while retaining native tuples pinned to the full registry SHA. The native
+validator rejected the derived view. The unchanged independent pure probe failed
+1/1.77s; default-empty native configuration passed the same action.
+
+The full original native tuple remains checked before selecting any model action.
+Only the derived selected-model view clears native_profiles alongside its existing
+model/observation narrowing. No original registry, tuple, work registration or
+model allowance changes. The unchanged independent probe and a malformed
+unselected native tuple denial pass2/7.19s. Final combined1516unit35.14s and
+amended strict/Ruff/format pass; original failure/input/source records are retained
+in model-gate/native-observation-cross-review.
+
+### Prevention
+Test catalog coexistence through actual constructors and public action predicates.
+Preserve complete validation before narrowing a derived view; do not weaken the
+native helper or skip malformed unselected configuration globally. Native model
+tools remain denied. No live provider, engineering acceptance or activation claim.
+
+---
+
 ## ERROR-076 — Restore directory replacement redirected output writes
 
 **Date:** 2026-10-14

@@ -122,6 +122,7 @@
 | ADR-109 | Qualified native mapping preserves older physical profiles | accepted | 2026-10-14 |
 | ADR-110 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
 | ADR-111 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
+| ADR-112 | Explicit model-free mechanical engineering profiles | accepted | 2026-10-14 |
 
 ---
 
@@ -3175,12 +3176,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-112 -->
+<!-- Next ID: ADR-113 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-112*
+*Next ADR ID: ADR-113*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3287,3 +3288,37 @@ original failure retained. Local codec/path checks are not proof of capture
 consistency, independent devices, production RPO/RTO or durable process recovery.
 Direct pin does not change the already selected runtime package version; lock
 metadata must be checked without upgrading the surrounding SDKs.
+
+## ADR-112 — Explicit model-free mechanical engineering profiles
+
+**Status:** accepted within the supervised implementation programme
+**Date:** 2026-10-14
+
+### Context
+A fixed mechanical build/check recipe requires no model call. Requiring a model
+evaluation for that job would confuse mechanical execution with evidence of LLM
+coding ability. Existing routine text conformance cannot qualify engineering.
+
+### Decision
+Add default-empty server-configured native profiles, excluded from serialization
+when empty. Pin company, canonical SHA of the exact original model catalog,
+catalog revision, closed workflow/profile identity, recipe and builder tool tuples.
+The initial native plan is exactly one author/verifier pair with seven engineering
+criteria and one matching edge. Its non-executing procedure and all registered
+ancestors retain zero model allowance, usage and delegation. Deny model tools and
+attempt kinds; retain current charter, source, owner approval, lease and budget
+gates. Ordinary LLM profiles keep their genuine current model evidence checks.
+No registration schema, provider profile enum or generic runner changes are needed.
+
+### Evidence and consequences
+Root's isolated package passed 9 restricted normal015 PG cases and 1,501 units;
+the combined gateway/native snapshot passed 1,514 units and strict types on 28
+files. After application, unchanged native PG cases passed 9/26.94s. Independent
+review verified all eight native source hashes and rejected an unselected
+conflicting tuple. These are admission checks, not engineering acceptance.
+Existing immutable registration rejected a test's attempted quota alteration;
+the corrected test preserves that safeguard and a genuine publicly registered
+positive ancestor separately demonstrates native denial. New private CSV work
+still requires actual module regression, patch, independent process/protected
+proof and recomputed acceptance. No live model quality, ARM64 or release claim
+follows from these profiles. See NATIVE_ENGINEERING_PROFILE_PLAN.md.

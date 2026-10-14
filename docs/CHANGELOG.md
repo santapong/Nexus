@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Explicit native mechanical engineering admission
+
+### Added
+- Closed opt-in engineering author/verifier profiles bind exact catalog/workflow/
+  tool/recipe identities. Initial plans and actual ancestry have zero model quota;
+  model requests are denied and current charter/source/approval/budget gates retained.
+- Default catalog serialization and ordinary model-profile eligibility are preserved.
+  Existing work registrations and generic builder runtime remain unchanged.
+
+### Fixed
+- Model selection preserves coexistence with full-registry-pinned native profiles;
+  full configuration validation still precedes the derived model view (ERROR-077).
+
+### Validation
+- Isolated 1,501 units and 9 restricted PG cases; combined gateway/native 1,514
+  units/48.97s and strict28/Ruff/format; active unchanged native9PG/26.94s.
+- Independent native source/tuple review found no actionable issue in its bounded
+  scope. Engineering acceptance, actual CSV patch and release activation remain open.
+- Combined review closed the unchanged coexistence probe and malformed-tuple
+  denial2/7.19s, with3unchanged gatewayPG/41.21s. Amended coherent1,516units/35.14s
+  and strict/Ruff/format on the2amended files pass; earlier checks are retained.
+
+**Authored by:** Codex with independent native profile review
+**PR:** not published
+
 ## [2026-10-14] — Native engineering admission plan and decision index
 
 ### Added

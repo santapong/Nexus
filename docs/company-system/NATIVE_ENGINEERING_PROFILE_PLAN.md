@@ -1,6 +1,7 @@
 # Explicit model-free engineering admission
 
-**Date:** 2026-10-14. **State:** proposed implementation; no admission or execution activated.
+**Date:** 2026-10-14. **State:** implemented opt-in; private engineering job not activated.
+Qualification is recorded in NATIVE_ENGINEERING_PROFILE_CHECKPOINT_2026-10-14.md.
 
 Task: admit owner-approved mechanical engineering and independent verification
 through explicit server profiles, without manufacturing model health or quality.

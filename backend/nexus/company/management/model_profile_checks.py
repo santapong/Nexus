@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from nexus.company.management.model_observations import effective_model_registration
+from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plans import ChildAllocation
 from nexus.company.management.transactions import ManagementDeniedError
 
@@ -17,6 +18,8 @@ def validate_model_profile(
     catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
 ) -> None:
     """Recheck explicit current evidence without renewing any registration or allowance."""
+    if native_execution_profile(catalog, child) is not None:
+        return
     binding = child.binding
     if (
         binding.model_registry_version != catalog.models.revision

@@ -47,6 +47,12 @@ from nexus.company.management.model_observations import (
     validate_model_observations,
 )
 from nexus.company.management.model_profile_checks import validate_model_profile
+from nexus.company.management.native_execution_profiles import (
+    NativeExecutionProfile,
+    require_native_action,
+    require_native_plan,
+    validate_native_profiles,
+)
 from nexus.company.management.plans import ChildAllocation, PlanPayload
 from nexus.company.management.transactions import ManagementDeniedError
 from nexus.core.llm.company_registry import ModelRegistry, Profile
@@ -85,11 +91,15 @@ class PlanAdmissionCatalog(ManagementContract):
     model_observations: tuple[ModelEligibilityObservation, ...] = Field(
         default=(), max_length=32, exclude_if=lambda value: not value
     )
+    native_profiles: tuple[NativeExecutionProfile, ...] = Field(
+        default=(), max_length=2, exclude_if=lambda value: not value
+    )
 
     @model_validator(mode="after")
     def exact_catalog(self) -> Self:
         require_company(self.company_id, self.models, *(row.resource for row in self.resources))
         validate_model_observations(self.models, self.model_observations)
+        validate_native_profiles(self.models, self.native_profiles)
         if len({row.tool for row in self.tools}) != len(self.tools):
             raise ValueError("One exact configured tool version per admission symbol is required")
         if len({row.symbol for row in self.resources}) != len(self.resources):
@@ -238,6 +248,7 @@ async def validate_plan(
     # This >50-line traversal keeps the complete approved DAG and final TTL check in one flow.
     if payload.company_id != scope.company_id or catalog.company_id != scope.company_id:
         raise ManagementDeniedError("Plan admission company is unavailable")
+    require_native_plan(catalog, payload)
     mandate = await current_mandate(session, scope, payload.mandate)
     if (
         mandate.mandate.owner_id != control.owner_id
@@ -340,6 +351,8 @@ def validate_plan_action(
     now: datetime,
 ) -> None:
     """Current charter/server tuples narrow actual effects alongside exact M1 approval."""
+    # Keep the >50-line native/model/tool narrowing together so none skips the exact ABI.
+    require_native_action(catalog, child, proposal, kind)
     if proposal.tool == "model.request.v1":
         if (
             kind != "model_requests"
@@ -360,6 +373,8 @@ def validate_plan_action(
                     "model_observations": tuple(
                         row for row in catalog.model_observations if row.registry_id == model_id
                     ),
+                    # The original native tuple was checked above; this view selects a model.
+                    "native_profiles": (),
                 }
             ),
             child,
