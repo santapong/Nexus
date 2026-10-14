@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Public cancellation preserves native enqueue history
+
+### Validation
+- Actual1PG/9.54s public app-role DBOSClient cancel-only clears queue and retains
+  immutable inputs/remaining ABI; exact generic-ABI replay denial conserves prior
+  decision/positiveHELD0.01/null/native mapping/counters/effects.
+- Exported actual proof before normal teardown; no worker/HTTP/statusSQL rewrite
+  or refund. This does not exercise the targeted status helper; its canonical
+  terminal-row boundary remains separate pure red/green proof.
+
+**Authored by:** Codex and supervised recovery agent; independent probe review
+**PR:** not published
+
 ## [2026-10-15] — Bounded read-only contained parent provider
 
 ### Added
