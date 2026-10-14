@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bounded read-only contained parent provider
+
+### Added
+- NEW8 typed contracts/provider/kernel/query tests validate exact current scope
+  identity, delegation/controllers/caps and actual finite monotonic unit deadline
+  through fixed bounded read-only busctl and no-follow kernel observations.
+- V2 execution/fullmethod/observer/sidecar/process activation remains disabled.
+
+### Validation
+- Root106focused/1.37s/types/Ruffformat8 and coherent2,138unit/22.53s pass.
+  Fake-query/ordinaryFD fixtures and unlimited init.scope compatibility are not
+  actual finite-parent admission. A closed finite-scope packet is being prepared.
+- Threaded filesystem late-return/unreaped query uncertainty is explicit; no
+  sandbox/DB/provider/Pi execution or full descendant containment claim.
+
+**Authored by:** Codex and supervised engineering agent
+**PR:** not published
+
 ## [2026-10-15] — Targeted notification active queue-state gate
 
 ### Fixed
