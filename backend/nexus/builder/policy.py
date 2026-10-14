@@ -54,10 +54,13 @@ class BuilderToolPolicy(BuilderValue):
     runtime_inputs: NodeRuntimeInputs | None = Field(default=None, exclude_if=absent)
     runtime_recipe: RuntimeRecipe = Field(default=RUNTIME_V1, exclude_if=is_legacy_runtime)
     runtime_method_sha256: Digest | None = Field(default=None, exclude_if=absent)
+    full_execution_method_sha256: Digest | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def exact_policy(self) -> Self:
         require_runtime_method(self.runtime_recipe, self.runtime_method_sha256)
+        if self.runtime_recipe == RUNTIME_V1 and self.full_execution_method_sha256 is not None:
+            raise ValueError("Legacy builder policy cannot attach a contained execution method")
         reference = self.image.split("@", 1)[0]
         if "/" not in reference:
             raise ValueError("Builder image needs a qualified registry and digest")

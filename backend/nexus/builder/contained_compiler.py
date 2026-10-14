@@ -25,6 +25,7 @@ def _rendering_views(
             update={
                 "runtime_recipe": RUNTIME_V1,
                 "runtime_method_sha256": None,
+                "full_execution_method_sha256": None,
             }
         ).model_dump()
     )

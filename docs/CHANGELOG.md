@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Prepare explicit complete runtime policy identity
+
+### Added
+- Optional full execution-method digest is excluded when absent and forbidden on
+  v1. Explicit v2 digest binds the complete original policy/spec/action hash.
+- Internal rendering views clear it only on their validated v1 descriptions.
+
+### Validation
+- Tests-first red,31focused including existing goldens, strict/Ruff3 and coherent
+  2,372unit/22.52s pass; independent hash/source review.
+- No full runtime digest is issued and all v2 execution remains denied.
+
+**Authored by:** Codex; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Qualify actual SDK rejected and uncertain outcomes
 
 ### Validation
