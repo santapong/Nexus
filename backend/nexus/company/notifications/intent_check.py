@@ -4,7 +4,6 @@ from datetime import datetime
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.access import VerifiedIdentity
@@ -14,13 +13,14 @@ from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.generated_artifact_scope import action_expiry
 from nexus.company.notifications.contracts import NotificationDraft
 from nexus.company.notifications.dispatch_models import NotificationDispatchRow
+from nexus.company.notifications.dispatch_slots import reserve_notification_slot
 from nexus.company.notifications.dispatch_support import (
     current_dispatch_draft,
     dispatch_scope,
     require_dispatch_time,
 )
+from nexus.company.notifications.dispatch_windows import require_dispatch_window
 from nexus.company.notifications.draft_store import NotificationDraftStore
-from nexus.company.notifications.ledger_rules import stable_idempotency_key
 from nexus.company.notifications.native_facts import NotificationUnavailableError
 from nexus.company.notifications.proposals import NotificationProposal
 from nexus.execution.runtime_contracts import ExecutionLease
@@ -90,40 +90,8 @@ class NotificationIntentCheck:
         self, session: AsyncSession, work: ExecutionWork, action: JournalAction, now: datetime
     ) -> None:
         assert self.draft is not None
-        self.day = now.astimezone(ZoneInfo("Asia/Bangkok")).date()
-        used = await session.scalar(
-            select(func.count())
-            .select_from(NotificationDispatchRow)
-            .where(
-                NotificationDispatchRow.company_id == work.company_id,
-                NotificationDispatchRow.kind == "routine",
-                NotificationDispatchRow.bangkok_day == self.day,
-            )
-        )
-        if used is None or used >= self.drafts.policy.routine_per_day:
-            raise NotificationUnavailableError("Owner notification daily cap is exhausted")
-        session.add(
-            NotificationDispatchRow(
-                company_id=work.company_id,
-                draft_id=self.draft.draft_id,
-                action_id=action.id,
-                task_id=work.task_id,
-                trace_id=work.trace_id,
-                run_id=work.run_id,
-                intent_fence=work.fence,
-                attempt_kind="tool_attempts",
-                proposal_sha256=action.proposal_hash,
-                registration_sha256=work.registration_hash,
-                payload_sha256=self.draft.payload_sha256,
-                recipient_policy_sha256=self.draft.recipient_policy.sha256,
-                idempotency_key=stable_idempotency_key(work.company_id, self.draft.draft_id),
-                kind="routine",
-                bangkok_day=self.day,
-                issued_at=now,
-                issued_by=self.identity.principal_id,
-                operation_id=action.id,
-                audit_trace_id=work.trace_id,
-            )
+        self.day = await reserve_notification_slot(
+            session, work, action, self.draft, self.drafts.policy, self.identity, now
         )
         self.validate_time(now)
 
@@ -131,6 +99,7 @@ class NotificationIntentCheck:
         if self.draft is None or self.day != now.astimezone(ZoneInfo("Asia/Bangkok")).date():
             raise NotificationUnavailableError("Native notification issuance day changed")
         self.drafts.recipients.require_current(self.draft.recipient_policy, now)
+        require_dispatch_window(self.draft, self.drafts.policy, now)
         require_dispatch_time(self.draft, self.lease, now)
         if any(value <= now for value in self.deadlines):
             raise NotificationUnavailableError("Native notification target access expired")

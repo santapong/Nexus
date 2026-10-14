@@ -237,6 +237,9 @@ jobs:
           - suite: owner-notification-inbox-api
             database: nexus_company_test_notifications
             tests: test_company_notification_inbox_api.py test_company_notification_inbox_auth.py test_company_notification_inbox_observations.py test_company_notification_inbox_obsolete.py test_company_notification_inbox_privacy.py test_company_notification_inbox_anchor.py
+          - suite: owner-notification-digest-dispatch
+            database: nexus_company_test_notifications
+            tests: test_company_notification_digest_dispatch.py test_company_notification_digest_policy.py test_company_notification_digest_slots.py test_company_notification_digest_time.py test_company_notification_digest_unknown.py test_company_notification_digest_privacy.py
           - suite: current-model-observation-expiry
             database: nexus_company_test_notification_review
             tests: test_company_model_observation_expiry.py

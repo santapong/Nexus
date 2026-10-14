@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Permanent native digest dispatch quotas
+
+### Added
+- Daily/weekly sends retain exact native policy/kind/window pins and one permanent
+  company/kind/bucket slot, independently of routine daily cap and provider result.
+- Existing real M1 intent/final clock/pre-HTTP gates preserve current licensing,
+  attempts and held unknown billing; no new task/allowance/approval is created.
+
+### Validation
+- Worker40coherent checks9PG+31unit280.25s and2postcommitPG49.33s; Root3unchanged
+  expiry/privacyPG102.38s, coherent1443unit37.86s and strict15/Ruff/format pass.
+  Every provider operation is mocked, default transport disabled. Worker/timer/
+  live delivery and full NOTIFY01/release remain open.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Bounded Node baseline/post qualification
 
 ### Added
