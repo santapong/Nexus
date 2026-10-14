@@ -180,3 +180,24 @@ def test_closed_policy_and_actual_ordinary_source_constraints(
         tmp_path.chmod(0o755)
     with pytest.raises(ValueError):
         EngineeringProcessConfig.model_validate(values)
+
+
+@pytest.mark.parametrize("ttl", [True, 0, 1, 30, 60])
+def test_original_process_config_requires_default_exact_ten_seconds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ttl: object
+) -> None:
+    values = packet(tmp_path, monkeypatch)
+    with pytest.raises(ValueError):
+        EngineeringProcessConfig.model_validate({**values, "lease_ttl_seconds": ttl})
+
+
+def test_new_immediate_config_explicit_thirty_seconds_and_same_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    values = packet(tmp_path, monkeypatch)
+    database = "nexus_company_test_engineering_immediate_intent"
+    monkeypatch.setitem(PROCESS_ROOTS, database, tmp_path)
+    values.update(database=database, lease_ttl_seconds=30)
+    assert EngineeringProcessConfig.model_validate(values).lease_ttl_seconds == 30
+    with pytest.raises(ValueError):
+        EngineeringProcessConfig.model_validate({**values, "lease_ttl_seconds": 10})

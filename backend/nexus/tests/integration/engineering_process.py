@@ -88,6 +88,10 @@ async def main() -> None:
         "port": "55438",
     }
     config, command = load_config(root, url.database, args.workflow_id)
+    if url.database.startswith("nexus_company_test_engineering_immediate_"):
+        from nexus.tests.engineering_acquisition_observer import install_acquisition_observer
+
+        install_acquisition_observer(root)
     engine = create_async_engine(url, poolclass=NullPool)
     factory = async_sessionmaker(engine, expire_on_commit=False)
 

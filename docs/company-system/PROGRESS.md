@@ -599,3 +599,13 @@ cases/1.27s, strict/Ruff/format9 and combined1,922units/21.06s pass. Retained ma
 JSON/company boundary failures are corrected (ERROR-091). See the
 [checkpoint](NOTIFICATION_WORKER_GUARD_CHECKPOINT_2026-10-15.md).
 Actual bounded ticks/final PG rollback, real credential/email and activation remain open.
+
+### Checked 2026-10-15 — Immediate engineering acquisition restart
+
+Two actual workers restart the same workflow while the old lease is still live;
+the helper itself records24/22 true live-prior observations and real acquisition
+waits, then resumes unknown/current accepted evidence without a second effect.
+Tool1/model0/positive unknown billing and released capacity remain. Eight actual
+PG negatives and Root1,929unit/21.31s/strict12 pass. See the
+[checkpoint](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md).
+This closes the defined immediate fixture gate, not StockFlow, ARM64 or service recovery.

@@ -9,6 +9,14 @@ PROCESS_ROOTS = {
     )
     for phase in ("intent", "result", "receipt", "proof", "acceptance")
 }
+PROCESS_ROOTS.update(
+    {
+        f"nexus_company_test_engineering_immediate_{phase}": Path(
+            f"/tmp/nexus-engineering-immediate-{phase}-20261015-1"
+        )
+        for phase in ("intent", "receipt")
+    }
+)
 
 
 def require_process_root(database: str, root: Path, *, existing: bool) -> None:

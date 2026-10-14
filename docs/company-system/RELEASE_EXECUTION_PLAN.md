@@ -33,9 +33,10 @@ Retain all prepared process databases and protected backup pairs. The four known
 cases ran sequentially under reviewed unchanged code, exact pins and source>=180s
 before launch. Actual owned-container cleanup is separately scoped after the wave;
 there is no repeated process-wave claim. Fixture authority does not activate workers.
-Immediate automatic engineering restart is still open: the controllers wait for
-lease expiry, while the worker context currently reacquires once. A bounded current
-same-segment lease wait and genuine immediate-restart test are required.
+Immediate automatic engineering acquisition is now qualified separately by two
+actual cases with live old leases observed inside the restarted helper; see the
+2026-10-15 immediate restart checkpoint. The earlier five controllers' manual wait
+receipts remain historical and are not relabeled as this later proof.
 
 | Lane | Deliverable | Exit |
 | --- | --- | --- |

@@ -132,7 +132,7 @@ def compose_process_services(
         ),
         sources=ProcessSource(config, reader, freshness),
         worker_id=worker_id,
-        lease_ttl_seconds=10,
+        lease_ttl_seconds=config.lease_ttl_seconds,
         hook=hook,
     )
 

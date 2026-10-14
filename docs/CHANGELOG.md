@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bounded immediate engineering restart acquisition
+
+### Added
+- Engineering-specific same-dispatch acquisition wait retains current member,
+  sealed credential, fresh governance and exact issued basis within310s, without
+  effect retry, credential refresh or allowance/segment replacement.
+- Trusted test-only live-helper observations prove immediate restart before the
+  old30s lease expires; existing five fixture defaults remain10s.
+
+### Validation
+- Fourteen pure checks and8actualPG negatives/44.72s; two actual OS positives
+  observe24/22 live-helper windows and real waits, conserve one attempt/unknown cost,
+  issue0/1original containers and no second, return unknown/current acceptance.
+- Root1,929unit/21.31s/19existing warnings and strict/Ruff/format12files pass.
+  Full StockFlow/ARM64/provider/operations release evidence remains separate.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-15] — Optional sealed configuration guards at notification final clocks
 
 ### Added

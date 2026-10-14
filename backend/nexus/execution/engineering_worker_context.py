@@ -9,6 +9,7 @@ from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.plans import RunBinding
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.dbos_contracts import SegmentCommand
+from nexus.execution.engineering_lease_recovery import recover_engineering_lease
 from nexus.execution.engineering_worker_contracts import EngineeringPhase
 from nexus.execution.engineering_worker_identity import EngineeringCredentialSourceGuard
 from nexus.execution.engineering_worker_services import EngineeringWorkerServices
@@ -56,13 +57,7 @@ async def prepare_engineering_context(
     command.require_scope(scope)
     async with services.factory() as clock:
         credential.require_time(await db_now(clock))
-    lease = await services.runner.execution.recover_dispatched(
-        scope,
-        signed,
-        services.worker_id,
-        command.segment_id,
-        ttl_seconds=services.lease_ttl_seconds,
-    )
+    lease = await recover_engineering_lease(services, scope, credential, command)
     try:
         guard = EngineeringCredentialSourceGuard(
             services.sources.resolve(binding, spec, lease, signed), credential

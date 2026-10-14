@@ -17,6 +17,10 @@ the old lease is live remains unqualified. A bounded same-segment wait using cur
 authority and the admitted maximum lease lifetime is required before claiming
 automatic production crash recovery. It must never retry an already issued effect.
 
+Later2026-10-15: the new bounded helper and two separate immediate-start cases are
+qualified in ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md. This does not
+change the scope or original bytes of the five manually sequenced cases below.
+
 | Kill boundary | Observed recovery | Container calls |
 | --- | --- | --- |
 | Committed intent, before invocation | Original intent becomes unknown; no receipt/proof/acceptance; released capacity | 0 before and after restart |

@@ -1,7 +1,7 @@
 """Bounded process fixture inputs carry no permits, credentials or keys."""
 
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import Field, model_validator
@@ -44,10 +44,16 @@ class EngineeringProcessConfig(ValueContract):
     verifier_spec: BuilderExecutionSpec
     workflow_id: UUID
     command: SegmentCommand
+    lease_ttl_seconds: Literal[10, 30] = 10
 
     @model_validator(mode="after")
     def exact_reviewed_scope(self) -> Self:
         require_process_root(self.database, self.task_root, existing=True)
+        expected_ttl = (
+            30 if self.database.startswith("nexus_company_test_engineering_immediate_") else 10
+        )
+        if self.lease_ttl_seconds != expected_ttl:
+            raise ValueError("Engineering fixture lease TTL differs from reviewed case")
         if self.source_root != self.task_root / "harmless-engineering-repository":
             raise ValueError("Engineering process source root differs")
         if self.source_root.resolve() != self.source_root or not self.source_root.is_dir():
@@ -137,4 +143,7 @@ def process_config(
         command=command,
         database=database,
         task_root=task_root,
+        lease_ttl_seconds=30
+        if database.startswith("nexus_company_test_engineering_immediate_")
+        else 10,
     )
