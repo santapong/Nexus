@@ -44,7 +44,10 @@ from nexus.company.management.plan_support import (
 from nexus.company.management.plan_support import PlanSourceFreshness as ManagementArtifactFreshness
 from nexus.company.management.plans import RunBinding, VerificationIntent
 from nexus.company.management.revision_store import plan_record, require_current_governance
-from nexus.execution.native_profile_checks import require_native_ancestry
+from nexus.execution.native_profile_checks import (
+    require_native_ancestry,
+    require_notification_ancestry,
+)
 from nexus.execution.runtime_contracts import AttemptKind, ExecutionDeniedError
 from nexus.execution.runtime_models import EffectIntent, ExecutionWork
 from nexus.execution.runtime_support import registration_digest, snapshot
@@ -375,6 +378,7 @@ async def require_management_execution(
     )
     try:
         await require_native_ancestry(session, work, catalog, binding.child)
+        await require_notification_ancestry(session, control, work, catalog, binding.child)
         charters = await validate_plan(
             session, control, scope, identity, record.payload, catalog, freshness
         )

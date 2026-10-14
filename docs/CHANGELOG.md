@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Explicit model-free owner notification admission
+
+### Added
+- Separate exact owner notification profiles, one-sender plans and zero-model
+  ancestry; actual current owner is required at the runtime claim/intent boundary.
+- Existing public Catalog aliases/default bytes preserved after focused declaration
+  extraction. Ordinary LLM and engineering identity/permission checks remain.
+
+### Fixed
+- Validate copied quota literals before serialization can normalize them (ERROR-083).
+
+### Validation
+-43pure/1.44s, independent3coexistence/1.60s; actual11PG/26.90s plus1expiryPG/7.29s
+  are separate calls (12distinct cases). Generic owner intent/unknown billing only.
+-Root combined1614units/15.60s with19existing warnings; strict/Ruff/format13files.
+  No worker, credentials, native draft, transport or live notification activated.
+
+**Authored by:** Codex and supervised notification agent with independent probes
+**PR:** not published
+
 ## [2026-10-14] — Owner-bound PostgreSQL and DBOS matching recovery
 
 ### Added

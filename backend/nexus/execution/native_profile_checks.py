@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.company.management.plans import ChildAllocation
+from nexus.company.notifications.native_profile_checks import native_notification_profile
 from nexus.execution.runtime_contracts import ExecutionDeniedError
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.execution.runtime_support import registration_digest, snapshot
+from nexus.harness.journal_models import CompanyControl
 
 
 async def require_native_ancestry(
@@ -21,6 +23,26 @@ async def require_native_ancestry(
     """Read actual parents under the company mutex; names cannot replace registered quota."""
     if native_execution_profile(catalog, child) is None:
         return
+    await require_zero_model_ancestry(session, work)
+
+
+async def require_notification_ancestry(
+    session: AsyncSession,
+    control: CompanyControl,
+    work: ExecutionWork,
+    catalog: PlanAdmissionCatalog,
+    child: ChildAllocation,
+) -> None:
+    """Actual owner sender and immutable zero-model ancestors, without granting a permit."""
+    if native_notification_profile(catalog, child) is None:
+        return
+    if work.actor_id != control.owner_id:
+        raise ExecutionDeniedError("Native notification sender differs from the actual owner")
+    await require_zero_model_ancestry(session, work)
+
+
+async def require_zero_model_ancestry(session: AsyncSession, work: ExecutionWork) -> None:
+    """Check every actual immutable ancestor under the caller's company transaction."""
     current, visited = work, set[UUID]()
     while True:
         if current.task_id in visited or len(visited) >= 101:

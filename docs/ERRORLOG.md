@@ -74,6 +74,29 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-083 — JSON serialization normalized copied quota values before validation
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, unchanged raw-quota probes closed
+**Found by:** independent notification profile review
+**Affected files:** notifications/native_profile_checks.py, management/native_execution_profiles.py
+
+In pinned Pydantic2.13.4, a corrupted model_copy quota with model_requests=False
+serialized as integer0. JSON reconstruction alone admitted malformed metadata;
+float/string copies could produce serializer warnings instead of deliberate denial.
+Notification original36cases passed33/failed3, and Root's engineering child/root
+bool probes failed2/1.42s. Both native paths now validate actual raw AttemptQuota
+fields before any JSON dump. Notification43cases/1.44s and unchanged engineering
+probes pass; independent original-catalog coexistence3cases pass1.60s. Root's
+complete integration1614units/15.60s and strict/lint13files pass.
+
+This is exact typed-metadata validation, not demonstrated extra runtime allowance:
+actual immutable registered counters and quotas are separate and unchanged. Keep
+raw literal checks ahead of serializers; do not relax limits or default profiles.
+
+---
+
 ## ERROR-082 — Backup owner authorization used an independently supplied database
 
 **Date:** 2026-10-14

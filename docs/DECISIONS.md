@@ -124,6 +124,7 @@
 | ADR-111 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
 | ADR-112 | Explicit model-free mechanical engineering profiles | accepted | 2026-10-14 |
 | ADR-113 | Owner-bound same-source PostgreSQL/DBOS recovery qualification | accepted | 2026-10-14 |
+| ADR-114 | Explicit model-free owner notification admission | accepted | 2026-10-14 |
 
 ---
 
@@ -3177,12 +3178,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-114 -->
+<!-- Next ID: ADR-115 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-114*
+*Next ADR ID: ADR-115*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3349,3 +3350,30 @@ and byte-verified artifacts are preserved. These tests require a live unchanged
 source for authorization and comparison. Lost/changed-source or older-backup
 recovery, independent storage/key custody, production service RTO and OPS02 remain
 unqualified; they require a separate operator authority and operating design.
+
+## ADR-114 — Explicit model-free owner notification admission
+
+**Status:** accepted as an opt-in admission foundation
+**Date:** 2026-10-14
+
+A fixed owner notification send requires no LLM model health or evaluation.
+Add a separate default-empty notification profile tuple pinned to company, exact
+original registry digest/revision, fixed workflow/tool and configured target.
+Keep the engineering pair closed and ordinary LLM evidence gates unchanged.
+Validate all original tuples before selection; derived model views exclude
+unrelated tuples only after validation. Initial notification plans contain one
+sender/no verifier edge and zero models through the actual immutable ancestry.
+Actual execution additionally requires work.actor_id equal current control.owner_id.
+Current member/source/charter/exact approval/lease/budget/recipient/digest checks
+remain; standing notification sends are not added.
+
+Move Catalog/NamedResource declarations into a focused module with old public
+imports reexported and default serialization preserved. This requires no migration,
+portable permit or provider enum change. Raw quota values are checked before JSON
+serialization to prevent copied bool/float/string normalization (ERROR-083).
+
+Forty-three pure cases, independent coexistence probes and twelve distinct actual
+normal015PG cases across11+1calls support admission. Root's full integrated1614
+units/15.60s and strict13files pass. This is generic M1 notification intent/unknown
+conservation, not native draft/POST/GET/delivery, real credential provisioning or
+durable worker activation. Those remain separate implementation and release gates.

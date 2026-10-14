@@ -20,6 +20,7 @@ from nexus.company.management.plan_support import PlanAdmissionCatalog, validate
 from nexus.company.management.plans import PlanPayload
 from nexus.company.notifications.contracts import NotificationDraft
 from nexus.company.notifications.native_facts import NotificationUnavailableError
+from nexus.company.notifications.native_profile_checks import native_notification_profile
 from nexus.execution.runtime_support import db_now
 
 
@@ -79,6 +80,8 @@ def profile_deadlines(
     deadlines = []
     for child in payload.children:
         validate_plan_profile(catalog, child, now)
+        if native_notification_profile(catalog, child) is not None:
+            continue
         available = [
             min(model.health.expires_at, evaluation.expires_at)
             for original in catalog.models.models

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Protocol, Self
+from typing import Protocol
 from uuid import UUID
 
-from pydantic import Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,10 +26,6 @@ from nexus.company.directory_models import DirectoryMembership
 from nexus.company.management.base import (
     SHA256,
     ManagementContract,
-    Name,
-    Symbol,
-    ValueContract,
-    require_company,
 )
 from nexus.company.management.control_support import (
     current_charter,
@@ -42,23 +37,21 @@ from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.governance import CharterRevision
 from nexus.company.management.governance_models import ManagementGoalHead
 from nexus.company.management.lifecycle import PlanRevisionRef
-from nexus.company.management.model_observations import (
-    ModelEligibilityObservation,
-    validate_model_observations,
-)
 from nexus.company.management.model_profile_checks import validate_model_profile
 from nexus.company.management.native_execution_profiles import (
-    NativeExecutionProfile,
     require_native_action,
     require_native_plan,
-    validate_native_profiles,
 )
+from nexus.company.management.plan_catalog import NamedPlanResource as NamedPlanResource
+from nexus.company.management.plan_catalog import PlanAdmissionCatalog as PlanAdmissionCatalog
 from nexus.company.management.plans import ChildAllocation, PlanPayload
 from nexus.company.management.transactions import ManagementDeniedError
-from nexus.core.llm.company_registry import ModelRegistry, Profile
+from nexus.company.notifications.native_profile_checks import (
+    require_notification_action,
+    require_notification_plan,
+)
 from nexus.execution.runtime_contracts import AttemptKind
 from nexus.harness.journal_models import CompanyControl
-from nexus.harness.standing_contracts import ToolPermission
 
 
 class PlanSourceFreshness(Protocol):
@@ -71,40 +64,6 @@ class PlanSourceFreshness(Protocol):
         references: tuple[ArtifactRevisionRef, ...],
         now: datetime,
     ) -> None: ...
-
-
-class NamedPlanResource(ValueContract):
-    """A server-owned exact symbol mapping; user strings cannot select arbitrary resources."""
-
-    symbol: Name
-    resource: ResourceRef
-
-
-class PlanAdmissionCatalog(ManagementContract):
-    """Constructor configuration, no default or anonymous eligibility affirmation."""
-
-    tools: tuple[ToolPermission, ...] = Field(default=(), max_length=32)
-    resources: tuple[NamedPlanResource, ...] = Field(default=(), max_length=32)
-    models: ModelRegistry
-    admitted_profiles: frozenset[Profile]
-    check_recipes: frozenset[Symbol]
-    model_observations: tuple[ModelEligibilityObservation, ...] = Field(
-        default=(), max_length=32, exclude_if=lambda value: not value
-    )
-    native_profiles: tuple[NativeExecutionProfile, ...] = Field(
-        default=(), max_length=2, exclude_if=lambda value: not value
-    )
-
-    @model_validator(mode="after")
-    def exact_catalog(self) -> Self:
-        require_company(self.company_id, self.models, *(row.resource for row in self.resources))
-        validate_model_observations(self.models, self.model_observations)
-        validate_native_profiles(self.models, self.native_profiles)
-        if len({row.tool for row in self.tools}) != len(self.tools):
-            raise ValueError("One exact configured tool version per admission symbol is required")
-        if len({row.symbol for row in self.resources}) != len(self.resources):
-            raise ValueError("Admission resources must have unique exact symbols")
-        return self
 
 
 class CurrentPlanBinding(ManagementContract):
@@ -249,6 +208,7 @@ async def validate_plan(
     if payload.company_id != scope.company_id or catalog.company_id != scope.company_id:
         raise ManagementDeniedError("Plan admission company is unavailable")
     require_native_plan(catalog, payload)
+    require_notification_plan(catalog, payload)
     mandate = await current_mandate(session, scope, payload.mandate)
     if (
         mandate.mandate.owner_id != control.owner_id
@@ -353,6 +313,7 @@ def validate_plan_action(
     """Current charter/server tuples narrow actual effects alongside exact M1 approval."""
     # Keep the >50-line native/model/tool narrowing together so none skips the exact ABI.
     require_native_action(catalog, child, proposal, kind)
+    require_notification_action(catalog, child, proposal, kind)
     if proposal.tool == "model.request.v1":
         if (
             kind != "model_requests"
@@ -375,6 +336,7 @@ def validate_plan_action(
                     ),
                     # The original native tuple was checked above; this view selects a model.
                     "native_profiles": (),
+                    "notification_profiles": (),
                 }
             ),
             child,

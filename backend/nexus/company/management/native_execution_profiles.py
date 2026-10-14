@@ -12,7 +12,7 @@ from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.plans import ChildAllocation, PlanPayload
 from nexus.company.management.transactions import ManagementDeniedError
 from nexus.core.llm.company_registry import ModelRegistry
-from nexus.execution.runtime_contracts import AttemptKind
+from nexus.execution.runtime_contracts import AttemptKind, AttemptQuota
 from nexus.harness.standing_contracts import ToolPermission
 
 if TYPE_CHECKING:
@@ -57,6 +57,13 @@ class NativeExecutionProfile(ManagementContract):
         return self
 
 
+def require_exact_native_quota(quota: AttemptQuota) -> None:
+    """Validate actual raw counts before JSON serialization can normalize copied values."""
+    AttemptQuota.model_validate(
+        {field: getattr(quota, field) for field in AttemptQuota.model_fields}
+    )
+
+
 def validate_native_profiles(
     registry: ModelRegistry, profiles: tuple[NativeExecutionProfile, ...]
 ) -> None:
@@ -91,6 +98,7 @@ def native_execution_profile(
     )
     if selected is None:
         return None
+    require_exact_native_quota(child.quota)
     child = ChildAllocation.model_validate_json(child.model_dump_json())
     binding = child.binding
     permissions = {(row.tool, row.tool_version, row.resource) for row in catalog.tools}
@@ -113,6 +121,7 @@ def require_native_plan(catalog: PlanAdmissionCatalog, payload: PlanPayload) -> 
     selected = tuple(native_execution_profile(catalog, row) for row in payload.children)
     if not any(selected):
         return
+    require_exact_native_quota(payload.procedure.quota)
     if (
         len(selected) != 2
         or any(row is None for row in selected)

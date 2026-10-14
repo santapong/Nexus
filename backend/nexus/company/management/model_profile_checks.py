@@ -9,6 +9,7 @@ from nexus.company.management.model_observations import effective_model_registra
 from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plans import ChildAllocation
 from nexus.company.management.transactions import ManagementDeniedError
+from nexus.company.notifications.native_profile_checks import native_notification_profile
 
 if TYPE_CHECKING:
     from nexus.company.management.plan_support import PlanAdmissionCatalog
@@ -18,7 +19,9 @@ def validate_model_profile(
     catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
 ) -> None:
     """Recheck explicit current evidence without renewing any registration or allowance."""
-    if native_execution_profile(catalog, child) is not None:
+    engineering = native_execution_profile(catalog, child)
+    notification = native_notification_profile(catalog, child)
+    if engineering is not None or notification is not None:
         return
     binding = child.binding
     if (
