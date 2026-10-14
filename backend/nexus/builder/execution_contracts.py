@@ -8,6 +8,7 @@ from typing import Literal, Self
 
 from pydantic import AwareDatetime, Field, model_validator
 
+from nexus.builder.contained_evidence_types import ContainmentRef
 from nexus.builder.contracts import (
     BuilderArtifact,
     BuilderCommandReceipt,
@@ -17,7 +18,12 @@ from nexus.builder.contracts import (
 )
 from nexus.builder.node_contracts import NodeRuntimeInputs, absent
 from nexus.builder.policy import BuilderToolPolicy
-from nexus.builder.runtime_identity import RUNTIME_V1, RuntimeRecipe, require_runtime_method
+from nexus.builder.runtime_identity import (
+    RUNTIME_V1,
+    RUNTIME_V2,
+    RuntimeRecipe,
+    require_runtime_method,
+)
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.management.canonical import canonical_sha256
@@ -109,9 +115,27 @@ class BuilderRunResult(BuilderValue):
     recorded_at: AwareDatetime
     elapsed_millis: int = Field(ge=0, strict=True)
     limitations: tuple[str, ...] = Field(default=(), max_length=16)
+    containment: ContainmentRef | None = Field(default=None, exclude_if=absent)
 
     @model_validator(mode="after")
     def truthful_success(self) -> Self:
+        if self.containment is not None:
+            identity = self.containment.identity
+            base = self.model_copy(update={"containment": None})
+            if self.spec.runtime_recipe != RUNTIME_V2 or (
+                identity.company_id,
+                identity.action_id,
+                identity.original_intent_fence,
+                identity.result_base_sha256,
+            ) != (
+                self.spec.job.company_id,
+                self.spec.job.action_id,
+                self.intent_fence,
+                canonical_sha256(base),
+            ):
+                raise ValueError("Builder containment reference differs from original result")
+        elif self.spec.runtime_recipe == RUNTIME_V2 and self.outcome != "outcome_unknown":
+            raise ValueError("Builder runtime v2 terminal result requires containment evidence")
         if len(self.commands) > len(self.spec.job.commands):
             raise ValueError("Builder result contains undeclared commands")
         for values in (self.artifacts, self.logs):

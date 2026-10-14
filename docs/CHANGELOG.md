@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Immutable contained process evidence and result binding
+
+### Added
+- Bounded observer/actual read-only IO retain current mount/PID/start/tree/caps
+  and captured/retired identities; private sidecars use original-fence write-once
+  identity with root/pending byte checks and no-replace publication.
+- Optional result containment ref preserves v1 wire defaults and binds actual
+  sidecar rereads to base/full result hashes, spec/proposal and original issuance.
+
+### Validation
+- Root89focus/strict10/coherent2,331unit; amended result/sample gate5focused,
+  strict/Ruff5 and coherent2,337unit/22.25s pass. Independent hash/source review.
+- Original candidate failures retained. Runtime v2 remains disabled; actual jobs,
+  publisher/loader/process integration and ARM64 remain unqualified.
+
+**Authored by:** Codex and supervised engineering agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Retain first actual durable notification SDK outcome
 
 ### Validation
