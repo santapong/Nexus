@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Current release-gate reconciliation
+
+### Documentation
+- Refresh execution ownership, progress and evidence index after local history,
+  atomic queue/cancellation and read-only parent-provider qualification.
+- Retain full StockFlow/ARM64/provider/owner/email/private recovery/soak requirements;
+  finite-parent and postqueue expiry packets remain preparation, not execution.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Public cancellation preserves native enqueue history
 
 ### Validation

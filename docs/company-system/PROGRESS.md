@@ -680,3 +680,16 @@ future knownclaim execute assertion. Root16pure/1.19s, strict/Ruff/format8 pass;
 no actual pair/database rerun. Existing failures/replay/proof/unknown cost and
 outer containment gap retain their original scope. See [current release evidence](RELEASE_GATES_CURRENT.md)
 for remaining full StockFlow, ARM64, model, owner/email and recovery/deployment gates.
+
+
+### Checked 2026-10-15 — Queue conservation and parent provider
+
+Local862d3bc includes targeted active queue-state correction, B1read-only typed
+parent provider and actual public cancellation conservation1PG/9.54s. Rootlatest
+coherent2,138unit/22.53s passes. Publiccancel clearsqueue; replaydenial isgeneric
+ABI beforetargetedstatusguard and preserves priorpositiveHELD/null/nativehistory.
+The finite actual parent20sprobe and postqueue real source/credential/approval
+expiry3cases are being prepared under closed packets; neither has executed yet.
+Runtimev2 remains description-only/disabled forjobs. Current evidence/release
+index is refreshed; full StockFlow/ARM64/provider/owner/email/operations gates stay
+required.

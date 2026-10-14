@@ -14,18 +14,18 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
-The initial foundation lanes below are historical. Current local headbe252d6 has integrated Brain/management, native engineering
-acceptance/reconciliation, immediate same-dispatch lease recovery and sealed
-notification staging/authorization boundaries. Root's latest coherent unit gate
-is1,950passed/21.75s, plus one actual notification staging/replay PG case. Actual
-model, business and operations gates remain separate.
+The initial foundation lanes below are historical. Current local head862d3bc has
+integrated Brain/management, native engineering acceptance/recovery, notification
+staging/history/atomic SQL enqueue and a bounded read-only parent provider. Root's
+latest coherent gate is2,138unit/22.53s; actual full business/provider/ARM64 and
+operational release gates remain separate.
 
 | Owner | Active deliverable | Required next evidence |
 | --- | --- | --- |
-| engineering_resume | Public synthetic native CSV PostgreSQL fixture in a persistent source snapshot | Two jobs/protected acceptance observed; full test failed at known-replay fixture, cleanup-mode and outer-containment gates remain open |
-| recovery_resume | Independent review of notification tick source and actual test scope | Initial tick reviewed; review five-case matrix and plan durable approval-consumption/enqueue ABI; no database mutation by reviewer |
-| notification_profiles | Bounded read/preparation tick implementation | Initial positive/replay passed; five-case temporal/concurrent/page matrix is being frozen; no autoapproval, transport or new allowance |
-| Root | Shared integration, independent review, evidence and release gates | Current scoped source/tests, held owner/email UAT and actual M4–M6 operational/business qualification |
+| engineering_resume | Finite read-only parent qualification, then contained runtime execution ABI | Actual current scope/kernel/deadline proof; payload/conmon/sidecar/process integration remains disabled |
+| recovery_resume | Actual postqueue source/credential/approval expiry matrix | Real SQL happened before captured expiry and complete transaction rollback; durable notification dispatch follows |
+| notification_profiles | Independent review of next runtime/expiry packets | Exact temporal nomination, current authority, evidence scope and no duplicate effects |
+| Root | Shared integration, source/evidence reconciliation and release gates | Full StockFlow, owner UAT/email, models, ARM64/private operations and supervised release |
 
 The first OS intent case completed after source expiry and proves historical
 unknown-state conservation only. The saved-result case recovered current protected
