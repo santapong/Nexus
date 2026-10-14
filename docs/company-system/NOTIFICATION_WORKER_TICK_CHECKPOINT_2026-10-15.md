@@ -57,3 +57,22 @@ The initial14 source hashes and first-PG receipt stay unchanged. These are publi
 synthetic read/preparation proofs only. Digest composition, repeated-restart
 fairness, licensed obsolete combinations, durable dispatch/process recovery,
 production credential/timer/email and operational release remain separate.
+
+
+## Actual protected digest composition — 2026-10-15
+
+Frozen NEW3 tests/support SHAeed40358ba422f909c7f029b8a637765f2ec04bda4cbe7ab
+28a2fbca3134a525 qualify an actual owner-saved operating snapshot with a real
+registered engineering author/verifier edge and nonempty protected baseline source
+references. Empty models and unapproved actions remain; the snapshot does not
+assert accepted engineering work, receipts or business completion.
+
+Both actual normal015 restricted-PG cases passed2/12.55s, no correction/retry. At
+2026-10-14T19:17:07Z the weekly bucket weekly:2026-10-12 was due: one native digest
+wake/draft/link/pending sender action, exact report/registration/policy/source/
+recipient pins, then unchanged immediate replay and new-worker restart. At
+19:17:15Z (02:17 Bangkok) daily was not due: quiet/no occurrence/draft/action.
+That daily case is honest no-due proof; positive daily remains pending until a
+real eligible clock. Root strict3/statichash checks pass; all earlier sources
+unchanged. Digest expiry/stale report/old-registration retention/rollover and
+transport/durable operation remain separate gates.

@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Protected native worker digest composition
+
+### Validation
+- NEW3 tests/support use a real public owner-saved snapshot, registered engineering
+  author/verifier edge and nonempty protected baseline references with empty models.
+- Actual2PG/12.55s pass: current weekly bucket stages1wake/draft/pending action then
+  repeat/restart quiet; daily before09:00 is quiet/no-due, positive daily still open.
+- Strict/Ruff/format3 pass; no acceptance/business/send/timer/credential issuer claim.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-15] — Native notification tick composition matrix
 
 ### Validation

@@ -660,3 +660,14 @@ max_candidates1 through one restart/pagecycle1. Initial14 source files unchanged
 Digest/durable dispatch/production credentials/email remain open. Phase3 targeted
 atomic consumption+hold+native dispatch+DBOS enqueue is now tests-first NEWmodule
 implementation; explicit owner decision remains an earlier immutable record.
+
+
+### Checked 2026-10-15 — Protected worker digest current bucket
+
+Frozen NEW3 actual2PG/12.55s pass with public owner-saved report, real registered
+engineering edge and nonempty protected baseline source closure. Actual weekly
+weekly:2026-10-12 stages one native occurrence/draft/action then repeat/restart
+quiet; actual daily02:17Bangkok is no-due, not positive daily proof. Empty models,
+zero holds/effects/attempts/counters and absent approvals remain. No accepted
+report output or business completion. Digest temporal/stale-retention/rollover
+and durable send remain separate.
