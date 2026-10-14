@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Explicit licensed obsolete digest history
+
+### Fixed
+- Separate supplied-session historical reference/provenance/freshness qualification
+  for obsolete metadata retains current READ/policy/head/deadline checks (ERROR-095).
+  Ordinary current artifact/native/publication/acceptance methods remain unchanged.
+
+### Validation
+- Unchanged original stale-source case1PG/5.47s now acknowledges licensed obsolete.
+  Direct current rejection/history acceptance/READ/tamper/finalexpiry7PG/32.77s pass.
+- Root6NEWpure/0.86s, strict6 and combined2,040unit/21.60s pass. Timestamp crossing
+  asserted but exact values not exported; mixed-derived/noTTL/quarantine/retention
+  and full operational release remain separate.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-15] — Description-only contained runtime v2 contract
 
 ### Added

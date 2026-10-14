@@ -74,6 +74,37 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-095 — Obsolete digest licensing used current-only historical references
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed for observed r1/r2 obsolete metadata; current READ and history guards qualified
+**Found by:** actual public source CAS/stale digest case
+**Affected files:** notifications/qualified_obsolete.py and artifact/freshness qualification
+
+Public source revision CAS accepted r2. The immutable owner report remained
+original, current data differed, and no current/new digest was emitted. Consuming
+the old wake correctly recognized obsolete state, then rejected saved r1 artifact
+references through the current-only artifact path. Actual fourth case failed;
+three separate loss cases passed14.16s. No obsolete acknowledgement/cursor proof.
+
+The supplied-session artifact-reference method and freshness reference_sources
+both demand current contributor revisions; body-free obsolete qualification needs
+an explicit historical route. Current read/publication/acceptance remains current
+only. Proposed correction preserves immutable bytes/complete lineage, current
+READ/source policy/head availability/qualifiedTTL/recipient/final time and returns
+metadata only. No general history flag, nested lock, old source refresh or new
+report/permit/allowance is introduced. Original stale test remains unchanged.
+
+Evidence: worker-digest-loss-stale-original-receipt.json, original corrected log,
+OBSOLETE_DIGEST_HISTORICAL_REFERENCE_PLAN.md. The exact unchanged stale test now
+passes1PG/5.47s; direct current/history/READ/tamper/finalexpiry7PG/32.77s pass.
+Current-only methods remain unchanged. Root6NEWpure/0.86s/types6 and combined
+2,040unit/21.60s pass. Mixed derivation/noTTL/quarantine and retention remain separate.
+A separate first fixture failure
+expected BrainDeniedError but actual required sender admission denied with exact
+ExecutionDeniedError; its corrected test now proves ledger conservation.
+
 ## ERROR-094 — Delegated outer scope did not contain Podman payloads
 
 **Date:** 2026-10-15 (Asia/Bangkok)

@@ -15,10 +15,10 @@ from nexus.company.brain.native_fact_inputs import (
     source_references,
     work_resources,
 )
-from nexus.company.brain.native_fact_provenance import qualify_native_inputs
 from nexus.company.brain.native_fact_resolution import action_resource
 from nexus.company.brain.native_fact_services import NativeFactServices
 from nexus.company.brain.native_fact_wake import event_selector
+from nexus.company.brain.obsolete_native_provenance import qualify_obsolete_native_inputs
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.management.operating_report_inputs import author_input_references
 from nexus.company.management.operating_report_store import stored_report
@@ -99,7 +99,7 @@ async def qualify_obsolete_event_locked(
             references = _unique(
                 (*references, *await receipt_references(session, scope, event.task_id))
             )
-    _, deadlines = await qualify_native_inputs(
+    _, deadlines = await qualify_obsolete_native_inputs(
         session, control, scope, identity, services, resources, references
     )
     return tuple(sorted({*deadlines, *extra_deadlines}))

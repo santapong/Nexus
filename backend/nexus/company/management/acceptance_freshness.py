@@ -19,6 +19,7 @@ from nexus.company.brain.source_registry import SourcePolicy
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.management.acceptance_errors import AcceptanceDeniedError, require_acceptance
 from nexus.company.management.acceptance_provenance import reference_sources
+from nexus.company.management.historical_reference_provenance import historical_reference_sources
 from nexus.execution.runtime_support import db_now
 
 
@@ -93,6 +94,26 @@ class RegisteredSourceFreshness:
         final = await db_now(session)
         require_qualified_time(current, final)
         require_acceptance(all(row.expires_at is None or row.expires_at > final for row in grants))
+
+    async def revalidate_historical_references(
+        self,
+        session: AsyncSession,
+        scope: BrainReadScope,
+        references: tuple[ArtifactRevisionRef, ...],
+        now: datetime,
+    ) -> tuple[datetime, ...]:
+        """Explicit obsolete-history policy qualification against current heads and grants."""
+        ids, resources = await historical_reference_sources(session, scope, references)
+        current = await self._resolve(session, scope, ids)
+        checked = await db_now(session)
+        require_qualified_time(current, checked)
+        grants = await require_resources(session, scope, resources, checked)
+        deadlines = tuple(row.fresh_until for row in current if row.fresh_until is not None)
+        deadlines += tuple(row.expires_at for row in grants if row.expires_at is not None)
+        final = await db_now(session)
+        require_qualified_time(current, final)
+        require_acceptance(all(value > final for value in deadlines))
+        return tuple(sorted(set(deadlines)))
 
     async def _resolve(
         self, session: AsyncSession, scope: BrainReadScope, ids: tuple[UUID, ...]

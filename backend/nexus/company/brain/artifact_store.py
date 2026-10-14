@@ -121,6 +121,48 @@ class BoundedArtifactReader:
             session, scope, tuple(row.resource_id for row in current.grants), checked_at
         )
 
+    async def revalidate_historical_artifact_reference(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        scope: BrainReadScope,
+        identity: VerifiedIdentity,
+        reference: ArtifactRevisionRef,
+        now: datetime,
+    ) -> tuple[datetime, ...]:
+        """Explicit locked history metadata; immutable bytes and current READ remain mandatory."""
+        reference = ArtifactRevisionRef.model_validate_json(reference.model_dump_json())
+        if (
+            not session.in_transaction()
+            or control.company_id != scope.company_id
+            or reference.company_id != scope.company_id
+        ):
+            raise BrainDeniedError("Historical artifact reference requires its company transaction")
+        await revalidate_brain_scope(session, control, scope, identity)
+        current = await self._snapshot(
+            session, scope, reference.artifact_revision_id, await _clock(session), True
+        )
+        raw = current.raw_text.encode()
+        if (
+            current.artifact != reference
+            or len(raw) != reference.byte_length
+            or hashlib.sha256(raw).hexdigest() != reference.sha256
+        ):
+            raise BrainConflictError("Historical artifact reference differs from immutable bytes")
+        grants = await require_resources(
+            session, scope, tuple(row.resource_id for row in current.grants), await _clock(session)
+        )
+        deadlines = tuple(
+            row.expires_at for row in (*current.grants, *grants) if row.expires_at is not None
+        )
+        deadlines += tuple(row.fresh_until for row in current.heads if row.fresh_until is not None)
+        final = await _clock(session)
+        if any(row.availability != "available" for row in current.heads) or any(
+            value <= final for value in deadlines
+        ):
+            raise BrainConflictError("Historical artifact current source/access is unavailable")
+        return tuple(sorted(set(deadlines)))
+
     # The 51-line two-phase gate keeps its final snapshot comparison adjacent to
     # the returned slice; protected byte validation is isolated outside the lock.
     async def bounded_artifact(
