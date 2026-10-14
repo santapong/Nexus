@@ -74,6 +74,45 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-088 — Notification authorization returned after recipient registry loss
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** high
+**Status:** fixed; retained actual probe closed
+**Found by:** independent notification authorization review
+**Affected files:** notifications/worker_authorization.py
+
+After the second actual draft admission, authorization awaited action authority
+and the final DB clock without rereading the external recipient pin. Removing
+only the disposable recipient file at that boundary returned authorized and
+committed a new hold0→1. Original actual probe failed1/5.58s, hook count1.
+This establishes erroneous consumption, not a send: no provider was invoked.
+
+The final synchronous recipients.require_current check now follows the last await,
+alongside native, credential and exact approval windows. The unchanged probe is
+included in the final ten-case normal015 gate10passed/42.96s. Independent source
+review confirms the placement; its report distinguishes Root execution from
+the reviewer's read-only verification. Original logs are retained under
+notifications/worker-authorization-recipient-original-pg.log in the dated evidence.
+
+## ERROR-087 — Client setup awaited past current notification source authority
+
+**Date:** 2026-10-14; final package checked 2026-10-15 (Asia/Bangkok)
+**Severity:** high
+**Status:** fixed in the new credential wrapper
+**Found by:** notification wrapper boundary review
+**Affected files:** notifications/worker_dispatch.py
+
+Actual fixture source READ was revoked inside awaited client setup after the
+original full precall check. One mock POST occurred before a later append denied;
+original probe failed1/7.33s. This is bounded synthetic setup behavior, not live mail.
+Move full inherited native precall and complete local-time checks inside the open
+client context, after setup; retain credential verification inside the request
+method. The unchanged source probe passes1/6.13s with zero POST and public release
+conserving one attempt, permanent slot and positive unknown hold. Final frozen
+7PG+7unit14/47.42s passes; shared dispatcher/effect/transport source is unchanged.
+Evidence: notifications/worker-credential-wrapper-freeze-1.json and setup-source logs.
+
 ## ERROR-086 — Engineering worker observation outlived the source window
 
 **Date:** 2026-10-14

@@ -3396,3 +3396,24 @@ Known acceptance remains separate from billing and M1's verifying state. Portabl
 segment observations carry only descriptive evidence identities, with verdict
 derived from WorkAcceptance. The six actual PG cases and Root's1,680unit gate
 support this slice; durable worker/process restart and release are separate gates.
+
+## ADR-116 — Retain sealed worker authentication at native notification boundaries
+
+**Status:** accepted for the opt-in owner-only local composition
+**Date:** 2026-10-15 (Asia/Bangkok)
+
+Reuse the signature-verified process-local identity/expiry witness; role claims,
+owner IDs and portable expiry DTOs provide no authentication. Keep existing native
+source/current owner/exact decision/budget/lease gates. Credential time participates
+in final intent clocks and the request boundary. Full current precall follows
+awaited client setup. Known receipt replay remains current protected read only;
+it cannot resend or resolve unknown outcomes by assumption.
+
+Consume an existing exact owner approval for the deterministic prepared sender in
+one CompanyControl transaction with complete current plan/source/draft/proposal
+binding, cost reservation, final native/credential/approval windows and synchronous
+recipient pin. Existing issued intents deny this authorization entry. No decision,
+grant, work, queue entry or effect is created. Standing sends and non-owner service
+admission remain outside this slice. Production credential provisioning and durable
+worker activation require their separate gates. Frozen wrapper14checks, actual
+authorization10PG and Root's1,703unit gate support this local implementation only.

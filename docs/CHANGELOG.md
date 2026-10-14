@@ -1,6 +1,30 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Credential-bound notification dispatch and exact authorization
+
+### Added
+- Opt-in process credential wrappers retain actual signed actor/expiry at final
+  native intent and nonretry HTTP boundaries. Bare identity dispatch is denied.
+- Exact prepared sender authorization consumes an existing owner decision in one
+  company transaction with current plan/source/draft/binding and final credential,
+  approval and recipient pins. It cannot approve, schedule or issue an action.
+
+### Fixed
+- Recheck full current native permission after awaited client setup (ERROR-087).
+- Reread recipient registration after the final authorization await (ERROR-088).
+
+### Validation
+- Frozen wrapper7PG+7unit14/47.42s; Root actual authorization10PG/42.96s,
+  including final expiry rollback, missing/expired approval, pause/binding/source
+  denial, source-revoked replay and unknown intent conservation. Mock transport only.
+- Root coherent1,703units/19.50s with19existing warnings, strict/Ruff/format9files.
+  Background tick, durable notification worker, real credentials/email and release
+  remain required; no live provider or service was activated.
+
+**Authored by:** Codex and supervised notification agent with independent review
+**PR:** not published
+
 ## [2026-10-14] — Known-output engineering worker and sealed credential composition
 
 ### Added

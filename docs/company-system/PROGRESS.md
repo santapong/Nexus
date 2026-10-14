@@ -556,3 +556,14 @@ corrected; focused PG calls preserve original receipts/counters/unknown holds.
 See the [checkpoint](ENGINEERING_WORKER_CREDENTIAL_CHECKPOINT_2026-10-14.md).
 Actual fresh-intent expiry and five OS recovery barriers remain unqualified.
 The proposed public pending verifier fixture is the next independent test slice.
+
+### Checked 2026-10-15 — Native notification credential and authorization boundaries
+
+Credentialed wrappers and exact prepared owner-decision consumption now pass scoped
+actual normal015/mock boundaries. Wrapper14checks/47.42s (7PG+7unit) and Root's
+ten authorization PG cases/42.96s pass; original setup-source and final recipient
+consumption gaps are retained and corrected (ERROR-087/088). Root's coherent
+1,703units/19.50s passes. See the
+[checkpoint](NOTIFICATION_WORKER_AUTHORIZATION_CHECKPOINT_2026-10-15.md).
+No real mail, daemon or durable notification worker is active. Read/timer tick,
+restart qualification, production credentials and remaining release gates stay open.
