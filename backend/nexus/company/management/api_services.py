@@ -10,6 +10,8 @@ from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.metric_queries import MetricQueries
 from nexus.company.management.metric_store import MetricStore
+from nexus.company.management.native_profile_store import NativeReportPreparationService
+from nexus.company.management.operating_report_store import OperatingReportStore
 from nexus.company.management.owner_view_store import ManagementOwnerViews
 from nexus.company.management.plan_store import ManagementPlanStore
 
@@ -26,3 +28,5 @@ class ManagementApiServices:
     cancellations: WorkCancellationStore | None = None
     metrics: MetricStore | None = None
     metric_queries: MetricQueries | None = None
+    reports: OperatingReportStore | None = None
+    report_preparation: NativeReportPreparationService | None = None

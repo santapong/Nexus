@@ -195,6 +195,9 @@ jobs:
           - suite: management-native-profile
             database: nexus_company_test_native_profile
             tests: test_company_native_profile.py test_company_native_profile_verifier.py test_company_native_profile_boundary.py test_company_native_profile_lease.py test_company_native_profile_denials.py
+          - suite: management-native-report-api
+            database: nexus_company_test_native_report_api
+            tests: test_company_native_report_api.py test_company_native_report_api_owner.py
           - suite: management-native-workflow
             database: nexus_company_test_native_workflow
             tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py

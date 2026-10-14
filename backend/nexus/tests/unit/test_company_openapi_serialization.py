@@ -73,6 +73,11 @@ def test_runtime_schema_matches_serialized_owner_arrays_and_money(
         "$ref": "#/components/schemas/MetricWorkFact"
     }
     assert schema["KnownMetricValue"]["properties"]["value"]["type"] == "integer"
+    assert schema["NativeReportPreparedAction"]["properties"]["scheduled"]["const"] is False
+    assert schema["NativeReportPreparedAction"]["properties"]["model_requests"]["const"] == 0
+    assert (
+        schema["NativeReportProfileRef"]["properties"]["evidence_ids"]["items"]["format"] == "uuid"
+    )
     assert schema["MetricComparison"]["properties"]["target"]["type"] == "string"
     assert {
         value.get("type")

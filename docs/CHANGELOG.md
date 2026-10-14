@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Expose owner native report selection and pending preparation
+
+### Added
+- Optional current signed-owner report snapshot/history and exact report/commitment profile APIs; native actor preparation re-resolves the owner selection and creates no dispatch, effect or allowance.
+- Strict aware period/unique bounded selection, specific404 handling and exact JSON/YAML response shapes. New snapshot creation is explicit and has no automatic retry.
+- Dedicated native report HTTP CI group; default configuration remains disabled.
+
+### Validation and limits
+- Stable committed-base plus8Python files:1134unit21.05s/19existing warnings, strict/Ruff/format8; actual normal013 restrictedHTTP8PG38.21s. Includes owner revocation after profile resolution, exact pending replay and unchanged issued facts.
+- Owner UI/pilot composition and operating-loop activation remain open. No worker/provider/external message/device/deployment starts from this router checkpoint.
+
+**Authored by:** Codex with bounded worker
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Prepare exact native report work from owner commitments
 
 ### Added

@@ -15,6 +15,7 @@ from nexus.api.company_brain_routes import CompanyBrainController
 from nexus.api.company_management_control_routes import CompanyManagementControlController
 from nexus.api.company_management_routes import CompanyManagementController
 from nexus.api.company_metric_routes import CompanyMetricController
+from nexus.api.company_native_report_routes import CompanyNativeReportController
 from nexus.api.company_openapi import CompanyJsonRenderPlugin, CompanyYamlRenderPlugin
 from nexus.api.company_routes import CompanyController, company_health, validation_error_handler
 from nexus.api.company_session_routes import CompanySessionController
@@ -70,6 +71,7 @@ def create_company_app(
         route_handlers.append(CompanyManagementController)
         route_handlers.append(CompanyManagementControlController)
         route_handlers.append(CompanyMetricController)
+        route_handlers.append(CompanyNativeReportController)
 
     if pilot_sessions is not None:
         mounted_sessions = pilot_sessions

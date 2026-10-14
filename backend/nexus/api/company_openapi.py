@@ -21,6 +21,11 @@ from nexus.company.management.metric_contracts import (
     MetricObservationRecord,
 )
 from nexus.company.management.metric_query_contracts import MetricObservationPage
+from nexus.company.management.native_profile_contracts import (
+    NativeReportOperatingProfile,
+    NativeReportPreparedAction,
+)
+from nexus.company.management.operating_report_contracts import SavedOperatingReport
 from nexus.company.management.owner_view_contracts import (
     ApprovalPage,
     CompanyView,
@@ -49,6 +54,9 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     MetricCurrentObservation,
     MetricObservationRecord,
     MetricObservationPage,
+    SavedOperatingReport,
+    NativeReportOperatingProfile,
+    NativeReportPreparedAction,
 )
 
 
