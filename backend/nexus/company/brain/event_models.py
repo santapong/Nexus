@@ -32,6 +32,7 @@ class BrainEvent(CompanyRow, RecordedRow, BrainBase):
     action_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
     __table_args__ = (
         UniqueConstraint("company_id", "sequence", name="uq_brain_event_sequence"),
+        UniqueConstraint("company_id", "event_id", "sequence", name="uq_brain_notification_event"),
         UniqueConstraint("company_id", "deduplication_key", name="uq_brain_event_deduplication"),
         ForeignKeyConstraint(
             ["company_id", "resource_id"],

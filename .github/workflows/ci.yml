@@ -198,6 +198,9 @@ jobs:
           - suite: management-native-report-api
             database: nexus_company_test_native_report_api
             tests: test_company_native_report_api.py test_company_native_report_api_owner.py
+          - suite: owner-notification-schema
+            database: nexus_company_test_notification_schema
+            tests: test_company_notification_schema.py test_company_notification_intent_schema.py test_company_notification_observation_schema.py
           - suite: management-native-workflow
             database: nexus_company_test_native_workflow
             tests: test_company_native_report_worker.py test_company_acceptance_reconciliation.py test_company_native_report_process.py

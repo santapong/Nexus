@@ -40,6 +40,24 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Install durable owner notification ledger without activating delivery
+
+### Added
+- Strict meaningful-notification/digest/delivery declarations and disabled fixed-host Resend transport/status conformance; provider acceptance remains separate from delivery and unknown never auto-resends.
+- Normal company014 four immutable tenant-scoped notification histories with canonical/UTF8/SQL NULL constraints, current membership references, full FK indexes and exact native event/intent targets.
+- Deferred dispatch FK permits binding in the same actual M1 intent transaction; wrong trace/fence/proposal/kind rolls back together, preserving counters and permanent one-intent identity.
+
+### Validation and limits
+- Stable1134-test base plus36Python overlays:1219unit15.72s/19existing warnings; strict/Ruff/format36 pass. Actual profile/schema19PG:1fresh/repeat/metadata/downgrade2.32s,6draft/event16.96s,5M1deferred21.15s,7observationNULL/delivery29.90s.
+- Offline notification77checks1.13s and unregistered model6checks0.63s remain separately scoped. SQL placeholder JSON is schema proof only. Remote CI is configured, not run.
+- Native notification store/recipient/event emitters, all required decision/block/cap/digest wakes, worker/UI/live delivery remain open. Existing six Brain event kinds/columns and old migrations are unchanged; additive015 follows before NOTIFY-01 release acceptance. No live email/provider/timer/device/deployment action.
+
+**Authored by:** Codex with bounded workers
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Expose owner native report selection and pending preparation
 
 ### Added

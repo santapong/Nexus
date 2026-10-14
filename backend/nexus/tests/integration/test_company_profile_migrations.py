@@ -19,6 +19,7 @@ from nexus.company.directory_models import DirectoryBase
 from nexus.company.management.cancellation_models import CancellationBase
 from nexus.company.management.models import ManagementBase
 from nexus.company.management.scheduling_models import SchedulingBase
+from nexus.company.notifications.notification_models import NotificationBase
 from nexus.execution.billing_models import BillingEvidenceBase
 from nexus.execution.dispatch_models import DispatchBase
 from nexus.execution.runtime_models import ExecutionBase
@@ -75,6 +76,7 @@ def verify_profile(connection: Connection) -> None:
         ManagementBase.metadata,
         SchedulingBase.metadata,
         CancellationBase.metadata,
+        NotificationBase.metadata,
     ):
         for table in metadata.sorted_tables:
             table.to_metadata(combined)

@@ -15,6 +15,7 @@ from nexus.company.directory_models import DirectoryBase
 from nexus.company.management.cancellation_models import CancellationBase
 from nexus.company.management.models import ManagementBase
 from nexus.company.management.scheduling_models import SchedulingBase
+from nexus.company.notifications.notification_models import NotificationBase
 from nexus.execution.billing_models import BillingEvidenceBase
 from nexus.execution.dispatch_models import DispatchBase
 from nexus.execution.runtime_models import ExecutionBase
@@ -38,6 +39,7 @@ target_metadata = [
     ManagementBase.metadata,
     SchedulingBase.metadata,
     CancellationBase.metadata,
+    NotificationBase.metadata,
 ]
 
 

@@ -3174,6 +3174,29 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-108*
+*Next ADR ID: ADR-109*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
+
+
+## ADR-108 — Permanent owner notification ledger and separate native wake migration
+
+**Date:** 2026-10-14
+**Status:** accepted within the approved supervised company programme
+
+Install the four immutable notification histories in normal014 with exact native
+event/intent references and a deferred intent FK. A trusted M1 before-intent check
+may bind one draft in the same transaction as the actual intent; ambiguity or
+provider24h key expiry cannot create another local attempt. Provider acceptance,
+delivery and financial reconciliation stay distinct. Delivery is disabled by
+default and pure/mocked adapter output cannot confer a send permit.
+
+Install new decision/block/cap/digest wakes separately in additive015 with actual
+source emitters and explicit old-profile compatibility. Existing Brain readers
+use the old six event kinds/columns; partially adding ORM columns while older
+profiles are still supported would break those readers. Ledger validation and
+native store work can proceed while015 is qualified. Both steps and every
+required notification signal remain mandatory before NOTIFY-01 acceptance.
+
+See NOTIFICATION_014_EVENT_PLAN.md and NOTIFICATION_LEDGER_CHECKPOINT_2026-10-14.md
+for schema/effect boundaries, scoped actual evidence and remaining activation gates.

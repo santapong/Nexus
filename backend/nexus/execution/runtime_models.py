@@ -165,6 +165,17 @@ class EffectIntent(ExecutionBase):
     receipt_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     verification_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     __table_args__ = (
+        UniqueConstraint(
+            "company_id",
+            "action_id",
+            "task_id",
+            "trace_id",
+            "run_id",
+            "intent_fence",
+            "attempt_kind",
+            "proposal_hash",
+            name="uq_company_notification_intent",
+        ),
         ForeignKeyConstraint(
             ["company_id", "action_id"],
             [JournalAction.__table__.c.company_id, JournalAction.__table__.c.id],
