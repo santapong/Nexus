@@ -399,3 +399,31 @@ CurrentStockFlow readiness/BrainB06/liveprovider quality and owneremail/ARM64Pi 
 controller/privateaccessbackuprestore/rollbacksoak/finalapproval remain open. Goal
 active; no push/tag/deploy/liveemail/provider/Pi changes. Verified model-observation
 procedure was saved reversibly in the Nexus skill with exact evidence and limitations.
+
+### Checked2026-10-14 — Successful bounded build and recovery format
+
+Local81d0256 follows Nodev3 integration8dcc625 and digestquota250bb9a. V3 actual
+nominated unchanged StockFlow baseline/post all8commands exit0/252.422s, one native
+process/attempt, actualcaps/protectedoutput/cleanup verified. Billing unknown and
+work verifying; the report-only verifier cannot publish code acceptance. Root
+1438unit30.44s/strict22 plusworker5PG75.41s and independentcleanup/capture review
+support that mechanical scope. Native engineering contract/independentproof and
+currentCSV correctness goal nowdesigned separately; no oldparent/revision reset.
+
+Native daily/weekly slots nowretain exactkind/window/policy andonepercompany/bucket
+permanently, separate fromroutinecap. Root3privacy/finalflushPG102.38s, coherent
+1443unit37.86s/strict15; worker9PG31unit+additional2PG retains originalfailures and
+unknownholds. No liveemail/timer/worker activation.61CIgroups resolve pathsremoteunrun.
+
+Encryptedbackupcodec/privatefiletree committed81d0256:28focusedunit0.71s, coherent
+1482unit43.23s/strict8. Independenttargetreplacement probe originallyfailed0.35s,
+thenpassedunchanged0.26s afterFDanchored writes. Typed directrestore aggregatecap
+alsoenforced. Directcryptography49 pin changes no packageversions. This is bounded
+codec/pathproof, not matchingPG/DBOSrestore orindependentstorage; thoseactualdrills
+arethenextapprovedoperator-localimplementationplan. No prodkeys/DB/Pi/UAT changes.
+
+Currentmodelobservationsatactualgateway areinprogresswithoriginalregistry/request
+identities preserved, preSDKcurrentchecks and protectedprovenance; first2actual
+normal015 mockSDK/nativebilling casespassed. Fullclock/revoke/version boundary
+packagepending. Human signup/owneremail andARM64/privateoperatingrelease gates
+remainopen; frontendinboxpatch staysisolated, previewsclosed. Goalactive.
