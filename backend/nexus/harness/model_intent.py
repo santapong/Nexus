@@ -8,9 +8,15 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from nexus.company.contracts.actions import ActionProposal
+from nexus.company.contracts.actions import ActionProposal, ApprovalDecision
 from nexus.company.directory_models import RegisteredWork
+from nexus.company.management.model_observations import ModelEligibilityObservation
 from nexus.core.llm.company_adapter_contracts import CompanyModelRequest
+from nexus.core.llm.company_eligibility import (
+    ModelEligibilityProvenance,
+    eligibility_provenance,
+    validated_observations,
+)
 from nexus.core.llm.company_pricing import CostQuote
 from nexus.core.llm.company_registry import (
     Capability,
@@ -51,10 +57,16 @@ class ModelIntentCheck:
         estimator: InputEstimator,
         recipe: ModelInputRecipe,
         classification: DataClassification,
+        *,
+        model_observations: tuple[ModelEligibilityObservation, ...] = (),
     ) -> None:
         self.call, self.quote, self.lease = call, quote, lease
         self.registry, self.estimator, self.recipe = registry, estimator, recipe
         self.classification = classification
+        self.observations = validated_observations(registry, model_observations)
+        self.original_model: ModelRegistration | None = None
+        self.eligibility_provenance: ModelEligibilityProvenance | None = None
+        self._approval_expires: datetime | None = None
         self.model: ModelRegistration | None = None
         self.estimate: InputEstimate | None = None
         self.billing_at: datetime | None = None
@@ -82,8 +94,15 @@ class ModelIntentCheck:
         )
         if model is None:
             raise ValueError("Model is absent from the trusted catalog")
+        self.original_model = model
+        self.eligibility_provenance = eligibility_provenance(
+            self.registry, self.observations, model
+        )
+        self._approval_expires = ApprovalDecision.model_validate_json(
+            action.approval_json or ""
+        ).expires_at
         policy = self._policy(control, work, model, hold)
-        plan = route_models(self.registry, policy, now=now)
+        plan = route_models(self.registry, policy, now=now, model_observations=self.observations)
         if (
             plan.primary.model.registry_id != self.call.registry_id
             or plan.primary.quote != self.quote
@@ -107,12 +126,52 @@ class ModelIntentCheck:
         mutex; our transactional quota mutation must not look like a second call.
         This performs no input estimation, DB query or provider request.
         """
+        self.require_prepared_time(now)
+        self.billing_at = now
+
+    def require_prepared_time(self, now: datetime) -> None:
+        """Use the same observation without moving the committed billing clock."""
         if self._prepared_policy is None or self.model is None or self.estimate is None:
             raise ValueError("Model temporal qualification has not been prepared")
-        current = route_models(self.registry, self._prepared_policy, now=now)
+        if (
+            self._approval_expires is None
+            or min(self._approval_expires, self.lease.expires_at) <= now
+        ):
+            raise ValueError("Model approval or lease expired before execution")
+        current = route_models(
+            self.registry, self._prepared_policy, now=now, model_observations=self.observations
+        )
         if current.primary.model != self.model or current.primary.quote != self.quote:
             raise ValueError("Prepared model or quote changed before final intent")
-        self.billing_at = now
+
+    def require_selection(
+        self,
+        request: CompanyModelRequest,
+        quote: CostQuote,
+        eligibility_sha256: str | None,
+    ) -> None:
+        provenance = self.eligibility_provenance
+        if (
+            request != self.call
+            or quote != self.quote
+            or eligibility_sha256 != (provenance.sha256 if provenance else None)
+        ):
+            raise ValueError("Pre-SDK qualification differs from the exact committed model request")
+
+    async def revalidate_prepared(
+        self,
+        session: AsyncSession,
+        control: CompanyControl,
+        work: ExecutionWork,
+        action: JournalAction,
+        now: datetime,
+    ) -> None:
+        """Revalidate the already-consumed exact call, with no estimator/counter/intent mutation."""
+        self._require_binding(
+            ActionProposal.model_validate_json(action.proposal_json), action, control, work
+        )
+        await self._require_caps(session, control, work, now)
+        self.require_prepared_time(now)
 
     def _require_binding(
         self,

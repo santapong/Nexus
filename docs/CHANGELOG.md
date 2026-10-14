@@ -1,6 +1,30 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Current observations at the governed model gateway
+
+### Added
+- Explicit current observations reach routing, native intent, adapter and client
+  checks while retaining original registry/model/request/evidence identities.
+- SDK calls revalidate the committed intent after setup with current actor,
+  authority, lease, exact managed resource pairs and complete protected input
+  closure. Final clocks cover model/source/grant/approval expiry without another
+  estimator, counter, hold or intent.
+- Optional protected provenance records the exact observation separately from
+  the immutable original model. Already-issued results stay recordable after
+  observation expiry under existing fence/member/billing rules.
+
+### Validation
+- Frozen25checks/100.55s:12restricted normal015 PG and13units; strict20/Ruff/format.
+- Combined native/gateway regression1,516units/35.14s; prior strict28 and amended2
+  checks pass. Independent combined3PG/41.21s and unchanged coexistence closure
+  are separately retained, with no fabricated aggregate count.
+- Mocked SDK transport only. Unknown costs/counters remain conserved; no live
+  model quality, engineering/business acceptance or release activation is claimed.
+
+**Authored by:** Codex and supervised model gateway agent
+**PR:** not published
+
 ## [2026-10-14] — Explicit native mechanical engineering admission
 
 ### Added

@@ -11,6 +11,7 @@ import math
 from datetime import datetime
 
 from nexus.company.access import VerifiedIdentity
+from nexus.company.management.model_observations import ModelEligibilityObservation
 from nexus.core.llm.company_adapter_contracts import (
     CompanyModelRequest,
     CompanyModelResult,
@@ -45,6 +46,7 @@ class GovernedModelClient:
         identity: VerifiedIdentity,
         *,
         cleanup_seconds: float = 5,
+        model_observations: tuple[ModelEligibilityObservation, ...] = (),
     ) -> None:
         if gate is None or resolver is None or execution is None:
             raise ValueError("Trusted gate, resolver and execution store are required")
@@ -58,7 +60,14 @@ class GovernedModelClient:
             != (lease.actor_id, lease.workspace_id)
         ):
             raise ValueError("Server lease/identity or bounded cleanup configuration is invalid")
-        self._adapter = CompanyModelAdapters(registry, resolver, gate)
+        gate.require_eligibility_configuration(registry, model_observations)
+        self._adapter = CompanyModelAdapters(
+            registry,
+            resolver,
+            gate,
+            model_observations=model_observations,
+            before_sdk=gate.revalidate_before_sdk,
+        )
         self._gate, self._execution = gate, execution
         self._lease, self._identity = lease, identity
         self._cleanup_seconds, self._used = cleanup_seconds, False

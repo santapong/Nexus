@@ -9,6 +9,11 @@ from uuid import UUID
 from pydantic import Field, field_validator
 
 from nexus.company.contracts.base import USD, Name
+from nexus.company.management.model_observations import (
+    ModelEligibilityObservation,
+    effective_model_registration,
+)
+from nexus.core.llm.company_eligibility import validated_observations
 from nexus.core.llm.company_pricing import (
     CostQuote,
     ModelContract,
@@ -137,9 +142,15 @@ def _eligible(model: ModelRegistration, policy: ModelPolicy, now: datetime) -> b
     )
 
 
-def _candidates(registry: ModelRegistry, policy: ModelPolicy, now: datetime) -> list[RoutedModel]:
+def _candidates(
+    registry: ModelRegistry,
+    policy: ModelPolicy,
+    now: datetime,
+    observations: tuple[ModelEligibilityObservation, ...],
+) -> list[RoutedModel]:
     candidates: list[RoutedModel] = []
-    for model in registry.models:
+    for original in registry.models:
+        model = effective_model_registration(registry, observations, original)
         if not _eligible(model, policy, now):
             continue
         try:
@@ -164,7 +175,13 @@ def _candidates(registry: ModelRegistry, policy: ModelPolicy, now: datetime) -> 
     )
 
 
-def route_models(registry: ModelRegistry, policy: ModelPolicy, *, now: datetime) -> RoutingPlan:
+def route_models(
+    registry: ModelRegistry,
+    policy: ModelPolicy,
+    *,
+    now: datetime,
+    model_observations: tuple[ModelEligibilityObservation, ...] = (),
+) -> RoutingPlan:
     """Choose cheapest eligible primary and at most two affordable alternatives.
 
     Sum all attempted-call upper bounds conservatively: a billable failed primary
@@ -174,6 +191,7 @@ def route_models(registry: ModelRegistry, policy: ModelPolicy, *, now: datetime)
     try:
         registry = ModelRegistry.model_validate(registry.model_dump())
         policy = ModelPolicy.model_validate(policy.model_dump())
+        model_observations = validated_observations(registry, model_observations)
     except ValueError as exc:
         raise RoutingDeniedError("invalid registry or policy contract") from exc
     if now.utcoffset() is None:
@@ -185,7 +203,7 @@ def route_models(registry: ModelRegistry, policy: ModelPolicy, *, now: datetime)
         raise RoutingDeniedError("company or pricebook mismatch")
     if not policy.remaining_model_requests:
         raise RoutingDeniedError("logical work item request allowance exhausted")
-    candidates = _candidates(registry, policy, now)
+    candidates = _candidates(registry, policy, now, model_observations)
     if not candidates:
         raise RoutingDeniedError("no eligible model fits current policy, price and budget")
     selected, total = [candidates[0]], candidates[0].quote.amount_usd

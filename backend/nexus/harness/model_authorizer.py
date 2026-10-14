@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID, uuid5
@@ -14,19 +14,21 @@ from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ResourceRevision
 from nexus.company.contracts.knowledge import ArtifactRef
 from nexus.company.contracts.results import ActionReceipt
+from nexus.company.management.model_observations import ModelEligibilityObservation
 from nexus.core.llm.company_adapter_contracts import (
     AuthorizedModelAttempt,
     CompanyModelRequest,
     CompanyModelResult,
     request_hash,
 )
+from nexus.core.llm.company_eligibility import validated_observations
 from nexus.core.llm.company_pricing import CostQuote, ModelContract, reconcile_cost
 from nexus.core.llm.company_registry import DataClassification, ModelRegistry
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.effect_support import effect_row
 from nexus.execution.intent_checks import BeforeIntentCheck, CompositeBeforeIntentCheck
 from nexus.execution.management_services import ManagementExecutionServices
-from nexus.execution.runtime_contracts import EffectRecord, ExecutionLease
+from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_support import (
     db_now,
     execution_row,
@@ -38,6 +40,12 @@ from nexus.execution.runtime_support import (
 from nexus.harness.model_authorizer_contracts import InputEstimator, ModelInputRecipe
 from nexus.harness.model_evidence import ModelEvidence, ModelEvidenceStore
 from nexus.harness.model_intent import ModelIntentCheck
+from nexus.harness.model_managed_deadlines import require_managed_gateway_configuration
+from nexus.harness.model_pre_sdk import (
+    ClaimedModelRequest,
+    ModelPreSdkServices,
+    revalidate_before_sdk,
+)
 
 
 class RecordedModelOutcome(ModelContract):
@@ -48,12 +56,6 @@ class RecordedModelOutcome(ModelContract):
     actual_usd: Decimal | None = Field(default=None, ge=0, allow_inf_nan=False)
     stop_required: bool
     receipt_id: UUID | None = None
-
-
-@dataclass(frozen=True)
-class _ClaimedRequest:
-    check: ModelIntentCheck
-    effect: EffectRecord
 
 
 class PersistentModelCallAuthorizer:
@@ -73,6 +75,7 @@ class PersistentModelCallAuthorizer:
         evidence_store: ModelEvidenceStore,
         additional_before_intent: BeforeIntentCheck | None = None,
         management: ManagementExecutionServices | None = None,
+        model_observations: tuple[ModelEligibilityObservation, ...] = (),
     ) -> None:
         self._lease = ExecutionLease.model_validate_json(lease.model_dump_json())
         self._identity = VerifiedIdentity.model_validate(identity.model_dump())
@@ -86,6 +89,8 @@ class PersistentModelCallAuthorizer:
             management.effect_store(factory) if management is not None else EffectStore(factory)
         )
         self._registry = ModelRegistry.model_validate_json(registry.model_dump_json())
+        self._observations = validated_observations(self._registry, model_observations)
+        require_managed_gateway_configuration(management, self._registry, self._observations)
         self._resources = tuple(
             ResourceRevision.model_validate(row.model_dump()) for row in resources
         )
@@ -93,7 +98,42 @@ class PersistentModelCallAuthorizer:
         self._recipe = ModelInputRecipe.model_validate_json(input_recipe.model_dump_json())
         self._classification, self._evidence = allowed_classification, evidence_store
         self._additional_check = additional_before_intent
-        self._claims: dict[UUID, _ClaimedRequest] = {}
+        self._pre_sdk = ModelPreSdkServices(
+            self._factory,
+            self._effects,
+            self._lease,
+            self._identity,
+            self._resources,
+            self._additional_check,
+            management,
+        )
+        self._claims: dict[UUID, ClaimedModelRequest] = {}
+
+    def require_eligibility_configuration(
+        self, registry: ModelRegistry, observations: tuple[ModelEligibilityObservation, ...]
+    ) -> None:
+        """Prevent adapter/client/server plan paths from choosing different dated observations."""
+        if (
+            registry != self._registry
+            or validated_observations(registry, observations) != self._observations
+        ):
+            raise ValueError("Client model eligibility differs from its actual persistent gate")
+
+    async def revalidate_before_sdk(
+        self, request: CompanyModelRequest, quote: CostQuote, eligibility_sha256: str | None
+    ) -> datetime:
+        """Revalidate one already-committed request; this method issues no new permit or attempt."""
+        claimed = self._claims.get(request.request_id)
+        if claimed is None:
+            raise ValueError("Pre-SDK model request has no native claim from this gate")
+        return await revalidate_before_sdk(
+            self._pre_sdk,
+            claimed.check,
+            claimed.effect,
+            request,
+            quote,
+            eligibility_sha256,
+        )
 
     async def claim(self, request: CompanyModelRequest, quote: CostQuote) -> AuthorizedModelAttempt:
         """Commit one lifetime attempt/intent before one caller-owned SDK invocation."""
@@ -107,6 +147,7 @@ class PersistentModelCallAuthorizer:
             self._estimator,
             self._recipe,
             self._classification,
+            model_observations=self._observations,
         )
         start = await self._effects.begin(
             self._lease,
@@ -124,7 +165,7 @@ class PersistentModelCallAuthorizer:
         )
         if not start.permit_external_call or check.hold is None:
             raise ValueError("Model intent already exists; invocation cannot be repeated")
-        self._claims[request.request_id] = _ClaimedRequest(check, start.record)
+        self._claims[request.request_id] = ClaimedModelRequest(check, start.record)
         return AuthorizedModelAttempt(
             scope=lease_scope(self._lease),
             action_id=request.action_id,
@@ -167,7 +208,7 @@ class PersistentModelCallAuthorizer:
         return await self._record_known(saved, artifact)
 
     async def _make_evidence(
-        self, claimed: _ClaimedRequest, result: CompanyModelResult
+        self, claimed: ClaimedModelRequest, result: CompanyModelResult
     ) -> ModelEvidence:
         check = claimed.check
         if (
@@ -186,7 +227,7 @@ class PersistentModelCallAuthorizer:
             request=check.call,
             request_hash=request_hash(check.call),
             action_hash=claimed.effect.proposal_hash,
-            model=check.model,
+            model=check.original_model or check.model,
             registry_revision=self._registry.revision,
             price_version=self._registry.pricebook_version,
             recipe=self._recipe,
@@ -195,9 +236,10 @@ class PersistentModelCallAuthorizer:
             source_event_at=check.billing_at,
             checked_at=now,
             owner_id=check.owner_id,
+            eligibility_provenance=check.eligibility_provenance,
         )
 
-    async def _mark_unknown(self, claimed: _ClaimedRequest) -> None:
+    async def _mark_unknown(self, claimed: ClaimedModelRequest) -> None:
         async with runtime_transaction(
             self._factory,
             lease_scope(self._lease),

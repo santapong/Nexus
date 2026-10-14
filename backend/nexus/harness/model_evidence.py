@@ -17,6 +17,7 @@ from nexus.core.llm.company_adapter_contracts import (
     CompanyModelResult,
     request_hash,
 )
+from nexus.core.llm.company_eligibility import ModelEligibilityProvenance
 from nexus.core.llm.company_pricing import ModelContract
 from nexus.core.llm.company_registry import ModelRegistration
 from nexus.harness.model_authorizer_contracts import (
@@ -41,6 +42,9 @@ class ModelEvidence(ModelContract):
     source_event_at: AwareDatetime
     checked_at: AwareDatetime
     owner_id: UUID
+    eligibility_provenance: ModelEligibilityProvenance | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     def require_binding(self) -> None:
         """Reject corrupted or scope-spliced stored provider provenance."""
@@ -58,6 +62,10 @@ class ModelEvidence(ModelContract):
         ):
             raise ValueError("Saved model evidence binding is invalid")
         require_input_estimate(self.request, self.input_estimate, self.recipe)
+        if self.eligibility_provenance is not None:
+            self.eligibility_provenance.require_binding(
+                self.model, self.request.company_id, self.registry_revision
+            )
 
 
 class ModelEvidenceStore(Protocol):

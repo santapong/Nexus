@@ -9,6 +9,10 @@ from datetime import datetime
 import httpx2
 import structlog
 
+from nexus.company.management.model_observations import (
+    ModelEligibilityObservation,
+    effective_model_registration,
+)
 from nexus.core.llm.company_adapter_contracts import (
     CompanyModelRequest,
     CompanyModelResult,
@@ -18,7 +22,12 @@ from nexus.core.llm.company_adapter_contracts import (
     ServerEndpoint,
 )
 from nexus.core.llm.company_adapter_sdk import outputs, request_model, sdk_model
-from nexus.core.llm.company_pricing import quote_cost, reconcile_cost
+from nexus.core.llm.company_eligibility import (
+    BeforeModelSdk,
+    eligibility_provenance,
+    validated_observations,
+)
+from nexus.core.llm.company_pricing import CostQuote, quote_cost, reconcile_cost
 from nexus.core.llm.company_registry import ModelRegistration, ModelRegistry
 from nexus.core.llm.company_wire_usage import WireObserver
 
@@ -26,7 +35,10 @@ logger = structlog.get_logger()
 
 
 def _registration(
-    registry: ModelRegistry, request: CompanyModelRequest, now: datetime
+    registry: ModelRegistry,
+    request: CompanyModelRequest,
+    now: datetime,
+    observations: tuple[ModelEligibilityObservation, ...] = (),
 ) -> ModelRegistration:
     if now.utcoffset() is None:
         raise ValueError("provider clock must be timezone-aware")
@@ -39,6 +51,7 @@ def _registration(
     row = next((row for row in registry.models if row.registry_id == request.registry_id), None)
     if row is None or not row.enabled or request.data_classification not in row.allowed_data:
         raise ValueError("model/data policy is unavailable")
+    row = effective_model_registration(registry, observations, row)
     required = (
         {"text"}
         | ({"tools"} if request.tools else set())
@@ -69,11 +82,21 @@ class CompanyModelAdapters:
     """
 
     def __init__(
-        self, registry: ModelRegistry, resolver: EndpointResolver, authorizer: ModelCallAuthorizer
+        self,
+        registry: ModelRegistry,
+        resolver: EndpointResolver,
+        authorizer: ModelCallAuthorizer,
+        *,
+        model_observations: tuple[ModelEligibilityObservation, ...] = (),
+        before_sdk: BeforeModelSdk | None = None,
     ) -> None:
         if authorizer is None or resolver is None:
             raise ValueError("trusted server resolver and model authorizer are required")
         self._registry = ModelRegistry.model_validate_json(registry.model_dump_json())
+        self._observations = validated_observations(self._registry, model_observations)
+        if self._observations and before_sdk is None:
+            raise ValueError("Observed model calls require a trusted pre-SDK current intent check")
+        self._before_sdk = before_sdk
         self._resolver, self._authorizer = resolver, authorizer
 
     async def request_once(
@@ -82,29 +105,13 @@ class CompanyModelAdapters:
         """One model request only; failed/unknown usage must retain its existing cost hold."""
         request = CompanyModelRequest.model_validate_json(request.model_dump_json(by_alias=True))
         try:
-            row = _registration(self._registry, request, now)
+            row = _registration(self._registry, request, now, self._observations)
+            original = next(
+                item for item in self._registry.models if item.registry_id == row.registry_id
+            )
+            provenance = eligibility_provenance(self._registry, self._observations, original)
             quote = quote_cost(row.price, request.bounds, now=now)
-            endpoint = await self._resolver.resolve(row.endpoint_id)
-            if (endpoint.endpoint_id, endpoint.provider, endpoint.api_family) != (
-                row.endpoint_id,
-                row.provider,
-                row.api_family,
-            ):
-                raise ValueError("server endpoint binding disagrees with catalog")
-            url = httpx2.URL(endpoint.base_url)
-            if (
-                url.scheme != "https"
-                or url.userinfo
-                or url.query
-                or url.fragment
-                or not endpoint.api_key.get_secret_value()
-            ):
-                raise ValueError("server provider config must be explicit and credential-safe")
-            if (
-                not math.isfinite(endpoint.timeout_seconds)
-                or not 0 < endpoint.timeout_seconds <= 120
-            ):
-                raise ValueError("provider timeout must be finite and bounded")
+            endpoint = await self._endpoint(row)
             claim = await self._authorizer.claim(request, quote)
             claim.require_request(request, quote)
         except (ValueError, KeyError) as exc:
@@ -120,7 +127,36 @@ class CompanyModelAdapters:
                 billing="not_issued",
                 error_code="authorization_or_configuration",
             )
-        return await _invoke(request, row, endpoint, now)
+        return await _invoke(
+            request,
+            row,
+            endpoint,
+            now,
+            quote=quote,
+            before_sdk=self._before_sdk,
+            eligibility_sha256=provenance.sha256 if provenance else None,
+        )
+
+    async def _endpoint(self, row: ModelRegistration) -> ServerEndpoint:
+        endpoint = await self._resolver.resolve(row.endpoint_id)
+        if (endpoint.endpoint_id, endpoint.provider, endpoint.api_family) != (
+            row.endpoint_id,
+            row.provider,
+            row.api_family,
+        ):
+            raise ValueError("server endpoint binding disagrees with catalog")
+        url = httpx2.URL(endpoint.base_url)
+        if (
+            url.scheme != "https"
+            or url.userinfo
+            or url.query
+            or url.fragment
+            or not endpoint.api_key.get_secret_value()
+        ):
+            raise ValueError("server provider config must be explicit and credential-safe")
+        if not math.isfinite(endpoint.timeout_seconds) or not 0 < endpoint.timeout_seconds <= 120:
+            raise ValueError("provider timeout must be finite and bounded")
+        return endpoint
 
 
 async def _invoke(
@@ -128,10 +164,16 @@ async def _invoke(
     row: ModelRegistration,
     endpoint: ServerEndpoint,
     now: datetime,
+    *,
+    quote: CostQuote,
+    before_sdk: BeforeModelSdk | None = None,
+    eligibility_sha256: str | None = None,
 ) -> CompanyModelResult:
     observer = WireObserver(row)
     try:
         async with sdk_model(row, endpoint, observer) as model:
+            if before_sdk is not None:
+                now = await before_sdk(request, quote, eligibility_sha256)
             response = await request_model(model, request)
         if observer.usage is None:
             raise ValueError("validated wire usage is absent")
