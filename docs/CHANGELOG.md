@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Compile fixed contained runtime descriptions
+
+### Added
+- Exact original v2 policy/spec qualification precedes internal rendering views;
+  existing generic/Nodev4 renderers keep commands, assets, paths, caps and isolation.
+- Descriptions add only cgroupfs/split selectors. Node requires fixed entrypoint.sh.
+
+### Validation
+- Tests-first missing-module red;25 focused including21 original v1 goldens,
+  strict/Ruff2 and coherent2,354unit/22.30s pass. Narrow entrypoint check4focused
+  and types pass after independent review. No process or v2 activation.
+
+**Authored by:** Codex; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Compose the contained process source watch
 
 ### Added
