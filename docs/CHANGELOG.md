@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Owner saved-report dashboard controls
+
+### Added
+- Approved plan snapshot form, saved report history route and current commitment/
+  evidence selection for exact pending author preparation. Generated OpenAPI types
+  preserve actual money, native IDs and scheduled/executed false fields.
+- Pilot mounts its existing report store; preparation stays explicitly unconfigured.
+- Snapshot mutation disables automatic retries and explains uncertain responses.
+
+### Validation
+- Build15.96s,18 report client/input checks,4 existing session race checks,6 backend
+  composition/schema units4.38s and strict2. Visible synthetic rendering confirms
+  unknown billing/receipt-versus-acceptance and one uncertain POST with disabled
+  submission. Real owner browser and timer/worker/provider activation remain open.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-14] — Bounded native builder and protected recovery
 
 ### Added

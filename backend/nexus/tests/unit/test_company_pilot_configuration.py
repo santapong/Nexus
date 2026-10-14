@@ -5,8 +5,10 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.company.pilot_catalog import offline_registration, pilot_catalog
+from nexus.company.pilot_composition import compose_pilot
 from nexus.company.pilot_config import PilotConfig
 from nexus.company.pilot_session_store import (
     PilotCredentialFile,
@@ -14,6 +16,7 @@ from nexus.company.pilot_session_store import (
     save_credentials,
 )
 from nexus.company.pilot_setup import initialize_task
+from nexus.settings import settings
 
 
 def sdk_receipt(root: Path, *, requests: int = 1) -> Path:
@@ -110,3 +113,16 @@ def test_uat_config_rejects_admin_other_database_and_short_initial_password(tmp_
     ):
         with pytest.raises(ValueError, match="exclusive restricted-role"):
             PilotConfig.model_validate(config.model_dump() | {"database_url": url})
+
+
+def test_pilot_mounts_saved_reports_without_implicit_preparation_or_worker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Owner read/snapshot controls use the configured store; effects stay unconfigured."""
+    config = initialize_task(tmp_path / "task", sdk_receipt(tmp_path))
+    monkeypatch.setattr(
+        settings, "jwt_secret_key", "unit-only-company-key-at-least-thirty-two-characters"
+    )
+    services = compose_pilot(async_sessionmaker[AsyncSession](), config)
+    assert services.management.reports is services.reports
+    assert services.management.report_preparation is None

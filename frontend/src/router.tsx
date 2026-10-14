@@ -18,6 +18,7 @@ import { CompanyTodayPage } from '@/pages/CompanyTodayPage'
 import { CompanyOverviewPage } from '@/pages/CompanyOverviewPage'
 import { CompanyPlanPage } from '@/pages/CompanyPlanPage'
 import { CompanyWorkPage } from '@/pages/CompanyWorkPage'
+import { CompanyReportPage } from '@/pages/CompanyReportPage'
 import { CompanyApprovalsPage } from '@/pages/CompanyApprovalsPage'
 import { CompanyActionReviewPage } from '@/pages/CompanyActionReviewPage'
 import { CompanyLoginPage } from '@/pages/CompanyLoginPage'
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
       { path: 'overview', element: <CompanyOverviewPage /> },
       { path: 'plans/:planId', element: <CompanyPlanPage /> },
       { path: 'work/:taskId', element: <CompanyWorkPage /> },
+      { path: 'reports/:reportId', element: <CompanyReportPage /> },
       { path: 'approvals', element: <CompanyApprovalsPage /> },
       { path: 'actions/:actionId', element: <CompanyActionReviewPage /> },
     ],

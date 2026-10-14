@@ -74,6 +74,22 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-068 — Report preparation link used the wrong generated action field
+
+**Date:** 2026-10-14
+**Severity:** low
+**Status:** fixed
+**Found by:** TypeScript build during owner report UI implementation
+**Affected files:** frontend report preparation panel
+
+### Cause and fix
+The journal ActionRecord nests its ID under proposal. The first link assumed
+action.action_id; the actual generated API type rejected it. The link now reads
+action.proposal.action_id, and the corrected build passes15.96s. Keep generated
+schema types authoritative for action links rather than guessing DTO fields.
+
+---
+
 ## ERROR-067 — Native builder recovery accepted a guard for a different identity
 
 **Date:** 2026-10-14
@@ -2171,7 +2187,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-068*
+*Next error ID: ERROR-069*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

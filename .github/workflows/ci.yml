@@ -377,6 +377,11 @@ jobs:
       - name: Company session identity race checks
         run: node scripts/test-company-session.mjs
 
+      - name: Company report request and bounded input checks
+        run: |
+          node scripts/test-company-reports.mjs
+          node scripts/test-company-report-inputs.mjs
+
   # ── Security Scanning ─────────────────────────────────────────────────────
 
   security-backend:

@@ -549,6 +549,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/companies/{company_id}/management/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** NewSnapshot */
+        post: operations["ApiV2CompaniesCompanyIdManagementReportsNewSnapshot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/reports/profiles/prepare-author": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** PrepareAuthor */
+        post: operations["ApiV2CompaniesCompanyIdManagementReportsProfilesPrepareAuthorPrepareAuthor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** RecordedReport */
+        get: operations["ApiV2CompaniesCompanyIdManagementReportsReportIdRecordedReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/management/reports/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** ResolveProfile */
+        post: operations["ApiV2CompaniesCompanyIdManagementReportsProfilesResolveProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/company-session/login": {
         parameters: {
             query?: never;
@@ -604,6 +672,26 @@ export interface components {
              * @default null
              */
             authorized_proofs: components["schemas"]["ProtectedCheckProof"][] | null;
+        };
+        /** AcceptedWork */
+        AcceptedWork: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            work: components["schemas"]["RunBinding"];
+            /** Work Snapshot Sha256 */
+            work_snapshot_sha256: string;
+            /** Criterion Ids */
+            criterion_ids: string[];
+            publication: components["schemas"]["PublishedAcceptance"];
         };
         /** ActionContent */
         ActionContent: {
@@ -682,19 +770,87 @@ export interface components {
             /** Estimated Cost Usd */
             estimated_cost_usd: string;
         };
-        /** ActionRecord */
-        ActionRecord: {
+        /**
+         * ActionReceipt
+         * @description Recorded effect status, distinct from business acceptance or email delivery.
+         */
+        ActionReceipt: {
             /**
+             * Schema Version
              * @default nexus.company.v1
              * @constant
              */
             schema_version: "nexus.company.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /** Proposal Hash */
+            proposal_hash: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "succeeded" | "failed" | "outcome_unknown";
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /**
+             * External Id
+             * @default null
+             */
+            external_id: string | null;
+            /**
+             * Artifacts
+             * @default []
+             */
+            artifacts: components["schemas"]["ArtifactRef"][];
+        };
+        /**
+         * ActionRecord
+         * @description Committed proposal and decision; authorization is distinct from execution.
+         */
+        ActionRecord: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
             proposal: components["schemas"]["ActionProposal"];
+            /** Proposal Hash */
             proposal_hash: string;
             approval: components["schemas"]["ApprovalDecision"] | null;
             state: components["schemas"]["ActionState"];
+            /** Consumed At */
             consumed_at: string | null;
         };
         /** ActionReview */
@@ -883,6 +1039,39 @@ export interface components {
             /** Format: uuid */
             artifact_revision_id: string;
         };
+        /**
+         * ArtifactRef
+         * @description Addressable immutable content; actual access remains a runtime check.
+         */
+        ArtifactRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Artifact Id
+             * Format: uuid
+             */
+            artifact_id: string;
+            /** Reference */
+            reference: string;
+            /** Sha256 */
+            sha256: string;
+            /** Revision */
+            revision: string;
+            /**
+             * Allowed Principals
+             * @default []
+             */
+            allowed_principals: string[];
+        };
         /** ArtifactRevisionRef */
         ArtifactRevisionRef: {
             /**
@@ -1005,6 +1194,51 @@ export interface components {
             company_id: string;
             target: components["schemas"]["RunBinding"];
             reason: string;
+        };
+        /** ChargeProjection */
+        ChargeProjection: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Charge Id
+             * Format: uuid
+             */
+            charge_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Root Task Id
+             * Format: uuid
+             */
+            root_task_id: string;
+            /** Amount Usd */
+            amount_usd: string;
+            /** Actual Usd */
+            actual_usd: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "held" | "unknown" | "reconciled";
+            /** Issued */
+            issued: boolean;
+            /**
+             * Required Resources
+             * @default []
+             */
+            required_resources: string[];
         };
         /** CharterPublish */
         CharterPublish: {
@@ -1207,6 +1441,34 @@ export interface components {
              * Format: date-time
              */
             recorded_at: string;
+        };
+        /** CommitmentRevisionRef */
+        CommitmentRevisionRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Revision Id
+             * Format: uuid
+             */
+            revision_id: string;
+            /** Version */
+            version: string;
+            /** Sha256 */
+            sha256: string;
+            /**
+             * Commitment Id
+             * Format: uuid
+             */
+            commitment_id: string;
         };
         /** CommitmentView */
         CommitmentView: {
@@ -2034,6 +2296,20 @@ export interface components {
             /** Value */
             value: number;
         };
+        /** LedgerSnapshot */
+        LedgerSnapshot: {
+            /** Held Usd */
+            held_usd: string;
+            /** Spent Usd */
+            spent_usd: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+        };
         /**
          * LifetimeAllowance
          * @description A permanent inherited slice and own task ledger; delegation is not a charge.
@@ -2469,6 +2745,156 @@ export interface components {
              */
             status: "accepted_report" | "not_accepted" | "unknown";
         };
+        /** NativeReportOperatingProfile */
+        NativeReportOperatingProfile: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            reference: components["schemas"]["NativeReportProfileRef"];
+            selection: components["schemas"]["ReportSelection"];
+            due: components["schemas"]["DueIntent"];
+        };
+        /**
+         * NativeReportPreparedAction
+         * @description A pending/replayed native journal fact supplies no new execution permit.
+         */
+        NativeReportPreparedAction: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            profile: components["schemas"]["NativeReportProfileRef"];
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "author" | "verifier";
+            action: components["schemas"]["ActionRecord"];
+            /**
+             * Exact Approval Required
+             * @default true
+             * @constant
+             */
+            exact_approval_required: true;
+            /**
+             * Scheduled
+             * @default false
+             * @constant
+             */
+            scheduled: false;
+            /**
+             * Executed
+             * @default false
+             * @constant
+             */
+            executed: false;
+            /**
+             * Model Requests
+             * @default 0
+             * @constant
+             */
+            model_requests: 0;
+        };
+        /**
+         * NativeReportProfileRef
+         * @description Selectors/checksums never supply owner, schedule, actor or approval authority.
+         */
+        NativeReportProfileRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            report_id: string;
+            /** Report Sha256 */
+            report_sha256: string;
+            /** Selection Sha256 */
+            selection_sha256: string;
+            commitment: components["schemas"]["CommitmentRevisionRef"];
+            /** Evidence Ids */
+            evidence_ids: string[];
+        };
+        /** NewReportSnapshot */
+        NewReportSnapshot: {
+            /** Format: uuid */
+            plan_revision_id: string;
+            /** Format: uuid */
+            author_task_id: string;
+            /** @default [] */
+            selected_task_ids: (string | unknown)[];
+            /**
+             * Format: date-time
+             * @description datetime with the constraint that the value must have timezone info
+             */
+            period_start: string;
+            /**
+             * Format: date-time
+             * @description datetime with the constraint that the value must have timezone info
+             */
+            period_end: string;
+        };
+        /** OperatingProjection */
+        OperatingProjection: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            snapshot: components["schemas"]["ReportSnapshot"];
+            /** Actual Total Usd */
+            actual_total_usd: string | null;
+            /**
+             * Unknown Charge Ids
+             * @default []
+             */
+            unknown_charge_ids: string[];
+            /**
+             * Accepted Task Ids
+             * @default []
+             */
+            accepted_task_ids: string[];
+            /**
+             * Receipt Task Ids
+             * @default []
+             */
+            receipt_task_ids: string[];
+            /**
+             * Cancelled Task Ids
+             * @default []
+             */
+            cancelled_task_ids: string[];
+        };
         /**
          * OwnerCancellation
          * @description Immutable observed owner instruction, not a source-report/candidate completion.
@@ -2760,6 +3186,10 @@ export interface components {
              */
             observed_at: string;
         };
+        /** PrepareReportAuthor */
+        PrepareReportAuthor: {
+            reference: components["schemas"]["NativeReportProfileRef"];
+        };
         /**
          * PrincipalAccess
          * @description Live trusted directory snapshot, not an externally accepted grant.
@@ -2896,6 +3326,28 @@ export interface components {
             /** Target Sha256 */
             target_sha256: string;
         };
+        /**
+         * PublishedAcceptance
+         * @description Facts from a trusted current acceptance/proof store, never a decoded verdict.
+         */
+        PublishedAcceptance: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            acceptance: components["schemas"]["WorkAcceptance"] | null;
+            /** Trusted Proofs Resolved */
+            trusted_proofs_resolved: boolean;
+            /** Invalidated */
+            invalidated: boolean;
+        };
         /** RankedHandle */
         RankedHandle: {
             /**
@@ -2932,6 +3384,146 @@ export interface components {
              * @enum {string}
              */
             billing: "unissued" | "known" | "unconfirmed";
+        };
+        /**
+         * ReportData
+         * @description Current native read facts without an owner identity substituted for a verifier.
+         */
+        ReportData: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /** Lineage */
+            lineage: components["schemas"]["WorkLineage"][];
+            /**
+             * Work
+             * @default []
+             */
+            work: components["schemas"]["WorkReportFacts"][];
+            /**
+             * Charges
+             * @default []
+             */
+            charges: components["schemas"]["ChargeProjection"][];
+            /**
+             * Missing Charge Ids
+             * @default []
+             */
+            missing_charge_ids: string[];
+            /**
+             * Owner Decision Ids
+             * @default []
+             */
+            owner_decision_ids: string[];
+            /**
+             * Required Resource Ids
+             * @default []
+             */
+            required_resource_ids: string[];
+            /**
+             * Resource Generations
+             * @default []
+             */
+            resource_generations: [
+                string,
+                number
+            ][];
+            /**
+             * Source Heads
+             * @default []
+             */
+            source_heads: components["schemas"]["SourceHead"][];
+            /**
+             * Blockers
+             * @default []
+             */
+            blockers: string[];
+        };
+        /**
+         * ReportSelection
+         * @description Server-resolved immutable owner selection; IDs cannot allocate or grant work.
+         */
+        ReportSelection: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            plan: components["schemas"]["PlanRevisionRef"];
+            author: components["schemas"]["RunBinding"];
+            verifier: components["schemas"]["RunBinding"];
+            /**
+             * Work
+             * @default []
+             */
+            work: components["schemas"]["RunBinding"][];
+        };
+        /** ReportSnapshot */
+        ReportSnapshot: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            report_id: string;
+            /**
+             * Period Start
+             * Format: date-time
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date-time
+             */
+            period_end: string;
+            ledger: components["schemas"]["LedgerSnapshot"];
+            /**
+             * Work
+             * @default []
+             */
+            work: components["schemas"]["WorkProjection"][];
+            /**
+             * Blockers
+             * @default []
+             */
+            blockers: string[];
+            /**
+             * Owner Decision Ids
+             * @default []
+             */
+            owner_decision_ids: string[];
+        };
+        /** ResolveReportProfile */
+        ResolveReportProfile: {
+            /** Format: uuid */
+            report_id: string;
+            /** Format: uuid */
+            commitment_id: string;
+            evidence_ids: (string | unknown)[];
         };
         /** ResourceGeneration */
         ResourceGeneration: {
@@ -3054,6 +3646,59 @@ export interface components {
             model_profile: string;
             /** Model Registry Version */
             model_registry_version: string;
+        };
+        /**
+         * SavedOperatingReport
+         * @description Stored owner-authored selection+facts+projection envelope, not model-declared input.
+         */
+        SavedOperatingReport: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            report_id: string;
+            /**
+             * Ledger Basis
+             * @default selected_work_lifetime
+             * @constant
+             */
+            ledger_basis: "selected_work_lifetime";
+            selection: components["schemas"]["ReportSelection"];
+            /**
+             * Period Start
+             * Format: date-time
+             */
+            period_start: string;
+            /**
+             * Period End
+             * Format: date-time
+             */
+            period_end: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            data: components["schemas"]["ReportData"];
+            projection: components["schemas"]["OperatingProjection"];
+            /** Data Sha256 */
+            data_sha256: string;
         };
         /** SearchQuery */
         SearchQuery: {
@@ -3287,6 +3932,139 @@ export interface components {
             /** Check Recipe */
             check_recipe: string;
         };
+        /**
+         * VerificationResult
+         * @description Explicit acceptance verdict with criterion identities and source evidence.
+         */
+        VerificationResult: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Verification Id
+             * Format: uuid
+             */
+            verification_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Verifier Id
+             * Format: uuid
+             */
+            verifier_id: string;
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "pass" | "reject" | "inconclusive";
+            /** Criterion Ids */
+            criterion_ids: string[];
+            /**
+             * Evidence Ids
+             * @default []
+             */
+            evidence_ids: string[];
+            /**
+             * Limitations
+             * @default []
+             */
+            limitations: string[];
+        };
+        /**
+         * VerificationSpec
+         * @description Resolved only from actual issued results; never a nullable future target.
+         */
+        VerificationSpec: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            author: components["schemas"]["RunBinding"];
+            verifier: components["schemas"]["RunBinding"];
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /** Receipt Sha256 */
+            receipt_sha256: string;
+            /** Work Snapshot Sha256 */
+            work_snapshot_sha256: string;
+            /** Criterion Ids */
+            criterion_ids: string[];
+            /** Artifacts */
+            artifacts: components["schemas"]["ArtifactRevisionRef"][];
+            /** Check Recipe */
+            check_recipe: string;
+        };
+        /**
+         * WorkAcceptance
+         * @description Trusted publisher read shape, not a raw caller verdict or actual completion permission.
+         */
+        WorkAcceptance: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Acceptance Id
+             * Format: uuid
+             */
+            acceptance_id: string;
+            target: components["schemas"]["VerificationSpec"];
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "pass" | "reject" | "inconclusive";
+            /**
+             * Proofs
+             * @default []
+             */
+            proofs: components["schemas"]["ProtectedCheckProof"][];
+            /**
+             * Limitations
+             * @default []
+             */
+            limitations: string[];
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+        };
         /** WorkAccess */
         WorkAccess: {
             /**
@@ -3376,6 +4154,28 @@ export interface components {
             /** Format: uuid */
             task_id: string;
         };
+        /** WorkLineage */
+        WorkLineage: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            work: components["schemas"]["RunBinding"];
+            /** Parent Task Id */
+            parent_task_id: string | null;
+            /**
+             * Root Task Id
+             * Format: uuid
+             */
+            root_task_id: string;
+        };
         /**
          * WorkPlan
          * @description A non-empty company/goal-bound DAG frozen at one plan revision.
@@ -3406,6 +4206,80 @@ export interface components {
             revision: number;
             /** Items */
             items: components["schemas"]["WorkItem"][];
+        };
+        /** WorkProjection */
+        WorkProjection: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            work: components["schemas"]["RunBinding"];
+            /**
+             * Execution State
+             * @enum {string}
+             */
+            execution_state: "eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked";
+            /** Registered Active */
+            registered_active: boolean;
+            /**
+             * Acceptance
+             * @enum {string}
+             */
+            acceptance: "pending" | "accepted" | "rejected" | "inconclusive" | "invalidated";
+            /**
+             * Acceptance Id
+             * @default null
+             */
+            acceptance_id: string | null;
+            /**
+             * Billing
+             * @enum {string}
+             */
+            billing: "known" | "unconfirmed";
+        };
+        /** WorkReportFacts */
+        WorkReportFacts: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            work: components["schemas"]["RunBinding"];
+            /**
+             * Execution State
+             * @enum {string}
+             */
+            execution_state: "eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked";
+            /** Registered Active */
+            registered_active: boolean;
+            /** Cancelled */
+            cancelled: boolean;
+            acceptance: components["schemas"]["AcceptedWork"];
+            receipt: components["schemas"]["ActionReceipt"] | null;
+            verification_candidate: components["schemas"]["VerificationResult"] | null;
+            /**
+             * Required Resources
+             * @default []
+             */
+            required_resources: string[];
+            /**
+             * Blockers
+             * @default []
+             */
+            blockers: string[];
         };
         /** WorkView */
         WorkView: {
@@ -4736,6 +5610,167 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetricObservationRecord"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementReportsNewSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewReportSnapshot"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedOperatingReport"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementReportsProfilesPrepareAuthorPrepareAuthor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepareReportAuthor"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeReportPreparedAction"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementReportsReportIdRecordedReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedOperatingReport"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementReportsProfilesResolveProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveReportProfile"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeReportOperatingProfile"];
                 };
             };
             /** @description Bad request syntax or unsupported method */

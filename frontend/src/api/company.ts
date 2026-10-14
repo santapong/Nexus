@@ -5,6 +5,8 @@ import type {
   CompanyLogin, CompanySignup, CompanySession,
   ManagementControlDescriptor, WorkCancellationIntent, OwnerCancellation, CompanyPauseState,
   MetricObservationIntent, MetricObservationRecord, MetricObservationPage,
+  NewReportSnapshot, SavedOperatingReport, ResolveReportProfile,
+  NativeReportProfileRef, NativeReportOperatingProfile, NativeReportPreparedAction,
 } from '@/types/company'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -55,6 +57,14 @@ const base = (id: string) => `/api/v2/companies/${encodeURIComponent(id)}/manage
 const query = (after?: string | null) => after ? `?after_id=${encodeURIComponent(after)}` : ''
 
 export const companyApi = {
+  saveReport: (id: string, body: NewReportSnapshot) => companyFetch<SavedOperatingReport>(
+    base(id) + '/reports/', { method: 'POST', body: JSON.stringify(body) }),
+  report: (id: string, report: string) => companyFetch<SavedOperatingReport>(
+    `${base(id)}/reports/${encodeURIComponent(report)}`),
+  resolveReportProfile: (id: string, body: ResolveReportProfile) => companyFetch<NativeReportOperatingProfile>(
+    base(id) + '/reports/profiles', { method: 'POST', body: JSON.stringify(body) }),
+  prepareReportAuthor: (id: string, reference: NativeReportProfileRef) => companyFetch<NativeReportPreparedAction>(
+    base(id) + '/reports/profiles/prepare-author', { method: 'POST', body: JSON.stringify({ reference }) }),
   metrics: (id: string, goal: string, after?: string | null) => companyFetch<MetricObservationPage>(
     `${base(id)}/metrics/observations?goal_id=${encodeURIComponent(goal)}${after ? `&after_id=${encodeURIComponent(after)}` : ''}`),
   observeMetric: (id: string, body: MetricObservationIntent) => companyFetch<MetricObservationRecord>(

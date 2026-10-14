@@ -70,6 +70,7 @@ def compose_pilot(factory: async_sessionmaker[AsyncSession], config: PilotConfig
         cancellations=WorkCancellationStore(factory),
         metrics=MetricStore(factory, catalog, artifacts, freshness),
         metric_queries=MetricQueries(factory, catalog, artifacts, freshness),
+        reports=reports,
     )
     return PilotServices(
         CompanyServices(directory, CompanyJournal(factory), CompanyControls(factory)),
