@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Fixed bounded contained-engine inspection transport
+
+### Added
+- Inspection-only cgroupfs transport accepts one exact format and full immutable
+  container ID; arbitrary programs/options/commands and expired deadlines deny.
+- Bounded stdout/stderr and owned child reaping share one absolute deadline.
+
+### Validation
+- Tests-first missing-module red retained;12 synthetic composition cases pass,
+  including cancellation, overflow and actual short timeout. Strict/Ruff2 pass.
+- No actual Podman invocation, container launch or runtime v2 activation.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Default-disabled durable owner notification execution
 
 ### Added
