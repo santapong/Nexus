@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Optional current-owner notification inbox API
+
+### Added
+- Explicit optional signed owner list/detail routes return licensed current drafts
+  and stored provider observations with whole-page expiry/privacy checks.
+- Exact runtime serialization schemas and bounded read-only composition; default
+  routes remain unmounted and perform no sending or provider polling.
+
+### Fixed
+- Pagination anchor joins all candidate/lookahead source/recipient checks and the
+  final clock barrier, with at most9 queried IDs (ERROR-075).
+
+### Validation
+- Worker26 historical checks15PG+11unit272.39s, amended8PG198.59s, unchanged
+  independent anchor1PG17.83s; coherent1427unit88.15s and strict16/Ruff/format pass.
+  Frontend preview is separately prepared; live owner/UAT/email/release remain open.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Qualified native drafts and atomic notification cursor
 
 ### Added

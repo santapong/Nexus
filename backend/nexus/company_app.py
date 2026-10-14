@@ -16,11 +16,13 @@ from nexus.api.company_management_control_routes import CompanyManagementControl
 from nexus.api.company_management_routes import CompanyManagementController
 from nexus.api.company_metric_routes import CompanyMetricController
 from nexus.api.company_native_report_routes import CompanyNativeReportController
+from nexus.api.company_notification_routes import CompanyNotificationInboxController
 from nexus.api.company_openapi import CompanyJsonRenderPlugin, CompanyYamlRenderPlugin
 from nexus.api.company_routes import CompanyController, company_health, validation_error_handler
 from nexus.api.company_session_routes import CompanySessionController
 from nexus.company.brain.api_services import BrainServices
 from nexus.company.management.api_services import ManagementApiServices
+from nexus.company.notifications.api_services import NotificationApiServices
 from nexus.company.pilot_session import PilotSessionService
 from nexus.company.services import CompanyServices
 
@@ -30,6 +32,7 @@ def create_company_app(
     *,
     brain_services: BrainServices | None = None,
     management_services: ManagementApiServices | None = None,
+    notification_services: NotificationApiServices | None = None,
     pilot_sessions: PilotSessionService | None = None,
     cors_config: CORSConfig | None = None,
 ) -> Litestar:
@@ -72,6 +75,17 @@ def create_company_app(
         route_handlers.append(CompanyManagementControlController)
         route_handlers.append(CompanyMetricController)
         route_handlers.append(CompanyNativeReportController)
+
+    if notification_services is not None:
+        mounted_notifications = notification_services
+
+        def provide_notification_services() -> NotificationApiServices:
+            return mounted_notifications
+
+        dependencies["notification_services"] = Provide(
+            provide_notification_services, use_cache=True, sync_to_thread=False
+        )
+        route_handlers.append(CompanyNotificationInboxController)
 
     if pilot_sessions is not None:
         mounted_sessions = pilot_sessions

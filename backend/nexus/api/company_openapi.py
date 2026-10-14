@@ -33,6 +33,10 @@ from nexus.company.management.owner_view_contracts import (
     TodayView,
     WorkView,
 )
+from nexus.company.notifications.inbox_contracts import (
+    NotificationInboxEntry,
+    NotificationInboxPage,
+)
 from nexus.company.pilot_session import PilotSessionToken
 
 RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
@@ -57,6 +61,8 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     SavedOperatingReport,
     NativeReportOperatingProfile,
     NativeReportPreparedAction,
+    NotificationInboxEntry,
+    NotificationInboxPage,
 )
 
 

@@ -231,6 +231,9 @@ jobs:
           - suite: owner-notification-managed-sender
             database: nexus_company_test_notifications
             tests: test_company_notification_managed.py test_company_notification_managed_denials.py test_company_notification_managed_plan_splice.py test_company_notification_managed_time.py
+          - suite: owner-notification-inbox-api
+            database: nexus_company_test_notifications
+            tests: test_company_notification_inbox_api.py test_company_notification_inbox_auth.py test_company_notification_inbox_observations.py test_company_notification_inbox_obsolete.py test_company_notification_inbox_privacy.py test_company_notification_inbox_anchor.py
           - suite: current-model-observation-expiry
             database: nexus_company_test_notification_review
             tests: test_company_model_observation_expiry.py

@@ -74,6 +74,32 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-075 — Inbox pagination anchor was outside current licensing
+
+**Date:** 2026-10-14
+**Severity:** medium
+**Status:** fixed, independent original probe closed
+**Found by:** combined owner inbox API review
+**Affected files:** notifications/inbox_store.py
+
+### What happened and fix
+after_id resolved an owner row for ordering but the final source/recipient barrier
+covered only candidates/lookahead. Actual source READ revoke followed by an empty
+page after the oldest anchor returnedHTTP200. No body disclosure is claimed.
+Original unchanged restricted015 probe failed18.05s, then passed17.83s after the
+anchor joined licensing and at most9 total queried identities. Cursor+limit8 uses
+at most8 candidates plus anchor; a conservative continuation may lead to an empty
+licensed page and does not claim has_more. Source/recipient final-await expiry and
+current/obsolete pagination remain guarded. Prior and amended snapshots preserved.
+
+### Prevention
+Count and qualify every metadata query row, including ordering anchors and skipped
+or lookahead records. Preserve original adversarial HTTP probe and final clock/
+recipient pins; existence alone is not a current read license. See external
+notification-inbox-review/verdict-fixed.json and inbox-anchor-amendment-v1.json.
+
+---
+
 ## ERROR-074 — Direct model observation helper ignored a later conflicting record
 
 **Date:** 2026-10-14
