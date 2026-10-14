@@ -116,8 +116,12 @@
 | ADR-103 | Registered authority, lifetime quotas and principal-bound effects | accepted | 2026-10-14 |
 | ADR-104 | One non-retrying effect step for governed offline recovery | accepted | 2026-10-14 |
 | ADR-105 | Required per-request model gate and local wire/schema validation | accepted | 2026-10-14 |
-| ADR-106 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
-| ADR-107 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
+| ADR-106 | Native permission-bound Brain provenance | accepted | 2026-10-14 |
+| ADR-107 | Supervised management and independent acceptance | accepted | 2026-10-14 |
+| ADR-108 | Permanent notification ledger and separate native wake migration | accepted | 2026-10-14 |
+| ADR-109 | Qualified native mapping preserves older physical profiles | accepted | 2026-10-14 |
+| ADR-110 | Separate current model eligibility from immutable registrations | accepted | 2026-10-14 |
+| ADR-111 | Bounded authenticated operator backup envelope | accepted | 2026-10-14 |
 
 ---
 
@@ -3171,12 +3175,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-108 -->
+<!-- Next ID: ADR-112 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-110*
+*Next ADR ID: ADR-112*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3227,7 +3231,7 @@ Downgrade refuses existing new-kind events before removing their columns, retain
 durable evidence. Real source emitters, final privacy/time checks and delivery
 remain separate required implementation gates.
 
-## ADR-106 — Separate current model eligibility from immutable registrations
+## ADR-110 — Separate current model eligibility from immutable registrations
 
 **Status:** accepted
 **Date:** 2026-10-14
@@ -3255,7 +3259,7 @@ prove live provider quality, code/reasoning or structured-output capability. Mod
 routing/client evidence integration remains separately qualified before use; no
 observation silently changes a request's registered model/endpoint/price/schema.
 
-## ADR-107 — Bounded authenticated operator backup envelope
+## ADR-111 — Bounded authenticated operator backup envelope
 
 **Status:** accepted
 **Date:** 2026-10-14

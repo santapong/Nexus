@@ -427,3 +427,32 @@ identities preserved, preSDKcurrentchecks and protectedprovenance; first2actual
 normal015 mockSDK/nativebilling casespassed. Fullclock/revoke/version boundary
 packagepending. Human signup/owneremail andARM64/privateoperatingrelease gates
 remainopen; frontendinboxpatch staysisolated, previewsclosed. Goalactive.
+
+### Checked 2026-10-14 — Isolated native engineering admission
+
+Root's [native profile plan](NATIVE_ENGINEERING_PROFILE_PLAN.md) now has an
+eight-file implementation in an isolated snapshot based on a1adec7. The active
+shared admission code is unchanged while the gateway agent finishes its package.
+The explicit profiles bind an exact registry digest and workflow, a closed
+engineering author/verifier pair, seven criteria, and zero model quota throughout
+actual immutable ancestry. Model requests are denied; current charter, approval,
+source, lease and budget gates remain in force. No model-health evidence is invented.
+
+The snapshot passed 1,501 unit tests in 34.16s (19 existing warnings), 9 restricted
+normal015 PostgreSQL cases in 19.69s, strict types on 8 files, and Ruff/format.
+The original test-first missing-module result and a mistaken quota-mutation fixture
+are retained. PostgreSQL correctly rejected that mutation through its immutable
+registration trigger; the corrected test preserves this safeguard, and a separate
+publicly registered positive ancestor demonstrates the native guard's denial.
+
+Source manifest: native-builder/native-profile-freeze-1.json, SHA
+de4f0a030947a719a6dc294303c0d1f02caff4132da9d63b892c8c8eb39902bf under the
+dated implementation evidence directory. Independent review and integration are
+pending. Actual CSV module regression, patch, independent process and engineering
+acceptance remain required. The reduced no-mount JavaScript probe establishes the
+malformed quantity semantics only.
+
+The release still needs genuine model quality, current StockFlow business evidence,
+owner setup/email, ARM64 sandbox qualification, private deployment, matching
+database/DBOS recovery, independent backup storage/key custody, rollback and a 24h
+soak. Gateway and operator-local recovery implementation continue in parallel.

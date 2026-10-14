@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Native engineering admission plan and decision index
+
+### Added
+- Reviewable model-free mechanical profile plan with exact native identities,
+  zero-model ancestry and retained owner/source/approval/budget boundaries.
+  Its isolated implementation passed 1,501 units and 9 restricted PG cases;
+  shared integration and independent review remain pending.
+
+### Fixed
+- Reconciled duplicate decision IDs: current model observations are ADR-110 and
+  backup format is ADR-111; historical Brain/management ADR-106/107 are preserved.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-14] — Bounded encrypted backup format and protected restore tree
 
 ### Added
