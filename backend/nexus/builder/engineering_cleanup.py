@@ -113,17 +113,21 @@ async def cleanup_known_engineering_container(
     result: BuilderRunResult,
     expected_receipt: ActionReceipt,
 ) -> None:
-    """Known receipt and current reconcile fence authorize only owned infrastructure cleanup."""
+    """Known receipt and current fenced mode authorize only owned infrastructure cleanup."""
     # Keep this >50-line company-first transaction and final effect fence cohesive:
     # issued receipt/result, captured container ID and last clock must agree before rm.
-    if lease.mode != "reconcile" or result.outcome == "outcome_unknown" or result.spec != spec:
+    if result.outcome == "outcome_unknown" or result.spec != spec:
         raise ValueError("Engineering cleanup needs known reconciliation output")
     await actual_action(factory, lease, identity, action, spec)
     expected = "nexus-builder-" + uuid5(spec.job.company_id, str(action.action_id)).hex
     if result.container_name != expected:
         raise ValueError("Engineering saved container name differs")
     async with runtime_transaction(
-        factory, lease_scope(lease), identity, allow_paused=True, allow_inactive=True
+        factory,
+        lease_scope(lease),
+        identity,
+        allow_paused=lease.mode == "reconcile",
+        allow_inactive=lease.mode == "reconcile",
     ) as (session, _, _):
         work = await execution_row(session, lease_scope(lease))
         require_lease(work, lease, await db_now(session))

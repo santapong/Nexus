@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Known execute-lease engineering cleanup and digest expiry
+
+### Fixed
+- Known receipt cleanup accepts current execute mode under normal active/unpaused
+  scope; reconcile retains historical allowances. Exact native receipt/protected
+  summary/fence/immutable stopped ID checks remain (ERROR-093).
+
+### Validation
+- Preserved actual CSV outputs replay with no new prepare/invoke; pausedexecute
+  denial, exact proof/acceptance replay and currentREAD revoke pass. Original full
+  pair and first recovery fixture failures remain retained; outer containment open.
+- Root12focused/0.96s, strict/Ruff2 and coherent1,952unit/21.71s pass.
+- Actual3digest expiry cases/39.34s prove distinct emitter/consumer/preparation
+  final-clock rollback while preserving prior committed stages, real finite clock.
+
+**Authored by:** Codex and supervised engineering/notification agents
+**PR:** not published
+
 ## [2026-10-15] — Protected native worker digest composition
 
 ### Validation

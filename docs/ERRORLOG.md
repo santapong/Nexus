@@ -99,7 +99,7 @@ gap.json and cgroup-split-qualification-20261015/manifest.json.
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** open; narrow cleanup-mode correction and replay qualification underway
+**Status:** fixed in cleanup scope; preserved known replay qualified, original full test remains failed
 **Found by:** actual public native CSV pair test
 **Affected files:** tests/csv_native fixture and builder/engineering_cleanup.py
 
@@ -116,6 +116,15 @@ checks. Exact succeeded receipt/protected summary/current fence/immutable stoppe
 ID remain mandatory. A preserved-state replay-only continuation must prove zero
 new invocation/attempt/hold; production mode is not itself effect authority.
 Evidence: csv-node-v4/native-fixture-job-1.log and root-native-first-failure-scope.json.
+
+Later preserved-state proof: first recovery-only driver returned both actual saved
+results with zero prepare/invoke, then failed a fixture receipt construction after
+the correct witness-cache cleanup. Actual finally released both leases/pauseFalse.
+The remaining-only driver uses actual stored receipt, proves pausedexecute denial,
+exact proof/acceptance replay and currentREAD revoke denial; terminalfences7/6
+released, immutable native history/captures unchanged. Root12focused/0.96s, strict
+/Ruff2 and coherent1,952units/21.71s pass. No jobs/allowances were repeated.
+
 
 ## ERROR-092 — Notification tick omitted the configured fact-resource comparison
 

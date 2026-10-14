@@ -46,3 +46,31 @@ root-native-outer-containment-gap.json and native-builder/
 cgroup-split-qualification-20261015/manifest.json in the dated implementation
 evidence directory. Full private StockFlow, integrated containment, ARM64, models,
 owner/email and operational release remain separate gates.
+
+
+## Preserved-state known replay and remaining proof
+
+The narrow cleanup correction permits a known current execute lease only through
+normal active/unpaused scope; reconcile retains historical allowances. Actual
+action, succeeded receipt, complete protected result summary, immutable stopped
+container ID and final fence checks remain. Retained original puremode case
+failed1/passed1; fixed12pure pass, strict/Ruff2 pass.
+
+A60s replay-only driver with hard prepare/invoke tripwires returned BOTH original
+saved results under new current execute leases with unchanged four original
+invocation/container capture hashes. It then FAILED constructing a paused-probe
+receipt from a cleared temporary witness cache. That fixture failure is preserved;
+actual finally released authorfence5/verifier4 and restored pauseFalse.
+
+The corrected remaining-only driver never calls runner.run. It reads the actual
+EffectStore succeeded receipt before pause, proves paused execute cleanup denial,
+restores pauseFalse, replays the exact stored protected proof/acceptance, checks
+current accepted projection and denies after public proof READ revocation. It
+reports PASS with original receipt/attempt/hold/proof/acceptance and four capture
+hashes unchanged. Terminal authorfence7/verifier6 released, tool1each/model0,
+two positive unknownUSD0.01/nullactual holds, two succeeded effects and one
+proof/acceptance remain. No new sandbox, action, budget or source refresh.
+
+These staged recovery checks qualify the saved-state boundary; the original
+full-pair test remains failed and outer containment remains open. Full private
+StockFlow, integrated runtime containment and ARM64 are separate requirements.

@@ -76,3 +76,17 @@ That daily case is honest no-due proof; positive daily remains pending until a
 real eligible clock. Root strict3/statichash checks pass; all earlier sources
 unchanged. Digest expiry/stale report/old-registration retention/rollover and
 transport/durable operation remain separate gates.
+
+
+## Actual finite digest expiry — 2026-10-15
+
+NEW2 frozen tests/support SHA9726de074a274b03df5002dc3dbea9384c98b5520c35a228
+38684cc7058d6fae passed3actualPG/39.34s without correction/retry. Exact finite10s
+RegisteredDigestPolicy is fixed before prerequisite emission so stateSHA stays
+unchanged. Same-session flushed event/cursor+draft+link/pending journal assertions
+prove each nominated phase. Real before<expiry<=after clocks and exact2/1/1alias
+calls are exported. Emitter rolls back new wake; consumer retains committed wake
+but rolls back draft/link/cursor; preparation retains wake/draft/cursor but rolls
+back pending action. All original native ledger/counters/effects remain conserved.
+Root strict2/static hashes pass. Loss/stale report/old-registration retention/
+real rollover and durable/provider operation remain separate gates.
