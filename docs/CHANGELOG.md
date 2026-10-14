@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Native notification tick composition matrix
+
+### Validation
+- Five frozen actual normal015 restricted-PG cases pass59.21s without correction:
+  concurrent single publication, empty/ignored sender expiry final-clock rollback,
+  qualified recursive-wake denial and bounded three-draft restart/page progress.
+- Initial14 implementation hashes unchanged; NEW6 tests/support strict/Ruff/format
+  and independent review pass. No model/effect/approval/transport/queue activation.
+- Record public CSV jobs/protected acceptance separately from its failed replay
+  assertion and open cleanup/outer-containment boundaries (ERROR-093/094).
+
+**Authored by:** Codex and supervised notification agent; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Bounded native notification read/preparation tick
 
 ### Added

@@ -609,3 +609,54 @@ Tool1/model0/positive unknown billing and released capacity remain. Eight actual
 PG negatives and Root1,929unit/21.31s/strict12 pass. See the
 [checkpoint](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md).
 This closes the defined immediate fixture gate, not StockFlow, ARM64 or service recovery.
+
+
+### Checked 2026-10-15 — Bounded notification staging/replay
+
+Local headbe252d6 commits the default-disabled native read/preparation tick. Exact
+configured subjects, genuine credential and current sender/source/recipient windows
+remain required through each final clock. One bounded consume batch and at mostone
+pending action preparation create no approval, allowance, queue dispatch or send.
+Independent resource-binding review retained2pure failures then2passing cases;
+exact resolvedresource denial is now before emission.
+
+Frozen14 source hashes and12 retained log hashes independently match. Root private
+snapshot21focused/1.27s, strict/Ruff14 and coherent1,950unit/21.75s/19existingwarnings
+pass. Actual isolated normal015/restricted-app positive+sequential replay1PG/8.08s
+proves one wake/draft/link/pending action, unchanged replay/cursor and zero holds,
+intents, dispatch slots or counters. Both source and sender actions remain awaiting
+approval. Owned teardown read returns normal base; returned draft/action UUIDs
+were asserted but not separately exported. See the [tick checkpoint](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md).
+
+Actual concurrent/empty-ignored expiry/self-wake/page-restart/digest composition
+remain open. Public synthetic native CSV author/verifier fixtures are registered
+but jobs await their final bounded launch gate. Neither fixture proves current
+full StockFlow, ARM64, live model quality, owner/email UAT or operational release.
+
+
+### Checked 2026-10-15 — Public CSV pair and retained recovery gaps
+
+One reviewed actual native CSV pair produced two succeeded receipts, protected
+acceptance, tool1each/model0 and positive unknown cost holds. Full test FAILED
+1/61.73s at a wrong fixture claim-mode assumption before replay checks. No jobs
+were repeated. Generic claim defaults execute for known terminal receipt; native
+runner routes existing issuance to reconciliation, while engineering cleanup
+currently rejects that execute lease. A narrow tests-first cleanup-mode fix and
+preserved-state replay-only continuation are planned; current claim semantics
+and original failure stay intact.
+
+Actual payload cgroups also ran outside the outer scope. Root's new tiny explicit
+cgroupfs/split candidate contained its payload, and a changed4s timeout killed
+all six captured live process/start identities. This local compatibility evidence
+does not close integrated Nexus/ARM64 containment. See the [CSV checkpoint](NATIVE_CSV_PG_CHECKPOINT_2026-10-15.md).
+
+
+### Checked 2026-10-15 — Notification temporal/concurrent/page composition
+
+The frozen NEW6 matrix passed all5 actual restricted-PG cases/59.21s, without
+correction/retry: concurrent aggregate1, empty+ignored real10s sender grant final
+clock rollback2, qualified self-wake unchanged cursor1, three public drafts with
+max_candidates1 through one restart/pagecycle1. Initial14 source files unchanged.
+Digest/durable dispatch/production credentials/email remain open. Phase3 targeted
+atomic consumption+hold+native dispatch+DBOS enqueue is now tests-first NEWmodule
+implementation; explicit owner decision remains an earlier immutable record.

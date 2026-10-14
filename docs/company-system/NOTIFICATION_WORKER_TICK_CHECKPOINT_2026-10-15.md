@@ -34,3 +34,26 @@ actions, exact persisted draft/payload/recipient pins and zero holds/intents/dis
 normal015 restricted-role setup and owned teardown are included. Concurrent replay, final-await expiry rollback, recursive self-wake
 cursor denial, page/restart fairness and protected digest composition remain open.
 No owner UAT, live email, daemon, queue or release activation accompanies this code.
+
+
+## Actual next matrix — 2026-10-15
+
+Frozen NEW6 tests/support on committedbe252d6, SHA141d00688f5705ecc1ea54b9f47b10cec
+3bcb15b8002ac4b5f323ef66a3967ee, independently source/hash-reviewed. Root strict6
+passes; author strict/Ruff/format6 and exact5-case collection pass. Actual normal015
+restricted-app batch passed5/59.21s with no source correction or retry:
+
+- Two simultaneous worker objects aggregate one actual wake/draft/pending action.
+- Empty and ignored consumer batches capture a real public sender-only10s READ
+  deadline, cross it at the delegated final SQL clock and roll back unchanged
+  native cursor/publication/journal/effect/counter state; each nominated hook runs1.
+- A public fully qualified sender decision wake denies after native admission with
+  unchanged cursor and no recursive draft/action.
+- Three public source wakes/drafts with max_candidates1 prepare all exact pending
+  actions through one new-worker restart and bounded page cycles. Actual visited
+  licensing includes anchor/lookahead; later cycles stay quiet.
+
+The initial14 source hashes and first-PG receipt stay unchanged. These are public
+synthetic read/preparation proofs only. Digest composition, repeated-restart
+fairness, licensed obsolete combinations, durable dispatch/process recovery,
+production credential/timer/email and operational release remain separate.

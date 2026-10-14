@@ -74,6 +74,49 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-094 — Delegated outer scope did not contain Podman payloads
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** high
+**Status:** open for integrated runtime; local compatibility candidate qualified
+**Found by:** Root inspection of actual CSV container PID/cgroup records
+**Affected files:** builder runtime configuration/qualification; no production edit yet
+
+Both real CSV payloads ran in sibling libpod scopes outside the proposed outer
+job.scope. Actual self caps4GiB/2CPU/256PID and inner caps do not prove outer
+whole-pair descendant cleanup. Original job records remain scoped accordingly.
+
+Installed Podman5.8.6/official v5.8 docs informed an explicit cgroupfs + split
+candidate. A tiny pinned-image no-network probe contained payload ancestry; a
+changed4s outer probe captured six live runtime/conmon/payload identities and all
+were absent after timeout. Engine cached Running with dead PIDs; ordinary rm/sync
+failed and only exact labelled synthetic object was force-removed. No production
+cleanup claim follows. Integrated versioned ABI, manager-compatible cleanup and
+actual full descendant gate remain required. Evidence: root-native-outer-containment-
+gap.json and cgroup-split-qualification-20261015/manifest.json.
+
+## ERROR-093 — Known CSV replay fixture assumed the wrong lease mode
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** open; narrow cleanup-mode correction and replay qualification underway
+**Found by:** actual public native CSV pair test
+**Affected files:** tests/csv_native fixture and builder/engineering_cleanup.py
+
+The actual author/verifier jobs and protected acceptance succeeded, then the full
+test failed1/61.73s asserting generic claim.mode == reconcile for a known succeeded
+receipt. Generic claim defaults execute; reconcile_only requires unresolved effects.
+The native runner routes existing issuance to reconcile before prepare/begin/invoke,
+but its engineering cleanup hook currently rejects the valid current execute lease.
+
+Do not change generic claim or repeat the two consumed jobs. Preserve the failed
+assertion/rows/unknown holds; qualify a narrow cleanup path accepting current execute
+only under normal active/unpaused admission, while reconcile retains historical
+checks. Exact succeeded receipt/protected summary/current fence/immutable stopped
+ID remain mandatory. A preserved-state replay-only continuation must prove zero
+new invocation/attempt/hold; production mode is not itself effect authority.
+Evidence: csv-node-v4/native-fixture-job-1.log and root-native-first-failure-scope.json.
+
 ## ERROR-092 — Notification tick omitted the configured fact-resource comparison
 
 **Date:** 2026-10-15 (Asia/Bangkok)
