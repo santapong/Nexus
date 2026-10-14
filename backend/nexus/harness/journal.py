@@ -17,13 +17,11 @@ from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal, ApprovalDecision, ResourceRevision
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dbos_queue import enqueue_authorized_segment
-from nexus.harness.approvals import ApprovalContext, require_exact_approval
+from nexus.harness.journal_authorization import authorize_locked as _authorize_locked
 from nexus.harness.journal_budget import (
     budget_snapshot,
     reconcile_cost,
     require_registered_access,
-    reserve_cost,
-    reserve_registered_cost,
 )
 from nexus.harness.journal_contracts import ActionRecord, BudgetSnapshot, CompanyPolicy, LedgerScope
 from nexus.harness.journal_models import CompanyControl, JournalAction
@@ -106,39 +104,6 @@ def _approve_locked(
     if not approved:
         require_transition(ActionState(row.state), ActionState.REJECTED)
         row.state = ActionState.REJECTED.value
-    return _record(row)
-
-
-async def _authorize_locked(
-    session: AsyncSession,
-    row: JournalAction,
-    control: CompanyControl,
-    scope: LedgerScope,
-    now: datetime,
-    resources: tuple[ResourceRevision, ...],
-    *,
-    registered: bool,
-) -> ActionRecord:
-    record = _record(row)
-    if record.approval is None or row.consumed_at is not None:
-        raise ValueError("Approval is missing or already consumed")
-    context = ApprovalContext(
-        company_id=scope.company_id,
-        owner_id=control.owner_id,
-        actor_id=scope.principal_id,
-        now=now,
-        policy_version=control.policy_version,
-        price_version=control.price_version,
-        paused=control.paused,
-        resources=resources,
-    )
-    require_exact_approval(record.proposal, record.approval, context)
-    require_transition(record.state, ActionState.AUTHORIZED)
-    if registered:
-        await reserve_registered_cost(session, control, record.proposal, scope, now)
-    else:
-        await reserve_cost(session, control, record.proposal, scope, now)
-    row.consumed_at, row.state = now, ActionState.AUTHORIZED.value
     return _record(row)
 
 

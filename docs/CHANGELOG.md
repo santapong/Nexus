@@ -40,6 +40,23 @@ Copy this template and fill it in. Delete sections that don't apply.
 
 ---
 
+## [2026-10-14] — Connect owner decisions to bounded native report operation
+
+### Added
+- Reloadable exact saved-occurrence registration and native operating tick with due/pending/issued/accepted/historical/unknown states and zero-model idle behavior.
+- Actual owner HTTP approval → configured actor same-transaction authorization → native scheduler/worker receipt → real verifier preparation/capacity release → second owner decision → protected acceptance.
+- Public registered-verifier read-only target selection and exact M1 authorization helper extraction; original lease/approval/budget behavior retained.
+
+### Validation and limits
+- Stable whole1229unit14.57s/19existing warnings; strict/Ruff/format21files. Frozen27checks17PG+10unit146.70s; Root independent unchanged6PG90.80s; originaljournal9PG3.38s compatibility.
+- Final after-hold source/profile/approval expiry rolls back consumption and charges. Issued unknown facts remain reconciliation-only. No production timer/worker, provider, notification, device or deployment is activated; owner UI/issuer/composition remain required.
+
+**Authored by:** Codex with bounded worker
+**Task ID:** 01a10730-bc57-7c93-aa91-a08879d268d8
+**PR:** n/a — local checkpoint
+
+---
+
 ## [2026-10-14] — Install durable owner notification ledger without activating delivery
 
 ### Added

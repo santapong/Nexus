@@ -195,6 +195,9 @@ jobs:
           - suite: management-native-profile
             database: nexus_company_test_native_profile
             tests: test_company_native_profile.py test_company_native_profile_verifier.py test_company_native_profile_boundary.py test_company_native_profile_lease.py test_company_native_profile_denials.py
+          - suite: management-native-operating-loop
+            database: nexus_company_test_operating_loop
+            tests: test_company_operating_loop.py test_company_operating_loop_denials.py test_company_operating_loop_expiry.py test_company_operating_loop_unknown.py test_company_operating_loop_capacity.py test_company_registered_target_read.py
           - suite: management-native-report-api
             database: nexus_company_test_native_report_api
             tests: test_company_native_report_api.py test_company_native_report_api_owner.py

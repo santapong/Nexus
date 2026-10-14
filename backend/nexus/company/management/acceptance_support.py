@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Protocol
 from uuid import UUID, uuid5
 
 from sqlalchemy import Select, select, text
@@ -31,6 +32,16 @@ from nexus.execution.runtime_support import execution_row, lease_scope, require_
 from nexus.harness.journal_models import CompanyControl
 
 
+class VerificationSelection(Protocol):
+    """Readonly native company/task selection, never a lease or execution permit."""
+
+    @property
+    def company_id(self) -> UUID: ...
+
+    @property
+    def task_id(self) -> UUID: ...
+
+
 def acceptance_scope(lease: ExecutionLease, action_id: UUID) -> BrainReadScope:
     return BrainReadScope(
         company_id=lease.company_id,
@@ -45,7 +56,7 @@ def acceptance_scope(lease: ExecutionLease, action_id: UUID) -> BrainReadScope:
 
 
 def plan_query(
-    lease: ExecutionLease,
+    lease: VerificationSelection,
 ) -> Select[tuple[ManagementPlanRevision, ManagementVerificationBinding, ManagementPlanHead]]:
     return (
         select(ManagementPlanRevision, ManagementVerificationBinding, ManagementPlanHead)
@@ -73,7 +84,7 @@ def plan_query(
 async def native_plan(
     session: AsyncSession,
     control: CompanyControl,
-    lease: ExecutionLease,
+    lease: VerificationSelection,
 ) -> tuple[ManagementPlanRevision, PlanPayload, ManagementVerificationBinding]:
     denied(
         not bool(
@@ -223,7 +234,19 @@ async def resolve_native_target(
     """Read the exact target under a current lease; this does not publish acceptance."""
     verifier = await execution_row(session, lease_scope(lease))
     require_lease(verifier, lease, now)
-    revision, payload, binding = await native_plan(session, control, lease)
+    return await resolve_work_target(session, control, lease, verifier, action_id)
+
+
+async def resolve_work_target(
+    session: AsyncSession,
+    control: CompanyControl,
+    selection: VerificationSelection,
+    verifier: ExecutionWork,
+    action_id: UUID,
+) -> VerificationSpec:
+    """Materialize exact current native targets after the caller's actual access/lease gate."""
+    denied((selection.company_id, selection.task_id) == (verifier.company_id, verifier.task_id))
+    revision, payload, binding = await native_plan(session, control, selection)
     await current_governance(session, control, payload)
     author, selected_author, author_charter = await current_work(
         session, control, payload, revision.plan_revision_id, binding.author_task_id
@@ -240,7 +263,7 @@ async def resolve_native_target(
     )
     receipt = await actual_receipt(session, author, action_id)
     return VerificationSpec(
-        company_id=lease.company_id,
+        company_id=selection.company_id,
         author=selected_author.binding,
         verifier=selected_verifier.binding,
         action_id=action_id,
