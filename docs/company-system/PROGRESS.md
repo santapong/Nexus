@@ -536,3 +536,13 @@ failure test exposed an acquired lease left active before context return; the
 scoped correction and known-output in-process replay passed2PG/18.94s. DBOS and
 five OS kill barriers are still pending. Credential-bound notification wrappers
 and the complete CSV recipe are being tested separately. Release goal remains active.
+
+### Checked 2026-10-14 — Native decision profile integration correction
+
+ERROR-084 closes an actual model-free notification decision-source denial.
+Only exact configured native children omit irrelevant model deadline windows;
+complete tuple and ordinary model checks remain. Focused89pure/1.17s and the
+unchanged actual normal015source fixture1/6.76s pass after original1failure/4.70s.
+The fixture emits a native draft and one mock POST with no second POST; credential
+expiry wrappers and durable activation remain separate unfinished gates. See the
+[checkpoint](NATIVE_DECISION_PROFILE_CHECKPOINT_2026-10-14.md).

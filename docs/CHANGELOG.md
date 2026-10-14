@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Exact native profile deadlines for decision publication
+
+### Fixed
+- Pending native decisions no longer require invented model health/evaluations
+  for exact configured model-free children (ERROR-084). Complete profile validation
+  precedes selection; ordinary model windows and source/grant checks remain live.
+
+### Validation
+- Test-first missing-helper failure retained; nine new pure cases and focused89
+  cases/1.17s, strict/Ruff/format2files pass. Actual original1failure/4.70s is closed
+  by the unchanged source fixture1pass/6.76s with a real native draft and mock POST.
+- Root's coherent combined suite passes1,689units/17.86s with19existing warnings.
+- Notification credential wrappers remain separately under qualification; no live
+  delivery, worker activation or release completion is claimed.
+
+**Authored by:** Codex and supervised notification agent
+**PR:** not published
+
 ## [2026-10-14] — Protected engineering reconciliation after known issuance
 
 ### Added

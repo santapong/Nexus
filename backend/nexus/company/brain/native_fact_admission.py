@@ -12,16 +12,36 @@ from nexus.company.brain.scope_support import BrainDeniedError
 from nexus.company.management.control_support import charter_record
 from nexus.company.management.governance_models import ManagementCharterRevision
 from nexus.company.management.model_observations import effective_model_registration
+from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plan_models import ManagementPlanRevision
+from nexus.company.management.plan_support import PlanAdmissionCatalog, validate_plan_profile
+from nexus.company.management.plans import ChildAllocation
 from nexus.company.management.revision_store import plan_record
+from nexus.company.notifications.native_profile_checks import native_notification_profile
 
 
 def profile_deadline(services: NativeFactServices, profile: str, now: datetime) -> datetime:
+    """Preserve the ordinary model deadline helper for existing callers."""
+    return _model_deadline(services.catalog, profile, now)
+
+
+def registered_profile_deadline(
+    catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
+) -> datetime | None:
+    """Exact configured native identity needs no model window; all other gates remain live."""
+    validate_plan_profile(catalog, child, now)
+    if (
+        native_execution_profile(catalog, child) is not None
+        or native_notification_profile(catalog, child) is not None
+    ):
+        return None
+    return _model_deadline(catalog, child.binding.model_profile, now)
+
+
+def _model_deadline(catalog: PlanAdmissionCatalog, profile: str, now: datetime) -> datetime:
     candidates = []
-    for original in services.catalog.models.models:
-        model = effective_model_registration(
-            services.catalog.models, services.catalog.model_observations, original
-        )
+    for original in catalog.models.models:
+        model = effective_model_registration(catalog.models, catalog.model_observations, original)
         if (
             not model.enabled
             or model.health.status != "healthy"
@@ -82,7 +102,8 @@ async def decision_deadlines(
     if len(expiries) > 3200:
         raise BrainDeniedError("Native decision grant scope exceeds its bound")
     deadlines = {value for value in expiries if value is not None}
-    deadlines.update(
-        profile_deadline(services, child.binding.model_profile, now) for child in payload.children
-    )
+    for child in payload.children:
+        deadline = registered_profile_deadline(services.catalog, child, now)
+        if deadline is not None:
+            deadlines.add(deadline)
     return tuple(sorted(deadlines))

@@ -74,6 +74,35 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-084 — Native decision publication required irrelevant model evidence
+
+**Date:** 2026-10-14
+**Severity:** high
+**Status:** fixed in the local native decision admission slice
+**Found by:** notification worker credential integration
+**Affected files:** company/brain/native_fact_admission.py
+
+Actual empty-model owner notification admission succeeded, but a real pending
+decision source failed publication because decision_deadlines unconditionally
+looked for model health/evaluation windows for every child. Original restricted
+PG case failed1/4.70s through the actual NativeFactEmitter/Reader with
+"Native decision profile evidence is unavailable".
+
+Validate each complete configured child profile before collecting deadlines.
+Only an exact configured native engineering or notification identity skips the
+model-only window; a literal name, missing configuration or corrupt unselected
+tuple still denies. Ordinary model evidence retains its actual finite window and
+fresh observation behavior. Grants, source, membership, current owner and all
+other native publication checks remain unchanged.
+
+Nine new pure cases and focused89cases/1.17s pass, strict/Ruff/format2files pass.
+The unchanged actual source fixture now passes1/6.76s, including native draft and
+one mock submission with replay/no second POST. The distinct pending source action
+remains unapproved. This is offline integration, not live email or worker release.
+Receipts: notifications/native-decision-profiles-* and
+worker-credentials-source-original.log/worker-credentials-first-positive.log
+under the dated implementation evidence directory.
+
 ## ERROR-083 — JSON serialization normalized copied quota values before validation
 
 **Date:** 2026-10-14
