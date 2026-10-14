@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Conservative final spawn temporal bridge
+
+### Added
+- Pure server-side window anchors source/approval/lease deadlines to a monotonic
+  clock sampled before the final database clock query; operation end cannot reset.
+- Synchronous current-clock qualification rejects expired, regressed or copied
+  extended windows. Actual watcher/process integration remains unimplemented.
+
+### Validation
+- Tests-first missing-module red;9 focused cases, strict/Ruff2 and independent
+  hash/source review pass. Combined transport/bridge/runtime2,275unit/21.83s pass.
+- No process launch, permission grant or runtime v2 activation.
+
+**Authored by:** Codex; independent source review
+**PR:** not published
+
 ## [2026-10-15] — Fixed bounded contained-engine inspection transport
 
 ### Added
