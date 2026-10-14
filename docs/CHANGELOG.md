@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-14] — Protected engineering reconciliation after known issuance
+
+### Added
+- Separate reconcile-only recovery rederives the unique actual author/verifier
+  pair, protected mechanical proof and immutable acceptance with current authority
+  and final deadlines. Exact replay conserves receipts, attempts and unknown costs.
+- Descriptive engineering segment result binds resolved native evidence IDs;
+  optional test fixture reserves an actual permanent dispatch before claim.
+
+### Validation
+- Six actual normal015 PG cases across three calls: positive1/12.90s,
+  authority4/30.51s, final proof expiry1/17.32s. Root combined1,680unit/18.10s,
+  strict/Ruff/format9files pass, with19existing warnings.
+- Durable worker/process-kill, unknown/failed/ambiguous issued basis, full product,
+  ARM64 and release qualification remain open. No live service was activated.
+
+**Authored by:** Codex and supervised recovery agent
+**PR:** not published
+
 ## [2026-10-14] — Process-local verified worker credential deadlines
 
 ### Added

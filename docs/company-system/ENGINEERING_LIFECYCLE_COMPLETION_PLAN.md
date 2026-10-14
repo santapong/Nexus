@@ -229,3 +229,56 @@ first. Preserve this observed ordering difference explicitly in the new engineer
 projection tests and Root policy review; do not claim all current report/scheduler
 paths already produce identical labels. Regardless of labels, none may refund an
 unknown hold, redispatch an accepted task or turn current proof into spend authority.
+
+## Concrete ABI accepted for implementation — 2026-10-14
+
+Root approved NEW modules/contracts and a separate reconcile-only acceptance
+recovery path; existing execute-only publisher/target methods remain unchanged.
+The first pure result shape is `execution/engineering_worker_contracts.py`:
+EngineeringSegmentResult binds existing SegmentCommand, fixed author/verifier
+phase and corresponding workflow, versionv1, descriptive status, actual receipt,
+acceptance/proof IDs, observation time and billing known/unconfirmed. The trusted
+`accepted_segment_result(command, receipt, acceptance, *, billing, observed_at)`
+requires the actual verifier succeeded receipt and exact registered target binding,
+then derives accepted/reject/inconclusive from WorkAcceptance.verdict. It accepts no
+caller status override. Current protected authority must already have been resolved
+by the adapter; this pure helper does not supply it.
+
+NEW `builder/engineering_pair_selection.py` proposes
+`resolve_pair(session, control, lease, *, verifier_action_id) -> EngineeringPairSelection`.
+The result carries the resolved VerificationSpec, actual EngineeringMetadata and
+both action selectors. `unique_author_action(session, author) -> UUID` counts all
+succeeded native identities in the actual author run before validating the unique
+builder identity; missing journal records, incompatible identity or multiplicity
+are denied. No latest-record selection or filtering out bad source/hash candidates
+can silently select a passing record. Both specs then require identical protected
+patch/source/policy/runtime input pins. The current approved verification edge
+supplies author/verifier tasks, and the exact dispatched command supplies the
+verifier action.
+
+NEW recovery ABI:
+`EngineeringAcceptanceRecovery.reconcile_verified_result(lease, identity, *, verifier_action_id) -> WorkAcceptance`.
+It requires a current reconcile lease, actual verifier SUCCEEDED native receipt and
+exact existing result/spec/witness, unique actual author SUCCEEDED receipt/current
+approved edge, active unpaused current actor/member and current source/whole proof
+READ. Recompute all seven criteria and the expected immutable proof identity.
+Saving proof bytes is staging only; append proof/provenance and acceptance/event
+under CompanyControl after repeated current checks and final actual clock windows.
+Exact prepared proof/acceptance replay must match protected storage/derivation/
+manifest. Unknown/failed native issuance cannot be upgraded by a raw result DTO,
+and a mechanical reject/inconclusive remains that verdict despite both native
+builder receipts succeeding. No effect begin, provider/tool call, reserve/refund,
+new attempt, changed registration or M1 completed transition belongs in recovery.
+Paused or revoked scope permits historical read-only audit only.
+
+The service/context/worker APIs remain new and separate:
+`EngineeringSourceResolver.resolve(binding, spec, lease, identity) -> BuilderSourceGuard`;
+`prepare_engineering_context(services, command, *, workflow_id) -> EngineeringContext`;
+`execute_engineering_segment(services, command, *, workflow_id) -> EngineeringSegmentResult`.
+Services inject actual signed SchedulerIdentities, fixed catalog/runner/acceptance/
+recovery/source resolver and hooks. Context verifies permanent dispatch, exact
+journal action/spec/policy, current fixed workflow/profile and actual signed actor
+before same-dispatch recovery. Fixed DBOS engineering.change/v1 and
+engineering.verify/v1 procedures share a non-retrying effect step, rebuild live
+services after restart and release the latest current lease after observed results.
+Their portable payload remains SegmentCommand JSON only.

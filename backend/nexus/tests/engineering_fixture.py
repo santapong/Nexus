@@ -46,7 +46,7 @@ from nexus.company.management.control_store import ManagementControlStore
 from nexus.company.management.governance import CharterRevisionRef
 from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.company.management.plan_support import NamedPlanResource, PlanAdmissionCatalog
-from nexus.company.management.plans import PlanPayload
+from nexus.company.management.plans import PlanPayload, RunBinding
 from nexus.execution.effect_store import EffectStore
 from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_store import ExecutionStore
@@ -98,8 +98,9 @@ class EngineeringScenario:
 
 
 async def engineering_scenario(
-    factory: async_sessionmaker[AsyncSession], root: Path
+    factory: async_sessionmaker[AsyncSession], root: Path, *, reserve_native_dispatch: bool = False
 ) -> EngineeringScenario:
+    assert type(reserve_native_dispatch) is bool
     plans, payload = await native_plan(factory, root)
     controls = ManagementControlStore(factory)
     charters = []
@@ -308,7 +309,14 @@ async def engineering_scenario(
         await journal.authorize_registered(
             scope, action.action_id, datetime.now(UTC), (), identity=identity(bound.actor_id)
         )
-        lease = await execution.claim(scope, identity(bound.actor_id), uuid4(), ttl_seconds=60)
+        segment_id = None
+        if reserve_native_dispatch:
+            segment_id = await reserve_engineering_dispatch(
+                factory, execution, scope, bound, action
+            )
+        lease = await execution.claim(
+            scope, identity(bound.actor_id), uuid4(), ttl_seconds=60, segment_id=segment_id
+        )
         guard = BuilderSourceGuard(
             spec,
             policy,
@@ -346,3 +354,41 @@ async def engineering_scenario(
         action,
         guard,
     )
+
+
+async def reserve_engineering_dispatch(
+    factory: async_sessionmaker[AsyncSession],
+    execution: ExecutionStore,
+    scope: LedgerScope,
+    bound: RunBinding,
+    action: ActionProposal,
+) -> UUID:
+    """Fixture invokes the real permanent native dispatch helper before an actual claim."""
+    from nexus.execution.dbos_contracts import SegmentCommand
+    from nexus.execution.dispatch_models import SegmentDispatch
+    from nexus.execution.dispatch_store import reserve_dispatch
+    from nexus.execution.runtime_store import next_segment_id
+    from nexus.execution.runtime_support import runtime_transaction
+
+    current = await execution.get(scope, identity(bound.actor_id))
+    command = SegmentCommand(
+        company_id=bound.company_id,
+        task_id=bound.task_id,
+        trace_id=bound.trace_id,
+        actor_id=bound.actor_id,
+        workspace_id=bound.workspace_id,
+        run_id=bound.run_id,
+        action_id=action.action_id,
+        segment_id=next_segment_id(current),
+    )
+    async with runtime_transaction(factory, scope, identity(bound.actor_id)) as (session, _, _):
+        await reserve_dispatch(
+            session,
+            command,
+            workflow_name=bound.workflow_name,
+            workflow_version=bound.workflow_version,
+        )
+        stored = await session.get(SegmentDispatch, (bound.company_id, action.action_id))
+        assert stored is not None and stored.binding_json == command.model_dump_json()
+        assert stored.workflow_id == command.workflow_id
+    return command.segment_id

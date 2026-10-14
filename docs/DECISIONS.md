@@ -3377,3 +3377,22 @@ normal015PG cases across11+1calls support admission. Root's full integrated1614
 units/15.60s and strict13files pass. This is generic M1 notification intent/unknown
 conservation, not native draft/POST/GET/delivery, real credential provisioning or
 durable worker activation. Those remain separate implementation and release gates.
+
+## ADR-115 — Recompute protected engineering acceptance during reconciliation
+
+**Status:** accepted for the known-issued recovery slice
+**Date:** 2026-10-14
+
+Keep the existing execute-only acceptance path unchanged. A separate service
+requires a current reconcile lease and actual succeeded native receipts, unique
+author identity, approved verification edge and exact retained result/spec/witness.
+Count all succeeded identities before validating the unique candidate; never pick
+the latest or discard malformed candidates to obtain a passing pair. Recompute
+mechanical evidence, stage proof bytes, and publish proof/acceptance under the
+company mutex after repeated current checks and final source/grant/lease clocks.
+
+Recovery cannot issue another effect or change budget/attempt/registration facts.
+Known acceptance remains separate from billing and M1's verifying state. Portable
+segment observations carry only descriptive evidence identities, with verdict
+derived from WorkAcceptance. The six actual PG cases and Root's1,680unit gate
+support this slice; durable worker/process restart and release are separate gates.

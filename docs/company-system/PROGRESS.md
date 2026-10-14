@@ -521,3 +521,18 @@ witness and engineering/notification durable worker composition. StockFlow's dir
 checkout, owner signup/email and primary UAT remain untouched. Current real model/
 business evidence, ARM64, private deployment, independent recovery, rollback and
 24hsoak remain mandatory. Goal active; no push/tag/deploy/live email/Pi action.
+
+### Checked 2026-10-14 — Known-issued engineering reconciliation
+
+Separate recovery now recomputes protected acceptance from actual succeeded
+author/verifier receipts on the same permanent dispatch, with current authority,
+unique pair and final proof permission clocks. Six PG cases across1+4+1calls pass;
+Root's integrated1,680units/18.10s and strict/Ruff/format9files pass. No new effect,
+attempt, cost reset or M1 completed transition is added. See the
+[checkpoint](ENGINEERING_RECONCILIATION_CHECKPOINT_2026-10-14.md).
+
+The new durable worker remains under qualification. Its actual source-resolution
+failure test exposed an acquired lease left active before context return; the
+scoped correction and known-output in-process replay passed2PG/18.94s. DBOS and
+five OS kill barriers are still pending. Credential-bound notification wrappers
+and the complete CSV recipe are being tested separately. Release goal remains active.
