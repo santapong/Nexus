@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.access import VerifiedIdentity
@@ -43,6 +43,21 @@ from nexus.harness.journal_models import CompanyControl, JournalAction
 from nexus.harness.journal_submission import pending_action_record
 
 _UNAVAILABLE = "Notification targeted enqueue is unavailable"
+
+
+async def require_active_notification_queue(
+    session: AsyncSession,
+    command: SegmentCommand,
+) -> None:
+    """Observe only an actual active locked row; canonical inputs cannot revive terminal work."""
+    if not session.in_transaction():
+        raise NotificationUnavailableError(_UNAVAILABLE)
+    status = await session.scalar(
+        text("SELECT status FROM dbos.workflow_status WHERE workflow_uuid=:workflow_id FOR UPDATE"),
+        {"workflow_id": command.workflow_id},
+    )
+    if type(status) is not str or status not in {"ENQUEUED", "PENDING"}:
+        raise NotificationUnavailableError(_UNAVAILABLE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -261,6 +276,7 @@ async def authorize_and_enqueue_prepared_notification(
             or queued.dispatch != "enqueued"
         ):
             raise NotificationUnavailableError(_UNAVAILABLE)
+        await require_active_notification_queue(session, actual)
         final = await current_prepared_admission(
             prepared, session, control, work, identity, selection, binding, approved
         )

@@ -31,6 +31,7 @@ async def test_atomic_composition_returns_only_after_same_transaction_final_gate
         "authorized",
         "qualified",
         "queued",
+        "status_checked",
         "qualified",
         "commit",
     ]

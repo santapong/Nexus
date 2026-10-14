@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** medium
-**Status:** open; scoped status policy/probe under review
+**Status:** fixed in targeted source/pure gate; actual cancellation conservation pending
 **Found by:** independent atomic enqueue source and pinned DBOS3.2 review
 **Affected files:** notifications/worker_enqueue.py queue-result observation
 

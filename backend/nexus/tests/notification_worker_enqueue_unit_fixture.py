@@ -147,11 +147,22 @@ async def enqueue_flow(
     session = MagicMock(spec=AsyncSession)
     events: list[str] = []
     session.flush = AsyncMock()
-    session.scalar = AsyncMock(return_value=None)
+
+    def stored_scalar(statement: object, *args: object) -> str | None:
+        if "dbos.workflow_status" in str(statement):
+            events.append("status_checked")
+            return "CANCELLED" if fault == "terminal" else "ENQUEUED"
+        return None
+
+    session.scalar = AsyncMock(side_effect=stored_scalar)
     scalar_rows = MagicMock()
     scalar_rows.all.return_value = (row.id,)
     session.scalars = AsyncMock(return_value=scalar_rows)
-    prior = SegmentDispatch(binding_json=command.model_dump_json()) if fault == "replay" else None
+    prior = (
+        SegmentDispatch(binding_json=command.model_dump_json())
+        if fault in {"replay", "terminal"}
+        else None
+    )
     session.get = AsyncMock(
         side_effect=lambda model, key: (
             row if model is JournalAction else prior if model is SegmentDispatch else None

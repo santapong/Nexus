@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Targeted notification active queue-state gate
+
+### Fixed
+- Lock actual DBOS status after canonical command binding; only ENQUEUED/PENDING
+  describe active identity, terminal/DELAYED/missing deny (ERROR-096). All final
+  native/source/recipient/credential/approval gates still follow. Generic queue
+  remains unchanged; no cancelled workflow resume, hold refund or new ID.
+
+### Validation
+- Retained public pure replay red1/1.34s; author58focused/1.68s/types/Ruff4 and
+  independent frozen-source review pass. Root19/1.26s, strict4 and combined
+  2,053unit/21.05s pass. Actual public cancellation probe remains pending.
+
+**Authored by:** Codex and supervised recovery agent; independent notification review
+**PR:** not published
+
 ## [2026-10-15] — Actual targeted notification SQL enqueue and exact replay
 
 ### Validation
