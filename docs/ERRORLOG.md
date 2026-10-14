@@ -74,6 +74,33 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-104 — Contained inspect templates used JSON tag spelling as a Go field
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** reproduced; narrow four-template source correction in progress
+**Found by:** actual diagnostic M1 qualification
+**Affected files:** contained_discovery.py, contained_engine.py, contained_observer_io.py, contained_cleanup.py
+
+The fresh diagnostic case completed both commands but recorded11 failed discovery
+reads, with first/last exit125 and the retained error “can't evaluate field Id”.
+No object was sealed and no sample was collected; final diagnostic saysno_samples.
+Native state correctly remains unknown with one attempt and positive unknown hold.
+
+Podman's Go template field is ID while the ordinary JSON tag is Id. Its bare
+`.Id` normalization does not rewrite the argument in `json .Id`. Root reproduced
+the error with the exact retained stopped object and changed only `json .ID`:
+the same read then exited0 and returned the expected identity/labels/stopped state.
+No process was started, removed or upgraded by those reads. Official source:
+https://raw.githubusercontent.com/containers/podman/v5.8.0/cmd/podman/inspect/inspect.go
+InspectNormalize, lines261–263 at review.
+
+Four duplicated fixed templates require the same narrow field correction. The
+approved scope changes no liveness predicate, allowance, workload, limit or retry.
+Both prior M1 actions/databases/results/containers remain preserved. This explains
+the new diagnostic case; missing diagnostics still prevent a causal claim for
+the original first M1. Fresh positive containment remains unqualified.
+
 ## ERROR-103 — Registry preservation test compared unordered raw JSON
 
 **Date:** 2026-10-15 (Asia/Bangkok)

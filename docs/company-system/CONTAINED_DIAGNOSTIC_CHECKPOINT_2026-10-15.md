@@ -40,3 +40,28 @@ External timeout forensics remain required. A fresh distinct case must use the
 same reviewed workload and separately pinned new source/method/action identities;
 the original failed action is never reissued. Positive M1/replay/cleanup, timeout,
 ARM64, full StockFlow and operating release remain required.
+
+## Actual diagnostic case — retention passes, containment still unknown
+
+Fresh case `nexus_company_test_contained_native_diag_m1` used committed53276e2,
+new action9d2d4447 and the unchanged quantity/verify bytes, patch, image and limits.
+Setup handle6696 exited0; actual normal015/app0/unissued assertions passed. Launch
+packet `a231da08` bound28 inputs plus1,389 complete base files. Root93559 exited1.
+
+Both commands/report checks pass. Actual private raw/final records `a1805023` /
+`8065d13c` were saved and reread by their exact references and original identity.
+They show11 discovery attempts, first/last exit125, sealed objectNone, sample0 and
+finalno_samples. The retained fixed-inspect error identifies `json .Id` as invalid
+for Podman's Go template field. No full intermediate-attempt detail is claimed;
+the trace explicitly records9 omitted attempts.
+
+Root terminal `d5365dcb` binds36 case files, result `bad28fc9`, source preservation,
+actual native ledger and three known PID-start absences. Original fence1/tool1/
+model0/positive USD0.01 unknown hold/null actual remain; current fence2 is released,
+no native receipt/protected summary/containment sidecar exists, and appbackends0.
+The exact new stopped containerd5cfbfa9 is retained without removal or rerun.
+
+Readonly same-object reproduction `ROOT_TEMPLATE_COMPAT_REPRO_1.json` (`23f1dfc6`)
+records original template exit125 and corrected `json .ID` exit0. This is command
+compatibility, not live containment. ERROR-104 tracks the four-template source
+correction. The older first M1 and its unknown cause remain unchanged.

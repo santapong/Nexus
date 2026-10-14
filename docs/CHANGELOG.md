@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Diagnose actual contained discovery failure
+
+### Evidence
+- Fresh diagnostic M1 preserves actual raw/final records and identifies11 failed
+  inspect-template reads. Both command checks pass; native containment remains unknown.
+- Same stopped-object read reproduces invalid `json .Id` and validates `json .ID`.
+  ERROR-104 tracks the narrow source correction; no action or container is retried.
+
+**Authored by:** Codex and supervised engineering/review agents
+**PR:** not published
+
 ## [2026-10-15] — Validate actual cycle partition rows without mutation
 
 ### Added
