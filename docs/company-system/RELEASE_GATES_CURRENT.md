@@ -5,16 +5,21 @@ the [full517 preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) and
 [read-only reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md) have favorable
 actual FILE audits. Reuse evidence is committed in `983f59c`. The
 [current-V8 fault harness](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md)
-passes source checks, but its first setup stopped after normal016 installation.
-The failed namespace is preserved; actual cases and real selected E/EV remain
-pending. Full tree retention limits are explicit in each checkpoint.
+passes source checks. Later fresh setup completes, but the first actual fault
+attempt fails after issuance as linked below. Native fault qualification and real
+selected E/EV remain pending. Full tree retention limits are explicit in each checkpoint.
 This index separates saved scoped proof from the full selected release.
 Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
-Latest: [all-five setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
+Latest: [first native fault attempt](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
+fails in the sampling path and records an unknown outcome with one tool attempt.
+The wave is stopped; its other four cases are unissued. Missing physical witnesses
+prevent timer qualification and use of the current recovery entry.
+
+Earlier [all-five setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
 completes with exit code 0 in 14.61s with independent file/SQL joins and zero issued
 attempts/intents. The first packet and passive check are complete; actual current-V8
-fault qualification is next.
+fault qualification was the next gate at that saved checkpoint.
 
 The later [second setup](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md)
 passes source ingestion and plan/action authorization, then stops at a fixture
@@ -38,11 +43,13 @@ remains open.
 
 ## Current next work
 
-The declared V2 recipe and fresh Source4/namespace3 setup now pass. Preserve both
-earlier failed namespaces. Qualify five separate current-V8 faults:
+The declared V2 recipe and fresh Source4/namespace3 setup pass, but its first
+actual fault attempt fails and stops the wave. Preserve every used namespace,
+the unknown issued hold and the four unissued actions. Diagnose the fixture and
+prepare a prospective repair plan before any fresh qualification. The five exits remain:
 original parent expiry, cancellation, pause, source READ revocation and stale-fence
 release. Each retains native unknown history and one attempt under original
-clocks; no actual case has been released. Then qualify selected E/EV and independent acceptance
+clocks. Then qualify selected E/EV and independent acceptance
 using fresh real runtime/Strategy pins, followed by P/C and the same-goal owner
 journey. Genuine providers/email, ARM64, private deployment and recovery/soak remain
 separate release requirements. The older dated continuation below is historical;

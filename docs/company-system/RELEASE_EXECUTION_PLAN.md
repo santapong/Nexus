@@ -1,9 +1,17 @@
 # Nexus release execution plan
 
+The [first actual native fault attempt](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
+fails in the sampling path after native issuance and leaves an unknown outcome.
+Stop this wave, retain its original hold and all evidence, and diagnose the
+qualification fixture before preparing an independent fresh attempt. The other
+four original actions remain unissued; the existing recovery entry lacks its
+required physical witness inputs.
+
 The [fresh five-case setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
 now completes with exit code 0, with independently verified unissued ledgers and
 original windows. The first parent-expiry packet and passive check are complete;
-actual fault qualification is next. No native case or effect has yet been issued.
+actual fault qualification was the next gate at that checkpoint. The later failed
+native attempt is linked above.
 
 The [second setup checkpoint](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md)
 records actual source ingestion and plan/action authorization, followed by a

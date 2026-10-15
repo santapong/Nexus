@@ -74,6 +74,37 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-168 — First native fault attempt lacks a usable sample witness
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** actual current-V8 parent-expiry qualification
+**Affected files:** private negative collector and operator composition
+
+### What happened
+The first actual case fails after one issued tool attempt. Native same-call
+diagnostics retain `ValidationError` in the sampling path with zero samples.
+The outside report records `ValueError` and no fault/issued/post-stop ledger.
+The intent and cost hold remain unknown; the other four cases never issue.
+
+### Root cause
+The precise original failing validator is not retained. A timing-precondition
+hypothesis is under source-only investigation; later host absence cannot supply
+the missing original sample or prove timer attribution.
+
+### Fix applied
+No runtime repair or retry is claimed. Stop the wave and preserve the exact
+source, packet, original windows, unknown hold, stopped container and diagnostics.
+The current recovery entry cannot run without its required witness inputs.
+
+### Prevention
+Retain the actual owned collector capture and safe same-catch failure metadata.
+Check causal timing eligibility before a future qualification issues an effect;
+do not relax the original thresholds or reinterpret this attempt as a pass.
+
+---
+
 ## ERROR-167 — Real fixture spec inherits V1 against declared V2 policy
 
 **Date:** 2026-10-16
@@ -4733,7 +4764,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-168*
+*Next error ID: ERROR-169*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

@@ -40,8 +40,9 @@ Root readback SHA-256:
 The independent read-only repeatable-read snapshot counts all74 tables and475
 rows. It verifies15 unissued work registrations, five authorized actions and five
 held USD0.010000 reservations with null actual billing; used counters, attempts,
-intents and live execute leases are zero. The transaction rolls back after1.145
-seconds. Application-role privileges and durability checks pass.
+intents and live execute leases are zero. The bounded audit completes in 1.145
+seconds and rolls back its read-only transaction; its database-clock read bracket
+is 0.220318 seconds. Application-role privileges and durability checks pass.
 
 File/SQL joins verify all five actual config/registration/proposal/approval pins,
 all setup-ledger byte hashes and original references/root identities, all370

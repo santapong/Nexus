@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Preserve failed first native fault attempt
+
+### Validation
+- Actual parent-expiry attempt exits 1 after 39.06s, before a usable fault witness.
+  Native history records one tool attempt and an unknown outcome; its original
+  cost hold stays unknown with null actual billing.
+- The five-case wave is stopped; the other four actions remain unissued. Raw
+  same-call sampling diagnostics, complete outer streams and later descriptive
+  host checks are retained. No timer, containment or release pass is claimed.
+- The current recovery entry lacks its required physical witness inputs. Preserve
+  the stopped container, original windows, all failed namespaces and held amounts.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Complete actual five-case native-fault setup
 
 ### Validation

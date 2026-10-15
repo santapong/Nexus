@@ -1,5 +1,11 @@
 # Nexus implementation progress
 
+Latest actual attempt: [first native fault case](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
+records one issued tool attempt and an unknown outcome after sampling-path
+validation fails. No usable fault witness is retained, so the wave is stopped
+and the remaining four cases stay unissued. The original hold remains unknown;
+there is no retry, refund or native qualification claim.
+
 Latest actual milestone: [all-five fault-fixture setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
 completes with exit code 0 in 14.61s. Independent file/SQL joins verify five companies, 15 work
 registrations, five authorized unissued actions/holds, zero attempts/intents/leases
