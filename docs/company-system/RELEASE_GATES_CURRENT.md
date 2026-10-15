@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local6bd0b67 plus the pending pure StrategyBrief slice. This index separates implemented/local
+Checked2026-10-15 against locald34821b. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -15,13 +15,14 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md), [atomic SQL/postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md), [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md); [durable worker](NOTIFICATION_DURABLE_EXECUTION_CHECKPOINT_2026-10-15.md): preserved replay1PG/2.20s, separate rejected17.15s/uncertain16.98s SDK+lifecycle+native replay | [OS recovery](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md): all4 actual crash/immediate-restart cases pass with no second request; daily-positive and registration retention remain; live email qualification is separate |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
 | Recovery/private access/portability | [Matching recovery](OPERATOR_MATCHING_RECOVERY_CHECKPOINT_2026-10-14.md), [backup codec](BACKUP_CODEC_CHECKPOINT_2026-10-14.md) | Independent storage/key custody/lost-source disaster restore/RPO-RTO/rollback, private access,24h bounded soak |
-| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces and [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md) | Strategy→plan→native patch→independent checks→presentation/support→owner report/email in one actual goal lineage |
+| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md):2,777unit/static7 pass | Protected strategy inputs/publication/actual acceptance and owner choice, then strategy→plan→native patch→independent checks→presentation/support→owner report/email in one actual goal lineage |
 | Oversight modes | Native exact approval/pause/cancellation and immutable history | Explicit owner promotion only after reviewed stable operation; Supervised first |
 
 ## Current next work
 
 Small existing team: diagnose the retained post-discovery parent-check failure
-and finish the pure StrategyBrief/checker/action ABI. Complete cycle catalog checks
+and implement the protected StrategyBrief producer/publication path after its
+committed pure checker/action ABI. Complete cycle catalog checks
 are integrated; the read-only partition helper remains unreferenced pending actual
 StrategyBrief/owner-choice transition proof. Three actual M1 cases remain failed;
 their original actions, unknown holds, databases, trees and stopped containers are

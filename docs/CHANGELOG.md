@@ -1,6 +1,28 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Add rich StrategyBrief checks and exact action descriptions
+
+### Added
+- Rich StrategyBrief with cited source facts, labelled hypotheses/expectations,
+  finite change/defer alternatives, tradeoffs, recommendation and owner request;
+  six mechanical checks preserve strategic merit as not evaluated.
+- Separate strategy write/check selectors, fixed private tool/target/policy rules,
+  bounded prepared bytes and stable company/action artifact identities. Exact
+  action pins reject changed manifests, foreign scope and report/authority aliases.
+- Concrete protected-publication implementation boundaries preserve original
+  producing snapshot bytes separately from fresh native authority checks.
+
+### Validation
+- 51 checker and25 action pure checks pass; integrated2,777unit/26.00s,
+  strict7 and Ruff/format7 pass. Independent source review favorable.
+- Retained red probes establish exact-six PASS and narrow authorization-error
+  handling fixes; unsupported criteria remain inconclusive.
+- No reader, publication, SQL, acceptance, owner-choice or runtime activation.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Record corrected-inspect actual qualification failure
 
 ### Validation

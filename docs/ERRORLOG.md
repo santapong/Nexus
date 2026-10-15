@@ -74,6 +74,40 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-105 — Strategy result descriptions and malformed-data handling were too broad
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (pure contract/checker scope)
+**Found by:** supervised implementation and independent review agents
+**Affected files:** `company/strategy/contracts.py`, `company/strategy/checker.py`
+
+### What happened
+Initial result decoding accepted a self-consistent checksum-valid PASS with only
+one criterion or unsupported economic-merit criterion, although the checker
+itself correctly returned inconclusive. Two constructor negatives reproduced it.
+Separately, a generic ValueError catch could classify injected existing authority
+denial exceptions as malformed strategy JSON; two pure boundary negatives proved
+this behavior. No protected reader/publication/acceptance path exists yet.
+
+### Root cause
+Aggregate/checksum consistency did not require the complete closed six-criterion
+PASS contract. Existing ExecutionDeniedError/BrainDeniedError inherit ValueError,
+so the malformed-input catch also matched authority failures.
+
+### Fix applied
+Require exactly the six supported criteria for PASS while preserving supported
+inconclusive results. Catch only dedicated malformed-data/JSON/Pydantic/Unicode/
+recursion errors; actual permission/system failures propagate. Original red logs
+and final51 focused green checks are bound by the StrategyBrief freeze2dfefa48.
+
+### Prevention
+Keep result-description invariants aligned with the pure checker, and nominate
+actual exception subclasses before adding malformed-data catches. This proves
+neither native acceptance nor live strategic quality.
+
+---
+
 ## ERROR-104 — Contained inspect templates used JSON tag spelling as a Go field
 
 **Date:** 2026-10-15 (Asia/Bangkok)
