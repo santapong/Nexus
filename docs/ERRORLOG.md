@@ -74,6 +74,40 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-117 — Lone CR escaped the support draft's literal quotation block
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (supplied-data export and real CommonMark parser scope)
+**Found by:** independent source review and retained actual parser negatives
+**Affected files:** `company/cycle_artifacts/renderers.py`, `test_cycle_deliverable_exports.py`
+
+### What happened and cause
+The initial new renderer prefixed only LF-separated quotation lines. CommonMark
+also recognizes CR and CRLF. An otherwise valid hashed source quotation containing
+lone CR could produce image or raw-HTML parser nodes outside its intended literal
+block. Six of24 real parser cases failed; no viewer execution or actual exploit
+was performed. Source1 and all original vectors are retained.
+
+### Fix and verification
+Normalize CRLF/lone CR only in the human Markdown display before prefixing every
+physical line. Original quotation UTF8, span SHA, dates and typed JSON stay exact;
+human-export and dependent manifest/check hashes are regenerated. The24 actual
+CommonMark parser cases pass, including mixed line ends/tabs/image/raw HTML.
+Retained-vector replay proves all24 original data identities unchanged and18 CR
+human views changed. Source2 has106 focused checks/strict17; Root3,182unit/59.00s
+and strict/lint/format17 pass. markdown-it-py4.2.0 was already locked via Rich;
+no production dependency or native authority changed.
+
+### Prevention and scope
+Keep parser-based line-ending cases and exact evidence-byte preservation checks.
+This package compares supplied descriptions; real current engineering proof,
+protected READ, publication and customer/operating acceptance remain separate.
+Evidence: cycle-deliverables-pure-freeze-2.json f52cc1e2 and Root integration
+receipt a69df4c7 under the dated private integration directory.
+
+---
+
 ## ERROR-115 — Cache export cancellation lost owned filesystem operations
 
 **Date:** 2026-10-15

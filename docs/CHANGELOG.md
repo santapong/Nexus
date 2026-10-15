@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Add bounded presentation and support draft descriptions
+
+### Added
+- Typed engineering/source basis, closed presentation/support content, deterministic
+  two-output JSON+HTML/Markdown manifests and independent supplied-data checks.
+- Strict kind/role selectors preserve existing Strategy parameter wire. Six draft
+  criteria remain separate from the unchanged future cycle configuration.
+
+### Fixed
+- Human Markdown preserves literal quoting across CR/CRLF/mixed line endings while
+  retaining exact source bytes, dates and JSON evidence identities (ERROR117).
+
+### Validation
+- 106 focused checks, including real CommonMark parser and fresh-interpreter hash
+  replay; Root3,182unit/59.00s and strict/lint/format17 pass. Native current proof,
+  protected READ, two-output publication and customer readiness remain unqualified.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Record actual contained native M1 and known replay
 
 ### Validation
