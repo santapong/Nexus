@@ -74,6 +74,29 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-122 — B1 SQL packet omitted the Unix-socket URL user separator
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** open (test packet repair; failed fixture preserved)
+**Found by:** first actual B1 SQL qualification
+**Affected files:** private `SETUP_PACKET_1.json` fixture
+
+The packet supplied `postgresql+asyncpg://santapong/database?...` instead of the
+reviewed socket form with `santapong@/database`. SQLAlchemy interpreted the former
+as a host rather than the required username. The strict fixture guard correctly
+denied before constructing an engine. Collection with an empty URL did not validate
+the actual packet's future URL, and review missed this literal difference.
+
+Root87641 failed once in1.97s; independent SQL confirms the created database has
+zero public tables and zero application backends. No migration, company, source,
+credential or operative action was created. Preserve the original source/run/empty
+DB; a fresh reviewed v2 packet must derive its URL from the typed URL constructor
+and validate that actual packet value in check-only mode before execution.
+No production URL guard is weakened. Root failed receipt599c3312 is authoritative.
+
+---
+
 ## ERROR-121 — Owner SQL fixture assumed every nested blob directory was 0700
 
 **Date:** 2026-10-15

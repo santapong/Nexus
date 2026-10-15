@@ -1,6 +1,15 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve first B1 SQL packet failure
+
+### Validation
+- The fixture rejected a malformed packet URL before connecting; fresh SQL confirms
+  zero public tables/application sessions (ERROR122). Actual B1 SQL remains pending.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Reconcile B1 qualification and subsequent work lanes
 
 ### Changed
