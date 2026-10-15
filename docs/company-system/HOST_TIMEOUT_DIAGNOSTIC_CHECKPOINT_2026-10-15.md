@@ -1,5 +1,31 @@
 # Native startup diagnostic checkpoint — 2026-10-15
 
+Latest actual V4 fails before readiness after1.60s. Its passive observer records
+the controller at the original root, two direct processes and no subtree
+controllers, then a generic ValueError without an exact read-step witness.
+The owned CLI is killed/reaped for failed-run cleanup; the container remains
+created and removal is unresolved. Later checks find the scope and controller/
+runtime PIDs absent, with21 inventory rows: the original20 plus that retained
+container. No ready marker, barrier, PID tree, payload or timeout is qualified.
+
+V4 source passes110 focused checks, strict/Ruff8 and independent review. It
+adds descriptor/proc-only readiness before any postspawn query and cleanup-only
+identity sealing after the owned CLI is terminal. All16 actual queries are
+retained; the first postspawn query occurs after CLI termination. The next source
+investigation concerns canonical default payload limits before runtime setup;
+that is a supported candidate, not the uniquely established actual failure cause.
+All failed sources, namespaces and the retained container remain unchanged.
+
+| Later V4 evidence | SHA256 |
+| --- | --- |
+| Frozen source | `3fe9d4e92c66bc4c306f04f3f064188defd42ddf31990d79102a57ff80d5bd22` |
+| Independent source review | `c5f53b404524c2f5e16568b4dd9ae578b06f11f4348fde6463a00679cf2724c1` |
+| Actual terminal | `21f484fe921d994683434b52ddace500ce4c872b825eea07751542a8df1653eb` |
+| Independent actual file audit | `55e224e4ae543b0de3d2c20d03be832521927cc38b7d73e51a1bddb79a43ef7b` |
+| Later read-only state | `818d6d75cc66556f6af75cfb477b5ecf4c1a60bf43207f37a720e51cc85c7544` |
+
+The earlier V3 observations below remain historical evidence.
+
 The fresh diagnostic captures an actual **container startup failure** before
 readiness or payload execution. runc reports a missing `pids.max` in the new
 payload cgroup. This identifies the immediate failing operation; the underlying

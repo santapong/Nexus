@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve passive-readiness failure evidence
+
+### Validation
+- Private readiness source passes110 focused/static checks and independent review.
+  Fresh actual diagnostic fails before readiness; all16 fixed queries are retained.
+- Cleanup remains unresolved with the created container preserved and original20
+  inventory rows unchanged. No timer, payload, cache or Company qualification.
+
+**Authored by:** Codex and supervised diagnostic/review agents
+**PR:** not published
+
 ## [2026-10-15] — Verify complete public dependency inputs
 
 ### Validation

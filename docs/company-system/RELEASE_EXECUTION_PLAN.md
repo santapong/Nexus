@@ -12,7 +12,7 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
-### Active continuation — 2026-10-15,13:03UTC
+### Active continuation — 2026-10-15,13:30UTC
 
 The current feature branch is pushed through3fde994. The coherent1,616-file
 publication/native-profile source passes4,165 units, configured strict typing and
@@ -29,17 +29,17 @@ Company-issued execution, full517 dependency import or business completion.
 
 | Lane | Current work | Exit evidence |
 | --- | --- | --- |
-| Native runtime | Diagnose actual child-cgroup startup failure | Diagnostic V3 retains CLI127/stderr/created state; require a reviewed deterministic remedy and fresh qualification |
+| Native runtime | Diagnose passive startup observation failure | V4 source passes110 checks; actual fails before readiness with cleanup unresolved. Preserve its container and add bounded read-step evidence |
 | Preparation | Full517 offline CAS recipe using verified stage/tool ABI | [Actual complete input observation](CAS_INPUT_CHECKPOINT_2026-10-15.md) passes; finite import/artifact integrity remains pending |
 | Qualification | Current full V7/opaque-issued Company scenario planning | Fresh runtime/CAS/policy/template pins and actual original-authority/lease/permit/result/cleanup evidence |
 | Root integration | Preserve source/evidence and coordinate gates | Real selected StockFlow E/EV, P/C acceptance and full supervised release requirements |
 
-The [fresh diagnostic](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md) now
-captures the immediate startup failure: runc cannot open the payload's pids.max.
-This occurs before readiness or timeout. All current ancestor controllers are
-available, but the removed scope's child-controller state was not retained;
-the underlying setup/race cause remains under investigation. Source tests and
-cleanup do not qualify execution. Read-only Pi preparation also finds disabled
+The [earlier V3 diagnostic](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
+captures runc failing to open the payload's pids.max before readiness or timeout.
+The fresh passive V4 observer then fails on an unavailable value before readiness;
+its exact read-step cause is unknown and cleanup is unresolved. Source-supported
+pending-child classification and bounded read-step evidence are the next source
+work. Source tests do not qualify execution. Read-only Pi preparation also finds disabled
 memory control, no rootless runtime and a256MiB /var/tmp; its separate concrete
 change packet and explicit applicable approval remain prerequisites.
 

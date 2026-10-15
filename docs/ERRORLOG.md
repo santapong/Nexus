@@ -74,6 +74,27 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-148 — Passive startup observation failed before readiness; cleanup unresolved
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** open; exact failing read is unknown
+**Found by:** actual diagnostic V4
+**Affected files:** private HostBootstrap readiness/cleanup boundary
+
+The first passive observation records controller-at-root/two direct processes/
+empty subtree; the next raises generic ValueError. Cleanup kills/reaps only the
+owned CLI and seals its exact created container, but removal fails. Preserve that
+container and21-row inventory; original20 rows remain unchanged. No barrier or
+PID-tree proof exists. A child interface's canonical default max is a supported
+pending-state candidate that the strict numeric parser rejects; it is not uniquely
+proven as this actual callsite. Add bounded read-step evidence and a child-only
+pending classification without weakening parent caps or allowing readiness.
+
+See [actual diagnostic evidence](company-system/HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md).
+
+---
+
 ## ERROR-147 — Special pnpm receipt row omitted its semantic hash join
 
 **Date:** 2026-10-15
