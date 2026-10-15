@@ -795,3 +795,14 @@ Proposal/approval/replay retain both full-plan/proof captures through the final 
 clock. Root3,399unit/67.46s and strict/lint/format31 pass with favorable cross-review.
 Actual staged-head2 proof/approved replay and downstream late-expiry SQL rollback
 remain the next separate gate. Native execution ancestry/spec guards remain closed.
+
+## 2026-10-15 — Actual B1 SQL transition qualified
+
+The [actual B1 SQL checkpoint](OWNER_TRANSITION_B1_PG_CHECKPOINT_2026-10-15.md)
+proves public full-catalog inception, actual S/SV publication and owner choice,
+same-session3→12 registration, current head2 proof/read, and exact approval replay.
+A second company crosses an original P-only grant deadline after staged head2 and
+rolls back to head1/three rows, preserving proposal2, native history, money and files.
+One recipe passed97.41s; Root fresh SQL and independent terminal file audit agree.
+The first malformed-URL fixture is preserved (ERROR122). B2 native execution,
+downstream publication and full operating release remain separate.

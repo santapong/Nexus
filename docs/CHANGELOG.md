@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify actual owner transition and downstream-expiry rollback
+
+### Validation
+- Fresh PostgreSQL proves real owner choice,3→12 registration, head2 proof/read,
+  exact approval replay and rollback to head1 when a downstream grant expires.
+- One recipe passed97.41s; original native attempts/unknown holds and exact blob
+  metadata stayed conserved. No model, engineering or sender call ran.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Establish develop and typed work branches
 
 ### Changed

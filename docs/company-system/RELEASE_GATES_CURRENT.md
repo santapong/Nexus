@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local6e37386, actual Strategy PG and methodv6/replay receipts. This index separates implemented/local
+Checked2026-10-15 against local97d2d45, actual B1 SQL, Strategy PG and methodv6/replay receipts. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -44,15 +44,21 @@ partition helpers remain unactivated pending those proofs. Notification native
 replay, corrected SDK outcomes and all four actual OS recovery cases pass; live
 email remains separate. Use the small existing team and milestone reviews.
 
+The [actual B1 SQL qualification](OWNER_TRANSITION_B1_PG_CHECKPOINT_2026-10-15.md)
+passes97.41s: real owner choice and3→12 registration, current head2 proof/replay,
+and rollback after a P-only grant expires following staged head2. Root fresh SQL
+and independent file audit verify conserved native history, budgets and files.
+B2 actor-scoped selection/spec/ancestry, P/C publication and the full goal cycle
+remain unqualified; registration does not activate engineering or sender execution.
+
 The actual-owner proof reader in943c5ec now passes its separate four-company
 [actual SQL qualification](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md)
 in90.62s with conserved ledgers/blob metadata, final original-credential expiry,
 Root fresh SQL and independent file audit. The first failed fixture is preserved.
 Dormant
 [full-plan window capture](PLAN_ADMISSION_WINDOW_CHECKPOINT_2026-10-15.md) is
-integrated in6e37386 after Root3,253unit/54.77s and independent review. Choice/
-revision2/full mixed admission and the real
-twelve-row registration check remain unactivated. No dated execution-pricing or
+integrated in6e37386 and composed by7dbbf81 after Root3,399unit/67.46s/static31.
+Actual B1 registration is now qualified by the linked SQL case. No dated execution-pricing or
 genuine model-quality proof follows from the window capture.
 
 Preserve seven prepared engineering process DBs, both backup pairs and the new

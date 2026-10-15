@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15
 **Severity:** low
-**Status:** open (test packet repair; failed fixture preserved)
+**Status:** fixed (fresh v2 packet qualification; failed fixture preserved)
 **Found by:** first actual B1 SQL qualification
 **Affected files:** private `SETUP_PACKET_1.json` fixture
 
@@ -94,6 +94,12 @@ credential or operative action was created. Preserve the original source/run/emp
 DB; a fresh reviewed v2 packet must derive its URL from the typed URL constructor
 and validate that actual packet value in check-only mode before execution.
 No production URL guard is weakened. Root failed receipt599c3312 is authoritative.
+
+The fresh v2 packet derives its URI through SQLAlchemy URL.create and passes its
+actual frozen environment value through the same pre-engine guard in mandatory
+check-only and a separate file-only test. Root confirmed that test1.38s; the actual
+two-company transition/rollback recipe then passed97.41s. All first-run bytes and
+the empty database remain unchanged.
 
 ---
 
