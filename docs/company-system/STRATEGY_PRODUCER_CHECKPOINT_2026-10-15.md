@@ -19,7 +19,8 @@ the native33-artifact closure. B is capped2MiB and Brief262144B; oversized mater
 denies without truncation. Actual recursive completeness remains a native reader
 gate. Raw copied counts revalidate before JSON can normalize them.
 
-Original wirev1 is retained unexecuted history. Canonical USD normalization changed
+Original wirev1 remains unpublished history with its actual pure probes retained.
+Canonical USD normalization changed
 registration digest despite value equality; plain lossless Pydantic JSON then
 failed fresh-process set ordering. Actual seed0 writer and seed1/2/3 replay probes
 reproduced exact-hash preparation denial with unchanged registration identity.

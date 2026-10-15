@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against localcefc411; producer wire compatibility remains under review. This index separates implemented/local
+Checked2026-10-15 against local76060bf. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -15,7 +15,7 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md), [atomic SQL/postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md), [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md); [durable worker](NOTIFICATION_DURABLE_EXECUTION_CHECKPOINT_2026-10-15.md): preserved replay1PG/2.20s, separate rejected17.15s/uncertain16.98s SDK+lifecycle+native replay | [OS recovery](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md): all4 actual crash/immediate-restart cases pass with no second request; daily-positive and registration retention remain; live email qualification is separate |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
 | Recovery/private access/portability | [Matching recovery](OPERATOR_MATCHING_RECOVERY_CHECKPOINT_2026-10-14.md), [backup codec](BACKUP_CODEC_CHECKPOINT_2026-10-14.md) | Independent storage/key custody/lost-source disaster restore/RPO-RTO/rollback, private access,24h bounded soak |
-| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md):2,777unit/static7 pass | Protected strategy inputs/publication/actual acceptance and owner choice, then strategy→plan→native patch→independent checks→presentation/support→owner report/email in one actual goal lineage |
+| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md), [deterministic producer/wirev2](STRATEGY_PRODUCER_CHECKPOINT_2026-10-15.md):2,865unit/static17 | Native protected input bundle/brief publication, actual independent acceptance and owner choice, then strategy→plan→native patch→independent checks→presentation/support→owner report/email in one actual goal lineage |
 | Oversight modes | Native exact approval/pause/cancellation and immutable history | Explicit owner promotion only after reviewed stable operation; Supervised first |
 
 ## Current next work
@@ -34,9 +34,9 @@ Another case requires evidence for the next correction and a separately reviewed
 source, role, action and launch packet.
 Parent failure metadata is now source-integrated and the new actual case proves
 the layout mismatch. A secure exact issued-layout design is next. The pure
-producer's original bundle serialization has a
-separate cross-process set-order concern under qualification; its initial green
-focused tests do not close that compatibility requirement.
+producer's cross-process ordering issue was reproduced and corrected with named
+lossless wirev2; fresh-process replay0–3, independent review and regression pass.
+Native bundle/brief publication is the next separate strategy boundary.
 Notification native replay, two corrected SDK outcomes and all four actual OS
 crash/immediate-restart cases pass. Preserve all four new process databases, the
 original accepted database and failed fixture tree.

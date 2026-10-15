@@ -14,6 +14,8 @@
   wire rewrites. 101 focused checks include actual fresh-interpreter replay0–3.
 - Independent review, coherent2,865unit/32.17s, strict/Ruff/format17 pass. Native
   bundle publication, current reader/acceptance/owner choice remain required.
+- Release index records the verified wire correction and next native publication
+  boundary separately from the open runtime layout correction.
 
 **Authored by:** Codex and supervised implementation/review agents
 **PR:** not published
