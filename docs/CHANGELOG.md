@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Integrate finite public-cache preparation source
+
+### Validation
+- Coherent1,640-file helper source preserves backend3fde994 and passes 343 finite
+  checks plus configured strict/lint/format24 and favorable combined source review.
+- Independent finite reviews close artifact binding/readback and monitor cadence
+  defects. Preserve original candidates and the failed137 timeout outcome.
+- The first actual scoped attempt stops before container launch. Preserve its
+  errors and unchanged inventory; current mount metadata exceeds the 4 KiB reader cap.
+- Actual full517 import, cache reuse and Company execution remain pending.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Retain pending child limits and complete timeout diagnostics
 
 ### Validation

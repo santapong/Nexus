@@ -35,7 +35,9 @@ The actual observation covers1,424 input files and239 directories, including the
 source; it does not claim a second independent bulk read of those input trees.
 No previous expired observation becomes current authority.
 
-Full dependency import remains held behind the [startup diagnostic gate](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md).
+The [V5 startup/cleanup evidence](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
+supports separately reviewed manual preparation. The [coherent importer candidate](FULL_CAS_SOURCE_CHECKPOINT_2026-10-15.md)
+has finite source checks; actual full dependency import remains pending.
 The full parent/payload/capture profile, passive readiness gate, stream settlement,
 cache extraction and separate read-only cache qualification require their own
 combined source and actual evidence. Any new CAS hash must enter fresh runtime,

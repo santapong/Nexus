@@ -74,6 +74,195 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-156 — Actual full importer stopped before parent promotion
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** open
+**Found by:** Root actual manual full-CAS attempt and independent file audit
+**Affected files:** private parent observer and shared contained_kernel mount reader
+
+### What happened
+The first scoped attempt exits 1 in 0.917s before container launch. All five saved
+D-Bus queries succeed with expected unit properties, but the kernel/controller/
+parent interval raises ValueError without retaining its exact step. Cleanup
+separately denies an absent immutable container seal; it preserves the first error.
+
+### Root cause
+The original failing substage remains unknown. A later read-only current-host
+probe reproduces mountinfo 5,142 B exceeding the shared reader's 4,096-byte cap.
+That is a concrete compatibility problem, not retrospective proof of the old step.
+
+### Fix applied
+No predicate change or retry. Preserve source/packet/full-3 output, verify absent
+unit/cgroup and unchanged 21-container baseline, and plan versioned bounded mount
+metadata reads plus immutable parent-step diagnostics before a fresh attempt.
+
+### Prevention
+Retain bounded first-step kernel diagnostics and first-failure phase. Exercise
+metadata readers against realistic host sizes while preserving finite bounds,
+source/version identities and historical failed qualification outcomes.
+
+---
+
+## ERROR-155 — Known capture failure could precede the first barrier release
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (finite source)
+**Found by:** independent coherent importer review
+**Affected files:** private host_bootstrap_operator.py and cas_lifecycle.py
+
+### What happened
+A capture error arriving during the initial core read still allowed the first
+release file to be created. A supplied-IO coordinator regression reproduced it.
+
+### Root cause
+The earlier check preceded intervening awaits; the physical writer had no capture check.
+
+### Fix applied
+Check after the initial read and pass the same capture object mandatorily to
+both barrier workers. Check its current first error after directory FD IO,
+immediately before O_EXCL creation. The coordinator and both finite FD cases pass.
+The first 1,640-file source remains preserved; actual preparation is still pending.
+
+### Prevention
+Carry the original failure owner to the effect boundary; an earlier boolean or
+report cannot stand in for its current state.
+
+---
+
+## ERROR-154 — Declared clean launch environment could not import the backend
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (finite source)
+**Found by:** Root passive clean-entry preflight
+**Affected files:** private host_bootstrap_operator.py
+
+### What happened
+The 339-check candidate failed standalone --help with ModuleNotFoundError:nexus.
+No scope or container started. Pytest's supplied backend path masked this entry problem.
+
+### Root cause
+Helper imports preceded the existing facts module's pinned backend bootstrap.
+
+### Fix applied
+A fresh archive imports facts first and preserves that order explicitly. The
+subprocess regression uses exactly the declared launch environment and passes;
+the original failure and all 1,640 original source files remain intact.
+
+### Prevention
+Exercise the CLI entry under its actual declared environment and an unrelated
+working directory before a launch; in-process tests do not establish that ABI.
+
+---
+
+## ERROR-153 — Inventory text replacement removed the profile declaration
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (finite source)
+**Found by:** Root collection during private full-CAS integration
+**Affected files:** private host_bootstrap_profiles.py
+
+### What happened
+A coarse replacement of source-inventory constants also removed ProfilePins.
+Collection raised ImportError before any actual recipe was frozen or executed.
+
+### Root cause
+The replacement endpoint was the later fixed_inputs function, beyond the class.
+
+### Fix applied
+Restore the held profile and replace only the two AST assignment spans. Combined
+source/profile regressions and configured strict24 pass; original failure logs remain.
+
+### Prevention
+Check that declarations survive mechanical namespace/inventory forwarding before
+freezing source; use syntax spans for adjacent declarations.
+
+---
+
+## ERROR-152 — Monitor could reset or skip the original first sampling slot
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (finite source)
+**Found by:** independent monitor source review
+**Affected files:** private cas_monitor.py
+
+### What happened
+Delayed attachment or dispatch reset the first slot; an initial repair still
+accepted a later wait(0) before dispatch with no sample after the missed slot.
+
+### Root cause
+The deadline was anchored inside the task, and wait.done preceded its check.
+
+### Fix applied
+Anchor to the original initial sample before task creation and check the slot
+before wait.done. Three meaningful regressions and independent review pass.
+
+### Prevention
+A later successful wait cannot rescue a missed observation window. Keep periodic
+named-process observations distinct from complete-tree barrier evidence.
+
+---
+
+## ERROR-151 — Artifact facts could describe replaced or changed stored output
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (finite source)
+**Found by:** independent finite artifact review
+**Affected files:** private cas_artifact.py
+
+### What happened
+Finite fixtures replaced the extracted root, changed final ledger permissions,
+and rewrote equal-length stored bytes before or immediately after readback.
+Earlier candidates returned the original facts despite these changes.
+
+### Root cause
+The final named root lacked a descriptor binding, and complete stored-byte hashes
+were not bracketed by final FD/named metadata checks.
+
+### Fix applied
+Retain the root descriptor through final checks; read back the stored ledger and
+compare metadata before/after hashing, including mode/owner/links/mtime/ctime.
+Apply final archive metadata checks after its hash.14 tests and peer review pass;
+all failed candidates are preserved. Actual full-CAS execution remains pending.
+
+### Prevention
+Hash actual stored bytes with stable descriptor/path observations. This does not
+provide atomic protection from hostile same-UID writers or power-loss durability.
+
+---
+
+## ERROR-150 — Initial observation conflated lifetime and per-call read deadline
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (finite source)
+**Found by:** Root full-CAS driver integration
+**Affected files:** private cas_inputs.py and host_bootstrap_operator.py
+
+### What happened
+The new driver passed the long parent lifetime to inner input reads while its
+owned await used a shorter deadline. A finite supplied-clock case accepted reads
+past that shorter end. The earlier actual30-second input check is unchanged.
+
+### Root cause
+The initial observation API used one end for both lifetime and individual IO.
+
+### Fix applied
+Add an explicit shorter IO end; forward it to every read while retaining the
+original observation lifetime. Short-end denial and lifetime-preservation tests pass.
+
+### Prevention
+Separate these bounds at initial observation as well as later revalidation;
+outer await timeout alone cannot stop a synchronous filesystem worker.
+
+---
+
 ## ERROR-149 — Canonical child defaults raised before runtime applied finite limits
 
 **Date:** 2026-10-15

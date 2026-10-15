@@ -885,3 +885,20 @@ partition and mandatory native intent checks. Original check/preparation/config
 survives later awaits; known issuance suppresses dispatch. Root3,715unit/84.69s and
 strict/lint/format23 pass with favorable combined review. Actual mixed SQL/SDK/OS
 and live email remain separate; no worker or service was activated.
+
+## 2026-10-15 — Full public-cache preparation source integrated
+
+The [coherent importer candidate](FULL_CAS_SOURCE_CHECKPOINT_2026-10-15.md)
+preserves backend3fde994 and passes 343 finite checks plus configured strict and
+Ruff24. It integrates full-only bounded orchestration, named process/cap readings,
+ordered complete-tree barriers, stream/control ownership, artifact validation and
+exact-ID cleanup. Independent component reviews close reproduced deadline,
+cadence and stored-output gaps; combined source review is favorable.
+
+The first actual scoped attempt stops after 0.917 s, before container launch. Its five
+unit replies are valid; the exact kernel/parent rejection step remains unknown.
+A later current-host probe reproduces mountinfo 5,142 B exceeding its 4 KiB reader.
+Next are a versioned reader/telemetry correction and fresh manual preparation,
+actual original-window/archive/extraction/cleanup evidence and separate cache
+reuse, followed by fresh runtime pins before Strategy inception and real E/EV.
+The failed137 case, retained V4 container and Company/full-V7 release gates remain.

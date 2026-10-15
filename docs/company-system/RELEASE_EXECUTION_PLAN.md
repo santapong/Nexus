@@ -12,7 +12,17 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
-### Active continuation — 2026-10-15,13:56UTC
+### Active continuation — 2026-10-15, full importer integration
+
+The [coherent finite importer candidate](FULL_CAS_SOURCE_CHECKPOINT_2026-10-15.md)
+is assembled and passes 343 checks plus configured strict/lint/format24. Its
+1,640-file repaired hold preserves all 1,616 backend files and has favorable
+combined source review. Its first actual scoped attempt stops before container
+launch; the later current-host mountinfo probe exceeds the 4 KiB reader cap.
+Next are a versioned bounded reader/parent telemetry correction and fresh actual
+preparation, then separate read-only cache reuse. Earlier
+startup and complete-input evidence below remains scoped to its original runs.
+
 
 The backend implementation is pushed in3fde994. The coherent1,616-file
 publication/native-profile source passes4,165 units, configured strict typing and
@@ -43,8 +53,8 @@ evidence without claiming Company qualification. Read-only Pi preparation also f
 memory control, no rootless runtime and a256MiB /var/tmp; its separate concrete
 change packet and explicit applicable approval remain prerequisites.
 
-The next critical path is coherent finite dependency-preparation source,
-monitor/recipe review and a separate manual public-data release decision using
+The next critical path is the bounded mount-reader/parent-observation correction,
+fresh coherent source and actual public-data preparation using
 V5's scoped evidence. Preserve its137 failure and keep parent-timer/cancellation
 proof as Company-release gates. Then bind new runtime/policy/template
 pins before fresh S inception, and actual current-native E/EV with independent
