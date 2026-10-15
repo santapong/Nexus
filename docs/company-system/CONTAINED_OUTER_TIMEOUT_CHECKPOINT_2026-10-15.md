@@ -35,6 +35,10 @@ The controller never released/claimed/reconciled the lease or removed the contai
 Expired-lease recovery and retained container metadata/disposal require a separately
 reviewed operation. Process absence does not establish a native result or refund.
 
+Subsequent [ledger-only recovery](CONTAINED_OUTER_LEDGER_RECOVERY_CHECKPOINT_2026-10-15.md)
+now classifies the original intent/cost as unknown and clears its reconciliation
+lease, preserving the original attempt and amount. Retained object handling remains.
+
 Evidence under `/home/santapong/.codex/nexus-contained-outer-fault-qualification-20261015`:
 
 - Source freeze63912df1e8b3095e8e0349b31a4d722e7460445df784a0b8681892e5a0e3b9ee;

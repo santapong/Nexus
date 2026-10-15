@@ -806,3 +806,16 @@ rolls back to head1/three rows, preserving proposal2, native history, money and 
 One recipe passed97.41s; Root fresh SQL and independent terminal file audit agree.
 The first malformed-URL fixture is preserved (ERROR122). B2 native execution,
 downstream publication and full operating release remain separate.
+
+## 2026-10-15 — Selected descriptions and exact outer ledger recovery
+
+Pure selected-builder template/spec pins are committed16c88a3 after126 focused,
+Root3,525unit/55.11s and repository-configured strict/lint/format5. They compare
+descriptions; actual actor READ/current proof, complete action approval and mandatory
+before-intent checks remain the next coherent B2a implementation.
+
+The [actual outer ledger recovery](CONTAINED_OUTER_LEDGER_RECOVERY_CHECKPOINT_2026-10-15.md)
+completed1.944s through existing public APIs. Original intent/attempt/tool1/money are
+preserved; state becomes unknown and the new reconciliation lease is released at
+fence3. Root fresh SQL and independent file audit agree. No engine call or result
+fabrication occurred; the retained object is unchanged.

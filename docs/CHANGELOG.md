@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify exact outer-timeout ledger recovery
+
+### Validation
+- One public reconciliation-only claim/read/release completed1.944s, preserving
+  original intent fence1, one attempt/tool use and reserved0.01USD/null actual cost.
+- Work is outcome_unknown/fence3 with no lease; hold is unknown without refund.
+  Root fresh SQL and independent file audit agree; no engine/reissue/result ran.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Pin selected native builder descriptions
 
 ### Added
