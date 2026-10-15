@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Pin selected native builder descriptions
+
+### Added
+- Strict trusted CSV template and exact candidate/spec comparisons bind repository,
+  protected metadata/patch, Node/CSV runtime, policy, commands, paths, limits and
+  output. Full execution method and runtime selector have separate identities.
+
+### Validation
+-126 pure checks; Root3,525unit/55.11s and repository-configured strict/lint/format5
+  pass with favorable source review. Current actor proof/READ/approval/intent guard
+  and runtime activation remain separate requirements.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify actual owner transition and downstream-expiry rollback
 
 ### Validation
