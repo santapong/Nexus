@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Describe one exact reviewed strategy candidate
+
+### Added
+- Pure candidate comparison binds the accepted original StrategyBrief bytes,
+  author/verifier registrations, exact mechanical check and candidate scope hash.
+- This reference records no owner decision, permission or plan transition. Current
+  native proof and signed revision2 choice remain separate unfinished work.
+
+### Validation
+- Seven positive/spliced/mismatched input checks, strict types and lint/format2
+  pass on the integrated snapshot; independent byte/source review is favorable.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Retain exact current issued-membership failure observations
 
 ### Added
