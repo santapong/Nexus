@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve exact strategy check graph and proof descriptions
+
+### Added
+- Internal C artifact/derivation/full input/resource graph append and exact replay,
+  plus deterministic receipt-bound acceptance description construction.
+- Replay binds original graph timestamps and deterministic event identity after
+  two retained negatives reproduced missing checks. Native authority stays separate.
+
+### Validation
+- 32 pure/mocked slice checks, strict/Ruff/format5, independent review and isolated
+  2,953unit/33.43s pass. No SQL, native publisher/acceptance or worker activation.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Bind strategy verification to actual succeeded receipt facts
 
 ### Added

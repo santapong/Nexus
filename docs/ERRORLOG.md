@@ -74,6 +74,37 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-110 — Check graph replay omitted exact derivation time and event identity
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (unhooked internal row-helper scope)
+**Found by:** independent replay review and Root retained negatives
+**Affected files:** `company/strategy/check_rows.py`
+
+### What happened
+The initial replay compared complete result/edge fields but accepted a changed
+derivation timestamp or arbitrary event UUID. Both cannot be produced by the
+writer, which shares one timestamp and derives event ID from company/dedup key.
+Two retained mocked-row tests failed DID NOT RAISE. No native store was activated.
+
+### Root cause
+Exact graph equality omitted two persisted fields; a positive fixture also used
+an arbitrary event UUID instead of the actual append_event recipe.
+
+### Fix applied
+Require derivation time==artifact time==event time and exact deterministic event
+UUID/company/key. Correct only the synthetic fixture to the writer recipe.
+32 slice tests and strict/Ruff/format5 pass; isolated2,953unit/33.43s and independent
+review pass. These are mocked graph/source checks, not SQL rollback proof.
+
+### Prevention
+Exact replay must account for every immutable graph field. Retain actual writer
+identity in positive fixtures rather than inventing compatible-looking rows.
+See STRATEGY_CHECK_GRAPH_CHECKPOINT_2026-10-15.md for original red evidence.
+
+---
+
 ## ERROR-109 — Verifier receipt gate omitted publication chronology
 
 **Date:** 2026-10-15 (Asia/Bangkok)
