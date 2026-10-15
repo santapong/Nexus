@@ -74,6 +74,39 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-161 — Successful manual reuse omitted stderr from its receipt
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** independent source reviewer before actual reuse
+**Affected files:** private reuse Source2 `cas_recipe.py`, `cas_reuse_receipt.py`
+and two focused test modules; primary production source unchanged
+
+### What happened
+The first held reuse recipe retained successful stdout but omitted successful
+stderr. A warning could therefore disappear from otherwise successful evidence.
+The original Source1 review is unfavorable and no Source1 actual run was issued.
+
+### Root cause
+The success receipt contract covered only stdout; failure diagnostics alone did
+not preserve stderr from a zero-exit command.
+
+### Fix applied
+Fresh Source2 retains both complete streams with explicit decimal lengths and
+canonical base64, including empty stderr. Each stream is capped at 16 KiB;
+overflow rejects success. FD3 control remains separate. Two meaningful parser
+failures precede the repair; 57 finite checks, configured strict/Ruff and independent
+forward review pass. The separate actual reuse retains 43-byte stdout and explicit
+empty stderr, with favorable FILE audit. Original Source1 stays preserved.
+
+### Prevention
+Check complete nonempty/empty stderr, warning propagation, missing/truncated/count/
+overflow records and control-looking bytes before freezing a new manual recipe.
+See [actual reuse evidence](company-system/CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md).
+
+---
+
 ## ERROR-160 — Selected template equated manifest and configuration digests
 
 **Date:** 2026-10-16
@@ -4525,7 +4558,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-161*
+*Next error ID: ERROR-162*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Qualify actual read-only public-cache reuse
+
+### Validation
+- Fresh Source2 passes 57 finite checks, configured strict/Ruff for 16 manual
+  modules and independent source review. Complete successful stdout and stderr
+  are retained with explicit empty streams and fixed overflow rejection.
+- Actual reuse passes in 71.610 seconds: untouched pnpm store, denied store write,
+  executable check, matching complete input summaries, zero terminal codes and
+  exact owned cleanup. Independent retained-file audit and fixed postcheck agree.
+- Full tree bodies and intermediate input/barrier clocks are not retained;
+  independent reconstruction and current Company execution remain unqualified.
+- Real Node-v4 data descriptions adopt the actual full517 cache lineage;
+  actual project resolution/timing and running-fault/recovery gates remain next.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Correct selected-template image identity binding
 
 ### Fixed

@@ -1,14 +1,20 @@
 # Nexus implementation progress
 
+Latest actual milestone: [read-only cache reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md)
+passes in 71.610 seconds with complete receipt streams, unchanged public inputs,
+exact owned cleanup and favorable independent FILE review. Retained full-tree
+bodies are unavailable; the checkpoint states that evidence limit. Current-V8
+running-fault/recovery checks and fresh real runtime/Strategy pins remain next.
+
 Latest backend source: [selected image binding](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
 corrects the distinct manifest/config-ID join and passes4,247 coherent units plus
 focused/static checks and independent review. Public fields and native authority
-checks remain intact. Cache reuse and fresh real runtime/Strategy pins remain next.
+checks remain intact. Actual native Company qualification remains open.
 
 The [actual full public-cache preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s:
 517 packages, verified archive/tree, exact owned cleanup and unchanged21-container
-baseline. Independent actual FILE audit is favorable. Read-only reuse and fresh
-real runtime/Strategy pins precede actual E/EV. The selected image-pair source
+baseline. Independent actual FILE audit is favorable. Later read-only reuse is
+linked above; fresh real runtime/Strategy pins precede actual E/EV. The selected image-pair source
 guard is fixed; current complete V8 remains disabled.
 
 Earlier backend source: the [bounded mount reader/current V8 checkpoint](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)

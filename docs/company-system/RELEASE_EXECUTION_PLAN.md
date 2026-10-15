@@ -1,9 +1,15 @@
 # Nexus release execution plan
 
+The [actual read-only cache reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md)
+passes in 71.610 seconds with favorable independent FILE audit. It retains complete
+receipt streams and unchanged input summaries; full tree bodies are unavailable.
+Next implement/review current-V8 running-fault/recovery fixtures, then fresh real
+runtime/CAS/policy/candidate/E-EV template descriptions before new Strategy.
+
 The [actual full public-cache preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s:
 517 packages, verified archive/tree, exact owned cleanup and unchanged21-container
-baseline. Independent actual FILE audit is favorable. Read-only reuse and fresh
-real runtime/Strategy pins precede actual E/EV. The selected image-pair source
+baseline. Independent actual FILE audit is favorable. Later read-only reuse is
+linked above; fresh real runtime/Strategy pins precede actual E/EV. The selected image-pair source
 guard is fixed; current complete V8 remains disabled.
 
 **Started:** 2026-10-13 (Asia/Bangkok). **Goal:** deliver the agreed supervised company-system release with evidence, then follow the approved release workflow.
@@ -19,9 +25,11 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 ## Current wave
 
 The [selected image-pair source fix](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
-passes4,247 units and independent review. Next qualify read-only cache reuse, then
-freeze new actual runtime/CAS/policy/candidate/E-EV template descriptions before
-fresh Strategy. The completed full517 preparation supplies data, not Company authority.
+passes4,247 units and independent review. Read-only reuse now passes separately.
+The five current-V8 negative cases have a saved packet/shared-interface plan;
+source implementation and combined review precede any actual case release.
+Freeze new actual runtime/CAS/policy/candidate/E-EV template descriptions before
+fresh Strategy. The completed full517 preparation and reuse supply public data.
 
 ### Active continuation — 2026-10-15, bounded reader and current profiles
 
