@@ -14,6 +14,23 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
+Latest reviewed local milestone: `6e37386` adds dormant full-plan admission windows
+to the actual-owner proof reader in `943c5ec`. Root combined3,253unit/54.77s and
+strict/lint/format12 pass. The following older foundation/notification-wave tables
+are historical; current lane ownership is:
+
+| Owner | Current deliverable | Next evidence |
+| --- | --- | --- |
+| notification_profiles | Actual-owner current Strategy proof SQL fixture | Four independent public lineages, unchanged ledgers, current READ/blocked/credential-expiry denials |
+| recovery_resume | Independent contained outer-fault review, then owner-transition plan | Exact controller/collector ownership and bounded launch; choice/revision2 interfaces before implementation |
+| engineering_resume | Separate contained outer-fault fixture and dynamic launch packet | Normal015/public setup, actual config/approval/hold pins, one separately reviewed bounded fault operation |
+| Root | Integrate milestones and qualify actual cases | Owner proof SQL, owner choice/full cycle, then remaining provider/ARM64/UAT/operations gates |
+
+The successful methodv6 M1/replay and native Strategy publication/expiry rollback
+are actual saved qualifications. The outer fault and actual owner reads are still
+pending. Frozen source packages remain pinned to their original committed bases;
+later dormant source additions do not silently rebase or activate them.
+
 The initial foundation lanes below are historical. Current local headae7d9b5 plus
 notification OS qualification integrates Brain/management, native engineering
 acceptance/recovery, notification staging/atomic enqueue and configured contained

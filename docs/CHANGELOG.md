@@ -1,6 +1,16 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Reconcile the current release work lanes
+
+### Changed
+- Release execution and gate indexes now identify the committed owner reader and
+  full-plan window milestone, current agent ownership and actual next SQL/runtime
+  qualifications. Historical foundation tables remain explicitly historical.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Retain full-plan admission expiry observations
 
 ### Added

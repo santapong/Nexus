@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local8d39e83, actual Strategy PG and methodv6/replay receipts. This index separates implemented/local
+Checked2026-10-15 against local6e37386, actual Strategy PG and methodv6/replay receipts. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -43,6 +43,13 @@ publication, and integrated outer-timeout/ARM64 qualification. The full cycle/
 partition helpers remain unactivated pending those proofs. Notification native
 replay, corrected SDK outcomes and all four actual OS recovery cases pass; live
 email remains separate. Use the small existing team and milestone reviews.
+
+The actual-owner proof reader is source/mock-qualified in943c5ec. Dormant
+[full-plan window capture](PLAN_ADMISSION_WINDOW_CHECKPOINT_2026-10-15.md) is
+integrated in6e37386 after Root3,253unit/54.77s and independent review. Actual owner
+SQL is the next qualification; choice/revision2/full mixed admission and the real
+twelve-row registration check remain unactivated. No dated execution-pricing or
+genuine model-quality proof follows from the window capture.
 
 Preserve seven prepared engineering process DBs, both backup pairs and the new
 CSV known-output DB/tree. Tick disposable database is exclusively owned by its
