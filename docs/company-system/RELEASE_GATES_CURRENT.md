@@ -11,6 +11,11 @@ pending. Full tree retention limits are explicit in each checkpoint.
 This index separates saved scoped proof from the full selected release.
 Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
+The later [second setup](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md)
+passes source ingestion and plan/action authorization, then stops at a fixture
+runtime-recipe mismatch. Its unissued hold is preserved; actual fault qualification
+remains open.
+
 | Requirement | Strongest saved evidence | Remaining proof for release |
 | --- | --- | --- |
 | Governed durable runtime and US$5/day | [M1 offline acceptance](M1_OFFLINE_ACCEPTANCE_2026-10-14.md), real PG/DBOS governance/recovery, permanent quotas/unknown holds | Actual configured provider/billing/operating policy and current integrated release profile |
@@ -28,8 +33,9 @@ Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
 ## Current next work
 
-Correct the fixture source adapter and prepare a fresh namespace after the
-preserved first setup failure. Then qualify five separate current-V8 faults:
+Bind the fixture execution spec to its declared V2 policy and prepare a fresh
+Source4/namespace3 after both preserved setup failures. Real ingestion now passes;
+the later configuration mismatch is linked above. Then qualify five separate current-V8 faults:
 original parent expiry, cancellation, pause, source READ revocation and stale-fence
 release. Each retains native unknown history and one attempt under original
 clocks; no actual case has been released. Then qualify selected E/EV and independent acceptance

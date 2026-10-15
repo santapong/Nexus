@@ -1,5 +1,12 @@
 # Nexus implementation progress
 
+Latest: [second fault-fixture setup](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md).
+Fresh source passes289 focused/strict-lint-format38 and cross-hash-seed boundary
+checks. Actual setup passes source ingestion, plan and action authorization, then
+correctly rejects a fixture spec's V1 default against its V2 policy. The authorized
+unissued action/held reservation and both used namespaces are preserved; attempts
+and intents remain zero. Correct real-helper composition before the next fresh setup.
+
 Latest fault-harness checkpoint: [source checks and stopped setup](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md).
 Frozen 1,653-file source passes 273 focused checks and strict/lint/format38.
 Actual public fixture staging completes; normal001–016 migrations succeed, then

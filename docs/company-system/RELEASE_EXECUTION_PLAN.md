@@ -1,5 +1,10 @@
 # Nexus release execution plan
 
+The [second setup checkpoint](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md)
+records actual source ingestion and plan/action authorization, followed by a
+fixture runtime-recipe mismatch. Preserve the authorized unissued action/hold;
+correct spec/policy composition and use a fresh namespace. No native fault case ran.
+
 The [current-V8 fault harness](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md)
 passes 273 focused and strict/lint/format38 source checks. Actual preparation and
 normal001–016 schema installation complete, but the first fixture setup stops
@@ -33,8 +38,9 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 The [selected image-pair source fix](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
 passes4,247 units and independent review. Read-only reuse now passes separately.
 The five current-V8 negative cases have frozen source and combined boundary
-reviews; their first actual setup stopped as linked above. A corrected fresh
-setup, current packet review and check-only precede any actual case release.
+reviews; actual setup reaches authorization but stops at the later recipe
+mismatch linked above. Corrected fresh setup, packet review and check-only
+precede any actual case release.
 Freeze new actual runtime/CAS/policy/candidate/E-EV template descriptions before
 fresh Strategy. The completed full517 preparation and reuse supply public data.
 

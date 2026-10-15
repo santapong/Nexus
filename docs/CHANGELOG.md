@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Validate fresh fixture source and retain second setup
+
+### Validation
+- Correct returned-record projection and two unordered-controller representation
+  boundaries in private qualification fixtures. Clean source checks pass289
+  focused tests, configured nonsilent strict/lint/format38 and10 boundary tests
+  under a second hash seed. Production baseline files and native wire stay intact.
+- Fresh actual setup passes ingestion, plan and action authorization, then stops
+  at a fixture runtime recipe default mismatch. Preserve its authorized unissued
+  action and USD0.010000 hold; attempts/intents remain0. Full setup and native
+  fault qualification remain open and require corrected fresh source/namespace.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Freeze fault harness and preserve first setup failure
 
 ### Validation
