@@ -4,10 +4,10 @@
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 
 Latest source milestone: [complete engineering bodies](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md),
-with 3,753 unit tests passing. Actual reader SQL/timing and real StockFlow E/EV
-remain open. The separate first mixed-sender SQL recipe failed in a fixture JSON
-diagnostic before sending; its DB and authority are preserved while a fresh v2 is
-prepared. This does not close the mixed sender or supervised-release gates.
+with 3,753 unit tests passing. The [actual mixed sender SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
+passes189.23s with one mock POST, original-expiry rollback and history0HTTP/0body.
+Its first failed fixture/held action remain preserved. Actual reader SQL/timing,
+real StockFlow E/EV, SDK/live email and the supervised release remain open.
 
 ## Working contract
 

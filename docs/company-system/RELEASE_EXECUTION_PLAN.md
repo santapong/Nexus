@@ -74,9 +74,10 @@ M0 freezes worker/model interfaces. M1 proves the actual durable runtime, standi
 
 2026-10-15 source checkpoint: complete engineering bodies pass3,753unit/67.03s;
 see [the scoped evidence](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md).
-Next prerequisites are actual bounded reader SQL/timing and a fresh mixed-sender
-SQL v2 after its first fixture-only JSON diagnostic failure. Preserve the failed
-lineage and original holds; no validator relaxation, expiry rescue or release claim.
+The [mixed sender direct-SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md) now
+passes189.23s after its first fixture-only JSON diagnostic failure. Preserve that
+failed lineage and its holds. Next are actual bounded reader SQL/timing, mixed
+SDK/OS and real E/EV; no validator relaxation, expiry rescue or release claim.
 
 Routine reversible local implementation choices and fixes proceed under the current scope. Agents run targeted tests and lint for their packages. Root reviews changed interfaces and high-impact approvals/auth/budget/ownership/migration/recovery boundaries at integration checkpoints. An independent agent reviews the combined milestone once the implementation and evidence are concrete.
 

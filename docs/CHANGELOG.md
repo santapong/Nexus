@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify mixed sender direct SQL and preserved history
+
+### Validation
+- Fresh two-company recipe passes189.23s: four exact missing/no-op denials, one
+  mockPOST, original-source expiry after the real final flush with full rollback,
+  and paused/inactive/expired-source issued history0HTTP/0private-body reads.
+- Root SQL confirms24work/5intents+attempts, one notification slot/observation,
+  two ENQUEUED rows, tool5/model0 and0leases/app sessions; unknown/held money stays.
+- Preserve first failed90.64s fixture/action; strict JSON-boundary repair and
+  fresh names only. SDK/OS/live email and the full StockFlow pilot remain open.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Read complete engineering bodies with original protection
 
 ### Added

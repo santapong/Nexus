@@ -99,7 +99,7 @@ real timing remain separate. See the complete engineering body source checkpoint
 
 **Date:** 2026-10-15
 **Severity:** low (fixture failure; no sender effect issued)
-**Status:** open qualification; fresh v2 repair prepared separately
+**Status:** fixed in fresh v2; actual direct SQL passes189.23s, SDK/live gates remain
 **Found by:** first actual B2b SQL recipe
 **Affected files:** private mixed_sender_pg_publication.py diagnostic
 
@@ -118,13 +118,17 @@ all-table conservation now surrounds recovery/release. These source corrections
 are not a successful mixed SQL qualification. Root terminal and independent file
 audit record the failed state and shutdown app0.
 
+Fresh v2 retained the same seven-error actual-producer red, then57pure/strict4
+checks passed without validator relaxation. Its complete SQL recipe passed189.23s;
+see MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md. The failed original stays preserved.
+
 ---
 
 ## ERROR-125 — Mixed sender needed complete final composition and history pins
 
 **Date:** 2026-10-15
 **Severity:** high (source hazards; mixed runtime was still closed)
-**Status:** fixed for coherent source; actual mixed qualification pending
+**Status:** fixed in source; direct SQL v2 qualified, SDK/live gates remain
 **Found by:** tests-first implementation and independent source review
 **Affected files:** mixed_notification_history.py, managed_effects.py, mixed sender boundaries
 

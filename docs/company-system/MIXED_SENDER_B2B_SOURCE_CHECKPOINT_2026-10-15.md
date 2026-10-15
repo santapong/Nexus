@@ -1,5 +1,9 @@
 # Mixed sender B2b source checkpoint
 
+Subsequent [actual direct-SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
+passed189.23s. The original source-only evidence below remains scoped as recorded;
+SDK/OS/live delivery and the full pilot are still open.
+
 Checked2026-10-15 on backendf4cc659 plus23 Python files, integrated after4fcdd8d.
 This is source/mock qualification. Actual mixed SQL, SDK/OS recovery and live email
 remain separate gates. No worker/service/queue or real provider is activated.

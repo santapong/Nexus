@@ -55,3 +55,8 @@ Root terminal receipt `51b978469f96068cf14f7f2a8909d5f8bdb53f1d1c58b64d8d56b0005
 pins 31 prior run files. A fresh v2 namespace and strict JSON-boundary regression
 are being prepared. Positive send, rollback, history, SDK and full-cycle gates
 remain unqualified by this failed recipe.
+
+Subsequent [fresh v2 direct SQL](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
+passes189.23s. The original failure above stays preserved. This closes that scoped
+synthetic direct-SQL gate; SDK/live email, reader SQL/timing and the real E/EV pilot
+remain open.

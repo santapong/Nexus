@@ -95,11 +95,20 @@ Deferred automatic Meta Harness and dedicated graph infrastructure remain deferr
 
 The [B2b sender source](MIXED_SENDER_B2B_SOURCE_CHECKPOINT_2026-10-15.md) now binds
 current credentials/config, fresh native checks and separate issued-family history.
-Root3,715unit/84.69s and strict/lint/format23 pass. Actual mixed SQL, SDK queue/replay,
-crash recovery and real email remain unqualified; source adds no activation.
+Root3,715unit/84.69s and strict/lint/format23 pass. Subsequent direct mixed SQL v2
+is qualified below; SDK queue/replay, crash recovery and real email remain open.
+Source adds no service activation.
 
 The [complete engineering body source](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md)
 passes Root3,753unit/67.03s and retains native page/proof/result limits. Actual
 restricted reader SQL/timing and real E/EV execution remain open. The first mixed
 sender SQL recipe failed at a fixture JSON diagnostic before begin/send; its
-source/run/database/held authority are preserved. A fresh v2 repair is source-only.
+source/run/database/held authority are preserved. Fresh v2 now passes as recorded
+below, without resuming that original action.
+
+The [actual mixed sender direct-SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
+passes189.23s: four mandatory-check denials, one mockPOST, original45s finalflush
+rollback and paused/inactive/expired-source issued history0HTTP/0body. Root SQL
+confirms24work/5intents+attempts/tool5/model0/queue2ENQUEUED/leases0/app0, with
+unknown/held money preserved. The first failure stays preserved. SDK/OS/liveemail,
+actual reader timing and real StockFlow E/EV/full pilot are still separate gates.
