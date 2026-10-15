@@ -77,8 +77,10 @@ see [the scoped evidence](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-
 The [mixed sender direct-SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md) now
 passes189.23s after its first fixture-only JSON diagnostic failure. Preserve that
 failed lineage and its holds. The [bounded reader SQL v2](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md)
-now passes28.18s. Next are runtime dependency recovery, real Node-v4 timing/E/EV,
-P/C, mixed SDK/OS and the remaining release gates; no expiry rescue or release claim.
+now passes28.18s. [Public dependency recovery](PUBLIC_RUNTIME_DEPENDENCY_STAGE_2026-10-15.md)
+passes46.04s with independent SRI/file audit. Next are contained offline cache
+bootstrap, real Node-v4 timing/E/EV, P/C, mixed SDK/OS and the remaining release
+gates; no expiry rescue or release claim.
 
 Routine reversible local implementation choices and fixes proceed under the current scope. Agents run targeted tests and lint for their packages. Root reviews changed interfaces and high-impact approvals/auth/budget/ownership/migration/recovery boundaries at integration checkpoints. An independent agent reviews the combined milestone once the implementation and evidence are concrete.
 

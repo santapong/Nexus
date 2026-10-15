@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Restore pinned public build-dependency inputs
+
+### Validation
+- Actual public GET-only stage completes46.04s with517 packages+pnpm; independent
+  audit recomputes all SRI/hash/byte pins and exact520file/private-mode tree.
+- Preserve first FUSE-mode failure; fresh Linux-filesystem packet retains strict
+  permissions. Credential-free private operator now strips server cookies too.
+- Offline cache/bootstrap, actual Node timing/E/EV and release remain open.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify complete protected body reads under real SQL
 
 ### Validation

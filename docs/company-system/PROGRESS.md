@@ -7,9 +7,9 @@ Latest source milestone: [complete engineering bodies](ENGINEERING_COMPLETE_BODI
 with 3,753 unit tests passing. The [actual mixed sender SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
 passes189.23s with one mock POST, original-expiry rollback and history0HTTP/0body.
 The [bounded reader SQL v2](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md)
-passes28.18s across five real cases. Both first failures remain preserved. Runtime
-inputs need restoration before real StockFlow E/EV; SDK/live email, ARM64 and the
-supervised release remain open.
+passes28.18s across five real cases. Both first failures remain preserved. The [public dependency stage](PUBLIC_RUNTIME_DEPENDENCY_STAGE_2026-10-15.md) now
+passes46.04s with independent full-file integrity audit. Offline cache bootstrap
+and real StockFlow E/EV remain next; SDK/live email, ARM64 and release stay open.
 
 ## Working contract
 

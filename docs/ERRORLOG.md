@@ -74,6 +74,68 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-131 — Public dependency stage did not preserve requested private mode
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** fixed (operator location; strict guard retained)
+**Found by:** Codex during actual public dependency restoration
+**Affected files:** private public-download operator packet; no backend change
+
+### What happened
+The actual stage mkdir requested0700 on/mnt/data but produced0755. The initializer
+stopped0.606s before its first fetch and before a download receipt. The empty failed
+stage and all source/release/logs remain retained.
+
+### Root cause
+Requested modes were treated as a sufficient placement assumption on this FUSE
+volume. The matching skill already recorded this mount-specific behavior for
+secret staging; that lesson was not consulted at the new artifact boundary.
+
+### Fix applied
+A fresh same-parent Linux-filesystem probe proved directory0700/file0600. A NEW
+path-only packet then completed517packages+pnpm in46.04s. Independent audit verifies
+all520files/two directories, actual modes/UID/link counts and integrity. Old packet
+was not resumed; the private-mode guard and other limits are unchanged.
+
+### Prevention
+The project skill now routes new cache/staging-root selection to the existing
+private-permissions lesson. Recheck actual filesystem behavior; requested mkdir or
+chmod is insufficient. Later independent reuse of this routing change is unknown.
+See [the dependency checkpoint](company-system/PUBLIC_RUNTIME_DEPENDENCY_STAGE_2026-10-15.md).
+
+---
+
+## ERROR-130 — Literal credential-free download policy allowed server cookies
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (private operator)
+**Found by:** independent file reviewer before any real download
+**Affected files:** private public_download_operator.py and its mock tests
+
+### What happened
+HTTPX's persistent client could carry a server Set-Cookie into a later request,
+violating the private operator's literal credentials=none policy.
+
+### Root cause
+trust_env=False and absent supplied Authorization do not disable the cookie jar.
+The initial mock cases did not inspect subsequent actual transport headers.
+
+### Fix applied
+A request hook on both actual clients removes Cookie, Authorization and
+Proxy-Authorization after merge/auth and before each transport request, including
+manual redirects. Five real MockTransport regressions first failed, then all28
+passed. Independent source review verifies pinned HTTPX0.28.1 ordering. Production
+APIs that support optional authenticated downloads were not changed.
+
+### Prevention
+Test transport-boundary headers across redirects and subsequent objects when the
+policy is literal credential-free. Recheck ordering on client/version changes.
+Actual download success is not independent wire-header capture evidence.
+
+---
+
 ## ERROR-129 — Runtime preflight inspected Docker before the configured Podman store
 
 **Date:** 2026-10-15

@@ -120,3 +120,10 @@ execution/holds/app sessions. Maximum-body/full StockFlow timing remains unprove
 Runtime preflight finds the exact configured Podman image present, while old/tmp
 CAS/tool/pnpm inputs are unavailable. Download-only recovery is being prepared;
 no public bytes have been reacquired or cache imported by that source preparation.
+
+
+The [public dependency stage](PUBLIC_RUNTIME_DEPENDENCY_STAGE_2026-10-15.md) is now
+complete: actual46.04s,517package archives+pnpm, independent complete SRI/hash/file
+permissions audit. The first FUSE-mode failure remains preserved. This only
+restores inputs for a separate contained offline cache bootstrap; real StockFlow
+Node-v4 timing, selected E/EV acceptance and full-cycle delivery remain open.
