@@ -1,6 +1,15 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Reconcile B1 qualification and subsequent work lanes
+
+### Changed
+- Current execution plan identifies the committed owner-transition source, fresh
+  SQL qualification work, and separately planned actor-scoped execution/recovery.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Bind owner Strategy choice to full plan revision
 
 ### Added
