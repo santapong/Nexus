@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
 import threading
 from collections.abc import Callable
@@ -20,6 +21,11 @@ from nexus.builder.contained_discovery_seal import FixedDiscoverySeal
 from nexus.builder.contained_kernel import _boot, _mount_id, open_directory
 from nexus.builder.contained_observer_io import _fd_mount_id, _proc
 from nexus.builder.contained_query import clock_us
+from nexus.builder.issued_diagnostics import (
+    FailureRecorder,
+    FieldName,
+    Step,
+)
 
 if TYPE_CHECKING:
     from nexus.builder.contained_process_contracts import ProcessRunBinding
@@ -57,10 +63,12 @@ class OwnedStart:
         self._sealed = False
         self.identity: HostPlacementIdentity | None = None
 
-    async def _perform(self, operation: Callable[[], T], end: int) -> T:
+    async def _perform(
+        self, operation: Callable[[], T], end: int, trace: FailureRecorder | None = None
+    ) -> T:
         end = min(end, self.end_us)
         budget = _remaining(end)
-        if self._closed:
+        if self._closed if trace is None else trace.remember("closed", self._closed):
             raise ValueError("Issued ownership context is already closed")
 
         def checked() -> T:
@@ -125,9 +133,12 @@ class OwnedStart:
                 raise ValueError("Owned-start preparation completed after close")
             self._root_fd, self.collector_start = held, start
 
-    def _require_root(self, fd: int) -> None:
+    def _require_root(self, fd: int, trace: FailureRecorder | None = None) -> None:
         stat, expected = os.fstat(fd), self.expected
-        if (stat.st_dev, stat.st_ino, stat.st_uid, _fd_mount_id(fd)) != (
+        observed = stat.st_dev, stat.st_ino, stat.st_uid, _fd_mount_id(fd)
+        if trace is not None:
+            trace.remember("root", observed)
+        if observed != (
             expected.mount_device,
             expected.cgroup_inode,
             expected.uid,
@@ -166,65 +177,99 @@ class OwnedStart:
 
     # One >50-line descriptor transaction keeps local FDs within a single try/finally;
     # splitting it would obscure the pre/post proc, mount and visible-directory rechecks.
-    def _collect(self, kernel: KernelScopeFacts, seal: FixedDiscoverySeal) -> HostPlacementIdentity:
+    def _collect(
+        self, kernel: KernelScopeFacts, seal: FixedDiscoverySeal, trace: FailureRecorder
+    ) -> HostPlacementIdentity:
         """Local descriptors survive cancellation until this bounded-IO worker returns."""
         expected, process = self.expected, self.process
+        trace.mark("runtime_initial")
         if (
-            self._closed
+            trace.remember("closed", self._closed)
+            or not trace.remember("runtime_present", process is not None)
             or process is None
-            or process.returncode is not None
-            or self.runtime_start is None
+            or trace.remember("runtime_returncode", process.returncode) is not None
+            or trace.remember("runtime_start", self.runtime_start) is None
         ):
             raise ValueError("Owned runtime is missing, reaped or inaccessible")
+        trace.mark("seal_binding")
+        trace.remember("runtime_pid", process.pid)
         seal.require(self.binding, process.pid, seal.container)
         path = expected.cgroup_path + "/runtime"
         wanted = (self.collector_start, path), (self.runtime_start, path)
+        trace.mark("before_membership")
         if (
-            os.getpid() != self.collector_pid
-            or (_proc(self.collector_pid), _proc(process.pid)) != wanted
+            trace.remember("collector_pid", os.getpid()) != self.collector_pid
+            or (
+                _observed_proc(trace, "collector_before", self.collector_pid),
+                _observed_proc(trace, "runtime_before", process.pid),
+            )
+            != wanted
         ):
             raise ValueError("Actual collector/runtime PID start or exact runtime leaf differs")
+        trace.mark("boot_uid_mount")
         if (
-            _boot() != expected.boot_id
-            or os.geteuid() != expected.uid
-            or _mount_id() != expected.mount_id
+            trace.remember("boot_id", _boot()) != expected.boot_id
+            or trace.remember("uid", os.geteuid()) != expected.uid
+            or trace.remember("mount_id", _mount_id()) != expected.mount_id
         ):
             raise ValueError("Actual issued host boot, UID or mount differs")
+        trace.mark("root_open")
         with open_directory(CGROUP_ROOT, cgroup_components(expected.cgroup_path)) as root:
-            self._require_root(root)
+            trace.mark("root_identity")
+            self._require_root(root, trace)
+            trace.mark("leaf_open")
             leaf = os.open(
                 "runtime", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=root
             )
             try:
+                trace.mark("leaf_identity")
                 stat = os.fstat(leaf)
                 info = stat.st_dev, stat.st_ino, stat.st_uid, _fd_mount_id(leaf)
+                trace.remember("leaf", info)
                 if info[0] != expected.mount_device or info[2:] != (
                     expected.uid,
                     expected.mount_id,
                 ):
                     raise ValueError("Actual runtime leaf device, owner or mount differs")
+                trace.mark("held_leaf")
                 with self._lock:
-                    if self._closed or self._root_fd is None:
+                    if trace.remember("closed", self._closed) or not trace.remember(
+                        "root_known", self._root_fd is not None
+                    ):
                         raise ValueError("Issued membership read completed after close")
                     if self._leaf_info is None:
                         self._leaf_fd, self._leaf_info = os.dup(leaf), info
                     if info != self._leaf_info:
                         raise ValueError("Actual held runtime leaf was replaced")
+                trace.mark("visible_leaf")
                 visible = os.stat("runtime", dir_fd=root, follow_symlinks=False)
+                trace.remember(
+                    "visible_leaf",
+                    (visible.st_dev, visible.st_ino, visible.st_uid, None),
+                )
                 if (visible.st_dev, visible.st_ino, visible.st_uid) != info[:3]:
                     raise ValueError("Actual runtime leaf changed during membership read")
-                self._require_root(root)
+                trace.mark("root_recheck")
+                self._require_root(root, trace)
             finally:
                 os.close(leaf)
+        after = (
+            _observed_proc(trace, "collector_after", self.collector_pid),
+            _observed_proc(trace, "runtime_after", process.pid),
+        )
+        trace.mark("after_membership")
         if (
-            _proc(self.collector_pid),
-            _proc(process.pid),
-        ) != wanted or process.returncode is not None:
+            after != wanted
+            or trace.remember("runtime_returncode_after", process.returncode) is not None
+        ):
             raise ValueError("Actual collector/runtime identity changed during read")
+        trace.mark("root_visible_after")
         with open_directory(CGROUP_ROOT, cgroup_components(expected.cgroup_path)) as fresh:
-            self._require_root(fresh)
-        if _mount_id() != expected.mount_id:
+            self._require_root(fresh, trace)
+        trace.mark("mount_after")
+        if trace.remember("mount_id", _mount_id()) != expected.mount_id:
             raise ValueError("Actual issued cgroup mount changed during read")
+        trace.mark("kernel_placement")
         if kernel.self_cgroup_path != path or kernel.cgroup_path != expected.cgroup_path:
             raise ValueError("Current kernel facts differ from exact issued placement")
         values = {
@@ -251,7 +296,7 @@ class OwnedStart:
             collector_pid=self.collector_pid,
             collector_start_ticks=self.collector_start,
             runtime_pid=process.pid,
-            runtime_start_ticks=self.runtime_start,
+            runtime_start_ticks=cast(int, self.runtime_start),
             mount_id=expected.mount_id,
             mount_device=expected.mount_device,
             mount_inode=expected.mount_inode,
@@ -264,8 +309,11 @@ class OwnedStart:
             runtime_inode=info[1],
             runtime_uid=info[2],
         )
+        trace.mark("stable_identity")
         with self._lock:
-            if self._closed or (self.identity is not None and self.identity != identity):
+            if trace.remember("closed_after", self._closed) or (
+                self.identity is not None and self.identity != identity
+            ):
                 raise ValueError("Issued stable identity changed or context closed")
             self.identity = identity
         return identity
@@ -280,15 +328,33 @@ class OwnedIssuedContext:
         self._issuer, self.owner, self.seal = issuer, owner, seal
 
     async def observe(
-        self, expected: ScopeExpectation, kernel: KernelScopeFacts, end: int
+        self,
+        expected: ScopeExpectation,
+        kernel: KernelScopeFacts,
+        end: int,
+        *,
+        call_token: object | None = None,
     ) -> HostPlacementIdentity:
-        if (
-            type(self) is not OwnedIssuedContext
-            or self._issuer is not _ISSUER
-            or expected != self.owner.expected
-        ):
-            raise ValueError("Issued context belongs to another original job or scope")
-        return await self.owner._perform(lambda: self.owner._collect(kernel, self.seal), end)
+        trace = FailureRecorder(
+            self.owner.expected,
+            hashlib.sha256(self.owner.binding.model_dump_json().encode()).hexdigest(),
+            self.owner.end_us,
+        )
+        token = object() if call_token is None else call_token
+        try:
+            if (
+                type(self) is not OwnedIssuedContext
+                or self._issuer is not _ISSUER
+                or expected != self.owner.expected
+            ):
+                raise ValueError("Issued context belongs to another original job or scope")
+            trace.mark("io_deadline")
+            return await self.owner._perform(
+                lambda: self.owner._collect(kernel, self.seal, trace), end, trace
+            )
+        except BaseException as failure:
+            trace.attach(failure, token, clock_us())
+            raise
 
 
 async def open_owned_start(
@@ -301,3 +367,12 @@ async def open_owned_start(
     except BaseException:
         owner.close()
         raise
+
+
+def _observed_proc(trace: FailureRecorder, key: Step, pid: int) -> tuple[int, str]:
+    trace.mark(key)
+    value = _proc(pid)
+    assert key in ("collector_before", "runtime_before", "collector_after", "runtime_after")
+    trace.remember(cast(FieldName, key), value)
+    trace.mark("before_membership" if key.endswith("before") else "after_membership")
+    return value

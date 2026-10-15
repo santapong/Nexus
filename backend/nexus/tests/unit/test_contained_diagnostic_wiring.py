@@ -180,3 +180,11 @@ def test_services_keep_diagnostic_storage_separate_from_success_sidecars(tmp_pat
     assert type(value.diagnostics) is ContainmentDiagnosticStore
     assert value.diagnostics.root != value.store.root
     assert value.diagnostics.root.stat().st_mode & 0o777 == 0o700
+
+
+def test_current_owned_failure_metadata_requires_a_distinct_full_method() -> None:
+    from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
+
+    assert CONTAINED_EXECUTION_METHOD_SHA256 != (
+        "e86f1f4b90feed38d5fa176a084919dc0e4fa2ed8951452a6d9a878bdd6cedd3"
+    )

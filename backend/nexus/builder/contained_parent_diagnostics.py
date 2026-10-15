@@ -20,6 +20,7 @@ from nexus.builder.contained_contracts import (
     UInt,
 )
 from nexus.builder.contracts import Digest
+from nexus.builder.issued_diagnostics import IssuedFailure
 
 ParentStage = Literal[
     "manager_uid",
@@ -100,6 +101,9 @@ class ParentAttempt(ContainedValue):
     issued_identity: HostPlacementIdentity | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    issued_failure: IssuedFailure | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def ordered_bounded_metadata(self) -> Self:
@@ -117,6 +121,13 @@ class ParentAttempt(ContainedValue):
             or self.facts_truncated
         ):
             raise ValueError("Completed metadata lacks actual facts")
+        if self.issued_failure is not None and (
+            self.stage != "issued_membership"
+            or self.issued_failure.expectation_sha256 != self.expectation_sha256
+            or self.issued_failure.error_type != self.error_type
+            or not self.started_us <= self.issued_failure.observed_us <= self.finished_us
+        ):
+            raise ValueError("Issued failure differs from current parent call")
         for fact, digest in ((self.unit, self.unit_observed), (self.kernel, self.kernel_observed)):
             if fact is not None and digest != facts_digest(fact):
                 raise ValueError("Parent diagnostic actual facts digest differs")
@@ -137,6 +148,7 @@ class ParentRecorder:
         self.unit: SystemdScopeFacts | None = None
         self.kernel: KernelScopeFacts | None = None
         self.issued_identity: HostPlacementIdentity | None = None
+        self.issued_failure: IssuedFailure | None = None
 
     def begin_query(self, index: int, argv: tuple[str, ...]) -> None:
         if index != len(self.queries) or index >= 5:
@@ -201,6 +213,7 @@ class ParentRecorder:
                 "issued_identity": self.issued_identity.model_dump()
                 if self.issued_identity
                 else None,
+                "issued_failure": self.issued_failure.model_dump() if self.issued_failure else None,
                 "error_type": kind,
                 "code": code,
             }

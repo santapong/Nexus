@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 from collections.abc import Awaitable, Callable
@@ -31,6 +32,7 @@ from nexus.builder.contained_query import (
     clock_us,
 )
 from nexus.builder.contained_scope import validate_current_scope, validate_issued_scope
+from nexus.builder.issued_diagnostics import issued_failure
 
 
 class ScopeQueryReader(Protocol):
@@ -81,6 +83,7 @@ class SystemdScopeProvider:
             deadline = min(deadline, context.owner.end_us)
         self._ordinal += 1
         recorder = ParentRecorder(self._ordinal, expected, start)
+        call_token = object()
         self.last_diagnostic = None
         end: int | None = None
         # Keep reads, original validation, final clock and exact exception metadata in one
@@ -113,7 +116,9 @@ class SystemdScopeProvider:
                 recorder.kernel = kernel
                 if context is not None:
                     recorder.stage = "issued_membership"
-                    recorder.issued_identity = await context.observe(expected, kernel, deadline)
+                    recorder.issued_identity = await context.observe(
+                        expected, kernel, deadline, call_token=call_token
+                    )
                 end = self._clock()
                 recorder.stage = "validate"
                 if end > deadline:
@@ -142,9 +147,21 @@ class SystemdScopeProvider:
                 self.last_diagnostic = snapshot
                 return result
         except BaseException as failure:
+            if context is not None and recorder.stage == "issued_membership":
+                captured = issued_failure(failure, call_token, expected, start, self._clock())
+                binding_sha = hashlib.sha256(
+                    context.owner.binding.model_dump_json().encode()
+                ).hexdigest()
+                if captured is not None and captured.binding_sha256 == binding_sha:
+                    recorder.issued_failure = captured
             self.last_diagnostic = recorder.finish(
                 failure, end if end is not None else self._clock()
             )
+            if recorder.issued_failure is not None:
+                # Include metadata CPU in this failed call end; keep the original exception.
+                self.last_diagnostic = self.last_diagnostic.model_copy(
+                    update={"finished_us": self._clock()}
+                )
             # Preserve the exact exception/type and bind its own call, including concurrent reads.
             failure.__dict__["nexus_parent_attempt"] = self.last_diagnostic
             raise

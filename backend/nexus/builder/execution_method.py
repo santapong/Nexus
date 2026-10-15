@@ -14,7 +14,7 @@ from nexus.builder.user_parent_identity import USER_PARENT_METHOD_SHA256
 CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
     json.dumps(
         {
-            "schema": "nexus.builder.contained-execution-method.v5",
+            "schema": "nexus.builder.contained-execution-method.v6",
             "fixed_inspect_template": "podman_go_field_ID_not_json_tag_Id",
             "diagnostics": {
                 "raw": "original_identity_complete_capture_metadata_before_decode",
@@ -31,6 +31,14 @@ CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
                     "kernel_bytes": 8192,
                     "overflow": "explicit_digest_truncation_never_authority",
                     "clock": "after_metadata_original_io_and_parent_end",
+                    "issued_failure": {
+                        "schema": "nexus.builder.issued-failure.v1",
+                        "binding": "same_exception_call_token_scope_and_original_job_only",
+                        "observations": "existing_read_operands_once_original_shortcircuit_order",
+                        "bytes": 4096,
+                        "timeout": "frozen_snapshot_no_late_worker_backfill",
+                        "authority": "none_preserve_exception_predicate_and_original_end",
+                    },
                 },
             },
             "selector": RUNTIME_V2_METHOD_SHA256,

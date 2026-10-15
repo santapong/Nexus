@@ -709,3 +709,15 @@ Original pure location-test failure and unlaunched ownership-gap source remain
 preserved. See the [OS checkpoint](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md).
 This closes mechanical synthetic notification recovery; live delivery and full
 StockFlow/ARM64/provider/owner/private operating release gates remain required.
+
+
+## 2026-10-15 — Current issued-failure diagnostics integrated locally
+
+Frozen source b03ca2fb and independent source review retain current-call operands
+without another OS read or changed runtime predicate. Full method v6 has a new
+identity. Root coherent committed snapshot plus eight owned files passes 3,090
+unit checks/42.69s, 41 focused and strict/lint/format8. Receipt and initial failures:
+`/home/santapong/.codex/nexus-issued-failure-integration-20261015/ROOT_INTEGRATION_RECEIPT_1.json`.
+The initial whole run also exposed an existing cache cancellation race; retained
+for deterministic repair, not dismissed by the corrected-temp whole-suite pass.
+Actual terminal containment, Strategy PG and full release gates remain open.

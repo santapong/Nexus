@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain exact current issued-membership failure observations
+
+### Added
+- Bounded private failure metadata records the current owned runtime predicate and
+  operands already read, bound to the same exception, call token, scope and job.
+- Full execution method v6 distinguishes this diagnostic capture. Original runtime
+  predicates, short-circuit reads, deadlines and pending-worker ownership remain.
+
+### Validation
+- Frozen six-file slice: 431 focused checks and independent source review pass.
+  Root integrated eight-file snapshot: 41 focused, 3,090 unit/42.69s, strict types,
+  lint and formatting pass. Initial failures/logs are retained: home-path fixture
+  denials corrected by established /tmp setup; separate cache cancellation race
+  remains under investigation despite the second whole-suite pass.
+- No new actual builder qualification ran. Fifth-case terminal outcome remains
+  unknown; the added diagnostics do not establish its historical failure cause.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Compose native strategy publication and protected proof stores
 
 ### Added

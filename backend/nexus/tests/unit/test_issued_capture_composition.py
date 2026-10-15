@@ -118,6 +118,17 @@ async def test_driver_preserves_preissue_anchor_postseal_identity_and_final_side
             )
             assert raw.parent_attempt.kernel is not None
             assert raw.parent_attempt.kernel.self_cgroup_path == "/foreign"
+            assert raw.parent_attempt.issued_failure is not None
+            assert raw.parent_attempt.issued_failure.step == "kernel_placement"
+            from nexus.builder.contained_diagnostics import ContainmentDiagnosticStore
+
+            record_store = ContainmentDiagnosticStore(tmp_path / "raw-diagnostics")
+            assert raw.diagnostic is not None
+            diagnostic_reference = await record_store.save_once(raw.diagnostic)
+            assert (
+                await record_store.load_exact(diagnostic_reference, raw.diagnostic.identity)
+                == raw.diagnostic
+            )
             assert (
                 raw.diagnostic is not None and raw.diagnostic.parent_attempt == raw.parent_attempt
             )
