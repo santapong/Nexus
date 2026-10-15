@@ -17,6 +17,7 @@ from nexus.builder.contained_evidence_types import (
 )
 from nexus.builder.contained_observer import ContainmentObserver
 from nexus.builder.contained_observer_io import OwnedObservationIO, _proc
+from nexus.builder.contained_parent_diagnostics import failure_parent_attempt
 from nexus.builder.contained_process_contracts import (
     ContainedRunCapture,
     PreparedContainedLaunch,
@@ -214,6 +215,7 @@ class ContainedProcess:
                 ) from failure
             raise
 
+    # Keep this >50-line issued lifecycle together to bind failure, ownership and raw metadata.
     async def run(
         self,
         launch: PreparedContainedLaunch,
@@ -247,6 +249,8 @@ class ContainedProcess:
             reason = type(failure).__name__
             state.error_type = error_kind(failure)
             state.errno = failure.errno if isinstance(failure, OSError) else None
+            if state.phase == "parent":
+                state.parent_attempt = failure_parent_attempt(failure, expectation)
         finally:
             uncertain = await self._finish_runtime(started, out, err, wait, deadline)
         return _capture(
@@ -374,6 +378,7 @@ def _capture(
         interruption=reason or ("capture_or_reap_unresolved" if uncertain else None),
     )
     result = assemble_capture(started, deadline, sealed, samples, capture, wait, reason, uncertain)
+    result = result.model_copy(update={"parent_attempt": state.parent_attempt})
     result = result.model_copy(update={"diagnostic": process_diagnostic(binding, result, state)})
     if clock() >= min(deadline.end_us, started.parent.deadline_us):
         diagnostic = result.diagnostic

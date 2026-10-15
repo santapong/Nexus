@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain exact failed parent-observation metadata
+
+### Added
+- Per-call scope-bound fixed-query and parsed-parent metadata attached to the
+  actual exception, compared against raw capture before private persistence.
+- Mandatory methodv4 identity; explicit bounded truncation and final clock after
+  metadata. Original query, validator, resource and job limits are unchanged.
+
+### Validation
+- 163 focused checks and independent review pass; Root2,864unit/28.96s and static
+  checks pass after an existing fake-clock fixture nominates the added clock reads.
+- This is source proof only. All three original failed cases remain preserved;
+  the actual post-discovery parent failure cause is still unproven.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Check original strategy inputs against current native sources
 
 ### Added

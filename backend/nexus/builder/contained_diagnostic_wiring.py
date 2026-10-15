@@ -59,6 +59,7 @@ async def persist_raw(
         or record.exit_code != raw.capture.exit_code
         or record.interruption != interruption_kind(raw.capture.interruption)
         or record.samples != sample_trace(raw.samples)
+        or record.parent_attempt != raw.parent_attempt
     ):
         raise ValueError("Contained raw diagnostic differs from original issued capture")
     return await _persist(record, services)

@@ -179,7 +179,9 @@ async def test_current_manager_context_is_reread_after_good_observation() -> Non
     changed = reports()
     changed[1] = b'{"type":"s","data":"260"}'
     reader = FakeReader(reports() + changed)
-    clock = iter((11_000_000, 12_000_000, 13_000_000))
+    # The successful observation now rechecks its clock after metadata; the failed
+    # fresh manager read also records its own final clock. Keep the same denial.
+    clock = iter((11_000_000, 12_000_000, 12_000_000, 13_000_000, 13_000_000))
     provider = SystemdScopeProvider(
         reader=reader, kernel_reader=read_kernel, clock_us=lambda: next(clock)
     )

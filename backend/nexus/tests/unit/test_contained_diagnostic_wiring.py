@@ -154,6 +154,15 @@ def test_new_method_contract_does_not_reuse_first_untraced_job_identity() -> Non
     )
 
 
+def test_parent_failure_metadata_requires_a_new_complete_method_identity() -> None:
+    from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
+
+    assert CONTAINED_EXECUTION_METHOD_SHA256 not in {
+        "1a078eb321e81b58efb44e20a59af35716c6b47988c925adabc90d9107f22c79",
+        "38fcb407e39abcda6a0352678fc9aa98254d66eadaa1d7d4543575775e4df04b",
+    }
+
+
 def test_services_keep_diagnostic_storage_separate_from_success_sidecars(tmp_path: Path) -> None:
     from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 

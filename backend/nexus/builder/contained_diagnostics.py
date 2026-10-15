@@ -22,6 +22,7 @@ from nexus.builder.contained_evidence_store import (
     _unique_pairs,
 )
 from nexus.builder.contained_evidence_types import Diagnostic, ExactContainer, ObservationStatus
+from nexus.builder.contained_parent_diagnostics import ParentAttempt
 from nexus.builder.contracts import Digest
 
 ErrorKind = Literal[
@@ -200,6 +201,9 @@ class ProcessDiagnostic(ContainedValue):
     errno: int | None = Field(default=None, ge=0, le=4095, strict=True)
     discovery: DiscoveryTrace
     samples: SampleTrace
+    parent_attempt: ParentAttempt | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class FinalizationDiagnostic(ContainedValue):

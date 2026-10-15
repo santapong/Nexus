@@ -38,6 +38,7 @@ from nexus.builder.contained_evidence_types import (
     ObservationDeadline,
     ObservedSample,
 )
+from nexus.builder.contained_parent_diagnostics import ParentAttempt
 from nexus.builder.contained_spawn_window import SpawnWindow
 from nexus.builder.contracts import Digest
 from nexus.builder.process import ProcessCapture
@@ -162,6 +163,7 @@ class ProcessSampling:
     phase: Phase = "initial"
     error_type: ErrorKind = "none"
     errno: int | None = None
+    parent_attempt: ParentAttempt | None = None
 
 
 class ContainedRunCapture(ContainedValue):
@@ -178,9 +180,18 @@ class ContainedRunCapture(ContainedValue):
     diagnostic: ProcessDiagnostic | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    parent_attempt: ParentAttempt | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def actual_samples(self) -> Self:
+        if self.parent_attempt is not None and (
+            self.parent_attempt.error_type == "none"
+            or self.parent_attempt.expectation_sha256
+            != hashlib.sha256(self.parent.expectation.model_dump_json().encode()).hexdigest()
+        ):
+            raise ValueError("Raw parent failure metadata differs from original expected scope")
         for sample in self.samples:
             row = ObservedSample.model_validate(sample.model_dump())
             if (
@@ -299,6 +310,7 @@ def process_diagnostic(
         errno=state.errno,
         discovery=state.discovery.snapshot(),
         samples=sample_trace(raw.samples),
+        parent_attempt=raw.parent_attempt,
     )
 
 

@@ -19,6 +19,7 @@ from nexus.builder.contained_contracts import (
     require_user_manager,
 )
 from nexus.builder.contained_kernel import collect_kernel
+from nexus.builder.contained_parent_diagnostics import ParentAttempt, ParentRecorder
 from nexus.builder.contained_query import (
     DBUS,
     PREFIX,
@@ -52,43 +53,95 @@ class SystemdScopeProvider:
         self._reader = reader if reader is not None else BusctlReader()
         self._kernel_reader = kernel_reader
         self._clock = clock_us
+        self._ordinal = 0
+        self.last_diagnostic: ParentAttempt | None = None
 
     async def observe(self, expected: ScopeExpectation) -> ParentObservation:
         """Read exact current Unit/Scope and kernel facts again on every call."""
         start = self._clock()
         deadline = start + ObservationBounds().total_io_us
-        async with asyncio.timeout(3):
-            queries = query_arguments(expected.unit)
-            manager = await self._read_manager(queries, deadline, expected.uid)
-            resolved = decode_records(await self._reader.query(queries[2], deadline), ("o",))
-            if resolved != ([object_path(expected.unit)],):
-                raise ValueError("Resolved systemd object differs from exact expected scope")
-            units = decode_records(
-                await self._reader.query(queries[3], deadline), ("s", "s", "s", "ay", "t")
+        self._ordinal += 1
+        recorder = ParentRecorder(self._ordinal, expected, start)
+        self.last_diagnostic = None
+        end: int | None = None
+        # Keep reads, original validation, final clock and exact exception metadata in one
+        # >50-line call boundary: a previous observation can never fill this failed attempt.
+        try:
+            async with asyncio.timeout(3):
+                queries = query_arguments(expected.unit)
+                manager = await self._read_manager(queries, deadline, expected.uid, recorder)
+                recorder.stage = "resolve"
+                resolved = decode_records(await self._query(queries, 2, deadline, recorder), ("o",))
+                if resolved != ([object_path(expected.unit)],):
+                    raise ValueError("Resolved systemd object differs from exact expected scope")
+                recorder.stage = "unit"
+                units = decode_records(
+                    await self._query(queries, 3, deadline, recorder), ("s", "s", "s", "ay", "t")
+                )
+                recorder.stage = "scope"
+                scopes = decode_records(
+                    await self._query(queries, 4, deadline, recorder),
+                    ("s", "t", "t", "b", "t", "t", "t", "t", "s", "b", "t"),
+                )
+                recorder.stage = "unit_decode"
+                unit = recorder.unit = _scope_facts(units, scopes, manager)
+                recorder.stage = "kernel"
+                kernel = (
+                    await self._kernel_reader()
+                    if self._kernel_reader is not None
+                    else await asyncio.to_thread(collect_kernel, expected, manager)
+                )
+                recorder.kernel = kernel
+                end = self._clock()
+                recorder.stage = "validate"
+                if end > deadline:
+                    recorder.code = "deadline"
+                    raise ValueError("Scope observation exceeded the total IO deadline")
+                result = validate_current_scope(expected, unit, kernel, start, end)
+                recorder.stage = "complete"
+                snapshot = recorder.finish(None, end)
+                end = self._clock()
+                if end > deadline or end > result.deadline_us - expected.minimum_remaining_us:
+                    recorder.code = "deadline"
+                    raise ValueError("Scope diagnostic metadata crossed the original deadline")
+                self.last_diagnostic = snapshot
+                return result
+        except BaseException as failure:
+            self.last_diagnostic = recorder.finish(
+                failure, end if end is not None else self._clock()
             )
-            scopes = decode_records(
-                await self._reader.query(queries[4], deadline),
-                ("s", "t", "t", "b", "t", "t", "t", "t", "s", "b", "t"),
-            )
-            unit = _scope_facts(units, scopes, manager)
-            kernel = (
-                await self._kernel_reader()
-                if self._kernel_reader is not None
-                else await asyncio.to_thread(collect_kernel, expected, manager)
-            )
-            end = self._clock()
-            if end > deadline:
-                raise ValueError("Scope observation exceeded the total IO deadline")
-            return validate_current_scope(expected, unit, kernel, start, end)
+            # Preserve the exact exception/type and bind its own call, including concurrent reads.
+            failure.__dict__["nexus_parent_attempt"] = self.last_diagnostic
+            raise
+
+    async def _query(
+        self,
+        queries: tuple[tuple[str, ...], ...],
+        index: int,
+        deadline: int,
+        recorder: ParentRecorder,
+    ) -> bytes:
+        recorder.begin_query(index, queries[index])
+        try:
+            raw = await self._reader.query(queries[index], deadline)
+        except BaseException as failure:
+            recorder.query_failed(failure)
+            raise
+        recorder.reply(raw)
+        return raw
 
     async def _read_manager(
         self,
         queries: tuple[tuple[str, ...], ...],
         deadline: int,
         uid: int,
+        recorder: ParentRecorder,
     ) -> UserManagerObservation:
-        owner = decode_records(await self._reader.query(queries[0], deadline), ("u",))[0]
-        version = decode_records(await self._reader.query(queries[1], deadline), ("s",))[0]
+        recorder.stage = "manager_uid"
+        owner = decode_records(await self._query(queries, 0, deadline, recorder), ("u",))[0]
+        recorder.stage = "manager_version"
+        version = decode_records(await self._query(queries, 1, deadline, recorder), ("s",))[0]
+        recorder.stage = "manager_validate"
         assert isinstance(owner, list)
         manager = UserManagerObservation.model_validate(
             {

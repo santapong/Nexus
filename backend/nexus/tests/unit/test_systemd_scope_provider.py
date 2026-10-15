@@ -82,7 +82,7 @@ async def read_kernel() -> KernelScopeFacts:
 @pytest.mark.asyncio
 async def test_five_fixed_read_only_queries_accept_current_synthetic_parent() -> None:
     reader = FakeReader(reports())
-    clock = iter((11_000_000, 12_000_000))
+    clock = iter((11_000_000, 12_000_000, 12_000_000))
     provider = SystemdScopeProvider(
         reader=reader, kernel_reader=read_kernel, clock_us=lambda: next(clock)
     )
@@ -142,7 +142,7 @@ async def test_current_provider_never_reuses_previous_unit_or_kernel_facts() -> 
     changed = reports()
     changed[3] = changed[3].replace(b'"active"', b'"inactive"')
     reader = FakeReader(good + changed)
-    clock = iter((11_000_000, 12_000_000, 13_000_000, 14_000_000))
+    clock = iter((11_000_000, 12_000_000, 12_000_000, 13_000_000, 14_000_000))
     provider = SystemdScopeProvider(
         reader=reader, kernel_reader=read_kernel, clock_us=lambda: next(clock)
     )
