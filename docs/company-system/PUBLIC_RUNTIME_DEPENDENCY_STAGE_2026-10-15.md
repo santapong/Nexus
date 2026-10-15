@@ -60,3 +60,21 @@ process containment and exact owned cleanup. If the rebuilt archive differs from
 the original cache pin, a new runtime preparation, policy and E/EV templates must
 bind its actual bytes before fresh company inception. No image pull, container,
 service, database, model, email, Pi or deployment action occurred in this stage.
+
+
+## Subsequent offline tool preparation
+
+The unchanged bounded `extract_public_tool` helper extracted pnpm into the fresh
+managed path `/var/tmp/nexus-runtime-public-tools-20261015-1/tools`. The outer
+root also holds copied, reverified pnpm and package-manifest archives. Every one
+of901 tool files matches its pinned archive entry (18,213,449 expanded bytes).
+Independent file audit verifies the exact904file/237directory tree, copied inputs,
+ownership and private modes. The tool receipt is
+`0c33eb439630bada3ac58ef8d89d38dcd7d3346da5d9b680b055e4eb74c6a1bf`;
+independent audit is
+`02732fbe9579cf8dc09f6591ab1a2ec4a1f6f9af73cbde8b9826c722aaba9503`.
+
+Root observed extraction process exit0 and34.13-second helper work. No independent
+outer timing or process-containment witness was captured for this data-only step.
+The outside-HOME location preserves the native Node managed-path requirement.
+Neither pnpm nor Node was executed; cache import and actual runtime remain open.

@@ -74,6 +74,35 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-132 — Release regression included an unfinished untracked local probe
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** fixed (source selection; local probe preserved)
+**Found by:** Codex during neutral family-reader integration
+**Affected files:** test invocation/source snapshot; no change to the local probe
+
+### What happened
+The initial full primary-checkout run also collected preserved untracked
+`test_strategy_publication_pg_scope.py`. Its empty-URL case failed:1 failed,
+3,771 passed in108.32s. The three changed release files were not that probe.
+
+### Root cause
+A directory-wide test invocation included unfinished local work outside the
+reviewed release-source closure, despite that work being visible in git status.
+
+### Fix applied
+Preserve the failed log and all four original untracked files. Build a fresh exact
+snapshot of committed backend plus only the three reviewed seam files;3,758 units
+pass80.76s. Static checks and264 relevant compatibility tests also pass. No local
+probe behavior or production validator was changed to obtain the release result.
+
+### Prevention
+Reconcile test discovery with the declared release source when local unfinished
+probes coexist. Report the local failure and exact-source result separately.
+
+---
+
 ## ERROR-131 — Public dependency stage did not preserve requested private mode
 
 **Date:** 2026-10-15

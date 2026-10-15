@@ -3571,3 +3571,25 @@ No schema, dependency, native job or service activation follows from this source
 
 Validation:77focused/2.18s, Root3,753unit/67.03s, strict/lint/format6 and favorable
 independent file review; see ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md.
+
+
+## ADR-123 — Separate current family facts from native execution membership
+
+**Date:** 2026-10-15
+**Status:** accepted for source; P/C consumers and actual execution remain separate
+**Decided by:** Codex under the approved P/C prerequisite plan
+
+Expose one descriptive locked read for an exact configured child and its complete
+current owner-approved family. Retain company-first scope, head2/governance,
+original revision event, all twelve rows and permanent registration/quota checks.
+Extract the four existing row helpers without changing their AST behavior.
+
+Keep native E/EV/sender membership and zero model limit/usage/delegation in the
+existing execution wrapper. A neutral fact read cannot authorize P/PV/C/CV native
+execution. Their forthcoming reader needs a separate exact partition and its own
+lease/credential/protected evidence. Do not introduce an allow-model/role flag.
+
+Validation:44 focused,264 compatibility and3,758 exact-source unit tests pass;
+configured strict/lint/format3 and independent file review pass. See
+CYCLE_FAMILY_READ_SOURCE_CHECKPOINT_2026-10-15.md. No schema/dependency or new active
+tool route is introduced.

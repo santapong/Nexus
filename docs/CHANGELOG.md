@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Separate current family facts from native execution
+
+### Changed
+- Shared locked family read returns the actual current PlanRevision while keeping
+  complete registration/governance checks. Native E/EV/sender membership and zero
+  model allowance remain enforced by the existing wrapper; no P/C tool activation.
+
+### Validation
+- 44 focused,264 compatibility and3,758 exact-source unit tests pass; configured
+  strict typing, lint/format3 and independent file review pass.
+- pnpm tool data is separately extracted and audited:901files/18,213,449bytes;
+  no Node/pnpm/cache execution. Initial unrelated untracked scope-test failure stays.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Restore pinned public build-dependency inputs
 
 ### Validation
