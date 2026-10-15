@@ -18,7 +18,14 @@ all five replies and kernel facts within its original bound. Exact262 source and
 native compatibility qualification remain required. The
 [generated HTML/company016 slice](DERIVED_HTML_SCHEMA_CHECKPOINT_2026-10-15.md)
 passes3,847 exact-source units and12 actual PostgreSQL checks. P/C native
-publication, SDK/live email, ARM64 and supervised release stay open.
+publication/check/acceptance [source](CYCLE_PUBLICATION_SOURCE_CHECKPOINT_2026-10-15.md)
+now passes4,165 coherent units with exact261/262 profiles; actual publication and
+current full-method qualification stay open. SDK/live email, ARM64 and supervised
+release remain open.
+
+The [fresh262 normal bootstrap](HOST_BOOTSTRAP_262_CHECKPOINT_2026-10-15.md) passes
+1.20s, but its separate timeout probe fails terminal validation (-1 versus frozen137)
+despite exact-ID cleanup. Full dependency bootstrap and native qualification remain open.
 
 ## Working contract
 

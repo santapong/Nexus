@@ -161,7 +161,7 @@ def _marker(fd: int, manager: UserManagerObservation) -> str:
     except OSError as error:
         if error.errno != errno.ENODATA:
             raise
-        # v261.2 user manager does not apply delegate xattrs; absence stays explicit.
+        # Checked exact 261.2-1/262-1 user contexts can lack the marker; preserve actual ENODATA.
         return "absent_user_manager"
     if value != b"1":
         raise ValueError("Scope actual delegation marker is malformed or false")

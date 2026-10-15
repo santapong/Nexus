@@ -20,6 +20,8 @@
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
+| ADR-127 | Preserve exact native manager histories with a distinct unconfigured full method | accepted | 2026-10-15 |
+| ADR-126 | Require native dual-output publication and independent acceptance under own scope | accepted | 2026-10-15 |
 | ADR-125 | Preserve truthful generated HTML with derived-only company016 persistence | accepted | 2026-10-15 |
 | ADR-001 | Pydantic AI as agent runtime | accepted | 2026-03 |
 | ADR-002 | MCP via Python package → Pydantic AI adapter | accepted | 2026-03 |
@@ -3636,3 +3638,35 @@ recognizes015/016 with actual columns checked; future revisions do not inherit i
 Fresh restricted PostgreSQL provenance/format/rollback and clean install/schema
 checks qualify this boundary. Browser sanitization, native publication and service
 migration/activation remain separate. See the generated HTML schema checkpoint.
+
+## ADR-126 — Native dual-output publication and independent acceptance
+
+**Date:** 2026-10-15
+**Status:** accepted
+
+Keep existing generic artifact tool keys and fixed protected targets/policies.
+Native own-role readers require actual accepted same-goal E/EV and original/current
+source authority. A committed effect permit precedes publication; both ordered
+outputs and all provenance/event families persist or replay together. Known intents
+use metadata before bodies; unresolved outcomes never issue a replacement write.
+Independent check receipts and protected recomputation create acceptance.
+
+Count all exact-run intents before recognizing one canonical succeeded/reconciled
+model request beside a tool publication. Original intent approval timing and model
+artifact identity remain checked without current-time approval or body reads.
+Offline source/component checks establish implementation, not native activation or
+business acceptance. Actual Company execution remains a separate release gate.
+
+## ADR-127 — Exact manager histories and distinct current execution method
+
+**Date:** 2026-10-15
+**Status:** accepted
+
+Preserve exact261.2-1 provider hashes and wire history; add explicit262-1 root and
+issued provider identities with immutable closed selectors. Bind actual manager,
+UID, phase and hash rather than accepting a version prefix or relabelling old data.
+Full-method V7 binds these profiles while retaining the identifiable V6 descriptor.
+The candidate remains unconfigured and execution_ready=false. Current execution
+and verification require new qualification/pins; historical V6 is not renewed.
+Tiny bootstrap normal/timeout evidence, opaque native issuance and full business
+execution remain separate qualifications.

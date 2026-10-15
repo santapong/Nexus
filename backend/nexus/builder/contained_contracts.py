@@ -8,11 +8,13 @@ from uuid import UUID, uuid5
 from pydantic import ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest
-from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256, ISSUED_PARENT_VERSION
+from nexus.builder.issued_parent_identity import IssuedParentProviderVersion, issued_parent_profile
 from nexus.builder.user_parent_identity import (
-    SUPPORTED_USER_SYSTEMD_VERSION,
     USER_PARENT_METHOD_SHA256,
     USER_PARENT_PROVIDER_VERSION,
+    UserParentProviderVersion,
+    UserSystemdVersion,
+    root_parent_profile,
 )
 
 UInt = Annotated[int, Field(ge=0, lt=2**64 - 1, strict=True)]
@@ -30,7 +32,7 @@ class UserManagerObservation(ContainedValue):
     """Actual daemon context from the private fixed user bus; descriptive, not authority."""
 
     manager: Literal["user"]
-    version: Literal["261.2-1"]
+    version: UserSystemdVersion
     uid: int = Field(gt=0, lt=2**32, strict=True)
     query_route: Literal["fixed_local_user_bus"]
 
@@ -185,9 +187,9 @@ class ParentObservation(ContainedValue):
     schema_version: Literal[
         "nexus.builder.parent-observation.v2", "nexus.builder.parent-observation.v3"
     ] = "nexus.builder.parent-observation.v2"
-    provider_version: Literal[
-        "nexus.builder.user-parent-provider.v2", "nexus.builder.user-issued-parent-provider.v1"
-    ] = USER_PARENT_PROVIDER_VERSION
+    provider_version: UserParentProviderVersion | IssuedParentProviderVersion = (
+        USER_PARENT_PROVIDER_VERSION
+    )
     provider_method_sha256: Digest = USER_PARENT_METHOD_SHA256
     expectation: ScopeExpectation
     unit: SystemdScopeFacts
@@ -204,16 +206,23 @@ class ParentObservation(ContainedValue):
     @model_validator(mode="after")
     def fixed_provider_method(self) -> Self:
         """This pin describes the provider only, never the unissued full runtime method."""
+        require_user_manager(self.unit.user_manager, self.expectation.uid)
+        require_user_manager(self.kernel.user_manager, self.kernel.uid)
+        if self.unit.user_manager != self.kernel.user_manager:
+            raise ValueError("Unit and kernel user manager observations differ")
+        root_version, root_method = root_parent_profile(self.unit.user_manager.version)
+        issued_version, issued_method = issued_parent_profile(self.unit.user_manager.version)
         if self.schema_version == "nexus.builder.parent-observation.v2":
             if (
-                self.provider_method_sha256 != USER_PARENT_METHOD_SHA256
-                or self.provider_version != USER_PARENT_PROVIDER_VERSION
+                self.provider_method_sha256 != root_method
+                or self.provider_version != root_version
                 or self.issued_identity is not None
             ):
                 raise ValueError("User-parent provider method differs")
         elif (
-            self.provider_version != ISSUED_PARENT_VERSION
-            or self.provider_method_sha256 != ISSUED_PARENT_METHOD_SHA256
+            self.schema_version != "nexus.builder.parent-observation.v3"
+            or self.provider_version != issued_version
+            or self.provider_method_sha256 != issued_method
             or self.issued_identity is None
         ):
             raise ValueError("Issued-parent provider identity is incomplete")
@@ -301,10 +310,14 @@ def cgroup_components(value: str) -> tuple[str, ...]:
 def require_user_manager(manager: UserManagerObservation, uid: int) -> None:
     """Reject unknown/copied contexts before qualified ENODATA can be described."""
     if (
-        manager.manager != "user"
-        or manager.version != SUPPORTED_USER_SYSTEMD_VERSION
+        type(manager) is not UserManagerObservation
+        or manager.manager != "user"
+        or type(manager.version) is not str
+        or type(manager.uid) is not int
+        or type(uid) is not int
         or manager.query_route != "fixed_local_user_bus"
         or manager.uid != uid
-        or uid <= 0
+        or not 0 < uid < 2**32
     ):
         raise ValueError("Current supported user manager identity differs")
+    root_parent_profile(manager.version)

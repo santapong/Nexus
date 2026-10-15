@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Govern native presentation and support publication
+
+### Added
+- Dormant own-scope dual-output publication, independent checking/acceptance and
+  metadata-first known-intent recovery with mandatory before-intent checks.
+- Canonical model issuance metadata recognition preserves separate model/tool
+  allowance while denying malformed, unknown or expired-at-issuance history.
+- Exact261/262 native profiles and a distinct unconfigured full-method V7;
+  historical261 descriptions and hashes remain identifiable.
+
+### Validation
+- 4,165 exact-source units, strict/lint/format30 and independent source reviews
+  pass. Earlier unfavorable candidates and semantic failures remain preserved.
+- No runtime activation, real P/C execution or full V7 qualification is claimed.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify generated HTML persistence and company016
 
 ### Added

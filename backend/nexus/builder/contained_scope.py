@@ -13,7 +13,8 @@ from nexus.builder.contained_contracts import (
     cgroup_components,
     require_user_manager,
 )
-from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256, ISSUED_PARENT_VERSION
+from nexus.builder.issued_parent_identity import issued_parent_profile
+from nexus.builder.user_parent_identity import root_parent_profile
 
 if TYPE_CHECKING:
     from nexus.builder.contained_evidence_types import ExactContainer
@@ -35,7 +36,10 @@ def validate_current_scope(
     remaining = deadline - end_us
     if not unit.active_enter_us <= start_us <= end_us or remaining < expected.minimum_remaining_us:
         raise ValueError("Scope deadline is expired, insufficient or clock order differs")
+    provider_version, provider_method = root_parent_profile(unit.user_manager.version)
     return ParentObservation(
+        provider_version=provider_version,
+        provider_method_sha256=provider_method,
         expectation=expected,
         unit=unit,
         kernel=kernel,
@@ -169,10 +173,11 @@ def validate_issued_scope(
         or deadline - end_us < expected.minimum_remaining_us
     ):
         raise ValueError("Scope deadline is expired, insufficient or clock order differs")
+    provider_version, provider_method = issued_parent_profile(unit.user_manager.version)
     return ParentObservation(
         schema_version="nexus.builder.parent-observation.v3",
-        provider_version=ISSUED_PARENT_VERSION,
-        provider_method_sha256=ISSUED_PARENT_METHOD_SHA256,
+        provider_version=provider_version,
+        provider_method_sha256=provider_method,
         expectation=expected,
         unit=unit,
         kernel=kernel,

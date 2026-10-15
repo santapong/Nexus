@@ -74,6 +74,83 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-143 — Tiny timeout outcome conflicts with its frozen terminal expectation
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** open; preserved failure, no retry
+**Found by:** actual separate fresh262 TIMEOUT2 probe
+**Affected files:** private HostBootstrap terminal contract/diagnostics
+
+The16.57s probe records stopped exit_code=-1/non-OOM three times, conflicting with
+expected137. Validation fails; exact-ID cleanup and runtime reaping succeed.
+Original query/PID/stream evidence remains, but runtime CLI exit/stderr/launch/
+read-end were not saved, so complete cause is unknown. Later absence checks are
+corroboration, not original timer/cause proof. Preserve the failed source, namespace
+and expectation. Research installed engine semantics and freeze a fresh bounded
+diagnostic plan before another run; never convert -1 into successful work.
+
+See [the current host checkpoint](company-system/HOST_BOOTSTRAP_262_CHECKPOINT_2026-10-15.md).
+
+---
+
+## ERROR-142 — Private image inspection repeated the Go field/JSON tag mismatch
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed for the fresh normal bootstrap; full qualification remains open
+**Found by:** actual first262 normal probe
+**Affected files:** private host_bootstrap_facts.py image template/test
+
+Parent/kernel checks pass, then read-only image inspection exits125 on json.Id.
+The earlier ERROR104 correction covered native container templates, but this
+private image caller retained the same mistake. An actual read-only json.ID query
+returns the exact image/platform. Preserve the failed run; a fresh source and
+namespace add an exact-argv red, correct only the field and pass54 mock checks
+plus actual normal execution/cleanup. Check every fixed read-only engine template
+against the configured store before a new bounded launch. Timeout remains separate.
+
+---
+
+## ERROR-141 — Model-footprint exclusion omitted canonical artifact and original intent time
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed before source integration
+**Found by:** independent P/C V2 boundary review
+**Affected files:** cycle artifact issued/model issuance facts and metadata tests
+
+The first mixed model/tool repair accepted one model receipt without checking its
+canonical artifact ID/revision, or the original approval's expiry at intent time.
+The frozen V2 and unfavorable review remain. Four real-helper semantic reds cover
+foreign artifact ID, wrong revision and intent at/after expiry. A cohesive metadata
+helper binds UUID5(action,request), model-result-envelope-v1 and intent<original
+expiry; valid later receipts remain accepted.254 focused/4,165 full units and
+configured static checks pass; independent V3 review is favorable. No model body,
+current-owner reauthorization or new authority is introduced.
+
+---
+
+## ERROR-140 — Publication counted a legitimate model request as duplicate tool issuance
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed before source integration
+**Found by:** independent P/C V1 boundary review
+**Affected files:** cycle artifact issued facts and verifier tests
+
+P/C reserve one model and one tool attempt. Counting all intents as publication
+duplicates rejected a valid succeeded model followed by its tool publication.
+Two real-helper P/C reds reproduced this. Keep an unfiltered bounded candidate
+read; recognize at most one fully bound succeeded/reconciled canonical native
+model footprint with exact permanent counters. Every other candidate remains
+counted; failed, unknown, pending and tool-as-model rows deny. V1/V2 failures and
+reviews are preserved; V3 passes the coherent regression and independent review.
+
+See [the publication checkpoint](company-system/CYCLE_PUBLICATION_SOURCE_CHECKPOINT_2026-10-15.md).
+
+---
+
 ## ERROR-139 — Current CSV fixture still expected the previous company head
 
 **Date:** 2026-10-15
@@ -150,7 +227,7 @@ See [the scoped checkpoint](company-system/MANAGED_ATTEMPT_KIND_CHECKPOINT_2026-
 
 **Date:** 2026-10-15
 **Severity:** medium
-**Status:** open (new compatibility qualification required)
+**Status:** mitigated (exact262 source added; current full-method qualification pending)
 **Found by:** Codex during the first actual tiny HostBootstrap run
 **Affected files:** private bootstrap source; native user-parent compatibility contract
 

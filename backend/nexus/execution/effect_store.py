@@ -114,6 +114,19 @@ class EffectStore:
             require_mixed_notification_intent_check(
                 self._management_catalog, work, lease, identity, action, before_intent
             )
+            from nexus.company.cycle_artifacts.intent_check import (
+                require_cycle_artifact_intent_check,
+            )
+
+            require_cycle_artifact_intent_check(
+                self._factory,
+                self._management_catalog,
+                work,
+                lease,
+                identity,
+                action,
+                before_intent,
+            )
             if before_intent is not None:
                 await before_intent.validate(session, control, work, action, now)
             active = await session.scalar(
