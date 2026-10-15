@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Compose native strategy publication and protected proof stores
+
+### Added
+- Concrete current strategy pair/input reader and atomic B/Brief publication,
+  independent C publication and actual-receipt/recomputed-result acceptance stores.
+- Exact graph replay and final initial/current source/READ/profile/approval/lease/
+  credential windows; no generic report alias or new effect/budget allowance.
+
+### Validation
+- Retained actor-state, role, logical-work and body-read ordering negatives now
+  deny correctly. 65 pure/mocked candidate checks, independent review and Root
+  3,078unit/49.00s, strict/Ruff/format29 pass.
+- Actual SQL, rollback, native receipts/acceptance and worker execution remain
+  unqualified. Fresh public-store PostgreSQL packet is the next release gate.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Retain actual methodv5 sample and terminal failure evidence
 
 ### Validation
