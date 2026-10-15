@@ -735,3 +735,16 @@ Cache cancellation is corrected in1daa776, with Root3,101unit/40.27s and scoped
 finite filesystem tests. Strategy first-PG failed at fixture first-approval CAS
 before registration/publication; its DB/zero execution ledger is preserved and
 a separate source-only repair is being prepared. Full release gates remain open.
+
+
+## 2026-10-15 — Actual native Strategy PostgreSQL proof and draft outputs
+
+The [Strategy native checkpoint](STRATEGY_NATIVE_PUBLICATION_PG_CHECKPOINT_2026-10-15.md)
+records actual v2 SQL publication, receipts, one six-criterion acceptance/proof,
+exact replay and real final-flush expiry rollback. One test passed31.34s, with
+independent file audit and Root current-row audit. Failed v1 CAS fixture remains
+preserved; no production CAS change or billing/source renewal was introduced.
+
+P/C supplied-data drafts are committed8d39e83 after the CommonMark correction,
+106 focused and Root3,182unit/59.00s/strict17. Native current-proof readers, owner
+choice/full revision2, native downstream publication and operating release remain.

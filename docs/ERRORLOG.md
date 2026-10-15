@@ -108,6 +108,38 @@ receipt a69df4c7 under the dated private integration directory.
 
 ---
 
+## ERROR-116 — First-plan PG fixture reused a stale pre-proposal CAS value
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** fixed (external qualification fixture; production CAS unchanged)
+**Found by:** first actual Strategy publication PG run
+**Affected files:** private `strategy_publication_pg_setup.py` and protocol tests
+
+### What happened and cause
+Actual v1 run96116 failed/4.30s after normal015/public source/governance setup.
+Its initial propose created a proposed head, but the separate approval caller still
+supplied expected_current_revision_id=None. Production correctly rejected the stale
+expectation before any execution registration/action/hold/intent/attempt/proof.
+The failed DB/source/tree and original source deadlines remain unchanged.
+
+### Fix and verification
+A new private v2 fixture expects the exact returned proposed revision for this
+closed first-plan flow. It does not alter production require_cas, guess current
+heads or generalize this rule to later revisions: a later proposal retains its
+existing approved operative head. A strict pure protocol using real require_cas
+retained the original failure, correct first flow and conflicting-head denial.
+V2's19 pure checks/static16 passed, then actual22745 passed1/31.34s through B/S/C,
+receipts/acceptance/replay and real final-flush expiry rollback. Root fresh SQL
+verified final native records and no app backends; old v1 remains preserved.
+
+### Prevention
+Trace public head evolution and CAS separately for propose/approve/replay. Export
+actual owner/policy/price/caps before claims, and retain stale-head negatives.
+See the native Strategy PG checkpoint and v2 repair/source/actual receipts.
+
+---
+
 ## ERROR-115 — Cache export cancellation lost owned filesystem operations
 
 **Date:** 2026-10-15

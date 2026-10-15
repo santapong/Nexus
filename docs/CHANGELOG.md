@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Record actual native Strategy publication and rollback proof
+
+### Validation
+- Restricted normal015 PostgreSQL passed actual B/S/C publication, complete graphs,
+  S/SV receipts, one six-criterion acceptance/proof, current READ and exact replay.
+- Separate real postflush grant expiry rolled back both outputs/all provenance and
+  events while conserving the original attempt/unknown hold; positive rows stayed
+  unchanged. Root fresh SQL and independent source/file audit confirm scoped results.
+- First failed fixture CAS is retained (ERROR116); production approval rules are
+  unchanged. Full mixed cycle, owner choice and genuine model quality remain open.
+
+**Authored by:** Codex and supervised qualification/review agent
+**PR:** not published
+
 ## [2026-10-15] — Add bounded presentation and support draft descriptions
 
 ### Added
