@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Add closed strategy role and publication-state gates
+
+### Added
+- Fixed same-session current application-role query with literal restricted result
+  required; no role/factory mutation or generic runtime change.
+- Fresh publication rejects failed/unknown effects despite existing output rows;
+  exact succeeded replay requires original output/receipt binding.
+
+### Validation
+- 14 pure/mocked checks, strict/Ruff4 and independent source review pass. Concrete
+  reader/store integration and actual restricted PostgreSQL proof remain separate.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Bind post-seal runtime membership to actual owned processes
 
 ### Added
