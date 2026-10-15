@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Check original strategy inputs against current native sources
+
+### Added
+- Same-session source/evidence/byte/policy and complete protected manifest checks,
+  with current grant/freshness/sealed-credential windows at the final database clock.
+
+### Validation
+- 17 focused checks, strict/Ruff/format3 and independent review pass. Retained two
+  original missing citation-link failures now deny before lookup.
+- Actual fresh normal015 restricted PostgreSQL passes valid READ, spliced-byte
+  denial and post-await actual grant expiry denial. No actions or strategy proof
+  were created; fixture remains preserved, helper remains unhooked.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Add rich StrategyBrief checks and exact action descriptions
 
 ### Added

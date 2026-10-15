@@ -74,6 +74,43 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-106 — Strategy source reader omitted citation-to-manifest links
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** high
+**Status:** fixed (new unactivated source-helper scope)
+**Found by:** independent source review and Root retained reproduction
+**Affected files:** `company/strategy/source_inputs.py`
+
+### What happened
+The initial helper compared supplied citation records with actual source records
+but performed READ/freshness checks over only the declared artifact/source
+manifest. A different source could form that manifest while the cited source was
+omitted. Two focused negatives failed with DID NOT RAISE, independently removing
+the exact citation artifact or source contributor from the supplied manifest.
+No endpoint or native strategy publisher was active.
+
+### Root cause
+The native manifest builder resolves artifact/source roots but copies evidence
+IDs without expanding them. The source record join itself is not a READ gate;
+later complete-reference checks cannot protect an omitted citation source.
+
+### Fix applied
+Before lookup, require each citation's exact artifact and source in the declared
+manifest and require complete unique evidence IDs. Perform every declared
+artifact's protected current READ and complete native manifest checks before
+source-body comparison. The same two negatives now pass within17 focused tests.
+Actual normal015 restricted PostgreSQL verifies valid READ, spliced-body denial
+and final grant expiry after a real awaited grant read. It does not qualify a
+native strategy, author registration, plan, acceptance or action.
+
+### Prevention
+Do not assume an evidence list automatically expands a native artifact/source
+closure. Retained red log: `nexus-strategy-source-inputs-20261015/missing-source-link-red.log`.
+Actual PG packetac5f213f and Root receipt1fa4fbab are preserved in the checkpoint.
+
+---
+
 ## ERROR-105 — Strategy result descriptions and malformed-data handling were too broad
 
 **Date:** 2026-10-15 (Asia/Bangkok)
