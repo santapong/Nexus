@@ -1,5 +1,37 @@
 # Native startup diagnostic checkpoint — 2026-10-15
 
+Latest V5 reaches readiness and captures two live three-group process trees with
+the original controller/runtime/conmon/payload identities and exact limits. Its
+18.17s diagnostic still fails the unchanged137 criterion: actual CLI255 and
+inspect-1, non-OOM, exited state, empty error and real start/finish timestamps.
+Those terminal facts are retained before freeze within the original20s capture
+window. Exact-ID cleanup/reaping succeed; later inventory remains21, including
+the untouched V4 created record. No successful-work or timeout137 claim is made.
+
+V5 source corrects a reproduced pending-state trap: canonical child max defaults
+remain unready until repeated exact numeric caps appear. Parent max, malformed
+values and identity violations still deny. Bounded immutable read-step/file/hash
+records preserve the original exception without late worker promotion.122 focused
+checks, configured strict/Ruff4 and independent review pass. The coherent409/408
+line helper/test boundaries carry the repository's explanatory size exception.
+This does not uniquely reconstruct the earlier V4 callsite.
+
+| Latest V5 evidence | SHA256 |
+| --- | --- |
+| Frozen source | `9f5d4a8f68c1663a38ccc768f3a6443e0512a230c2df42191bd2bd2b15939a69` |
+| Independent source review | `13a36957a1da915d5d595e2203e8aa5da74f9ffd5c4286cda867fc64703d3ccc` |
+| Actual terminal | `4a354e364a908f5cc2f2f07a1225f287eb5c88747fd71f1a065ba6cbe534e9e3` |
+| Independent actual file audit | `3e87eb13c675d7a251238f6b1e1a37f1faa89244339d6b8785c3a636715b79a7` |
+| Later read-only state | `321aea86517a06e5c29c5e6f58ca96d9f66161f9cd9c927674776daa317e15ce` |
+
+This actual startup/caps/failed-completion/cleanup evidence supports separately
+reviewed manual public-data cache preparation. That preparation confers no Company
+authority. The run finishes well before its60s parent deadline and cannot qualify
+parent-timer expiry, cancellation, current full V7 or native Company execution.
+Keep those release gates separate and preserve the original frozen failure.
+
+The following V4/V3 sections are historical observations.
+
 Latest actual V4 fails before readiness after1.60s. Its passive observer records
 the controller at the original root, two direct processes and no subtree
 controllers, then a generic ValueError without an exact read-step witness.

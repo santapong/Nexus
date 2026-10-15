@@ -1,6 +1,31 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain pending child limits and complete timeout diagnostics
+
+### Validation
+- Fresh private observer passes122 focused/static checks and independent review;
+  canonical child defaults stay unready and fixed read-step evidence is bounded.
+- Actual18.17s diagnostic captures readiness, live trees, CLI255/inspect-1 and
+  exact cleanup. Original137 rejection remains failed; parent timer/full V7 remain open.
+- Manual public cache preparation proceeds through its own reviewed source/recipe;
+  no Company execution, provider spend or deployment authority is granted.
+
+**Authored by:** Codex and supervised diagnostic/review agents
+**PR:** not published
+
+## [2026-10-15] — Record read-only Pi builder preparation
+
+### Validation
+- Capture actual boot/controller/storage limits, the normal nine-package resolver
+  transaction and laptop archive/script review with immutable evidence pins.
+- Preserve the first ten-package plan and narrow its mask warning using the actual
+  installed helper. Setup/rollback/service disposition and owner approval remain pending.
+- No Pi installation, configuration, service change, reboot or native qualification.
+
+**Authored by:** Codex and supervised preparation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Preserve passive-readiness failure evidence
 
 ### Validation

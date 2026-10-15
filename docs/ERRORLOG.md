@@ -74,6 +74,25 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-149 — Canonical child defaults raised before runtime applied finite limits
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed for pending observation; older actual callsite remains unknown
+**Found by:** real descriptor tests after V4 investigation
+**Affected files:** private readiness helper/test and fresh source namespace
+
+Three original helper tests reproduce ValueError on canonical child memory/pids
+max and CPU max100000. Fresh V5 returns unready for those exact defaults while
+rechecking identities; only repeated exact finite caps permit the first query.
+Root max/malformed/unknown cases still deny. Immutable bounded read-step evidence
+retains the original exception.122 focused/static checks and independent review
+pass. Actual V5 reaches readiness/live trees and cleans up, but still rejects
+CLI255/inspect-1 under its unchanged137 criterion. Do not infer V4's exact cause
+or relabel the preserved timeout failure as completed work.
+
+---
+
 ## ERROR-148 — Passive startup observation failed before readiness; cleanup unresolved
 
 **Date:** 2026-10-15

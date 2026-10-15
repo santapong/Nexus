@@ -5,15 +5,18 @@ focused tests and actual complete517-package/901-tool observation/revalidation.
 This is read-only input evidence; full cache import and native execution remain held.
 
 Current continuation: the [startup diagnostic checkpoint](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
-records82 focused diagnostic tests and actual pre-readiness runc cgroup failure
-with retained CLI/stderr/state. Cleanup succeeds; execution qualification remains
-open. The latest coherent backend milestone is3fde994 with4,165 unit tests;
+records122 focused diagnostic tests and actual V5 readiness/live trees/cleanup.
+Its frozen137 expectation still rejects actual CLI255/inspect-1. Full cache
+preparation source proceeds through a separate recipe/monitor review; parent
+timer and native Company qualification remain open. [Pi preparation](PI_BUILDER_READINESS_CHECKPOINT_2026-10-15.md)
+records read-only prerequisites and the nine-package candidate, with no mutation.
+The latest coherent backend milestone is3fde994 with4,165 unit tests;
 older source counts below describe their individual historical packages.
 
 **Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 
-Latest source milestone: [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md),
+Earlier package milestones: [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md),
 with3,813 exact-source unit tests passing. The [managed attempt-kind fix](MANAGED_ATTEMPT_KIND_CHECKPOINT_2026-10-15.md)
 now passes3,814 units and preserves the separate model/tool slices. It uses each actor's own scope and actual
 accepted E/EV evidence; publication and execution wiring remain separate. The
