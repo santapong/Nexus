@@ -20,22 +20,20 @@ from nexus.company.management.base import (
 )
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.check_contracts import CheckVerdict, CriterionCheckResult
+from nexus.company.management.cycle_strategy_criteria import (
+    STRATEGY_CHECK_CRITERIA as STRATEGY_CHECK_CRITERIA,
+)
 from nexus.company.management.generated_artifact_contracts import GeneratedArtifactInputs
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.lifecycle import PlanRevisionRef
+from nexus.company.management.plan_choice_contracts import (
+    StrategySelectionRef as StrategySelectionRef,
+)
 from nexus.company.management.plans import RunBinding
 from nexus.execution.runtime_contracts import ExecutionRegistration
 from nexus.harness.standing_contracts import ToolPermission
 
 STRATEGY_CHECK_RECIPE = "stockflow-strategy-brief-v1"
-STRATEGY_CHECK_CRITERIA = (
-    "strategy.schema.v1",
-    "strategy.citations.v1",
-    "strategy.source-time.v1",
-    "strategy.candidate-scope.v1",
-    "strategy.recommendation-binding.v1",
-    "strategy.unknowns.v1",
-)
 STRATEGY_LIMITATIONS = (
     "mechanical_strategy_brief_only",
     "business_readiness_unproven",
@@ -285,18 +283,4 @@ class StrategyCheckResult(StrategyCheckPayload):
             or self.result_sha256 != canonical_sha256(payload)
         ):
             raise ValueError("Strategy result digest or actual criterion aggregate differs")
-        return self
-
-
-class StrategySelectionRef(ManagementContract):
-    """Descriptive comparison ref only; an actual owner decision must bind it later."""
-
-    brief: ArtifactRevisionRef
-    acceptance_id: UUID
-    candidate_id: Symbol
-    candidate_scope_sha256: SHA256
-
-    @model_validator(mode="after")
-    def same_company(self) -> Self:
-        require_company(self.company_id, self.brief)
         return self

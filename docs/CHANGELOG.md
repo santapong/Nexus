@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bind owner Strategy choice to full plan revision
+
+### Added
+- Optional hash-bound selection with compatible absent wire, exact full structural
+  admission and same-session concrete owner proof/credential checks.
+- Original three-row partition, staged twelve-row partition and retained first/
+  current plan/proof windows for proposal, approval and exact replay.
+
+### Validation
+- Root3,399unit/67.46s and strict/lint/format31 pass. These are source/mock checks;
+  actual revision2 SQL/rollback and B2 native execution remain separate gates.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify actual owner proof and contained outer timeout
 
 ### Validation

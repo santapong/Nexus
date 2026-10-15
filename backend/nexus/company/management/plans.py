@@ -17,6 +17,7 @@ from nexus.company.management.base import (
 )
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.governance import CharterRevisionRef
+from nexus.company.management.plan_choice_contracts import StrategySelectionRef
 from nexus.execution.runtime_contracts import AttemptQuota
 
 
@@ -74,6 +75,9 @@ class PlanPayload(ManagementContract):
     procedure: ProcedureRoot
     children: tuple[ChildAllocation, ...] = Field(min_length=1, max_length=100)
     verification: tuple[VerificationIntent, ...] = Field(default=(), max_length=100)
+    strategy_selection: StrategySelectionRef | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @field_validator("plan", mode="before")
     @classmethod
@@ -90,6 +94,7 @@ class PlanPayload(ManagementContract):
             self.goal,
             self.mandate,
             self.procedure,
+            self.strategy_selection,
             *self.charters,
             *self.children,
             *self.verification,

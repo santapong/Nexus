@@ -82,6 +82,14 @@ def native_notification_profile(
 
 def require_notification_plan(catalog: PlanAdmissionCatalog, payload: PlanPayload) -> None:
     """Initial sender plans contain one child, no verifier edge and a zero-model root."""
+    if catalog.cycle_admission is not None:
+        from nexus.company.management.cycle_admission import validate_stockflow_cycle
+        from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
+
+        validate_cycle_catalog(catalog.cycle_admission, catalog)
+        matched = validate_stockflow_cycle(catalog.cycle_admission, catalog.models, payload)
+        if matched is not None and matched.stage == "full":
+            return
     selected = tuple(native_notification_profile(catalog, child) for child in payload.children)
     if not any(selected) and payload.procedure.binding.model_profile != NOTIFICATION_PROFILE:
         return

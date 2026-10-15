@@ -785,3 +785,13 @@ six post-TERM survivors and all seven recorded identities/complete subtree absen
 by deadline+1.5s. No result receipt was fabricated. Its one original intent/attempt
 and0.01USD/null hold remain; the original lease has expired. Separate recovery and
 retained-object handling remain open; no external release or removal occurred.
+
+## 2026-10-15 — B1 owner choice and revision2 source milestone
+
+The [B1 source checkpoint](OWNER_TRANSITION_B1_SOURCE_CHECKPOINT_2026-10-15.md)
+records typed hash-bound choice, compatible absent wire, exact complete structural
+admission, same-session current owner proof and permanent3→12 registration guards.
+Proposal/approval/replay retain both full-plan/proof captures through the final owner
+clock. Root3,399unit/67.46s and strict/lint/format31 pass with favorable cross-review.
+Actual staged-head2 proof/approved replay and downstream late-expiry SQL rollback
+remain the next separate gate. Native execution ancestry/spec guards remain closed.

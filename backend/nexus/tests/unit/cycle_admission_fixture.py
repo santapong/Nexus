@@ -12,6 +12,7 @@ from nexus.company.management.cycle_admission_contracts import (
     StockFlowCycleAdmission,
     StockFlowCycleSlot,
 )
+from nexus.company.management.cycle_strategy_criteria import STRATEGY_CHECK_CRITERIA
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.governance import CharterRevisionRef
 from nexus.company.management.native_execution_profiles import NATIVE_CRITERIA
@@ -150,7 +151,9 @@ def cycle() -> Cycle:
             8: (UUID(int=200), UUID(int=202), UUID(int=204), UUID(int=206)),
         }.get(index, ())
         criteria = (
-            NATIVE_CRITERIA
+            STRATEGY_CHECK_CRITERIA
+            if index in (0, 1)
+            else NATIVE_CRITERIA
             if index in (2, 3)
             else REPORT_CHECK_CRITERIA
             if index in (8, 9)

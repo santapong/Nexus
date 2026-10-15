@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.directory_store import PersistentCompanyDirectory
 from nexus.company.management.cancellation_support import require_plan_not_cancelled
 from nexus.company.management.control_support import ManagementConflictError, db_clock, require_cas
+from nexus.company.management.cycle_admission_contracts import require_exact_cycle_quota
 from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.lifecycle import PlanRevision
 from nexus.company.management.plan_models import (
@@ -31,6 +33,10 @@ from nexus.company.management.plan_support import (
     PlanSourceFreshness,
     validate_plan,
 )
+from nexus.company.management.plan_transition_store import (
+    approve_transition_locked,
+    propose_transition_locked,
+)
 from nexus.company.management.plans import PlanPayload
 from nexus.company.management.revision_store import (
     consume_revision,
@@ -39,12 +45,17 @@ from nexus.company.management.revision_store import (
     plan_reference,
     propose_locked,
 )
+from nexus.company.management.strategy_transition import is_full_transition
 from nexus.company.management.transactions import (
     ManagementDeniedError,
     management_owner_transaction,
 )
+from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.harness.journal_models import CompanyControl
+
+if TYPE_CHECKING:
+    from nexus.company.strategy.current_proof_reader import StrategyCurrentProofReader
 
 
 class ManagementPlanStore:
@@ -56,6 +67,7 @@ class ManagementPlanStore:
         catalog: PlanAdmissionCatalog,
         *,
         source_freshness: PlanSourceFreshness | None = None,
+        strategy_proof_reader: StrategyCurrentProofReader | None = None,
     ) -> None:
         validate_cycle_catalog(catalog.cycle_admission, catalog)
         self.factory, self.catalog = (
@@ -64,6 +76,18 @@ class ManagementPlanStore:
         )
         self.directory = PersistentCompanyDirectory(factory)
         self.source_freshness = source_freshness
+        self.strategy_proof_reader = strategy_proof_reader
+        if strategy_proof_reader is not None:
+            from nexus.company.strategy.current_proof_reader import StrategyCurrentProofReader
+
+            if (
+                not isinstance(strategy_proof_reader, StrategyCurrentProofReader)
+                or strategy_proof_reader.reader.artifacts.factory is not factory
+                or source_freshness is not strategy_proof_reader.reader.freshness
+            ):
+                raise ManagementDeniedError(
+                    "Strategy reader must share the exact plan-store factory"
+                )
 
     async def propose(
         self,
@@ -72,15 +96,29 @@ class ManagementPlanStore:
         payload: PlanPayload,
         *,
         expected_current_revision_id: UUID | None,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> PlanRevision:
         """Save a fully validated immutable proposal without reserving any root or child."""
-        payload = PlanPayload.model_validate_json(payload.model_dump_json(by_alias=True))
+        for quota in (payload.procedure.quota, *(row.quota for row in payload.children)):
+            require_exact_cycle_quota(quota)
+        payload = PlanPayload.model_validate(payload.model_dump(warnings=False))
         async with management_owner_transaction(self.factory, scope, identity) as (
             session,
             control,
             _,
         ):
             await require_plan_not_cancelled(session, scope.company_id, payload)
+            if is_full_transition(payload, self.catalog):
+                return await propose_transition_locked(
+                    self,
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    payload,
+                    expected_current_revision_id,
+                    credential,
+                )
             await validate_plan(
                 session, control, scope, identity, payload, self.catalog, self.source_freshness
             )
@@ -100,6 +138,7 @@ class ManagementPlanStore:
         exact_hash: str,
         *,
         expected_current_revision_id: UUID | None,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> PlanRevision:
         """Approve exact stored data and atomically delegate each existing/new M1 registration."""
         async with management_owner_transaction(self.factory, scope, identity) as (
@@ -109,6 +148,18 @@ class ManagementPlanStore:
         ):
             record, head = await self._target(session, scope, plan_revision_id, exact_hash)
             await require_plan_not_cancelled(session, scope.company_id, record.payload)
+            if is_full_transition(record.payload, self.catalog):
+                return await approve_transition_locked(
+                    self,
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    record,
+                    head,
+                    expected_current_revision_id,
+                    credential,
+                )
             charters = await validate_plan(
                 session,
                 control,

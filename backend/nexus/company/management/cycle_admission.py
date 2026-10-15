@@ -9,6 +9,7 @@ from nexus.company.management.cycle_admission_contracts import (
     StockFlowCycleSlot,
     require_exact_cycle_quota,
 )
+from nexus.company.management.cycle_strategy_criteria import STRATEGY_CHECK_CRITERIA
 from nexus.company.management.native_execution_profiles import NATIVE_CRITERIA
 from nexus.company.management.plans import PlanPayload
 from nexus.core.llm.company_registry import ModelRegistry
@@ -134,6 +135,8 @@ def _slot_abi(admission: StockFlowCycleAdmission, slot: StockFlowCycleSlot, inde
         raise ValueError("Cycle author/sender cannot declare another verification edge")
     if index in (2, 3) and slot.work.acceptance != NATIVE_CRITERIA:
         raise ValueError("Cycle native role requires all seven original engineering criteria")
+    if index in (0, 1) and slot.work.acceptance != STRATEGY_CHECK_CRITERIA:
+        raise ValueError("Cycle Strategy roles require the exact six mechanical criteria")
     if index in (8, 9) and slot.work.acceptance != REPORT_CHECK_CRITERIA:
         raise ValueError("Cycle report role requires the existing exact mechanical criteria")
 

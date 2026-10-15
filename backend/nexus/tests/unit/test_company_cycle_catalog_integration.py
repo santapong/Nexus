@@ -1,6 +1,7 @@
 """Explicit cycle metadata narrows validation but cannot activate mixed work or model authority."""
 
 from datetime import timedelta
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
@@ -33,15 +34,13 @@ def test_absent_cycle_is_excluded_from_existing_canonical_wire() -> None:
     assert canonical_json(checked) == canonical_json(case.catalog)
 
 
-def test_configured_cycle_retains_complete_layout_but_does_not_bypass_native_plan() -> None:
+def test_exact_full_structural_layout_does_not_substitute_for_current_model_evidence() -> None:
     catalog = configured()
     admission = catalog.cycle_admission
     assert admission is not None
     payload = declared(admission, 2)
-    with pytest.raises(ValueError):
-        require_native_plan(catalog, payload)
-    with pytest.raises(ValueError):
-        require_notification_plan(catalog, payload)
+    require_native_plan(catalog, payload)
+    require_notification_plan(catalog, payload)
     with pytest.raises(ValueError, match="no current registered model evidence"):
         validate_model_profile(catalog, admission.slots[0].child, NOW)
 
@@ -86,7 +85,7 @@ def test_selected_model_view_clears_cycle_only_after_full_original_validation() 
         profile="reasoning",
         suite_version="synthetic",
         artifact_reference="fixture:evaluation",
-        score="0.9",
+        score=Decimal("0.9"),
         conformance_passed=True,
         evaluated_at=NOW - timedelta(days=1),
         expires_at=NOW + timedelta(days=1),

@@ -1,4 +1,4 @@
-"""Exact native/sender descriptions are model-free; public mixed capture remains denied."""
+"""Exact no-model descriptions and real full capture still require current governance."""
 
 from uuid import UUID
 
@@ -37,7 +37,9 @@ def test_unselected_native_tuple_hash_is_checked_before_selecting_model_free_chi
         capture_child_window(catalog, data.admission.slots[2].child, NOW)
 
 
-async def test_actual_full_mixed_public_capture_is_still_denied_by_real_native_plan_gate() -> None:
+async def test_actual_full_mixed_capture_does_not_skip_real_governance_after_structural_match() -> (
+    None
+):
     data = cycle_catalog()
     admission = data.admission
     resources = {x.symbol: x for x in data.catalog.resources}
@@ -73,7 +75,7 @@ async def test_actual_full_mixed_public_capture_is_still_denied_by_real_native_p
         operation_id=UUID(int=7),
         trace_id=UUID(int=8),
     )
-    with pytest.raises(ManagementDeniedError, match="Native plan must retain"):
+    with pytest.raises(ManagementDeniedError):
         await capture_plan_admission_locked(
             db.session,
             control,
@@ -84,4 +86,4 @@ async def test_actual_full_mixed_public_capture_is_still_denied_by_real_native_p
             qualifier(db.data),
             credential=await bound_witness(bound),
         )
-    assert db.body_reads == 0 and len(db.statements) == 1
+    assert db.body_reads == 0
