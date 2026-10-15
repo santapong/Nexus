@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Establish develop and typed work branches
+
+### Changed
+- Created integration branch `develop` from released `main`, renamed active work
+  to `feat/company-foundation`, documented branch routing, and added PR policy CI.
+- CI/security now include `develop`; publication and deployment triggers remain.
+- Retired only verified redundant refs with a recoverable local Git bundle.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Preserve first B1 SQL packet failure
 
 ### Validation

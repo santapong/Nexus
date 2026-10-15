@@ -1397,6 +1397,11 @@ Seeded into each agent's `semantic_memory` at initialization under `project.poli
 
 ### Branch naming
 
+Current company-system workflow: [branch policy](docs/BRANCH_POLICY.md).
+Use `develop` for integration, `main` for releases, and new `feat/`, `fix/`,
+`docs/`, `chore/`, `refactor/`, `test/`, `perf/`, `ci/`, or `build/` branches.
+This replaces the historical `feature/` prefix below for new work.
+
 ```
 feature/{description}
 fix/{description}

@@ -1,0 +1,33 @@
+name: Branch policy
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  branch-policy:
+    name: Branch policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source and target
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$BASE_BRANCH" == main ]]; then
+            if [[ "$HEAD_BRANCH" != develop || "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]]; then
+              echo '::error::Release PRs into main must come from this repository’s develop branch.'
+              exit 1
+            fi
+          elif [[ ! "$HEAD_BRANCH" =~ ^(feat|fix|docs|chore|refactor|test|perf|ci|build|hotfix|release)/[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo '::error::Use a supported type/name branch with a lowercase hyphen-separated name.'
+            exit 1
+          fi

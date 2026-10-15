@@ -835,6 +835,11 @@ What will be harder because of this decision?}
 
 ## 12. Commit & Branch Rules
 
+Current company-system branch rules are in [docs/BRANCH_POLICY.md](docs/BRANCH_POLICY.md):
+PRs target `develop`; release PRs go from `develop` to `main`. Use `feat/` for new
+features and the other documented Conventional Commit prefixes for scoped work.
+The older `feature/` examples below are historical.
+
 ### Branch naming
 
 ```bash
