@@ -1,5 +1,14 @@
 # Nexus release execution plan
 
+The [latest Source5 wave](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md)
+passes parent expiry and metadata-only recovery, then stops on cancellation:
+the native guard fires in 228 ms, but five recorded processes remain at the 10 s bound.
+Root and three source workers are implementing an opaque original-owned full-ID
+stop, complete private control-channel delivery and explicit new method identity.
+Keep original deadlines, ownership and physical predicates. Test/review/integrate
+the source, then use new exact pins and an independent namespace for all five
+cases. Never resume this stopped wave or reuse its consumed actions/windows.
+
 The [first actual native fault attempt](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
 fails in the sampling path after native issuance and leaves an unknown outcome.
 Stop this wave, retain its original hold and all evidence, and diagnose the
@@ -47,6 +56,13 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 **2026-10-14 ownership update:** the M1 offline exit has independent combined acceptance. M2 preparation now assigns shared Brain DTO/models to the model worker, deterministic ingestion/parser/blob/outbox to replay worker, permission-aware retrieval/context to planner, and current scope/ACL/migrations/API/acceptance integration to root. Actual package namespace is `backend/nexus/company/brain/`. Agree fields and method signatures before parallel writes; head migrations remain coordinator-owned. [M1 evidence](M1_OFFLINE_ACCEPTANCE_2026-10-14.md) and [M2 plan](BRAIN_IMPLEMENTATION_PLAN.md) define activation gates.
 
 ## Current wave
+
+The current wave is source repair following Source5's stopped cancellation case.
+Its parent-expiry/recovery proof remains scoped to that actual run. The other
+three cases are unissued; all 24 retained containers and unknown financial history
+remain intact. A new method/source package still needs fresh native qualification.
+
+### Earlier preparation
 
 The [selected image-pair source fix](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
 passes4,247 units and independent review. Read-only reuse now passes separately.

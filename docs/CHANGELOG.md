@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Qualify parent expiry and preserve cancellation failure
+
+### Validation
+- Fresh Source5 passes 318 focused checks, configured strict/lint/format on 40 files and
+  actual all-five setup. The original seven-process parent-expiry oracle passes;
+  metadata-only recovery conserves the original attempt, unknown hold and null billing.
+- Actual cancellation fires the native guard in 228 ms, but five container processes
+  remain at the original 10 s bound. The wave stops and the other three cases remain
+  unissued. Complete captures also reveal mixed diagnostic/control output and late
+  first-cause adoption. Independent audits retain both failures without reclassification.
+- Preserve all old windows, consumed actions, holds and containers. Owned-stop and
+  control-channel source repair is next; native qualification and release remain open.
+- Passive count/output-guard repairs complete before issuance; neither changes
+  native authority or renews the original governance windows.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Preserve failed first native fault attempt
 
 ### Validation

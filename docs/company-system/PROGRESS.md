@@ -1,6 +1,14 @@
 # Nexus implementation progress
 
-Latest actual attempt: [first native fault case](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
+Latest: [fresh setup, parent expiry and stopped cancellation](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md).
+Source5 passes 318 focused checks and actual all-five setup. Its parent-expiry and
+metadata-only recovery pass independent audits. Cancellation is detected in 228 ms,
+but five container processes remain at the original stop bound. This wave stops;
+pause, READ revocation and stale fence remain unissued. Implement owned-container
+stop and separate collector control output before a fresh qualification. Preserve
+all prior sources/windows/holds/containers. Native qualification and release stay open.
+
+Earlier actual attempt: [first native fault case](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
 records one issued tool attempt and an unknown outcome after sampling-path
 validation fails. No usable fault witness is retained, so the wave is stopped
 and the remaining four cases stay unissued. The original hold remains unknown;

@@ -1,6 +1,12 @@
 # Supervised release evidence index
 
-Current frontier checked 2026-10-16: pushed backend `be18432` passes 4,247 units;
+Current frontier checked 2026-10-16: [Source5 parent expiry and metadata recovery](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md)
+pass independent audits, but cancellation fails retirement and stops the wave.
+Pause, READ revocation and stale fence remain unissued. The next gate is source
+repair of owned-container termination and private report delivery, followed by
+fresh native qualification under new exact method/source/action pins.
+
+Pushed backend `be18432` historically passes 4,247 units;
 the [full517 preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) and
 [read-only reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md) have favorable
 actual FILE audits. Reuse evidence is committed in `983f59c`. The
@@ -11,7 +17,7 @@ selected E/EV remain pending. Full tree retention limits are explicit in each ch
 This index separates saved scoped proof from the full selected release.
 Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
-Latest: [first native fault attempt](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
+Earlier: [first native fault attempt](CURRENT_V8_FIRST_NATIVE_FAULT_CHECKPOINT_2026-10-16.md)
 fails in the sampling path and records an unknown outcome with one tool attempt.
 The wave is stopped; its other four cases are unissued. Missing physical witnesses
 prevent timer qualification and use of the current recovery entry.
@@ -43,10 +49,12 @@ remains open.
 
 ## Current next work
 
-The declared V2 recipe and fresh Source4/namespace3 setup pass, but its first
-actual fault attempt fails and stops the wave. Preserve every used namespace,
-the unknown issued hold and the four unissued actions. Diagnose the fixture and
-prepare a prospective repair plan before any fresh qualification. The five exits remain:
+Source5's parent expiry/recovery pass, while cancellation fails the original
+retirement bound despite a working native guard. Preserve every used namespace,
+all unknown holds and the three unissued Source5 cases. Integrate/test the actual
+owned-stop and report-delivery repair, preserving named V6–V8 identities and
+current-only issuance gates. A new independent source/namespace must qualify all
+five cases; the old wave is never resumed. The five exits remain:
 original parent expiry, cancellation, pause, source READ revocation and stale-fence
 release. Each retains native unknown history and one attempt under original
 clocks. Then qualify selected E/EV and independent acceptance

@@ -74,6 +74,92 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-172 — Diagnostic output and late parsing mask the retained first denial
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** independent file-only cancellation triage
+**Affected files:** private case entry, negative observer and transport
+
+The observer waits for an empty tree before decoding a completed collector report.
+It therefore reports TimeoutError before adopting the actual native cancellation.
+The retained full capture also contains a 183-byte warning before 5308 bytes of JSON
+and 108 bytes of launcher stderr. These are independent latent framing rejections;
+the original observer does not reach their validation before its timeout.
+
+Give the private collector a dedicated control-only stdout, retain complete bounded
+stderr, and validate a completed canonical report before waiting for retirement.
+Do not strip mixed historical output into accepted wire or infer physical success
+from a decoded denial. Meaningful finite framing/first-cause tests precede a new
+source package. The old capture, predicates and failed wave remain unchanged.
+
+---
+
+## ERROR-171 — Runtime-client cleanup leaves the owned container tree alive
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** open
+**Found by:** actual cancellation retirement qualification
+**Affected files:** `backend/nexus/builder/contained_process.py` and owned lifecycle
+
+The native guard detects cancellation in 228179 microseconds, then the runtime
+finalizer kills/reaps only the Podman client. Conmon, payload and three descendants
+remain alive at the original 10 s oracle bound. The stopped-wave audit correctly
+denies qualification; later stopped/PID0/Scope.success facts cannot repair it.
+
+Add a bounded running-stop boundary issued only by the original opaque owned
+context and full immutable container identity. Stop before context close, preserve
+original end/first denial/task and child owners, and retain incomplete/unsealed
+uncertainty. Existing cleanup v1 is stopped-object removal and cannot confer this
+new authority. No remove, replacement execution permit or financial reset occurs.
+Version the changed method, preserve old histories, then requalify in a fresh
+namespace. Finite ownership/cancellation/deadline tests and actual whole-tree
+qualification are separate requirements; neither is claimed complete here.
+
+---
+
+## ERROR-170 — Read-only capture guard consumes its launcher's output
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed
+**Found by:** actual passive host capture
+**Affected files:** private read-only capture helper
+
+An overbroad stdout-file guard rejects the launcher's already-open outer stdout
+before the first query. The failed control and its original clock remain intact.
+A fresh capture checks only its eight query outputs and terminal/failure objects;
+it completes all eight bounded read-only commands in 2.07s. No native attempt,
+lease or SQL action occurs in either capture. Record exact owned output names
+and keep wrapper streams separate from the consumption guard.
+
+---
+
+## ERROR-169 — Descriptive packet retains the previous source-file count
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed
+**Found by:** published E4 passive packet check
+**Affected files:** private metadata-only packet producer
+
+The producer writes count1653 after two new helper/test files make the exact
+manifest closure1655. Both unchanged passive guards reject it before backend
+import, controller creation or native issuance. The failed packet is preserved
+by an inode-preserving archive rename. A new packet changes only the descriptive
+count; source, code, config, action, preflight, grants and original windows are
+unchanged. Full library validation and actual published CLI check pass. The
+corrected packet subsequently reaches the separately frozen native case.
+
+Derive counts from the SHA-pinned manifest and verify the actual closure. A
+saved future producer also validates the published packet before reporting
+completion; that full producer remains unexecuted. No approval or allowance is
+reset by the metadata repair.
+
+---
+
 ## ERROR-168 — First native fault attempt lacks a usable sample witness
 
 **Date:** 2026-10-16
@@ -4764,7 +4850,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-169*
+*Next error ID: ERROR-173*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 
