@@ -1,6 +1,16 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Research current provider prices for release qualification
+
+### Documentation
+- Record official OpenAI/Google candidate rates, a deferred Groq option and exact
+  illustrative token arithmetic. Preserve current adapter/pricebook/activation gates.
+- No provider request, spending, registry mutation or release qualification occurred.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Require current selected Strategy proof for native builder intents
 
 ### Added

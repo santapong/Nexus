@@ -70,6 +70,11 @@ integrated in6e37386 and composed by7dbbf81 after Root3,399unit/67.46s/static31.
 Actual B1 registration is now qualified by the linked SQL case. No dated execution-pricing or
 genuine model-quality proof follows from the window capture.
 
+The [dated provider pricing research](PROVIDER_PRICING_RESEARCH_2026-10-15.md)
+records official candidate prices and illustrative arithmetic. Current company
+adapters support OpenAI Responses/Google GenerateContent; a researched Groq option
+remains unsupported. No live model quality/usage, pricebook or spending is activated.
+
 Preserve seven prepared engineering process DBs, both backup pairs and the new
 CSV known-output DB/tree. Tick disposable database is exclusively owned by its
 assigned lane and normally returned to base after fixtures. Held ownerUAT is not
