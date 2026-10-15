@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve first owner-read qualification failure
+
+### Validation
+- Actual native positive Strategy lineage completed, then a fixture directory-mode
+  assertion stopped the run before the owner read (ERROR121). State is preserved;
+  owner current READ/expiry and later cases remain unqualified.
+- Separate contained outer-fault setup passed normal015/public registration only;
+  zero builder intents or attempts have been issued.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-15] — Reconcile the current release work lanes
 
 ### Changed

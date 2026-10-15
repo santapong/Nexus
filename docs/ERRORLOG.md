@@ -74,6 +74,35 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-121 — Owner SQL fixture assumed every nested blob directory was 0700
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** open (fixture correction; failed run preserved)
+**Found by:** first actual owner-proof SQL run
+**Affected files:** private `strategy_owner_pg_ledger.py` fixture
+
+The first run completed its positive company's native B/S/C publication, receipts
+and acceptance, then failed before the owner reader at the file-audit assumption
+that every nested directory was mode0700. The actual protected root and artifact
+directories are0700, immutable files0400, and the intermediate company directory
+is0775. `Path.mkdir(parents=True, mode=0700)` applies that mode to the final directory;
+intermediate parents use the process umask. The outer0700 boundary remains intact.
+
+Root91036 failed once in18.42s. Fresh SQL confirms one company, three work rows,
+two original intents/attempts, one acceptance/proof and no app backends. No owner
+read or later case ran. Preserve DB/tree/source/TTLs/holds; do not chmod or retry
+the original. A corrected fixture must audit actual ownership/type, protected root,
+immutable file modes and unchanged directory metadata in a fresh namespace.
+Production storage behavior is not changed by this finding.
+
+Root failed-terminal receipt SHA256
+`2c3637e3792641fe851cb4198c2d8b0d0a4f0a95c6fcf56bf028edaaa6e92fcd`
+is saved in the private owner-proof run directory. Actual owner READ/expiry proof
+remains unqualified; a new reviewed fixture is required.
+
+---
+
 ## ERROR-120 — New window narrowed the legacy aggregate resource set
 
 **Date:** 2026-10-15

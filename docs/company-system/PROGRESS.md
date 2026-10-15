@@ -762,3 +762,10 @@ alternatives, native/sender pins and original credential. Legacy aggregate cover
 includes unused declared charters after independent review and a retained regression.
 Root combined3,253unit/54.77s and strict/lint/format12 pass. Full mixed admission,
 owner choice/revision2 and the twelve-row registered family remain unactivated.
+
+The first actual owner-proof SQL recipe stopped18.42s before its owner read:
+positive native lineage/receipts/acceptance succeeded, then a test-only nested
+directory-mode assumption failed (ERROR121). The failed database/tree/source are
+preserved; other cases never started. Actual owner READ/expiry is still unproven.
+The separate contained outer-fault setup passed normal015/public approval only:
+one unissued action, positive held amount, zero intents/attempts. Runtime is held.
