@@ -1,6 +1,20 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify actual owner proof and contained outer timeout
+
+### Validation
+- Fresh four-company owner SQL passes90.62s, including repeated read, revoked READ,
+  blocked verifier and original credential expiry at the final owner boundary.
+  Ledgers/exact blob references/directory metadata remain unchanged; independent
+  file audit and Root fresh SQL agree. First fixture failure is preserved (ERROR121).
+- One contained outer-fault operation completed49.867s with original scope timeout
+  and all seven recorded processes/subtree absent. Native outcome remains unknown,
+  with original attempt/intent/positive hold and expired lease retained for recovery.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Preserve first owner-read qualification failure
 
 ### Validation

@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-15
 **Severity:** low
-**Status:** open (fixture correction; failed run preserved)
+**Status:** fixed (fresh v2 fixture audit; failed v1 run preserved)
 **Found by:** first actual owner-proof SQL run
 **Affected files:** private `strategy_owner_pg_ledger.py` fixture
 
@@ -95,6 +95,12 @@ read or later case ran. Preserve DB/tree/source/TTLs/holds; do not chmod or retr
 the original. A corrected fixture must audit actual ownership/type, protected root,
 immutable file modes and unchanged directory metadata in a fresh namespace.
 Production storage behavior is not changed by this finding.
+
+The fresh v2 inventory records actual directory device/inode/UID/mode and checks
+all five files against actual source/publication/check refs. An actual BlobStore
+umask0002 test retained the original failure, then four metadata checks passed;
+25 focused/static16/check-only1522 passed. The new four-case SQL recipe passed
+90.62s, with unchanged ledgers/blobs and independent terminal auditda7c43a7.
 
 Root failed-terminal receipt SHA256
 `2c3637e3792641fe851cb4198c2d8b0d0a4f0a95c6fcf56bf028edaaa6e92fcd`

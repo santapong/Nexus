@@ -769,3 +769,19 @@ directory-mode assumption failed (ERROR121). The failed database/tree/source are
 preserved; other cases never started. Actual owner READ/expiry is still unproven.
 The separate contained outer-fault setup passed normal015/public approval only:
 one unissued action, positive held amount, zero intents/attempts. Runtime is held.
+
+## 2026-10-15 — Actual owner proof and contained outer timeout
+
+The [fresh owner SQL v2 qualification](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md)
+passes all four cases in90.62s: repeated taskless owner reads, current READ revocation,
+blocked SV and original credential expiry after full proof/final owner membership.
+Native ledgers, exact five files and directory metadata stay unchanged around each
+read. Root fresh SQL and independent terminal file audit confirm the bounded scope.
+ERROR121's original fixture stays immutable; no production reader change was needed.
+
+The [single actual contained outer timeout](CONTAINED_OUTER_TIMEOUT_CHECKPOINT_2026-10-15.md)
+completed49.867s with collector stateT before deadline, original scope failed/timeout,
+six post-TERM survivors and all seven recorded identities/complete subtree absent
+by deadline+1.5s. No result receipt was fabricated. Its one original intent/attempt
+and0.01USD/null hold remain; the original lease has expired. Separate recovery and
+retained-object handling remain open; no external release or removal occurred.

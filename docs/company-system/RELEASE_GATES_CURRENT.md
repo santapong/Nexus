@@ -11,11 +11,11 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Management/report/metric/controls | [Native loop](NATIVE_LOOP_CHECKPOINT_2026-10-14.md), [metric](METRIC_CHECKPOINT_2026-10-14.md), [owner controls](OWNER_CONTROLS_CHECKPOINT_2026-10-14.md) | Selected real goal/procedure/customer-readiness outcome and owner populated browser journey |
 | Multi-provider routing | [Governed observations](MODEL_OBSERVATION_GATEWAY_CHECKPOINT_2026-10-14.md), official adapter/usage conformance with mocked transports | Current approved model IDs/prices, genuine quality/usage and budgeted live qualification |
 | Native builder receipt/independent proof | [Engineering acceptance](ENGINEERING_ACCEPTANCE_CHECKPOINT_2026-10-14.md), [CSV PG](NATIVE_CSV_PG_CHECKPOINT_2026-10-15.md) | Full nominated private StockFlow author/verifier body/checks on actual current source |
-| Builder containment/restart | [Process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [actual methodv6 M1/replay](CONTAINED_METHOD_V6_M1_AND_REPLAY_2026-10-15.md): succeeded native receipt/protected output, eight reported contained samples, normal cleanup and fresh-process known replay with conserved one attempt | Full stored sample-chain recomputation is limited; five failed histories remain unchanged; integrated outer-timeout, representative ARM64 and actual nominated StockFlow qualification remain |
+| Builder containment/restart | [Process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [actual methodv6 M1/replay](CONTAINED_METHOD_V6_M1_AND_REPLAY_2026-10-15.md), [actual outer timeout](CONTAINED_OUTER_TIMEOUT_CHECKPOINT_2026-10-15.md): collector stopped, original scope timeout and all seven recorded descendants absent | Full normal-M1 stored sample-chain recomputation is limited; five failed histories remain unchanged; expired native lease/unknown object recovery, representative ARM64 and nominated StockFlow qualification remain |
 | Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md), [atomic SQL/postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md), [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md); [durable worker](NOTIFICATION_DURABLE_EXECUTION_CHECKPOINT_2026-10-15.md): preserved replay1PG/2.20s, separate rejected17.15s/uncertain16.98s SDK+lifecycle+native replay | [OS recovery](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md): all4 actual crash/immediate-restart cases pass with no second request; daily-positive and registration retention remain; live email qualification is separate |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
 | Recovery/private access/portability | [Matching recovery](OPERATOR_MATCHING_RECOVERY_CHECKPOINT_2026-10-14.md), [backup codec](BACKUP_CODEC_CHECKPOINT_2026-10-14.md) | Independent storage/key custody/lost-source disaster restore/RPO-RTO/rollback, private access,24h bounded soak |
-| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md), [actual native Strategy publication/proof](STRATEGY_NATIVE_PUBLICATION_PG_CHECKPOINT_2026-10-15.md): B/S/C, succeeded receipts, acceptance and real-expiry rollback; pure P/C drafts integrated | Exact owner choice/full revision2, then native patch→independent checks→native presentation/support→owner report/email in one actual full-goal lineage, genuine model quality |
+| Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md), [actual native Strategy publication/proof](STRATEGY_NATIVE_PUBLICATION_PG_CHECKPOINT_2026-10-15.md), [actual current-owner proof](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md): repeated read and current READ/blocked/final credential denials; pure P/C drafts integrated | Exact owner choice/full revision2, then native patch→independent checks→native presentation/support→owner report/email in one actual full-goal lineage, genuine model quality |
 | Oversight modes | Native exact approval/pause/cancellation and immutable history | Explicit owner promotion only after reviewed stable operation; Supervised first |
 
 ## Current next work
@@ -44,10 +44,14 @@ partition helpers remain unactivated pending those proofs. Notification native
 replay, corrected SDK outcomes and all four actual OS recovery cases pass; live
 email remains separate. Use the small existing team and milestone reviews.
 
-The actual-owner proof reader is source/mock-qualified in943c5ec. Dormant
+The actual-owner proof reader in943c5ec now passes its separate four-company
+[actual SQL qualification](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md)
+in90.62s with conserved ledgers/blob metadata, final original-credential expiry,
+Root fresh SQL and independent file audit. The first failed fixture is preserved.
+Dormant
 [full-plan window capture](PLAN_ADMISSION_WINDOW_CHECKPOINT_2026-10-15.md) is
-integrated in6e37386 after Root3,253unit/54.77s and independent review. Actual owner
-SQL is the next qualification; choice/revision2/full mixed admission and the real
+integrated in6e37386 after Root3,253unit/54.77s and independent review. Choice/
+revision2/full mixed admission and the real
 twelve-row registration check remain unactivated. No dated execution-pricing or
 genuine model-quality proof follows from the window capture.
 
