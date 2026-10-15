@@ -74,6 +74,35 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-137 — Generic managed tools could select the model-request attempt slice
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (managed validator)
+**Found by:** Codex during P/C intent-boundary integration
+**Affected files:** company/management/plan_support.py and existing cycle catalog tests
+
+### What happened
+A valid generic artifact-write proposal passed the real validate_plan_action with
+kind=model_requests. The semantic reproduction failed1.13s (DID NOT RAISE); no actual
+SQL counter mutation is claimed by that pure test.
+
+### Root cause
+The model branch enforced its request kind, but the generic non-model tool branch
+had no reciprocal tool-attempt requirement. Specialized E/N checks did not cover it.
+
+### Fix applied
+After the unchanged model.request.v1 return, require tool_attempts for managed
+tools. Existing EffectStore ordering performs this validation before hold movement
+or attempt reservation.9 focused/3814 full units, configured static2 and independent
+file review pass; legitimate model-request behavior remains covered.
+
+### Prevention
+Validate effect category alongside exact tool/version/resource and permanent quota.
+See [the scoped checkpoint](company-system/MANAGED_ATTEMPT_KIND_CHECKPOINT_2026-10-15.md).
+
+---
+
 ## ERROR-136 — Current user manager differs from the qualified bootstrap profile
 
 **Date:** 2026-10-15

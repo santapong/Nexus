@@ -180,3 +180,22 @@ def test_ordinary_cycle_nonmodel_effect_cannot_borrow_sibling_tool() -> None:
             "tool_attempts",
             NOW,
         )
+
+
+def test_managed_artifact_write_cannot_spend_the_model_request_slice() -> None:
+    from nexus.company.management.plan_support import validate_plan_action
+    from nexus.tests.unit.test_company_foundation import proposal
+
+    case = cycle_catalog()
+    slot = case.admission.slots[0]
+    action = proposal().model_copy(
+        update={
+            "tool": slot.tool.tool,
+            "tool_version": slot.tool.tool_version,
+            "resource": slot.tool.resource,
+        }
+    )
+    with pytest.raises(ValueError, match="tool-attempt"):
+        validate_plan_action(
+            configured(), slot.child, declared_charter(case), action, "model_requests", NOW
+        )

@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve managed per-kind attempt budgets
+
+### Fixed
+- Managed non-model tool actions now require tool_attempts. The governed model
+  branch retains its existing checks; generic artifact writes cannot use that slice.
+- Real validator semantic red retained;9 focused/3814 exact-source units,
+  configured static2 and independent file review pass. No actualSQL/runtime claim.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Record current-manager bootstrap refusal
 
 ### Validation

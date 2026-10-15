@@ -4,7 +4,8 @@
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 
 Latest source milestone: [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md),
-with3,813 exact-source unit tests passing. It uses each actor's own scope and actual
+with3,813 exact-source unit tests passing. The [managed attempt-kind fix](MANAGED_ATTEMPT_KIND_CHECKPOINT_2026-10-15.md)
+now passes3,814 units and preserves the separate model/tool slices. It uses each actor's own scope and actual
 accepted E/EV evidence; publication and execution wiring remain separate. The
 [bounded reader SQL](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md) and
 [mixed sender SQL](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md) stay qualified within

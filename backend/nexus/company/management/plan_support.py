@@ -346,6 +346,8 @@ def validate_plan_action(
             now,
         )
         return
+    if kind != "tool_attempts":
+        raise ManagementDeniedError("Managed tools require their tool-attempt budget")
     if cycle is not None:
         selected_slot = next((slot for slot in cycle.slots if slot.child == child), None)
         if selected_slot is None or (proposal.tool, proposal.tool_version, proposal.resource) != (
