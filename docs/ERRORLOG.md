@@ -74,6 +74,67 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-160 — Selected template equated manifest and configuration digests
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** open
+**Found by:** parallel post-import dependency review and finite primary-validator repro
+**Affected files:** builder/selected_strategy_contracts.py and synthetic selected fixture
+
+### What happened
+The actual retained image reference uses manifest digest c4d552… while its local
+configuration/image ID is8f3dff…. Both lower runtime/policy models validate, but
+the selected-template suffix-equality guard rejects that distinct pair. An
+otherwise equalized synthetic control passes; the original fixture masks the join.
+
+### Root cause
+The guard compares identifiers for two different OCI objects. The pinned manifest
+contains the actual configuration correspondence; equality does not represent it.
+
+### Fix applied
+Pending bounded exact trusted architecture/reference/manifest/configuration pair
+validation. No wildcard, generic inequality allowance or substituted identity.
+Keep runtime/native image observation, canonical policy and capability checks.
+The original finite repro and1failed2passed result remain preserved.
+
+### Prevention
+Add a real-distinct-pair positive and wrong-reference/ID/cross-pair denials, while
+preserving old raw golden wires. Complete new runtime/template pins before fresh S.
+
+---
+
+## ERROR-159 — Parent diagnostic publication could cross its original end
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (private source; fresh actual preparation observed)
+**Found by:** independent finite telemetry review
+**Affected files:** private cas_parent_trace.py and ordinary diagnostic publication tests
+
+### What happened
+Summary validation could cross the original clock after an early check and before
+a kernel or ordinary failure-tail State write. A later caller check raised only
+after publication. The manual collector also retained ERROR-158's visible-group
+interval. Three exact peer counterexamples fail against the original component.
+
+### Root cause
+Final state publication did not repeat the deadline check after metadata work;
+a copied manual collector needed its own final path rebind.
+
+### Fix applied
+Fresh telemetry2 rechecks clock/frozen state immediately before both ordinary
+writes and keeps caller-local unavailable cancellation tails distinct from worker
+results. Rebind the visible group after final mount/boot/self-path IO with the
+original descriptor still held. Original component/unfavorable review preserved.
+
+### Prevention
+The three exact regressions and four cancellation/expiry controls pass independent
+review. Coherent source passes312 finite cases; the fresh actual full-4 run reports
+complete same-call metadata without errors. This does not recover full-3's substep.
+
+---
+
 ## ERROR-158 — Final mount read could outlive the visible group binding
 
 **Date:** 2026-10-15

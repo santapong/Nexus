@@ -1,5 +1,11 @@
 # Nexus implementation progress
 
+The [actual full public-cache preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s:
+517 packages, verified archive/tree, exact owned cleanup and unchanged21-container
+baseline. Independent actual FILE audit is favorable. Read-only reuse and the
+selected-template image-pair correction precede fresh
+runtime/Strategy pins and actual E/EV. Current complete V8 remains disabled.
+
 Latest backend source: the [bounded mount reader/current V8 checkpoint](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)
 passes4,216 units and configured strict/lint/format17 in a1,618-file held closure.
 Historical profiles remain readable, fresh execution requires current tuples and

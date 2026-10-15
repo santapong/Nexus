@@ -1,5 +1,10 @@
 # Full public-cache importer source checkpoint — 2026-10-15
 
+Later: the [fresh source3/full-4 preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s after
+versioned reader and telemetry corrections. The source2/full-3 failure below
+remains preserved; its missing original substep remains unknown. Separate reuse
+and Company qualification remain open.
+
 The combined importer candidate passes 343 finite checks and configured strict
 typing, Ruff lint and formatting across 24 helper/test files. Its 1,640-file source
 hold preserves all 1,616 backend files from 3fde994 byte for byte. Independent

@@ -1,5 +1,9 @@
 # Current bounded mount reader and V8 source checkpoint — 2026-10-15
 
+Later: [actual manual full517 preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) succeeds with complete
+5,142-byte mount metadata. This verifies that new manual preparation scope;
+current opaque Company/full-V8 execution remains unqualified.
+
 The coherent backend source passes **4,216 unit tests** with19 existing
 DeprecationWarnings in70.46 seconds. Configured strict typing and Ruff check/format
 pass across17 changed files. Its1,618-file held closure changes15 existing files,

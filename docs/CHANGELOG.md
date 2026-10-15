@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Complete actual full public-cache preparation
+
+### Validation
+- Fresh manual v2/current-profile source passes312 finite checks and configured
+  strict/lint/format28, with favorable combined source review.
+- The41.072s actual scoped run imports517 packages, verifies a725,964,800-byte
+  archive and26,721-file extraction, records both barriers and zero exit codes,
+  settles the owned runtime and removes only its exact container.
+- Independent actual FILE audit rehashes the archive and every extracted file;
+  retained query/control/clock/cleanup evidence agrees.
+- Fixed read-only postcheck confirms the original21-container baseline, absent
+  scope and absent known process directories. Original failed full-3 stays preserved.
+- Separate read-only cache reuse, selected-template image-pair correction and fresh
+  runtime/Strategy/native Company qualification remain the next steps.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Version the bounded mount reader and current native profiles
 
 ### Changed
