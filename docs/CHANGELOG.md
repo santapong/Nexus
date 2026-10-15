@@ -9,6 +9,8 @@
 - Later issued-membership ValueError leaves overall unknown/no success receipt.
   Exact branch remains unproven; one attempt/unknown hold and stopped object are
   conserved. Fifth case preserved without retry, cleanup or outcome upgrade.
+- Release evidence index distinguishes the seven actual samples from the missing
+  overall terminal proof and pending strategy reader/store corrections.
 
 **Authored by:** Codex and supervised qualification agent
 **PR:** not published
