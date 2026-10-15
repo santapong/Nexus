@@ -12,6 +12,8 @@
 ### Validation
 - 163 focused checks and independent review pass; Root2,864unit/28.96s and static
   checks pass after an existing fake-clock fixture nominates the added clock reads.
+- Release index records the actual source-PG qualification and separates the
+  pending producer bundle compatibility concern from the parent source checks.
 - This is source proof only. All three original failed cases remain preserved;
   the actual post-discovery parent failure cause is still unproven.
 
