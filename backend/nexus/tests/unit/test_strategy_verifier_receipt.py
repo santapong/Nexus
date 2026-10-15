@@ -27,6 +27,7 @@ async def _read(case: ReceiptCase) -> StrategyVerifierReceipt:
         protected_result=case.reference,
         rule=case.rule,
         credential=case.credential,
+        artifacts=case.artifacts,
     )
 
 

@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Read current Strategy proof under the actual owner
+
+### Added
+- Concrete taskless owner proof reader resolves exact native acceptance/proof,
+  original B/S, actual SV receipt, C graph and recomputed check without an SV lease.
+- First/current source, target, recipient, profile and genuine credential windows
+  survive the final owner/clock check; original publication and fences are retained.
+
+### Fixed
+- Explicit C metadata/READ-adapter/body order and consumed-authority→attempt→intent
+  chronology (ERROR118/119); existing execute lease checks remain. Inherited READ
+  adapter internals are a separate qualification limit.
+
+### Validation
+- 154 source/mock checks; Root3,234unit/69.80s and strict/lint/format19 pass. Actual
+  owner SQL, full-plan transition, API and authority activation remain unqualified.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Record actual native Strategy publication and rollback proof
 
 ### Validation

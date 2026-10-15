@@ -74,6 +74,53 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-119 — SV attempt chronology could precede consumed authority
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (native receipt source/mock scope)
+**Found by:** Phase A lower receipt-facts negative
+**Affected files:** `strategy/verifier_facts.py`
+
+The old receipt check independently required consumption<=intent and attempt<=intent,
+allowing an actual-shaped attempt reserved before the journal's consumed authority.
+One original DID NOT RAISE/1.42s is retained. The extracted shared predicate now
+requires consumed_at<=reserved_at<=intent.created_at, preserving original fence and
+succeeded receipt chronology. Existing execution lease/identity checks stay in the
+wrapper. Source/mock tests and Root3,234unit/69.80s/strict19 pass; no actual SQL
+corruption or changed historical records were exercised. Keep the explicit original
+attempt-chain negative; actual owner SQL qualification remains separate.
+
+---
+
+## ERROR-118 — Receipt caller loaded C bytes before invoking its READ adapter
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (explicit receipt caller boundary; inherited adapter scope separate)
+**Found by:** retained unchanged outer AcceptanceStore negative
+**Affected files:** `strategy/verifier_receipt.py`, `verifier_facts.py`, `acceptance_store.py`
+
+The original acceptance path called receipt verification before its protected-result
+adapter; exact_artifact loaded the full C row first. The original outer-store test
+observed one explicit full C get before nominated BrainDeniedError, failing/2.03s.
+The shared lower facts gate now projects exact C metadata/target, invokes the
+configured BoundedArtifactReader READ adapter, then loads and checks C bytes.
+The execution wrapper requires that reader and retains lease/identity/fence/final
+credential checks; only its two production callers forward their actual reader.
+
+This establishes caller ordering, not literal zero body SQL before every contributor
+READ inside the inherited adapter: its existing _snapshot/ancestor closure have a
+separate internal ordering qualification limit. No returned-data leak or untrusted
+SQL bypass was demonstrated. Preserve the actual boundary denial and scope it
+accurately; any generic adapter change needs its own concrete probe/review.
+
+Author154 focused/8.47s and Root3,234unit/69.80s/strict/lint/format19 pass. New real-owner
+current-proof readers are source/mock-qualified only; no actual owner SQL, selection
+approval, API wiring or revision2 activation is claimed.
+
+---
+
 ## ERROR-117 — Lone CR escaped the support draft's literal quotation block
 
 **Date:** 2026-10-15

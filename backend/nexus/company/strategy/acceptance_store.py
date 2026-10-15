@@ -135,6 +135,7 @@ class StrategyAcceptanceStore:
                 protected_result=protected_result,
                 rule=self.reader.rules.check,
                 credential=credential,
+                artifacts=self.reader.artifacts,
             )
             result_protection = await self.reader.protect_check_result_locked(
                 session,
@@ -184,6 +185,7 @@ class StrategyAcceptanceStore:
                 protected_result=protected_result,
                 rule=self.reader.rules.check,
                 credential=credential,
+                artifacts=self.reader.artifacts,
             )
             require_acceptance(current_facts == facts)
             current_result = await self.reader.protect_check_result_locked(

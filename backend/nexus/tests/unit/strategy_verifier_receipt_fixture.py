@@ -13,6 +13,7 @@ from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.brain.access_contracts import ResourceRef
+from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.brain.source_models import BrainArtifactRevision
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.contracts.actions import ActionProposal
@@ -21,6 +22,7 @@ from nexus.company.contracts.results import ActionReceipt
 from nexus.company.management.acceptance import VerificationSpec
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity, _verify
+from nexus.company.strategy import verifier_facts
 from nexus.company.strategy import verifier_receipt as module
 from nexus.company.strategy.artifact_contracts import StrategyArtifactRule, StrategyCheckParameters
 from nexus.company.strategy.artifact_identity import strategy_artifact_id, strategy_derivation_id
@@ -49,6 +51,7 @@ class ReceiptCase:
     rule: StrategyArtifactRule
     work: ExecutionWork
     clock: dict[str, datetime]
+    artifacts: MagicMock
 
 
 def _lease(target: VerificationSpec, now: datetime) -> ExecutionLease:
@@ -248,6 +251,8 @@ def receipt_case(monkeypatch: pytest.MonkeyPatch) -> ReceiptCase:
             if model is EffectIntent
             else artifact
             if model is BrainArtifactRevision
+            else work
+            if model is ExecutionWork
             else attempt
             if model is ExecutionAttempt
             else None
@@ -255,12 +260,27 @@ def receipt_case(monkeypatch: pytest.MonkeyPatch) -> ReceiptCase:
 
     session.get = AsyncMock(side_effect=get)
     work = _work(target, lease)
+    session.scalar = AsyncMock(return_value=False)
+    metadata = MagicMock()
+    metadata.one_or_none.return_value = (
+        artifact.artifact_id,
+        artifact.artifact_revision_id,
+        artifact.revision,
+        artifact.sha256,
+        artifact.byte_length,
+        artifact.resource_id,
+    )
+    session.execute = AsyncMock(return_value=metadata)
+    artifacts = MagicMock(spec=BoundedArtifactReader)
+    artifacts.revalidate_artifact_reference = AsyncMock()
+    monkeypatch.setattr(verifier_facts, "require_brain_scope", AsyncMock())
     clock = {"now": now}
 
     async def current(_: AsyncSession) -> datetime:
         return clock["now"]
 
     monkeypatch.setattr(module, "db_now", current)
+    monkeypatch.setattr(verifier_facts, "db_now", current)
     monkeypatch.setattr(module, "execution_row", AsyncMock(return_value=work))
     return ReceiptCase(
         session,
@@ -278,4 +298,5 @@ def receipt_case(monkeypatch: pytest.MonkeyPatch) -> ReceiptCase:
         rule,
         work,
         clock,
+        artifacts,
     )
