@@ -74,6 +74,93 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-114 — Current strategy proof allowed blocked work and early body reads
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (pure/mocked current reader scope)
+**Found by:** independent source review and retained concrete reader negatives
+**Affected files:** `strategy/pair_reader.py`, `input_reader.py`, `original_reader.py`
+
+### What happened
+A selected succeeded S receipt could supply current proof when its logical author
+work was blocked/unknown. Separately, full B/Brief ORM bodies were loaded before
+per-resource current READ. Three original negatives failed/2.48s; the denied READ
+case observed two early full body gets. No returned-body leak or SQL exploit ran.
+
+### Root cause and correction
+The new path omitted the existing current-target author state policy and used
+full ORM rows to construct refs. It now rejects blocked/unknown author work,
+projects five metadata fields, qualifies actual current artifact READ, then loads
+exact full bytes. Retained negatives pass within65 candidate checks; independent
+review and Root3,078unit/strict29 pass. Native SQL qualification remains required.
+
+---
+
+## ERROR-113 — Acceptance SQL timestamp diverged from immutable saved record
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (mocked acceptance persistence scope)
+**Found by:** independent store review and Root negative
+**Affected files:** `strategy/acceptance_store.py`
+
+### What happened
+Changing only the saved SQL acceptance timestamp passed replay, even though later
+management ordering uses that column. The original negative failed DID NOT RAISE.
+
+### Root cause and correction
+The existing generic decoder did not compare SQL recorded_at with its embedded
+record date. New strategy persistence checks exact equality, full proof sets and
+returned date<=final actual DB clock without replacing original replay dates.
+Mocked tests and Root3,078unit/static29 pass; actual SQL proof remains pending.
+
+---
+
+## ERROR-112 — Strategy reader omitted restricted connection check
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (mocked configured-reader boundary)
+**Found by:** independent source review and concrete reader negative
+**Affected files:** `strategy/application_role.py`, native reader/store entry points
+
+### What happened
+A nominated privileged current-session result did not stop a protected original
+read (one original DID NOT RAISE/1.14s). This is a trusted configuration rejection
+gap, not an observed cross-company exploit.
+
+### Root cause and correction
+Generic runtime_transaction lacks the Brain transaction's role denial. Concrete
+strategy entries now require the fixed same-session current_user role query to
+return literalFalse before body qualification/writes. Missing/wrong-typed values
+deny. Original source/test/logs remain; pure/mocked and full source regression
+pass. The actual PostgreSQL packet must separately prove restricted behavior.
+
+---
+
+## ERROR-111 — Existing output rows weakened fresh publication effect state
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (mocked fresh actor publication scope)
+**Found by:** Root and concrete actor reproduction
+**Affected files:** `strategy/publication_state.py`, author/check actor gates
+
+### What happened
+With present B/S rows and an original failed/unknown effect, the initial concrete
+author gate returned instead of denying (two original DID NOT RAISE/1.19s). No
+actual receipt upgrade or native publication was executed.
+
+### Root cause and correction
+The reused generic known-output gate skipped effect state while the original
+intent/hold helper was state-agnostic. Fresh strategy publishing now allows only
+pending intent/no receipt or present rows with exact known succeeded receipt;
+failed/unknown always deny. Corrected actor probes pass. Recovery remains separate,
+same-fence semantics and unknown positive money remain unchanged.
+
+---
+
 ## ERROR-110 — Check graph replay omitted exact derivation time and event identity
 
 **Date:** 2026-10-15 (Asia/Bangkok)
