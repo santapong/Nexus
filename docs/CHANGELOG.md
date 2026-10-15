@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Capture current host parent facts
+
+### Validation
+- Fresh raw262 diagnostic completes0.49s; five fixed replies complete/reaped,
+  exact user262-1 and owned cgroup caps retained within the original3s IO bound.
+- Independent file audit passes. Original bootstrap failure remains preserved;
+  current native profile, timer kill, cache and real E/EV remain unqualified.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Preserve managed per-kind attempt budgets
 
 ### Fixed

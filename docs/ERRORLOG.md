@@ -125,8 +125,11 @@ correctly refused the unsupported context. The time/cause of host change is unkn
 ### Current action
 Preserve failed source/root/packet/logs; no original retry or timeout run. Fresh
 postchecks show unit/cgroup/name absent and existing20-container inventory unchanged.
-Research actual262 behavior and qualify a fresh bounded raw parent diagnostic before
-extending the closed profile and its version-bound provider/execution identity.
+The fresh raw diagnostic now passes0.49s with all five complete/reaped replies,
+actual262-1/kernel caps/ENODATA61 and independent file audit. This supports the
+closed-profile source extension; current native identity, timeout and execution
+qualification remain open. See the
+[raw checkpoint](company-system/HOST_PARENT_262_RAW_CHECKPOINT_2026-10-15.md).
 
 ### Prevention
 Read current daemon UID/version against the declared supported profile before

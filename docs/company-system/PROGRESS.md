@@ -13,7 +13,9 @@ their recorded scope. Public dependency/tool data is restored and audited;
 contained offline cache bootstrap and real StockFlow E/EV remain next. The first
 [tiny host probe](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md) stopped before
 container creation at the current262-1 versus qualified261.2-1 manager boundary;
-new compatibility qualification is required. P/C native
+the [raw262 diagnostic](HOST_PARENT_262_RAW_CHECKPOINT_2026-10-15.md) now captures
+all five replies and kernel facts within its original bound. Exact262 source and
+native compatibility qualification remain required. P/C native
 publication, SDK/live email, ARM64 and supervised release stay open.
 
 ## Working contract
