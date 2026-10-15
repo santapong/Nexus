@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Freeze fault harness and preserve first setup failure
+
+### Validation
+- Frozen1,653-file fixture source retains all1,620 baseline backend files and
+  passes273 focused tests plus configured nonsilent strict/lint/format38.
+- Independent boundary counterexamples correct pending-worker retention,
+  final filesystem/output observations, first-error/native-prefix preservation
+  and failed collector-report consumption. Earlier failed components are retained.
+- Actual local public-fixture preparation completes0; normal001–016 schema
+  installation succeeds, then the first company's source-adapter validation
+  stops setup in3.03s. Preserve the used database/source/namespace; no native case
+  or Company action is issued. Fixture correction and fresh execution remain open.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Qualify actual read-only public-cache reuse
 
 ### Validation

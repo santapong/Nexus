@@ -74,6 +74,66 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-163 — Static import environment narrowed transitive diagnostics
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** Root and independent source reviewer during coherent fixture checks
+**Affected files:** private qualification environment and ledger catalog adapter;
+production migration source unchanged
+
+### What happened
+An explicit target check passed with `PYTHONPATH=.` while the coherent nonsilent
+check exposed seven imported SQLAlchemy DDL typing errors. Fresh reciprocal
+checks isolated the environment difference on unchanged source.
+
+### Root cause
+Pinned mypy1.20.2 treated the duplicate backend import path as a package path and
+silenced imported non-root module diagnostics. Cache and `MYPYPATH` were not the cause.
+
+### Fix applied
+Final configured strict checks unset `PYTHONPATH`. The fixture uses fixed catalog
+security sets with a pure AST comparison instead of importing migration installers
+only for their literals. Nonsilent strict38 passes; no import suppression is added.
+
+### Prevention
+Retain exact static environment and target scope; runtime/pytest import flags are
+separate. Reciprocal logs and source pins remain in the dated evidence folder.
+
+---
+
+## ERROR-162 — First native-fault fixture setup stops after source registration
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** actual bounded setup after source-only checks
+**Affected files:** private `current_v8_negative_sources.py` fixture adapter
+
+### What happened
+Actual normal001–016 installation succeeds, then the first company's setup stops
+with `ValueError` after its first Brain source registration. No fault action is
+issued. Completed-call hashes and schema metadata survive in the failure output.
+
+### Root cause
+The candidate reader compares an actual `SourceRecord` to its base registration
+model and would unpack record-only fields into a snapshot. Controlled reproduction
+is in progress; the original error message/traceback was not retained, so the
+original exact branch is not independently reconstructed from stdout alone.
+
+### Fix applied
+Preserve the used Source2/database/run namespace. Reproduce the real returned DTO
+through the source registry, then repair only the fixture projection in a fresh
+component. A new attempt requires new source/DB/roots/identities and operator pins;
+no reset or retry of the consumed attempt.
+
+### Prevention
+Test adapters with actual returned record types as well as base request models;
+do not weaken production validation to accommodate a fixture.
+
+---
+
 ## ERROR-161 — Successful manual reuse omitted stderr from its receipt
 
 **Date:** 2026-10-16
@@ -4558,7 +4618,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-162*
+*Next error ID: ERROR-164*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

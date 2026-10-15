@@ -1,9 +1,15 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local4fcdd8d plus coherent B2b source, actual B1/B2a SQL,
-outer ledger recovery, Strategy PG and methodv6/replay receipts. This index separates implemented/local
-proof from the full selected release. It is not a completion audit or authorization
-to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
+Current frontier checked 2026-10-16: pushed backend `be18432` passes 4,247 units;
+the [full517 preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) and
+[read-only reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md) have favorable
+actual FILE audits. Reuse evidence is committed in `983f59c`. The
+[current-V8 fault harness](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md)
+passes source checks, but its first setup stopped after normal016 installation.
+The failed namespace is preserved; actual cases and real selected E/EV remain
+pending. Full tree retention limits are explicit in each checkpoint.
+This index separates saved scoped proof from the full selected release.
+Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
 | Requirement | Strongest saved evidence | Remaining proof for release |
 | --- | --- | --- |
@@ -12,6 +18,7 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Management/report/metric/controls | [Native loop](NATIVE_LOOP_CHECKPOINT_2026-10-14.md), [metric](METRIC_CHECKPOINT_2026-10-14.md), [owner controls](OWNER_CONTROLS_CHECKPOINT_2026-10-14.md) | Selected real goal/procedure/customer-readiness outcome and owner populated browser journey |
 | Multi-provider routing | [Governed observations](MODEL_OBSERVATION_GATEWAY_CHECKPOINT_2026-10-14.md), official adapter/usage conformance with mocked transports | Current approved model IDs/prices, genuine quality/usage and budgeted live qualification |
 | Native builder receipt/independent proof | [Engineering acceptance](ENGINEERING_ACCEPTANCE_CHECKPOINT_2026-10-14.md), [CSV PG](NATIVE_CSV_PG_CHECKPOINT_2026-10-15.md) | Full nominated private StockFlow author/verifier body/checks on actual current source |
+| Native public dependency inputs | [Actual full517 cache](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md), [actual read-only reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md), data-only real Node-v4 descriptions using the new cache lineage | Actual project resolution/timing and fresh runtime/policy/candidate/ordered E-EV template pins before new Strategy |
 | Builder containment/restart | [Process cases](ENGINEERING_PROCESS_CHECKPOINT_2026-10-15.md), [immediate restart](ENGINEERING_IMMEDIATE_RESTART_CHECKPOINT_2026-10-15.md), [actual methodv6 M1/replay](CONTAINED_METHOD_V6_M1_AND_REPLAY_2026-10-15.md), [actual outer timeout](CONTAINED_OUTER_TIMEOUT_CHECKPOINT_2026-10-15.md): collector stopped, original scope timeout and all seven recorded descendants absent | Full normal-M1 stored sample-chain recomputation is limited; five failed histories remain unchanged; expired native lease/unknown object recovery, representative ARM64 and nominated StockFlow qualification remain |
 | Notification staging/dedup/expiry | [Worker tick](NOTIFICATION_WORKER_TICK_CHECKPOINT_2026-10-15.md), [atomic SQL/postqueue rollback](NOTIFICATION_ATOMIC_ENQUEUE_CHECKPOINT_2026-10-15.md), [obsolete history](OBSOLETE_HISTORY_CHECKPOINT_2026-10-15.md); [durable worker](NOTIFICATION_DURABLE_EXECUTION_CHECKPOINT_2026-10-15.md): preserved replay1PG/2.20s, separate rejected17.15s/uncertain16.98s SDK+lifecycle+native replay | [OS recovery](NOTIFICATION_OS_RECOVERY_CHECKPOINT_2026-10-15.md): all4 actual crash/immediate-restart cases pass with no second request; daily-positive and registration retention remain; live email qualification is separate |
 | Owner dashboard/email | [Inbox checkpoint](OWNER_NOTIFICATION_INBOX_CHECKPOINT_2026-10-14.md), offline transport/status ledger/credential gates | Held owner signup/browser UAT; integrated frontend patch; configured real sender/recipient acceptance/delivery/reconciliation |
@@ -20,6 +27,19 @@ to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 | Oversight modes | Native exact approval/pause/cancellation and immutable history | Explicit owner promotion only after reviewed stable operation; Supervised first |
 
 ## Current next work
+
+Correct the fixture source adapter and prepare a fresh namespace after the
+preserved first setup failure. Then qualify five separate current-V8 faults:
+original parent expiry, cancellation, pause, source READ revocation and stale-fence
+release. Each retains native unknown history and one attempt under original
+clocks; no actual case has been released. Then qualify selected E/EV and independent acceptance
+using fresh real runtime/Strategy pins, followed by P/C and the same-goal owner
+journey. Genuine providers/email, ARM64, private deployment and recovery/soak remain
+separate release requirements. The older dated continuation below is historical;
+its unavailable dependency inputs and old manager/profile state are superseded by
+the linked current preparation/reuse and source checkpoints.
+
+### Historical continuation — 2026-10-15
 
 The native methodv6 synthetic amd64 M1 and fresh-process known-result replay now
 pass. Actual receipt/protected output, ordinary exact-ID cleanup, process/unit

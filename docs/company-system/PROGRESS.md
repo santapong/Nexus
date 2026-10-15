@@ -1,5 +1,12 @@
 # Nexus implementation progress
 
+Latest fault-harness checkpoint: [source checks and stopped setup](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md).
+Frozen 1,653-file source passes 273 focused checks and strict/lint/format38.
+Actual public fixture staging completes; normal001–016 migrations succeed, then
+setup stops on the first company's source-adapter validation. The consumed
+database/source/namespace are preserved. No current-V8 fault case has started;
+fixture correction and a fresh namespace precede actual qualification.
+
 Latest actual milestone: [read-only cache reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md)
 passes in 71.610 seconds with complete receipt streams, unchanged public inputs,
 exact owned cleanup and favorable independent FILE review. Retained full-tree

@@ -1,5 +1,11 @@
 # Nexus release execution plan
 
+The [current-V8 fault harness](CURRENT_V8_NEGATIVE_HARNESS_CHECKPOINT_2026-10-16.md)
+passes 273 focused and strict/lint/format38 source checks. Actual preparation and
+normal001–016 schema installation complete, but the first fixture setup stops
+at source-adapter validation. Preserve the failed namespace and correct the
+adapter before a separately planned fresh attempt; no actual fault case ran.
+
 The [actual read-only cache reuse](CACHE_READONLY_REUSE_CHECKPOINT_2026-10-16.md)
 passes in 71.610 seconds with favorable independent FILE audit. It retains complete
 receipt streams and unchanged input summaries; full tree bodies are unavailable.
@@ -26,8 +32,9 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 The [selected image-pair source fix](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
 passes4,247 units and independent review. Read-only reuse now passes separately.
-The five current-V8 negative cases have a saved packet/shared-interface plan;
-source implementation and combined review precede any actual case release.
+The five current-V8 negative cases have frozen source and combined boundary
+reviews; their first actual setup stopped as linked above. A corrected fresh
+setup, current packet review and check-only precede any actual case release.
 Freeze new actual runtime/CAS/policy/candidate/E-EV template descriptions before
 fresh Strategy. The completed full517 preparation and reuse supply public data.
 
