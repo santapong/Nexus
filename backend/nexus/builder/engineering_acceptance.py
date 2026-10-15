@@ -8,6 +8,10 @@ from uuid import UUID, uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.engineering_bodies import (
+    load_complete_engineering_body,
+    revalidate_complete_engineering_artifact_locked,
+)
 from nexus.builder.engineering_checker import check_engineering_change
 from nexus.builder.engineering_contracts import EngineeringCheckResult
 from nexus.builder.engineering_inputs import PreparedEngineeringInput, RegisteredEngineeringInputs
@@ -166,16 +170,28 @@ class EngineeringWorkAcceptanceStore:
             await self.proof.require_stored_locked(
                 session, scope, prepared, expected, protected_result
             )
-            await self.inputs.reader.revalidate_artifact(
-                session, control, scope, identity, protected, await db_now(session)
+            await revalidate_complete_engineering_artifact_locked(
+                self.inputs.reader,
+                session,
+                control,
+                scope,
+                identity,
+                protected,
+                await db_now(session),
             )
             await self.inputs.freshness.revalidate(
                 session, scope, proof_freshness, await db_now(session)
             )
             record = await self._upsert_record(session, scope, prepared, expected, protected_result)
             await self._recheck(session, control, lease, scope, identity, prepared)
-            await self.inputs.reader.revalidate_artifact(
-                session, control, scope, identity, protected, await db_now(session)
+            await revalidate_complete_engineering_artifact_locked(
+                self.inputs.reader,
+                session,
+                control,
+                scope,
+                identity,
+                protected,
+                await db_now(session),
             )
             await self.inputs.freshness.revalidate(
                 session, scope, proof_freshness, await db_now(session)
@@ -244,27 +260,16 @@ class EngineeringWorkAcceptanceStore:
         protected_result: ArtifactRevisionRef,
     ) -> tuple[ArtifactSlice, tuple[QualifiedFreshness, ...]]:
         require_acceptance(protected_result == self.proof.reference(expected))
-        protected = await self.inputs.reader.bounded_artifact(
-            scope,
-            identity,
-            protected_result.artifact_revision_id,
-            start_byte=0,
-            max_bytes=16384,
-            include_history=False,
+        protected = await load_complete_engineering_body(
+            self.inputs.reader, self.inputs.freshness, scope, identity, protected_result
         )
-        require_acceptance(
-            protected.artifact == protected_result
-            and not protected.has_more
-            and protected.span.start_byte == 0
-        )
-        raw = protected.text.encode()
+        raw = protected.raw
         require_acceptance(
             len(raw) == protected_result.byte_length
             and hashlib.sha256(raw).hexdigest() == protected_result.sha256
             and EngineeringCheckResult.model_validate_json(raw) == expected
         )
-        proof_freshness = await self.inputs.freshness.prepare(scope, identity, (protected,))
-        return protected, proof_freshness
+        return protected.first, protected.freshness
 
     async def _upsert_record(
         self,

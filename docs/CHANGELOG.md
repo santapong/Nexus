@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Read complete engineering bodies with original protection
+
+### Added
+- Sequential bounded native reads assemble full private bodies while retaining
+  the first grant/head/freshness snapshot and checking the full stored tail.
+- Public16KiB pages, generatedproof16KiB and result262144 limits remain unchanged;
+  no permission marker, schema, dependency or runtime activation is introduced.
+
+### Validation
+- Root3,753unit/67.03s, author77focused/2.18s and strict/lint/format6 pass;
+  independent source review is favorable. Actual reader SQL/timing remains open.
+- Preserve the separate first mixed-sender SQL failure90.64s at its fixture JSON
+  diagnostic, before begin/send; fresh v2 remains source-only (ERROR126/127).
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Bind mixed sender to current actor and native checks
 
 ### Added

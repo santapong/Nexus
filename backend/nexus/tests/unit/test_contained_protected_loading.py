@@ -10,6 +10,7 @@ from uuid import UUID
 import pytest
 
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
+from nexus.builder.engineering_bodies import CompleteEngineeringBody
 from nexus.builder.engineering_contracts import EngineeringChangeDeclaration
 from nexus.builder.engineering_inputs import RegisteredEngineeringInputs
 from nexus.builder.execution_contracts import BuilderRunResult
@@ -18,8 +19,13 @@ from nexus.builder.result_store import BuilderResultStore
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.builder.verification_support import actual_summary
 from nexus.company.access import VerifiedIdentity
-from nexus.company.brain.artifact_contracts import ArtifactSlice
 from nexus.tests.contained_sidecar_fixture import contained_result, publisher, source_witness
+from nexus.tests.unit.engineering_body_fixture import (
+    body_case,
+    described_body,
+    load_body,
+    without_expiry,
+)
 
 
 def inputs(
@@ -44,7 +50,7 @@ def inputs(
     )
 
 
-def protected(value: BuilderRunResult, store: ContainmentEvidenceStore) -> ArtifactSlice:
+def protected(value: BuilderRunResult, store: ContainmentEvidenceStore) -> CompleteEngineeringBody:
     """Synthetic protected boundary, preserving the real publisher's full summary bytes."""
     assert value.containment is not None
     payload = {
@@ -55,14 +61,7 @@ def protected(value: BuilderRunResult, store: ContainmentEvidenceStore) -> Artif
         "containment": value.containment.model_dump(mode="json"),
         "engineering_source_witness": source_witness(value).model_dump(mode="json"),
     }
-    return cast(
-        ArtifactSlice,
-        SimpleNamespace(
-            has_more=False,
-            span=SimpleNamespace(start_byte=0),
-            text=json.dumps(payload),
-        ),
-    )
+    return described_body(json.dumps(payload).encode(), company=value.spec.job.company_id)
 
 
 async def test_engineering_result_rereads_actual_sidecar_and_denies_later_tampering(
@@ -83,13 +82,29 @@ async def test_unconfigured_engineering_loader_denies_qualified_v2_metadata(tmp_
         await inputs(value, None)._result(value.spec, protected(value, store))
 
 
+async def test_complete_large_summary_is_not_rejected_as_a_partial_consumer(
+    tmp_path: Path,
+) -> None:
+    value, store = await contained_result(tmp_path)
+    summary = protected(value, store)
+    body = described_body(b" " * 16384 + summary.raw, company=value.spec.job.company_id)
+    assert body.first.has_more
+    assert (await inputs(value, store)._result(value.spec, body))[0] == value
+
+
+async def test_qualified_no_ttl_remains_no_ttl(monkeypatch: pytest.MonkeyPatch) -> None:
+    case = body_case(monkeypatch)
+    without_expiry(case)
+    assert (await load_body(case)).freshness == case.body.freshness
+
+
 @pytest.mark.parametrize("change", ["missing", "null", "hash", "fence", "method", "base"])
 async def test_protected_summary_reference_cannot_be_substituted(
     tmp_path: Path, change: str
 ) -> None:
     value, store = await contained_result(tmp_path)
     summary = protected(value, store)
-    payload = json.loads(summary.text)
+    payload = json.loads(summary.raw)
     if change == "missing":
         del payload["containment"]
     elif change == "null":
@@ -103,14 +118,7 @@ async def test_protected_summary_reference_cannot_be_substituted(
             "base": "result_base_sha256",
         }[change]
         payload["containment"]["identity"][key] = 99 if change == "fence" else "0" * 64
-    changed = cast(
-        ArtifactSlice,
-        SimpleNamespace(
-            has_more=False,
-            span=summary.span,
-            text=json.dumps(payload),
-        ),
-    )
+    changed = described_body(json.dumps(payload).encode(), company=value.spec.job.company_id)
     with pytest.raises(ValueError):
         await inputs(value, store)._result(value.spec, changed)
 

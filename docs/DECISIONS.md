@@ -126,6 +126,7 @@
 | ADR-113 | Owner-bound same-source PostgreSQL/DBOS recovery qualification | accepted | 2026-10-14 |
 | ADR-114 | Explicit model-free owner notification admission | accepted | 2026-10-14 |
 | ADR-121 | Separate fresh mixed sender authority from issued history | accepted (source) | 2026-10-15 |
+| ADR-122 | Assemble complete private engineering bodies through native bounded reads | accepted (source) | 2026-10-15 |
 
 ---
 
@@ -3184,7 +3185,7 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-122*
+*Next ADR ID: ADR-123*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3542,3 +3543,31 @@ A caller issued flag, permissive mode on active partition and a discarded resolv
 subclass were rejected. No schema/dependency changed. Source/mock tests qualify
 the integration only; actual SQL, SDK queue/replay, crash recovery and live email
 remain separate gates before release.
+
+
+## ADR-122 — Assemble complete private engineering bodies through native bounded reads
+
+**Date:** 2026-10-15
+**Status:** accepted for source; actual restricted-SQL/timing gate pending
+**Decided by:** Codex under the approved bounded reader plan
+
+Engineering summaries may exceed a single public16KiB slice. Preserve the native
+public contract and assemble complete private bytes through sequential current
+READs, keeping the genuine first slice and original qualified freshness. Bound
+body size/pages/attempts and use one fixed30s collection ceiling without extending
+authority. Only exact native UTF8 endpoint splits permit bounded same-offset retry.
+
+CompleteEngineeringBody is process-local descriptive material. Both consumers
+retain native slice checks AND full-reference stored-tail hashing under the same
+transaction; first windows and actual composition remain required at the final
+clock. PreparedEngineeringInput and public/proof/result caps remain unchanged.
+
+Widening the public DTO or direct blob reads would weaken the existing boundary;
+marking a first page complete would misrepresent integrity. Keeping a single-page
+restriction would reject valid existing result references. Sequential reads cost
+extra snapshot/I/O work, so real restricted-SQL timing remains an explicit next
+qualification rather than an assumed fit for the StockFlow600s source window.
+No schema, dependency, native job or service activation follows from this source.
+
+Validation:77focused/2.18s, Root3,753unit/67.03s, strict/lint/format6 and favorable
+independent file review; see ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md.

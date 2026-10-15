@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -10,6 +11,12 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
+from nexus.builder.engineering_bodies import (
+    BODY_READ_SECONDS,
+    CompleteEngineeringBody,
+    load_complete_engineering_body,
+    revalidate_complete_engineering_artifact_locked,
+)
 from nexus.builder.engineering_contracts import (
     EngineeringChangeDeclaration,
     EngineeringCheckInput,
@@ -113,10 +120,16 @@ class RegisteredEngineeringInputs:
         require_acceptance(declaration is not None)
         assert declaration is not None
         require_acceptance(declaration.procedure_id == metadata.procedure_id)
-        artifacts = await self._artifacts(scope, identity, metadata)
-        freshness = await self.freshness.prepare(scope, identity, artifacts)
-        author, first = await self._result(metadata.author_spec, artifacts[0])
-        verifier, second = await self._result(metadata.verifier_spec, artifacts[1])
+        bodies = await self._artifacts(scope, identity, metadata)
+        artifacts = tuple(body.first for body in bodies)
+        original: dict[UUID, QualifiedFreshness] = {}
+        for body in bodies:
+            for row in body.freshness:
+                require_acceptance(row.source_id not in original or original[row.source_id] == row)
+                original.setdefault(row.source_id, row)
+        freshness = tuple(original[key] for key in sorted(original))
+        author, first = await self._result(metadata.author_spec, bodies[0])
+        verifier, second = await self._result(metadata.verifier_spec, bodies[1])
         command = EngineeringCheckInput(
             company_id=target.company_id,
             target=target,
@@ -136,8 +149,9 @@ class RegisteredEngineeringInputs:
 
     async def _artifacts(
         self, scope: BrainReadScope, identity: VerifiedIdentity, metadata: EngineeringMetadata
-    ) -> tuple[ArtifactSlice, ...]:
+    ) -> tuple[CompleteEngineeringBody, ...]:
         refs = [metadata.author_output, metadata.verifier_output]
+        require_acceptance(all(ref.byte_length <= 262144 for ref in refs))
         for spec in (metadata.author_spec, metadata.verifier_spec):
             require_acceptance(
                 spec.protected_patch is not None and spec.protected_patch.byte_length > 0
@@ -146,28 +160,23 @@ class RegisteredEngineeringInputs:
             if spec.protected_patch not in refs:
                 refs.append(spec.protected_patch)
         result = []
-        for ref in refs:
-            require_acceptance(ref.byte_length <= 524288)
-            artifact = await self.reader.bounded_artifact(
-                scope,
-                identity,
-                ref.artifact_revision_id,
-                start_byte=0,
-                max_bytes=min(ref.byte_length, 16384),
-                include_history=False,
-            )
-            require_acceptance(artifact.artifact == ref and artifact.source_state == "current")
-            result.append(artifact)
+        async with asyncio.timeout(BODY_READ_SECONDS):
+            for ref in refs:
+                result.append(
+                    await load_complete_engineering_body(
+                        self.reader, self.freshness, scope, identity, ref
+                    )
+                )
         return tuple(result)
 
     async def _result(
-        self, spec: BuilderExecutionSpec, protected: ArtifactSlice
+        self, spec: BuilderExecutionSpec, protected: CompleteEngineeringBody
     ) -> tuple[BuilderRunResult, EngineeringSourceWitness]:
-        require_acceptance(not protected.has_more and protected.span.start_byte == 0)
+        protected.require_integrity()
         result = await self.results.load(spec)
         require_acceptance(result is not None and result.spec == spec)
         assert result is not None
-        value = json.loads(protected.text)
+        value = json.loads(protected.raw)
         require_acceptance(
             (
                 value.get("result_sha256"),
@@ -182,7 +191,7 @@ class RegisteredEngineeringInputs:
                 result.intent_fence,
             )
         )
-        require_summary_containment(result, protected.text)
+        require_summary_containment(result, protected.raw.decode())
         await require_result_containment(
             result, self.containment_store, self.execution_method_sha256
         )
@@ -219,7 +228,7 @@ class RegisteredEngineeringInputs:
                 result, self.containment_store, self.execution_method_sha256
             )
         for artifact in prepared.artifacts:
-            await self.reader.revalidate_artifact(
-                session, control, scope, identity, artifact, await db_now(session)
+            await revalidate_complete_engineering_artifact_locked(
+                self.reader, session, control, scope, identity, artifact, await db_now(session)
             )
         await self.freshness.revalidate(session, scope, prepared.freshness, await db_now(session))

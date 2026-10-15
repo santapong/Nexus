@@ -72,6 +72,12 @@ M0 freezes worker/model interfaces. M1 proves the actual durable runtime, standi
 
 ## Review policy
 
+2026-10-15 source checkpoint: complete engineering bodies pass3,753unit/67.03s;
+see [the scoped evidence](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md).
+Next prerequisites are actual bounded reader SQL/timing and a fresh mixed-sender
+SQL v2 after its first fixture-only JSON diagnostic failure. Preserve the failed
+lineage and original holds; no validator relaxation, expiry rescue or release claim.
+
 Routine reversible local implementation choices and fixes proceed under the current scope. Agents run targeted tests and lint for their packages. Root reviews changed interfaces and high-impact approvals/auth/budget/ownership/migration/recovery boundaries at integration checkpoints. An independent agent reviews the combined milestone once the implementation and evidence are concrete.
 
 Run the full relevant regression at milestone integration, not after every edit. Repeat checks when code, failures or unresolved concerns justify it. Security/permission failures stop activation; visual/wording polish does not block unrelated backend work. Owner review is reserved for material authority/product changes, external commitments, and applicable final deployment/publication decisions.

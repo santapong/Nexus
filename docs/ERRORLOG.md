@@ -74,6 +74,52 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-127 — Private engineering consumer rejected complete results above one page
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed in source/mock checks; actual reader SQL qualification pending
+**Found by:** real StockFlow preparation and bounded reader reproduction
+**Affected files:** engineering_inputs.py, engineering_acceptance.py, engineering_bodies.py
+
+The metadata contract allowed complete results above16KiB, but the private reader
+loaded one public page and rejected honest has_more. A valid full result first
+failed that original condition1.33s. The new private loader assembles sequential
+native pages, retains the first metadata/freshness and checks full length/SHA/UTF8.
+Both consumers pair slice and full-reference revalidation so a changed stored tail
+cannot hide behind a matching prefix. Public/proof/result limits stay unchanged.
+
+77focused, Root3,753unit/67.03s and strict/lint/format6 pass; independent source
+review is favorable. Actual restricted READ/revocation/expiry/tail integrity and
+real timing remain separate. See the complete engineering body source checkpoint.
+
+---
+
+## ERROR-126 — SQL fixture diagnostic used Python validation for JSON parameters
+
+**Date:** 2026-10-15
+**Severity:** low (fixture failure; no sender effect issued)
+**Status:** open qualification; fresh v2 repair prepared separately
+**Found by:** first actual B2b SQL recipe
+**Affected files:** private mixed_sender_pg_publication.py diagnostic
+
+After public first-lineage/head2 and native notification authorization/enqueue/
+claim, canonical_spec_hash called strict model_validate on ActionProposal.parameters
+created with mode=json. Five nested UUID strings and two list fields produced
+seven validation errors. The recipe stopped1FAILED/90.64s before generic begin,
+send, second company, rollback or history. Source/run/database and original N
+held reservation/lease remain preserved, with no renewal/refund or resumption.
+
+A fresh v2 uses the exact strict JSON validation entry point and an actual
+make_spec→serialized ActionProposal.parameters regression. No production validator
+or original time recipe is relaxed. Earlier preflight findings also remain saved:
+the history observer's nonexistent method was reproduced and corrected, and exact
+all-table conservation now surrounds recovery/release. These source corrections
+are not a successful mixed SQL qualification. Root terminal and independent file
+audit record the failed state and shutdown app0.
+
+---
+
 ## ERROR-125 — Mixed sender needed complete final composition and history pins
 
 **Date:** 2026-10-15

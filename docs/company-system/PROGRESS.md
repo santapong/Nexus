@@ -1,7 +1,13 @@
 # Nexus implementation progress
 
-**Checked:** 2026-10-14. **Branch:** `feature/company-foundation`. **Baseline:** `6a8c8ef`.\
+**Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
+
+Latest source milestone: [complete engineering bodies](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md),
+with 3,753 unit tests passing. Actual reader SQL/timing and real StockFlow E/EV
+remain open. The separate first mixed-sender SQL recipe failed in a fixture JSON
+diagnostic before sending; its DB and authority are preserved while a fresh v2 is
+prepared. This does not close the mixed sender or supervised-release gates.
 
 ## Working contract
 

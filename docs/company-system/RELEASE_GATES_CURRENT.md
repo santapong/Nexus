@@ -97,3 +97,9 @@ The [B2b sender source](MIXED_SENDER_B2B_SOURCE_CHECKPOINT_2026-10-15.md) now bi
 current credentials/config, fresh native checks and separate issued-family history.
 Root3,715unit/84.69s and strict/lint/format23 pass. Actual mixed SQL, SDK queue/replay,
 crash recovery and real email remain unqualified; source adds no activation.
+
+The [complete engineering body source](ENGINEERING_COMPLETE_BODIES_SOURCE_CHECKPOINT_2026-10-15.md)
+passes Root3,753unit/67.03s and retains native page/proof/result limits. Actual
+restricted reader SQL/timing and real E/EV execution remain open. The first mixed
+sender SQL recipe failed at a fixture JSON diagnostic before begin/send; its
+source/run/database/held authority are preserved. A fresh v2 repair is source-only.
