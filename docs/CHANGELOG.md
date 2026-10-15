@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain actual methodv5 sample and terminal failure evidence
+
+### Validation
+- New actual qualification records seven observed_contained samples with complete
+  subtree and numeric cap observations; post-seal issued identity is established.
+- Later issued-membership ValueError leaves overall unknown/no success receipt.
+  Exact branch remains unproven; one attempt/unknown hold and stopped object are
+  conserved. Fifth case preserved without retry, cleanup or outcome upgrade.
+
+**Authored by:** Codex and supervised qualification agent
+**PR:** not published
+
 ## [2026-10-15] — Add closed strategy role and publication-state gates
 
 ### Added
