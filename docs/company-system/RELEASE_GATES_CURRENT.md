@@ -1,6 +1,6 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local9889da9 plus the B2a source package, actual B1 SQL,
+Checked2026-10-15 against local4fcdd8d plus coherent B2b source, actual B1/B2a SQL,
 outer ledger recovery, Strategy PG and methodv6/replay receipts. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
@@ -92,3 +92,8 @@ Owner password/email inputs remain held, not re-requested here. Pi install/boot/
 reboot/routes, provider spending/live messages and release push/tag/deployment
 need their concrete authorized setup. This index adds none of those actions.
 Deferred automatic Meta Harness and dedicated graph infrastructure remain deferred.
+
+The [B2b sender source](MIXED_SENDER_B2B_SOURCE_CHECKPOINT_2026-10-15.md) now binds
+current credentials/config, fresh native checks and separate issued-family history.
+Root3,715unit/84.69s and strict/lint/format23 pass. Actual mixed SQL, SDK queue/replay,
+crash recovery and real email remain unqualified; source adds no activation.

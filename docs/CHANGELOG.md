@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bind mixed sender to current actor and native checks
+
+### Added
+- Credential-first metadata, separate issued-family audit and required fresh-intent
+  checks; final per-operation dispatcher retains original config and concrete checks.
+- Final wrapper/preparation pins and historical identity/counter guards close
+  independently reproduced source issues (ERROR125).
+
+### Validation
+- Root3,715unit/84.69s and strict/lint/format23 pass with favorable combined review.
+  Actual mixed SQL/SDK/OS and live email remain separate gates.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify actual selected builder actor reads and guard denials
 
 ### Validation

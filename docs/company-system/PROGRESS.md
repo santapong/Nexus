@@ -839,3 +839,12 @@ after actual proof. Root fresh SQL confirms conserved four original attempts/mod
 zero E intents/leases/app sessions and exact eight blobs per company. Source1's FTS
 issue was caught before execution and is preserved; fresh v2 fixed only fixture
 query/names. Genuine-parent positive intent, native E/EV and the full release remain.
+
+## 2026-10-15 — Coherent mixed sender B2b source
+
+The [B2b source checkpoint](MIXED_SENDER_B2B_SOURCE_CHECKPOINT_2026-10-15.md)
+records credential-first metadata, actual derived issued history, current fresh
+partition and mandatory native intent checks. Original check/preparation/config
+survives later awaits; known issuance suppresses dispatch. Root3,715unit/84.69s and
+strict/lint/format23 pass with favorable combined review. Actual mixed SQL/SDK/OS
+and live email remain separate; no worker or service was activated.

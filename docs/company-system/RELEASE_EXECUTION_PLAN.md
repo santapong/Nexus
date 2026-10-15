@@ -24,7 +24,7 @@ are historical; current lane ownership is:
 
 | Owner | Current deliverable | Next evidence |
 | --- | --- | --- |
-| notification_profiles | Frozen private B2b sender foundation | Coherent shared context/ancestry/intent wiring and separate actual qualification |
+| notification_profiles | Coherent B2b sender source qualified | Fresh public mixed SQL, then actual SDK/crash recovery qualification |
 | recovery_resume | Native presentation/support publication plan | Own-role engineering evidence and real same-goal E/EV acceptance prerequisite |
 | engineering_resume | Terminal B2a SQL file audit | Exact ledgers, eight blobs per company and actual original-deadline scope |
 | Root | Publish qualified milestones and integrate coherent source | Genuine-parent/native E/EV, sender/full cycle and provider/ARM64/UAT/operations gates |

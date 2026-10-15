@@ -14,6 +14,7 @@ from nexus.company.brain.base import BrainReadScope
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
 from nexus.company.management.control_support import current_charter
 from nexus.company.management.model_observations import effective_model_registration
+from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.native_profile_admission import control_scope
 from nexus.company.management.operating_report_resources import report_resources
 from nexus.company.management.plan_support import PlanAdmissionCatalog, validate_plan_profile
@@ -80,7 +81,10 @@ def profile_deadlines(
     deadlines = []
     for child in payload.children:
         validate_plan_profile(catalog, child, now)
-        if native_notification_profile(catalog, child) is not None:
+        if (
+            native_notification_profile(catalog, child) is not None
+            or native_execution_profile(catalog, child) is not None
+        ):
             continue
         available = [
             min(model.health.expires_at, evaluation.expires_at)

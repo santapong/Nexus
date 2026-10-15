@@ -15,6 +15,11 @@ async def run_notification_effect(
         return
     if context.lease.mode != "execute":
         raise ExecutionDeniedError("Unissued notification reconciliation cannot dispatch")
-    await services.dispatcher.dispatch_with_credential(
+    dispatcher = services.dispatcher
+    if services.reads.facts.catalog.cycle_admission is not None:
+        from nexus.company.notifications.mixed_worker_dispatch import MixedNotificationDispatcher
+
+        dispatcher = MixedNotificationDispatcher(dispatcher, services.reads, context.guard)
+    await dispatcher.dispatch_with_credential(
         context.lease, context.credential, context.draft_id, context.command.action_id
     )

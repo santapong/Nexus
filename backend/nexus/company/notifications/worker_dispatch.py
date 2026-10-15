@@ -65,9 +65,7 @@ class AuthenticatedManagedNotificationDispatcher(ManagedNotificationDispatchStor
             if await self._existing(lease, identity, draft_id, action_id):
                 return None
             witness.require_time(datetime.now(UTC))
-            check = CredentialNotificationIntentCheck(
-                lease, witness, draft_id, self.drafts, self.target, self.resource_symbol
-            )
+            check = self._intent_check(lease, witness, draft_id, action_id)
             start = await self.effects.begin(lease, identity, action_id, before_intent=check)
             if not start.permit_external_call:
                 return None
@@ -77,17 +75,34 @@ class AuthenticatedManagedNotificationDispatcher(ManagedNotificationDispatchStor
             await self._record(lease, identity, draft_id, receipt, result)
             return result
 
-    async def _submit(
-        self, check: CredentialNotificationIntentCheck, action_id: UUID
-    ) -> SubmissionResult:
+    def _intent_check(
+        self,
+        lease: ExecutionLease,
+        witness: AuthenticatedWorkerIdentity,
+        draft_id: UUID,
+        action_id: UUID,
+    ) -> CredentialNotificationIntentCheck:
+        """Default native check; a final per-operation dispatcher can narrow its composition."""
+        return CredentialNotificationIntentCheck(
+            lease, witness, draft_id, self.drafts, self.target, self.resource_symbol
+        )
+
+    def _transport(self, check: CredentialNotificationIntentCheck) -> CredentialedResendTransport:
+        """Construct the default transport before the same existing full native precall."""
         assert check.draft is not None
-        async with CredentialedResendTransport(
+        return CredentialedResendTransport(
             check.draft.recipient_policy,
             self.configuration.api_key,
             check.witness,
             enabled=True,
             transport=self.configuration.http_transport,
-        ) as transport:
+        )
+
+    async def _submit(
+        self, check: CredentialNotificationIntentCheck, action_id: UUID
+    ) -> SubmissionResult:
+        assert check.draft is not None
+        async with self._transport(check) as transport:
             await self._precall(check.lease, check.identity, check, action_id)
             check.validate_time(datetime.now(UTC))
             return await transport.submit(

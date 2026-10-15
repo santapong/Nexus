@@ -52,12 +52,29 @@ async def require_notification_ancestry(
     work: ExecutionWork,
     catalog: PlanAdmissionCatalog,
     child: ChildAllocation,
+    *,
+    identity: VerifiedIdentity | None = None,
 ) -> None:
     """Actual owner sender and immutable zero-model ancestors, without granting a permit."""
     if native_notification_profile(catalog, child) is None:
         return
     if work.actor_id != control.owner_id:
         raise ExecutionDeniedError("Native notification sender differs from the actual owner")
+    if catalog.cycle_admission is not None:
+        from nexus.execution.cycle_partition_checks import require_cycle_native_partition
+
+        admission = validate_cycle_catalog(catalog.cycle_admission, catalog)
+        if (
+            admission is None
+            or identity is None
+            or identity.principal_id != control.owner_id
+            or child != admission.slots[-1].child
+        ):
+            raise ExecutionDeniedError("Mixed sender ancestry requires its actual current owner")
+        await require_cycle_native_partition(
+            session, control, work, identity, admission=admission, registry=catalog.models
+        )
+        return
     await require_zero_model_ancestry(session, work)
 
 

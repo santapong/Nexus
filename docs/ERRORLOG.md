@@ -74,6 +74,33 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-125 — Mixed sender needed complete final composition and history pins
+
+**Date:** 2026-10-15
+**Severity:** high (source hazards; mixed runtime was still closed)
+**Status:** fixed for coherent source; actual mixed qualification pending
+**Found by:** tests-first implementation and independent source review
+**Affected files:** mixed_notification_history.py, managed_effects.py, mixed sender boundaries
+
+Initial history comparison omitted actual ExecutionWork actor/workspace (absent
+from registration JSON) and accepted a reset issued tool counter. Six crossed-row
+tests and one counter test first failed with DID NOT RAISE; explicit row identity
+and consumed-counter checks now deny them.
+
+The initial shape check bound preparation only before later awaits. Final validation
+now reruns the concrete shape against the original catalog/work/action/preparation.
+A further probe replaced the check itself: branching on its current type skipped
+mixed checks. Final validation now branches on original bound type and rejects
+replacement. All seven drift cases pass after retained failing reproductions.
+
+Fresh generic begin also needed a mandatory mixed native check before mutations;
+the old optional/no-op path had three reproduced failures. Actual begin now denies
+them and preserves existing unknown-intent early return and full native validation.
+Root3,715unit/84.69s and strict/lint/format23 pass. No real mixed sender effect was
+issued by these source/mock reproductions; SQL/SDK/recovery remain separate gates.
+
+---
+
 ## ERROR-124 — Fixture metadata suffix did not match PostgreSQL's dotted token
 
 **Date:** 2026-10-15

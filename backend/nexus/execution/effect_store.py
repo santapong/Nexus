@@ -107,6 +107,13 @@ class EffectStore:
             require_selected_intent_check(
                 self._management_catalog, work, lease, identity, action, before_intent
             )
+            from nexus.company.notifications.mixed_worker_intent import (
+                require_mixed_notification_intent_check,
+            )
+
+            require_mixed_notification_intent_check(
+                self._management_catalog, work, lease, identity, action, before_intent
+            )
             if before_intent is not None:
                 await before_intent.validate(session, control, work, action, now)
             active = await session.scalar(

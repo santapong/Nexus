@@ -1,7 +1,7 @@
 """Supplied-session direct-begin boundary, not current database or selected-proof authority.
 
-TASK: fresh mixed E/EV cannot reserve without the exact configured selected guard.
-OWNED: this NEW fixture and test_selected_intent_boundary.py only.
+TASK: fresh mixed E/EV/sender cannot reserve without exact configured native checks.
+OWNED: this fixture and test_selected_intent_boundary.py only.
 TESTS: missing/no-op/wrong/subclass guards, binding splices, original-intent replay.
 DONE: focused/static checks plus retained pre-gate failures; no database/runtime calls.
 RISK: authority boundary; actual runtime authority/management are explicit fixture mocks.
@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import cast
+from typing import Literal, cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
@@ -130,21 +130,35 @@ class IntentBoundary:
 
     def untouched(self, *, issued: bool = False) -> None:
         """Assert no attempt/hold movement/intent mutation occurred in the real begin path."""
-        assert self.work.tool_attempts_used == int(issued)
-        assert self.work.model_requests_used == 0
+        for kind in ("model_requests", "tool_attempts", "rework_rounds", "plan_revisions"):
+            assert getattr(self.work, kind + "_used") == int(issued and kind == "tool_attempts")
+            assert getattr(self.work, kind + "_delegated") == 0
         assert self.added == []
         assert self.hold.state == ("unknown" if issued else "held")
         assert self.hold.amount_usd == Decimal("0.01") and self.hold.actual_usd is None
+        assert self.hold.day == self.now.date()
+        assert self.action.state == "authorized"
+        assert self.action.consumed_at == self.now - timedelta(seconds=1)
         self.hold_move.assert_not_awaited()
         self.session.flush.assert_not_awaited()
 
 
 def intent_boundary(verifier: bool = False) -> IntentBoundary:
+    """Preserve the selected E/EV fixture API and exact catalog-derived identities."""
+    return _intent_boundary("verifier" if verifier else "engineering")
+
+
+def sender_intent_boundary() -> IntentBoundary:
+    """Use the final catalog slot's actual sender binding, quota, tool and resources."""
+    return _intent_boundary("sender")
+
+
+def _intent_boundary(role: Literal["engineering", "verifier", "sender"]) -> IntentBoundary:
     """Actual typed registered work/lease/action descriptors; no selected authority asserted."""
     # Keep this >50-line coherent permanent registration/lease/journal fixture together.
     declared = cycle_catalog()
     catalog = declared.catalog.model_copy(update={"cycle_admission": declared.admission})
-    slot = declared.admission.slots[3 if verifier else 2]
+    slot = declared.admission.slots[{"engineering": 2, "verifier": 3, "sender": -1}[role]]
     bound, now = slot.child.binding, datetime.now(UTC)
     saved = registration(bound, slot.work, slot.child.quota)
     lease = ExecutionLease(

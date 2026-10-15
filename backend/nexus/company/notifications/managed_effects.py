@@ -77,6 +77,11 @@ class ManagedNotificationIntent:
         self, frozen: NotificationIntentCheck, preparation: ManagedNotificationPreparation
     ) -> None:
         self.frozen, self.preparation = frozen, preparation
+        self._bound_frozen = frozen
+        self._bound_preparation = preparation
+        self._bound_catalog = preparation.catalog
+        self._work: ExecutionWork | None = None
+        self._action: JournalAction | None = None
         self.admission: ManagedNotificationAdmission | None = None
 
     async def validate(
@@ -87,6 +92,7 @@ class ManagedNotificationIntent:
         action: JournalAction,
         now: datetime,
     ) -> None:
+        self._work, self._action = work, action
         await self.frozen.validate(session, control, work, action, now)
         current = await self.preparation.admit(
             session,
@@ -101,6 +107,27 @@ class ManagedNotificationIntent:
         self.frozen.deadlines += current.deadlines
 
     def validate_time(self, now: datetime) -> None:
+        from nexus.company.notifications.mixed_worker_intent import (
+            MixedCredentialNotificationIntentCheck,
+            require_mixed_notification_intent_check,
+        )
+
+        if type(self._bound_frozen) is MixedCredentialNotificationIntentCheck:
+            if (
+                self.frozen is not self._bound_frozen
+                or self.preparation is not self._bound_preparation
+                or self._work is None
+                or self._action is None
+            ):
+                raise NotificationUnavailableError("Mixed preparation identity is unavailable")
+            require_mixed_notification_intent_check(
+                self._bound_catalog,
+                self._work,
+                self.frozen.lease,
+                self.frozen.identity,
+                self._action,
+                self,
+            )
         self.frozen.validate_time(now)
         if self.admission is None:
             raise NotificationUnavailableError("Managed notification admission is unavailable")

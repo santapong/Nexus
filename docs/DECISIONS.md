@@ -125,6 +125,7 @@
 | ADR-112 | Explicit model-free mechanical engineering profiles | accepted | 2026-10-14 |
 | ADR-113 | Owner-bound same-source PostgreSQL/DBOS recovery qualification | accepted | 2026-10-14 |
 | ADR-114 | Explicit model-free owner notification admission | accepted | 2026-10-14 |
+| ADR-121 | Separate fresh mixed sender authority from issued history | accepted (source) | 2026-10-15 |
 
 ---
 
@@ -3178,12 +3179,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-121 -->
+<!-- Next ID: ADR-122 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-121*
+*Next ADR ID: ADR-122*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3517,3 +3518,27 @@ second call or refund unknown money. Ordinary catalogs retain their existing pat
 mixed sender ordering remains separately closed. No schema/dependency/allowance or
 production activation follows. Source/mock gates qualify the implementation only;
 actual SQL READ, genuine-parent intent and native E/EV evidence must follow.
+
+## ADR-121 — Separate fresh mixed sender authority from native issued history
+
+**Date:** 2026-10-15
+**Status:** accepted for source implementation; actual mixed qualification pending
+**Decided by:** Root after independent combined source review
+**Relates to:** ADR-103, ADR-114, ADR-116, ADR-119, ADR-120
+
+Acquire the actual sealed owner credential against the original complete server
+registration before mixed metadata. Fresh work requires current full partition/
+source/action authority and a concrete config/action native check at actual begin.
+Final wrapper pins retain original check/preparation/catalog after later awaits;
+per-operation dispatcher factories keep that check through the HTTP seam.
+
+Actual intent+slot+attempt chooses a separate read-only recorded-family verifier.
+It retains current owner/member/credential/config and immutable chronology/quota/
+identity/counter facts, without a private body, new call, refund or refill. Current
+active source approval is not historical evidence; deterministic IDs do not rewrite
+original facts. Existing issuance suppresses POST and bypasses fresh intent checks.
+
+A caller issued flag, permissive mode on active partition and a discarded resolver
+subclass were rejected. No schema/dependency changed. Source/mock tests qualify
+the integration only; actual SQL, SDK queue/replay, crash recovery and live email
+remain separate gates before release.
