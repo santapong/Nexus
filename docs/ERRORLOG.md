@@ -74,6 +74,47 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-123 — Credential wrapping would discard the selected source guard
+
+**Date:** 2026-10-15
+**Severity:** high (integration hazard; mixed execution was still closed)
+**Status:** fixed for source composition; actual selected SQL/runtime pending
+**Found by:** B2a source review and intentional original-context reproduction
+**Affected files:** engineering_worker_context.py, effect_store.py, selected builder modules
+
+The original context always constructed EngineeringCredentialSourceGuard from the
+resolver result. That wrapper copies base fields and loses specialized overrides.
+Returning a selected resolver subclass alone therefore would not install selected
+Strategy validation. EffectStore.begin also accepts an optional before-intent check;
+opening ancestry alone would not make that check mandatory. Existing closed mixed
+ancestry prevented this from being an observed active bypass.
+
+Context now requires concrete selected configuration before acquiring a lease and
+constructs the final concrete selected guard. Fresh mixed E/EV begin requires the
+exact bound selected-guard/contained-parent composite before any native mutation.
+Known issued history keeps its original early return. No ancestry opening is shipped
+separately from these gates.
+
+The retained original16c context reproduction fails both current regressions in
+0.40s (missing service accepted; final guard lost). The combined implementation
+passes3,633unit/54.05s and configured strict/lint/format25. Actual native SQL/parent
+qualification remains separate; no real effect was issued by this reproduction.
+
+Independent review also nominated composition drift after disclosure during later
+parent/revalidation/flush awaits. The final synchronous selected callback now checks
+factory/catalog/input-reader identity again before its time checks. Three retained
+tests first failed with DID NOT RAISE, then passed with this correction; the focused
+60-test context/guard/intent group passes3.69s. Final combined qualification is
+recorded in the B2a source checkpoint.
+
+The direct result-disclosure path also needed this check after its own last clock
+await. Centralizing composition validation in the shared selected final check closes
+both paths. The nominated drift probe first failed with DID NOT RAISE1.28s; the
+corrected61-test group passes3.84s. Earlier probe import/argument fixture errors
+are retained separately and are not evidence of the production gap.
+
+---
+
 ## ERROR-122 — B1 SQL packet omitted the Unix-socket URL user separator
 
 **Date:** 2026-10-15

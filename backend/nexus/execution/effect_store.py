@@ -102,6 +102,11 @@ class EffectStore:
             action = await require_effect_authority(
                 session, control, work, action_id, now, resources, lease_scope(lease), identity
             )
+            from nexus.execution.selected_intent_gate import require_selected_intent_check
+
+            require_selected_intent_check(
+                self._management_catalog, work, lease, identity, action, before_intent
+            )
             if before_intent is not None:
                 await before_intent.validate(session, control, work, action, now)
             active = await session.scalar(

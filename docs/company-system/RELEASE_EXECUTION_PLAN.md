@@ -14,22 +14,23 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ### Active continuation — 2026-10-15
 
-Latest reviewed local milestone: `7dbbf81` binds owner Strategy choice to full plan
-revision2, with Root3,399unit/67.46s and strict/lint/format31. Actual owner READ and
-outer timeout are qualified separately; actual revision2 SQL remains pending.
+Completed actual milestones now include B1 owner choice/revision2/replay and
+downstream-expiry rollback (97.41s), plus exact outer-timeout ledger recovery
+(1.944s, conserved unknown intent/attempt/hold). The coherent B2a source package
+adds selected actor/READ/spec/intent gates; its actual SQL/native proof is next.
 The following older foundation/notification-wave tables
 are historical; current lane ownership is:
 
 | Owner | Current deliverable | Next evidence |
 | --- | --- | --- |
-| notification_profiles | Plan actor-scoped B2 selection/spec proof | Current worker READ and exact immutable execution pins; no borrowed owner credential |
-| recovery_resume | Plan exact expired outer-fault recovery | Original unknown intent/attempt/hold conserved with no reissue; engine disposal separate |
-| engineering_resume | Stage fresh B1 SQL source only | Full-catalog lineage, actual head2 proof/replay and late P/C-only expiry rollback |
-| Root | Integrate milestones and qualify actual cases | Exact B1 SQL, then native selected execution/full cycle and provider/ARM64/UAT/operations gates |
+| notification_profiles | Plan fresh selected-actor SQL qualification | Actual E/EV READ and pinned E disclosure; genuine-parent positive intent remains separate |
+| recovery_resume | Review combined B2a authority/intent integration | Exact concrete checks before mutations, current windows and immutable issued history |
+| engineering_resume | Review actor/selected-source window composition | Retained original eligibility, factory/catalog identity and final clocks |
+| Root | Integrate milestones and qualify actual cases | Fresh selected SQL, then native E/EV/full cycle and provider/ARM64/UAT/operations gates |
 
 The successful methodv6 M1/replay and native Strategy publication/expiry rollback
-are actual saved qualifications. Current-owner reads and outer termination now pass;
-expired native recovery and the actual full-plan transition remain pending. Frozen
+are actual saved qualifications. Current-owner reads, outer termination/recovery
+and actual full-plan transition now pass; selected execution remains pending. Frozen
 packages retain their original bases and do not silently rebase or activate.
 
 The initial foundation lanes below are historical. Current local headae7d9b5 plus

@@ -4,6 +4,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nexus.company.access import VerifiedIdentity
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.native_execution_profiles import native_execution_profile
 from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.company.management.plans import ChildAllocation
@@ -19,9 +21,27 @@ async def require_native_ancestry(
     work: ExecutionWork,
     catalog: PlanAdmissionCatalog,
     child: ChildAllocation,
+    *,
+    control: CompanyControl | None = None,
+    identity: VerifiedIdentity | None = None,
 ) -> None:
     """Read actual parents under the company mutex; names cannot replace registered quota."""
     if native_execution_profile(catalog, child) is None:
+        return
+    if catalog.cycle_admission is not None:
+        from nexus.execution.cycle_partition_checks import require_cycle_native_partition
+
+        admission = validate_cycle_catalog(catalog.cycle_admission, catalog)
+        if (
+            admission is None
+            or control is None
+            or identity is None
+            or child not in tuple(slot.child for slot in admission.slots[2:4])
+        ):
+            raise ExecutionDeniedError("Selected native ancestry needs its actual current actor")
+        await require_cycle_native_partition(
+            session, control, work, identity, admission=admission, registry=catalog.models
+        )
         return
     await require_zero_model_ancestry(session, work)
 

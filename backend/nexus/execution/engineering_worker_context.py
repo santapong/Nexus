@@ -6,6 +6,7 @@ from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal
+from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.plans import RunBinding
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.dbos_contracts import SegmentCommand
@@ -57,10 +58,26 @@ async def prepare_engineering_context(
     command.require_scope(scope)
     async with services.factory() as clock:
         credential.require_time(await db_now(clock))
+    configured = validate_cycle_catalog(services.catalog.cycle_admission, services.catalog)
+    selected = None
+    if configured is not None:
+        from nexus.builder.selected_strategy_services import SelectedBuilderServices
+
+        if (
+            binding not in tuple(slot.child.binding for slot in configured.slots[2:4])
+            or type(services.selected_builder) is not SelectedBuilderServices
+        ):
+            raise ValueError("Configured selected engineering services are unavailable")
+        selected = services.selected_builder
+        if selected.reader.reader.artifacts.factory is not services.factory:
+            raise ValueError("Selected engineering reader uses another application factory")
     lease = await recover_engineering_lease(services, scope, credential, command)
     try:
-        guard = EngineeringCredentialSourceGuard(
-            services.sources.resolve(binding, spec, lease, signed), credential
+        original = services.sources.resolve(binding, spec, lease, signed)
+        guard = (
+            EngineeringCredentialSourceGuard(original, credential)
+            if selected is None
+            else selected.resolve_guard(original, credential)
         )
         services.runner.require_binding(lease, signed, spec, guard)
         return EngineeringContext(

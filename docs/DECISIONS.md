@@ -3178,12 +3178,12 @@ own actual acceptance before activation. See MANAGEMENT_IMPLEMENTATION_PLAN.md.
 ---
 
 <!-- New ADR entries go above this line, with the next ID number -->
-<!-- Next ID: ADR-115 -->
+<!-- Next ID: ADR-121 -->
 
 ---
 
 *Last updated: 2026-10-14 (supervised company integration)*
-*Next ADR ID: ADR-115*
+*Next ADR ID: ADR-121*
 *Company-program additions: six proposed ADRs (094–099); older statuses are preserved, not a runtime cutover claim.*
 *Note: on acceptance, ADR-078 supersedes ADR-008 and ADR-086 supersedes ADR-014.*
 
@@ -3489,3 +3489,31 @@ Freeze2 implements the endpoint witness with mocked qualification; actual SQL/SD
 proof remains pending. The original passing freeze1 is retained separately.
 An unrelated singleton is denied. Source and pure tests qualify the implementation;
 actual SDK dispatch/replay, OS restart and production email remain separate gates.
+
+## ADR-120 — Separate selected actor proof from owner choice and fresh effect issuance
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Status:** accepted for source implementation; actual selected SQL/runtime qualification pending
+**Decided by:** Root after bounded implementation and independent review
+**Relates to:** ADR-103, ADR-106, ADR-107, ADR-112, ADR-117
+
+Share native Strategy material/equality assembly behind distinct owner and actual
+E/EV actor gates. Derive selected choice from the current approved revision2 and
+registered full family; never pass an owner flag/credential or supplied choice into
+the actor API. Two reads retain original proof/fences/windows through current task
+READ and the last database clock. Pure proof observations convey no permission.
+
+Construct the final concrete selected source guard in engineering context. Require
+that guard plus the real contained-parent check, in exact order, before a fresh
+mixed E/EV intent can reserve or consume anything. Bind complete trusted template
+and separate exact approved action to the current work/lease/spec. Keep originally
+eligible model-family windows and all first/current disclosure windows through
+later awaits. A resolver subclass alone was rejected because the credential wrapper
+copies base fields and discards overrides; a callback/boolean attestation would not
+establish actual selected proof or parent observation.
+
+Known issued history returns before fresh selection checks and cannot create a
+second call or refund unknown money. Ordinary catalogs retain their existing path;
+mixed sender ordering remains separately closed. No schema/dependency/allowance or
+production activation follows. Source/mock gates qualify the implementation only;
+actual SQL READ, genuine-parent intent and native E/EV evidence must follow.

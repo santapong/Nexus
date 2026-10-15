@@ -377,7 +377,9 @@ async def require_management_execution(
         trace_id=work.trace_id,
     )
     try:
-        await require_native_ancestry(session, work, catalog, binding.child)
+        await require_native_ancestry(
+            session, work, catalog, binding.child, control=control, identity=identity
+        )
         await require_notification_ancestry(session, control, work, catalog, binding.child)
         charters = await validate_plan(
             session, control, scope, identity, record.payload, catalog, freshness

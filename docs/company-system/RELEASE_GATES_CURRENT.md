@@ -1,6 +1,7 @@
 # Supervised release evidence index
 
-Checked2026-10-15 against local97d2d45, actual B1 SQL, Strategy PG and methodv6/replay receipts. This index separates implemented/local
+Checked2026-10-15 against local9889da9 plus the B2a source package, actual B1 SQL,
+outer ledger recovery, Strategy PG and methodv6/replay receipts. This index separates implemented/local
 proof from the full selected release. It is not a completion audit or authorization
 to activate production. Normative exits remain SDDv0.2 and IMPLEMENTATION_PLAN.
 
@@ -50,6 +51,14 @@ and rollback after a P-only grant expires following staged head2. Root fresh SQL
 and independent file audit verify conserved native history, budgets and files.
 B2 actor-scoped selection/spec/ancestry, P/C publication and the full goal cycle
 remain unqualified; registration does not activate engineering or sender execution.
+
+The [coherent B2a source package](SELECTED_BUILDER_B2A_SOURCE_CHECKPOINT_2026-10-15.md)
+implements separate current actor proof and mandatory selected/parent composition
+before fresh intents. Source/mock/static gates pass; actual E/EV READ and pinned
+E disclosure are the next bounded SQL gate. A positive intent/postflush rollback
+requires a genuine current contained parent; EV execute additionally needs the real
+E trigger. Neither is replaced with fabricated receipt/lease/parent observations.
+Mixed sender stays closed pending its separate credential/ancestry ordering.
 
 The actual-owner proof reader in943c5ec now passes its separate four-company
 [actual SQL qualification](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md)

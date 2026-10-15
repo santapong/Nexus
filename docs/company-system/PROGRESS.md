@@ -819,3 +819,13 @@ completed1.944s through existing public APIs. Original intent/attempt/tool1/mone
 preserved; state becomes unknown and the new reconciliation lease is released at
 fence3. Root fresh SQL and independent file audit agree. No engine call or result
 fabrication occurred; the retained object is unchanged.
+
+## 2026-10-15 — Coherent selected actor/source/intent implementation
+
+The [B2a source checkpoint](SELECTED_BUILDER_B2A_SOURCE_CHECKPOINT_2026-10-15.md)
+records separate owner/actor gates, actual selected-plan derivation, full E/EV
+partition/READ, complete template/source pins and first/current windows. Context
+preserves the final guard; fresh mixed intents require its concrete ordered parent
+composition before mutations. Known history/ordinary behavior remains covered;
+sender stays closed. Root3,637unit/51.66s and configured strict/lint/format25 pass.
+Actual SQL actor READ, genuine-parent positive intent and native E/EV remain separate.

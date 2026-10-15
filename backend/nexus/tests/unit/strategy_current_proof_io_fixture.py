@@ -18,6 +18,7 @@ from nexus.company.management.acceptance_models import ManagementAcceptanceProof
 from nexus.company.management.generated_artifact_contracts import GeneratedArtifactInputs
 from nexus.company.strategy import (
     current_proof_material,
+    current_proof_read,
     current_proof_reader,
     original_reader,
     owner_reader,
@@ -133,7 +134,13 @@ def install_proof_reads(
     monkeypatch.setattr(
         current_proof_material, "native_manifest", AsyncMock(return_value=(manifest, "internal"))
     )
-    for module in (current_proof_material, current_proof_reader, verifier_facts, owner_reader):
+    for module in (
+        current_proof_material,
+        current_proof_reader,
+        current_proof_read,
+        verifier_facts,
+        owner_reader,
+    ):
         monkeypatch.setattr(module, "db_now", clock)
     monkeypatch.setattr(original_reader, "require_strategy_publication_replay_locked", bs_graph)
     monkeypatch.setattr(current_proof_material, "require_strategy_check_replay_locked", c_graph)

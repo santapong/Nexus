@@ -1,7 +1,9 @@
 """Trusted fixed engineering runtime services remain outside portable workflow payloads."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -17,6 +19,9 @@ from nexus.company.management.plans import RunBinding
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.engineering_worker_identity import EngineeringWorkerIdentities
 from nexus.execution.runtime_contracts import ExecutionLease
+
+if TYPE_CHECKING:
+    from nexus.builder.selected_strategy_services import SelectedBuilderServices
 
 
 class EngineeringSourceResolver(Protocol):
@@ -51,6 +56,7 @@ class EngineeringWorkerServices:
     worker_id: UUID
     lease_ttl_seconds: int = 60
     hook: EngineeringWorkerHook | None = None
+    selected_builder: SelectedBuilderServices | None = None
 
     async def observe(self, phase: str, command: SegmentCommand) -> None:
         """Emit an optional trusted checkpoint observation without writing native authority."""

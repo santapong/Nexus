@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Require current selected Strategy proof for native builder intents
+
+### Added
+- Separate current E/EV actor proof, complete trusted template services and final
+  selected source guard retain actual identity, READ, pins and original deadlines.
+- Fresh configured native intents require the exact selected/contained-parent
+  composition; context preserves that final guard before execution (ERROR123).
+
+### Validation
+- Root3,637unit/51.66s and configured strict/lint/format25 pass. This is source/mock
+  qualification; actual selected SQL, genuine-parent intent and native E/EV remain.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify exact outer-timeout ledger recovery
 
 ### Validation
