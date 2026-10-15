@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Record corrected-inspect actual qualification failure
+
+### Validation
+- Fresh isolated normal015/public setup and one actual governed native job ran
+  against730c20f. Corrected inspect succeeded and sealed the actual running
+  container; later ValueError beforefirstsample still denied containment.
+- Original unknown effect, single attempt, positive unknown/null hold and stopped
+  object remain preserved. Root terminal audit binds37 actual case files; no retry.
+
+**Authored by:** Codex and supervised qualification agents
+**PR:** not published
+
 ## [2026-10-15] — Correct fixed Podman inspect Go fields
 
 ### Fixed
