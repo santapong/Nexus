@@ -1,6 +1,17 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Verify complete public dependency inputs
+
+### Validation
+- Bounded input helper passes35 focused/static checks and actual517-package/
+  901-tool observation plus immediate revalidation; independent file audit passes.
+- Preserve the first source and semantic pnpm receipt mismatch failure. Full
+  dependency import and native runtime qualification remain separate pending gates.
+
+**Authored by:** Codex and supervised preparation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Record bounded startup diagnostic evidence
 
 ### Validation

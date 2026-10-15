@@ -1,5 +1,9 @@
 # Nexus implementation progress
 
+The [dependency input checkpoint](CAS_INPUT_CHECKPOINT_2026-10-15.md) records35
+focused tests and actual complete517-package/901-tool observation/revalidation.
+This is read-only input evidence; full cache import and native execution remain held.
+
 Current continuation: the [startup diagnostic checkpoint](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
 records82 focused diagnostic tests and actual pre-readiness runc cgroup failure
 with retained CLI/stderr/state. Cleanup succeeds; execution qualification remains

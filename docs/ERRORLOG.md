@@ -74,6 +74,26 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-147 — Special pnpm receipt row omitted its semantic hash join
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed in fresh input source; full import remains held
+**Found by:** independent Root input-helper review
+**Affected files:** private cas_inputs.py and focused tests
+
+Actual pnpm archives were checked against configured hashes and integrity, but
+the receipt's special pnpm SHA was not compared with that configured SHA. A
+negative repins the receipt after changing only that row and reproduces acceptance.
+Fresh V2 adds the missing receipt/spec equality; actual byte/SHA/SRI checks remain.
+35 focused checks, strict/Ruff and actual read-only full input revalidation pass;
+independent file review is favorable. Preserve V1; a pinned receipt still needs
+semantic joins for every record. No runtime or import authority is granted.
+
+See [input evidence](company-system/CAS_INPUT_CHECKPOINT_2026-10-15.md).
+
+---
+
 ## ERROR-146 — Native startup cannot open the payload cgroup pids.max
 
 **Date:** 2026-10-15

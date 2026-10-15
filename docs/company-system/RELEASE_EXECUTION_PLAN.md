@@ -30,7 +30,7 @@ Company-issued execution, full517 dependency import or business completion.
 | Lane | Current work | Exit evidence |
 | --- | --- | --- |
 | Native runtime | Diagnose actual child-cgroup startup failure | Diagnostic V3 retains CLI127/stderr/created state; require a reviewed deterministic remedy and fresh qualification |
-| Preparation | Full517 offline CAS recipe using verified stage/tool ABI | Separate reviewed finite profile and actual artifact integrity; no legacy fixed-name CLI reuse |
+| Preparation | Full517 offline CAS recipe using verified stage/tool ABI | [Actual complete input observation](CAS_INPUT_CHECKPOINT_2026-10-15.md) passes; finite import/artifact integrity remains pending |
 | Qualification | Current full V7/opaque-issued Company scenario planning | Fresh runtime/CAS/policy/template pins and actual original-authority/lease/permit/result/cleanup evidence |
 | Root integration | Preserve source/evidence and coordinate gates | Real selected StockFlow E/EV, P/C acceptance and full supervised release requirements |
 
