@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Compile rich strategy material with stable lossless input wire
+
+### Added
+- Pure deterministic brief producer using explicit immutable server policy and
+  actual-described original quotations; target-free six-criterion material checker.
+- Separate original bundle ref, unchanged original manifest, strict byte/ancestry
+  capacity guards and named deterministic lossless bundle wirev2.
+
+### Validation
+- Retained canonical-USD and real cross-hash-seed failures corrected without old
+  wire rewrites. 101 focused checks include actual fresh-interpreter replay0–3.
+- Independent review, coherent2,865unit/32.17s, strict/Ruff/format17 pass. Native
+  bundle publication, current reader/acceptance/owner choice remain required.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Diagnose actual post-issuance parent path failure
 
 ### Validation

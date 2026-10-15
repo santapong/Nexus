@@ -74,6 +74,43 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-107 — Original bundle storage changed wire identity across encodings/processes
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (unpublished pure producer wirev2)
+**Found by:** implementation reproduction and independent compatibility review
+**Affected files:** `company/strategy/producer.py`, `producer_contracts.py`
+
+### What happened
+Canonical identity JSON changed original registration USD spelling0.08→0.080000:
+the registration remained value-equal but its original wire digest changed.
+Lossless Pydantic JSON avoided that scale change, but a separate cross-process
+probe found its SourcePolicy.allowed_external_keys set changed array order.
+Seed0 wrote one bundle; seeds1/2/3 restored equal inputs but regenerated different
+bytes, and actual preparation rejected each original bundle hash. No strategy
+artifact was published; the original sources/wire/ref/failures remain preserved.
+
+### Root cause
+Semantic identity canonicalization and lossless durable wire are different
+contracts. Pydantic set serialization is not itself stable across hash seeds.
+
+### Fix applied
+Named `strategy-input-bundle-json-v2` retains validated JSON Decimal/date values,
+sorts only reachable typed SourcePolicy.allowed_external_keys sets and object
+keys, and preserves ordered arrays. No shared canonical recipe or old snapshot
+is rewritten. A schema inventory confirms this is the only current reachable set.
+Actual writer0 then fresh replay0/1/2/3 prepare/hash/digest equality now passes
+within101 pure checks. Root2,865unit/32.17s, strict/Ruff/format17 and independent
+review pass. This proves pure wire replay, not native protected publication.
+
+### Prevention
+Preserve original wire identity separately from canonical semantic digests;
+exercise durable bytes across fresh interpreters/hash seeds. Freeze2/source and
+retained probes are linked in STRATEGY_PRODUCER_CHECKPOINT_2026-10-15.md.
+
+---
+
 ## ERROR-108 — Issued runtime relocates the host within the delegated scope
 
 **Date:** 2026-10-15 (Asia/Bangkok)

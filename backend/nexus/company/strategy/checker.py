@@ -91,19 +91,15 @@ def _decode(raw: bytes) -> StrategyBrief:
     return StrategyBrief.model_validate_json(raw)
 
 
-def _registration_matches(command: StrategyCheckInput) -> bool:
-    snapshot = command.snapshot
-    assert snapshot is not None
-    target, scope, actual = command.target, snapshot.scope, snapshot.author_registration
+def _snapshot_registration_matches(snapshot: StrategyCheckSnapshot) -> bool:
+    scope, actual = snapshot.scope, snapshot.author_registration
     payload = json.dumps(
         actual.model_dump(mode="json"), sort_keys=True, separators=(",", ":"), allow_nan=False
     )
     author = scope.author
     return (
-        _digest(payload.encode()) == scope.author_registration_sha256 == target.work_snapshot_sha256
-        and scope.author == target.author
-        and scope.verifier == target.verifier
-        and actual.work.company_id == command.company_id
+        _digest(payload.encode()) == scope.author_registration_sha256
+        and actual.work.company_id == snapshot.company_id
         and actual.work.goal_id == scope.goal.goal_id
         and (
             actual.work.task_id,
@@ -123,7 +119,21 @@ def _registration_matches(command: StrategyCheckInput) -> bool:
             author.model_profile,
             author.model_registry_version,
         )
-        and actual.work.acceptance == target.criterion_ids
+        and len(actual.work.acceptance) == len(STRATEGY_CHECK_CRITERIA)
+        and set(actual.work.acceptance) == set(STRATEGY_CHECK_CRITERIA)
+    )
+
+
+def _registration_matches(command: StrategyCheckInput) -> bool:
+    snapshot = command.snapshot
+    assert snapshot is not None
+    target, scope = command.target, snapshot.scope
+    return (
+        _snapshot_registration_matches(snapshot)
+        and scope.author_registration_sha256 == target.work_snapshot_sha256
+        and scope.author == target.author
+        and scope.verifier == target.verifier
+        and snapshot.author_registration.work.acceptance == target.criterion_ids
     )
 
 
@@ -148,9 +158,7 @@ def _preflight(command: StrategyCheckInput) -> StrategyCheckResult | None:
     return None
 
 
-def _sources(command: StrategyCheckInput, brief: StrategyBrief) -> CriterionCheckResult:
-    snapshot = command.snapshot
-    assert snapshot is not None
+def _sources(snapshot: StrategyCheckSnapshot, brief: StrategyBrief) -> CriterionCheckResult:
     criterion = "strategy.citations.v1"
     sources = {row.evidence.evidence_id: row for row in snapshot.sources}
     if (
@@ -287,16 +295,34 @@ def check_strategy_brief(command: StrategyCheckInput) -> StrategyCheckResult:
         RecursionError,
     ):
         return _failure(command, "reject", "invalid_strategy_json_or_schema")
-    snapshot = command.snapshot
+    rows = check_strategy_material(command.snapshot, brief)
+    by_id = {row.criterion_id: row for row in rows}
+    return _result(command, tuple(by_id[cid] for cid in command.target.criterion_ids))
+
+
+def check_strategy_material(
+    snapshot: StrategyCheckSnapshot, brief: StrategyBrief
+) -> tuple[CriterionCheckResult, ...]:
+    """Check six supplied-data properties without fabricating a receipt or target authority."""
+    snapshot = StrategyCheckSnapshot.model_validate(snapshot.model_dump(warnings=False))
+    brief = StrategyBrief.model_validate(brief.model_dump(warnings=False))
     if (
         brief.scope != snapshot.scope
         or brief.input_snapshot_sha256 != canonical_sha256(snapshot)
         or brief.input_manifest_sha256 != canonical_sha256(snapshot.inputs)
     ):
-        return _failure(command, "reject", "strategy_scope_or_input_identity_mismatch")
-    rows = (
+        return tuple(
+            _row(cid, "reject", "strategy_scope_or_input_identity_mismatch")
+            for cid in STRATEGY_CHECK_CRITERIA
+        )
+    if not _snapshot_registration_matches(snapshot):
+        return tuple(
+            _row(cid, "reject", "exact_strategy_target_or_registration_mismatch")
+            for cid in STRATEGY_CHECK_CRITERIA
+        )
+    return (
         _row("strategy.schema.v1", "pass", "strategy_rich_schema_matches"),
-        _sources(command, brief),
+        _sources(snapshot, brief),
         _times(snapshot, brief),
         _candidates(snapshot, brief),
         _recommendation(brief),
@@ -304,5 +330,3 @@ def check_strategy_brief(command: StrategyCheckInput) -> StrategyCheckResult:
             "strategy.unknowns.v1", "pass", "strategy_explicit_unknowns_and_owner_request_present"
         ),
     )
-    by_id = {row.criterion_id: row for row in rows}
-    return _result(command, tuple(by_id[cid] for cid in command.target.criterion_ids))
