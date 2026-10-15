@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Read accepted engineering evidence for presentation and support
+
+### Added
+- Dormant own-scope P/PV/C/CV reader and partition: actual E/EV issuance,
+  acceptance/provenance, protected bodies/results/sidecars and original windows.
+- Final validation rereads both sidecars; retained regressions cover missing or
+  corrupt originals, strict issued counters and same-root store replacement.
+
+### Validation
+- 319 focused and3,813 exact-source unit tests pass, configured strict/lint/format13
+  and independent review pass. First green candidate stayed held for PC1 repair.
+- No native P/C publication, actual accepted E/EV lineage, route activation or
+  runtime operation is claimed by this source milestone.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Separate current family facts from native execution
 
 ### Changed

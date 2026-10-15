@@ -74,6 +74,90 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-135 — Retained engineering proof did not reread its private sidecars
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed before source integration
+**Found by:** independent P/C milestone reviewer
+**Affected files:** engineering_prerequisite_reader.py and its existing reader tests
+
+### What happened
+The first candidate's final revalidate_locked checked actual public result refs,
+body integrity and original windows, but sidecars were reread only during material
+load. Later missing/corrupt private evidence could pass that final boundary.
+
+### Root cause
+Result-reference integrity was mistakenly treated as sufficient for subsequent
+interpretation of the retained full result. A green3,809-unit run missed this path.
+
+### Fix applied
+Preserve V1 and its unfavorable review. Fresh V2 invokes existing
+require_result_containment for each result during final revalidation. Four real
+local sidecar negatives first reached the later-body sentinel (2.35s), then deny
+before it. Upstream qualification/SQL delivery remain explicit mocks.319 focused,
+3,813 full units, static13 and independent V2 review pass; no actual E claim.
+
+### Prevention
+Every v2 result interpretation must reread original private sidecar bytes, including
+retained/supplied proofs. Public hashes and cached prior reads do not replace it.
+
+---
+
+## ERROR-134 — Same-path containment store replacement escaped composition checks
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed before first source freeze
+**Found by:** Codex during P/C source composition review
+**Affected files:** cycle_artifacts/native_contracts.py and protection tests
+
+### What happened
+The draft fingerprint retained the containment root path and method hash but omitted
+the store object's identity. A fresh same-path store reset its pinned root identity
+without changing that fingerprint. The retained regression failed1.90s.
+
+### Root cause
+A semantic path fingerprint did not preserve the concrete evidence-store instance.
+
+### Fix applied
+Retain the original store object in the composition identity tuple, including the
+legitimate legacyNone case. An actual configured-reader/store replacement regression
+now denies. Root3813 units and configured static13 pass with the final package.
+
+### Prevention
+Retain concrete IO composition across awaits as well as its configured values.
+Do not treat a fresh same-path adapter as the original pinned store.
+
+---
+
+## ERROR-133 — Draft prerequisite accepted succeeded issuance with zero tool usage
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed before first source freeze
+**Found by:** author during P/C component self-review
+**Affected files:** engineering_prerequisite_facts.py and its facts tests
+
+### What happened
+Actual-shaped serialized succeeded action/intent/attempt rows were accepted even
+when the E/EV work counter reported zero issued tools. The regression failed1.51s.
+
+### Root cause
+The first issuance check compared native records but omitted their permanent work
+counter conservation requirement.
+
+### Fix applied
+Require strict-int tool limit/used/delegated=(1,1,0) for both issued E/EV works.
+Retain the semantic red and counter denials; final319 focused/3813 full units pass.
+The test is mocked native-row delivery, not actual accepted E/EV qualification.
+
+### Prevention
+Match native issuance to permanent counters, including strict numeric types, rather
+than accepting a plausible receipt graph alone.
+
+---
+
 ## ERROR-132 — Release regression included an unfinished untracked local probe
 
 **Date:** 2026-10-15

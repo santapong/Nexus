@@ -3,14 +3,14 @@
 **Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 
-Latest source milestone: [current cycle family reader](CYCLE_FAMILY_READ_SOURCE_CHECKPOINT_2026-10-15.md),
-with3,758 exact-source unit tests passing. Native E/EV/sender exclusions remain.
-The [actual mixed sender SQL v2](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md)
-passes189.23s; [bounded reader SQL v2](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md)
-passes28.18s. The [public dependency stage](PUBLIC_RUNTIME_DEPENDENCY_STAGE_2026-10-15.md)
-passes46.04s with independent integrity audit; pnpm tool data is also extracted
-and verified. Contained offline cache bootstrap and real StockFlow E/EV remain
-next; P/C publication, SDK/live email, ARM64 and supervised release stay open.
+Latest source milestone: [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md),
+with3,813 exact-source unit tests passing. It uses each actor's own scope and actual
+accepted E/EV evidence; publication and execution wiring remain separate. The
+[bounded reader SQL](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md) and
+[mixed sender SQL](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md) stay qualified within
+their recorded scope. Public dependency/tool data is restored and audited;
+contained offline cache bootstrap and real StockFlow E/EV remain next. P/C native
+publication, SDK/live email, ARM64 and supervised release stay open.
 
 ## Working contract
 

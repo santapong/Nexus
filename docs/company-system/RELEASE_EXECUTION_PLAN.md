@@ -101,3 +101,10 @@ Twenty reviewed completed items and several stable cycles govern later Delegated
 The [roadmap estimate](DELIVERY_ROADMAP.md) remains the measured-planning baseline. Parallel agents shorten independent work, while SDK/schema/auth/recovery integration remains the critical path. Re-estimate from package throughput after M1 rather than dividing calendar time by agent count.
 
 Source references: [DBOS outbox](https://docs.dbos.dev/python/examples/outbox), [DBOS queues](https://docs.dbos.dev/python/tutorials/queue-tutorial), [Pydantic AI DBOS integration](https://pydantic.dev/docs/ai/capabilities/durable_execution/dbos/), [OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).
+
+
+2026-10-15 follow-up: the dormant [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md)
+is source-qualified with319 focused/3,813 full units and independent review. It
+preserves each downstream actor's own scope, original windows and actual private
+sidecars. Continue the contained offline dependency/bootstrap and real selected
+E/EV gates, then protected P/C publication/check/acceptance and runtime wiring.

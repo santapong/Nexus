@@ -127,3 +127,9 @@ complete: actual46.04s,517package archives+pnpm, independent complete SRI/hash/f
 permissions audit. The first FUSE-mode failure remains preserved. This only
 restores inputs for a separate contained offline cache bootstrap; real StockFlow
 Node-v4 timing, selected E/EV acceptance and full-cycle delivery remain open.
+
+
+The [own-scope P/C engineering reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md)
+passes319 focused/3,813 full units and independent review after the retained-sidecar
+repair. It remains dormant: actual selected E/EV plus independent acceptance,
+P/C protected publication/check/acceptance and the same-goal operating proof remain.

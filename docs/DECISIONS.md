@@ -3593,3 +3593,27 @@ Validation:44 focused,264 compatibility and3,758 exact-source unit tests pass;
 configured strict/lint/format3 and independent file review pass. See
 CYCLE_FAMILY_READ_SOURCE_CHECKPOINT_2026-10-15.md. No schema/dependency or new active
 tool route is introduced.
+
+
+## ADR-124 — Read accepted engineering evidence under each downstream actor's own scope
+
+**Date:** 2026-10-15
+**Status:** accepted for dormant source; native P/C publication remains separate
+**Decided by:** Codex under the approved P/C prerequisite plan
+
+Use a distinct P/PV/C/CV partition and current credential/original lease to read
+actual accepted E/EV evidence. Capture original grants/source/profile windows
+before material READ. Preserve complete native receipts/attempts, independent
+acceptance, exact provenance, full protected bytes/results, source witnesses and
+actual containment sidecars. Recompute engineering and selected Strategy facts.
+
+Retained-proof validation rereads both sidecars as well as public references and
+body tails, and retains the original store/composition and final clock checks.
+The process-local result is descriptive; readers do not issue or write acceptance.
+Do not widen the E-only input reader or borrow the verifier's identity/lease.
+
+This adds five dormant production modules and five unit/support files, without
+schema, dependency or active route changes.319 focused and3,813 full unit tests,
+configured strict/lint/format13 and independent review pass. Real accepted E/EV,
+P/C publication and the full-goal SQL/runtime gates remain separate. See
+CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md.
