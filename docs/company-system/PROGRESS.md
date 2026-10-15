@@ -721,3 +721,17 @@ unit checks/42.69s, 41 focused and strict/lint/format8. Receipt and initial fail
 The initial whole run also exposed an existing cache cancellation race; retained
 for deterministic repair, not dismissed by the corrected-temp whole-suite pass.
 Actual terminal containment, Strategy PG and full release gates remain open.
+
+
+## 2026-10-15 — Actual contained native M1 and fresh-process known replay
+
+The [methodv6 checkpoint](CONTAINED_METHOD_V6_M1_AND_REPLAY_2026-10-15.md) records
+one actual succeeded native job and exact known-result replay, normal cleanup,
+released fence4 and conserved one tool/unknown hold. Eight samples are reported;
+full intermediate sample bodies are not retained, so independent full-chain
+recomputation stays limited. Prior five runtime failures remain unchanged.
+
+Cache cancellation is corrected in1daa776, with Root3,101unit/40.27s and scoped
+finite filesystem tests. Strategy first-PG failed at fixture first-approval CAS
+before registration/publication; its DB/zero execution ledger is preserved and
+a separate source-only repair is being prepared. Full release gates remain open.

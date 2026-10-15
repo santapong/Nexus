@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Record actual contained native M1 and known replay
+
+### Validation
+- One synthetic amd64 methodv6 native job passed with actual succeeded receipt,
+  protected summary, containment sidecar, normal stopped-container cleanup and
+  recorded process/unit termination. Fresh-process known replay preserved the
+  original result/reference/receipt, one tool attempt and positive unknown hold.
+- Eight contained samples are reported; retained final sample and aggregate data
+  limit independent full-chain recomputation. Prior five failures stay unchanged.
+- First strategy PG stopped at fixture approval CAS before native publication;
+  its partial DB is preserved. Full StockFlow/ARM64/provider/operating gates stay open.
+
+**Authored by:** Codex and supervised evidence-review agent
+**PR:** not published
+
 ## [2026-10-15] — Preserve cache export ownership through cancellation
 
 ### Fixed
