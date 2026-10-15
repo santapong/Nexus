@@ -74,6 +74,38 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-108 — Issued runtime relocates the host within the delegated scope
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** high
+**Status:** open
+**Found by:** actual methodv4 native qualification with retained parent facts
+**Affected files:** `builder/contained_scope.py`, issued-process parent layout (correction pending)
+
+### What happened
+The actual original host self-membership changed from the exact delegated scope
+to its `runtime` child after sandbox runtime issuance. All recorded Unit facts
+and other Kernel identity/cap fields matched. The exact-root self-path invariant
+rejected it, leaving sample0 and the native result unknown with no receipt.
+
+### Root cause
+The current layout assumed the host would remain directly in the scope root.
+Exact actual-facts pure replay reproduces denial, with only that path different.
+Runtime source research and a secure exact post-issuance layout correction are
+being reviewed; no generic descendant membership exception is accepted.
+
+### Fix applied
+None yet. The new parent diagnostics retained the necessary facts. Preserve the
+fourth failed action/DB/object/unknown hold; implement and qualify a new method
+with actual owned-process/host/parent identity before any fresh execution case.
+
+### Prevention
+Keep current live parent and workload layouts tied to actual runtime behavior.
+Do not infer old-case causes, loosen caps or treat counterfactual DTO validation
+as live qualification. See CONTAINED_PARENT_PATH_FAILURE_2026-10-15.md.
+
+---
+
 ## ERROR-106 — Strategy source reader omitted citation-to-manifest links
 
 **Date:** 2026-10-15 (Asia/Bangkok)

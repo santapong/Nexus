@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Diagnose actual post-issuance parent path failure
+
+### Validation
+- Fresh actual methodv4 case retained complete failed parent query/Unit/Kernel
+  metadata. Exact-facts replay identifies only host self-path root→runtime-child;
+  scope identity and resource caps match. Original result remains unknown.
+- Fourth failed action/DB/object/positive unknown hold preserved. A secure issued
+  layout correction remains open; no retry or validation exception was installed.
+
+**Authored by:** Codex and supervised qualification/research agents
+**PR:** not published
+
 ## [2026-10-15] — Retain exact failed parent-observation metadata
 
 ### Added
