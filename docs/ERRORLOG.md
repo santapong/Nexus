@@ -74,6 +74,37 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-109 — Verifier receipt gate omitted publication chronology
+
+**Date:** 2026-10-15 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (unhooked mocked-SQL receipt scope)
+**Found by:** Root and independent receipt review
+**Affected files:** `company/strategy/verifier_receipt.py`
+
+### What happened
+Initial exact journal/intent/receipt/output checks did not constrain the actual
+artifact record's timestamp to original issuance and succeeded receipt time.
+Two pure native-row negatives with metadata before issuance/after receipt failed
+DID NOT RAISE. No caller endpoint or native acceptance store was active.
+
+### Root cause
+Final receipt<=now validated receipt time but did not prove that the referenced
+publication metadata existed between original issuance and that receipt.
+
+### Fix applied
+Require original attempt<=intent<=publication metadata<=receipt<=final database
+clock and authorization consumption<=intent. Keep original intent fence separate
+from the current execute fence. The same two probes pass within56 focused checks;
+coherent2,921unit/32.68s, strict/Ruff/format5 and independent review pass.
+
+### Prevention
+Validate each distinct persisted event's chronology against its original effect,
+without inventing current timestamps or treating a present row as prior issuance
+proof. Retained source/red logs are in STRATEGY_VERIFIER_RECEIPT_CHECKPOINT.
+
+---
+
 ## ERROR-107 — Original bundle storage changed wire identity across encodings/processes
 
 **Date:** 2026-10-15 (Asia/Bangkok)

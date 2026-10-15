@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bind strategy verification to actual succeeded receipt facts
+
+### Added
+- Read-only exact SV journal/intent/original attempt/receipt/output binding with
+  current lease and sealed credential clocks; no caller verdict or new authority.
+- Deterministic check-output identity covers target, original snapshot/output and
+  complete supplied check manifest. Concrete native pair/B/READ remains required.
+
+### Validation
+- Retained two publication-chronology failures corrected. 56 focused checks,
+  coherent2,921unit/32.68s, strict/Ruff/format5 and independent review pass.
+- No SQL qualification, native acceptance, worker or mixed-cycle activation.
+
+**Authored by:** Codex and supervised review agent
+**PR:** not published
+
 ## [2026-10-15] — Compile rich strategy material with stable lossless input wire
 
 ### Added
