@@ -63,7 +63,8 @@ class BrainArtifactRevision(CompanyRow, RecordedRow, BrainBase):
         ),
         CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="ck_brain_artifact_hash"),
         CheckConstraint(
-            "media_type IN ('text/plain','text/markdown','application/json')",
+            "media_type IN ('text/plain','text/markdown','application/json') OR "
+            "(media_type = 'text/html' AND derivation_id IS NOT NULL)",
             name="ck_brain_artifact_media",
         ),
     )

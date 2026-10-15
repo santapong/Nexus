@@ -20,6 +20,7 @@
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
+| ADR-125 | Preserve truthful generated HTML with derived-only company016 persistence | accepted | 2026-10-15 |
 | ADR-001 | Pydantic AI as agent runtime | accepted | 2026-03 |
 | ADR-002 | MCP via Python package → Pydantic AI adapter | accepted | 2026-03 |
 | ADR-003 | A2A Gateway as boundary service only | accepted | 2026-03 |
@@ -3617,3 +3618,21 @@ schema, dependency or active route changes.319 focused and3,813 full unit tests,
 configured strict/lint/format13 and independent review pass. Real accepted E/EV,
 P/C publication and the full-goal SQL/runtime gates remain separate. See
 CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md.
+
+## ADR-125 — Preserve truthful generated HTML with derived-only persistence
+
+**Date:** 2026-10-15
+**Status:** accepted
+
+Generated presentations retain text/html. Source policy requires derived origin;
+artifact metadata and the company016 CHECK require a derivation identity, retaining
+existing deferred same-company provenance FKs. Keep direct HTML ingestion denied
+and preserve the original three formats. Labelling HTML as plain text would lose
+its real media identity; widening only Python literals would fail database writes.
+
+Use the additive independent company lineage. Normal downgrade refuses retained
+HTML and preserves rows/history transactionally. Native event capability explicitly
+recognizes015/016 with actual columns checked; future revisions do not inherit it.
+Fresh restricted PostgreSQL provenance/format/rollback and clean install/schema
+checks qualify this boundary. Browser sanitization, native publication and service
+migration/activation remain separate. See the generated HTML schema checkpoint.

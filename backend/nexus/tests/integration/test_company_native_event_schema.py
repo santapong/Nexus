@@ -1,4 +1,4 @@
-"""Actual normal015 schema qualification only; placeholder event rows are not native wakes."""
+"""Physical015 event columns on normal016; placeholders are not native wakes."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime
@@ -49,7 +49,7 @@ async def test_native_event015_physical_columns_and_profile_are_qualified(
     async with native_schema_factory() as session, session.begin():
         assert await native_event_capability(session)
         version = await session.scalar(text("SELECT version_num FROM company_alembic_version"))
-        assert version == "company_015"
+        assert version == "company_016"
         connection = await session.connection()
         columns = await connection.run_sync(
             lambda sync: inspect(sync).get_columns("company_brain_events")

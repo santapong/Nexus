@@ -1,4 +1,4 @@
-"""Actual physical015 capability, checked before any full native event query."""
+"""Actual physical015 capability on closed015/016 profiles, before full event SQL."""
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,6 @@ async def native_event_capability(session: AsyncSession) -> bool:
     if await session.scalar(text("SELECT to_regclass('public.company_alembic_version')")) is None:
         raise BrainDeniedError("Native event profile is not qualified")
     version = await session.scalar(text("SELECT version_num FROM company_alembic_version"))
-    if not isinstance(version, str) or version not in {"company_015"}:
+    if not isinstance(version, str) or version not in {"company_015", "company_016"}:
         raise BrainDeniedError("Native event profile version is not qualified")
     return True

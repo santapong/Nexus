@@ -49,7 +49,7 @@ class ArtifactRevisionRef(BrainContract):
 
 class ArtifactRevisionRecord(ArtifactRevisionRef):
     resource: ResourceRef
-    media_type: Literal["text/plain", "text/markdown", "application/json"]
+    media_type: Literal["text/plain", "text/markdown", "text/html", "application/json"]
     storage_symbol: Symbol
     raw_text: Annotated[str, StringConstraints(min_length=1, max_length=2_097_152)]
     recorded_at: AwareDatetime
@@ -58,6 +58,8 @@ class ArtifactRevisionRecord(ArtifactRevisionRef):
     @model_validator(mode="after")
     def actual_bytes(self) -> Self:
         require_company(self.company_id, self.resource)
+        if self.media_type == "text/html" and self.derivation_id is None:
+            raise ValueError("HTML artifact requires its immutable derivation identity")
         raw = self.raw_text.encode("utf-8")
         if (
             "\x00" in self.raw_text

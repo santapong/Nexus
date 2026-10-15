@@ -15,7 +15,9 @@ contained offline cache bootstrap and real StockFlow E/EV remain next. The first
 container creation at the current262-1 versus qualified261.2-1 manager boundary;
 the [raw262 diagnostic](HOST_PARENT_262_RAW_CHECKPOINT_2026-10-15.md) now captures
 all five replies and kernel facts within its original bound. Exact262 source and
-native compatibility qualification remain required. P/C native
+native compatibility qualification remain required. The
+[generated HTML/company016 slice](DERIVED_HTML_SCHEMA_CHECKPOINT_2026-10-15.md)
+passes3,847 exact-source units and12 actual PostgreSQL checks. P/C native
 publication, SDK/live email, ARM64 and supervised release stay open.
 
 ## Working contract

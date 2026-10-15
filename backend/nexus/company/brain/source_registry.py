@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Literal, Protocol
+from typing import Literal, Protocol, Self
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from nexus.company.brain.base import BrainContract, Name, SourceTime, Symbol, ValueContract
 from nexus.company.brain.claims import DerivationRecord
@@ -20,7 +20,7 @@ class SourcePolicy(ValueContract):
     authority_profile: Symbol
     data_classification: Literal["public", "internal", "confidential", "restricted"]
     origin_kind: Literal["direct", "derived"] = "direct"
-    media_type: Literal["text/plain", "text/markdown", "application/json"]
+    media_type: Literal["text/plain", "text/markdown", "text/html", "application/json"]
     parser_version: Symbol
     chunker_version: Symbol
     search_config: Literal["simple", "english"]
@@ -30,6 +30,12 @@ class SourcePolicy(ValueContract):
     chunk_bytes: int = Field(default=8192, ge=32, le=8192, strict=True)
     max_chunks: int = Field(default=256, ge=1, le=256, strict=True)
     parse_timeout_seconds: int = Field(default=10, ge=1, le=10, strict=True)
+
+    @model_validator(mode="after")
+    def derived_html(self) -> Self:
+        if self.media_type == "text/html" and self.origin_kind != "derived":
+            raise ValueError("HTML source policy requires a derived origin")
+        return self
 
 
 class SourceSnapshot(BrainContract):

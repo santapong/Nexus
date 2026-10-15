@@ -19,11 +19,13 @@ from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.plan_support import PlanAdmissionCatalog
 from nexus.company.management.plans import PlanPayload
 
-DATABASE = "nexus_company_test_native_csv_engineering"
-COMPANY_REVISION = "company_015"
-ROOT = Path("/tmp/nexus-csv-native-pg-20261015-1")
+DATABASE = "nexus_company_test_native_csv_engineering_v2"
+COMPANY_REVISION = "company_016"
+ROOT = Path("/tmp/nexus-csv-native-pg-20261015-2")
 PUBLIC = Path("/home/santapong/.codex/nexus-csv-v4-public-fixture-20261014")
 PLAN = Path("/home/santapong/.codex/nexus-csv-native-pg-20261015-plan")
+# Historical immutable public-input/source lineage, never a new execution source pin.
+# A future V2 launch needs its separately frozen current source/operator packet.
 SOURCE_HEAD = "930aed362394a6c779870c18fab32a6c9ed802e8"
 
 

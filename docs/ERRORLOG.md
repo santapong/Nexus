@@ -74,6 +74,49 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-139 — Current CSV fixture still expected the previous company head
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed in source; no native fixture retry
+**Found by:** Root exact-source full regression after company016 addition
+**Affected files:** tests/csv_native_scope.py and its scope unit tests
+
+The first candidate had one failure and3,843 passes: the unchanged current-head
+assertion compared016 with the fixture's015 expectation. The frozen historical
+015 run cannot be repinned or replayed under that old database/root identity.
+
+Version the current fixture to016 and fresh exact v2 database/root names. Preserve
+the head assertion, immutable public-input lineage and all old source/DB/proof.
+Three real old-namespace denial reds precede the fix;19 focused and3,847 full units
+pass. Future actual CSV setup needs a new source/operator packet and runtime pins.
+
+---
+
+## ERROR-138 — Generated HTML contracts lacked matching persistent media support
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed and qualified on fresh local company databases
+**Found by:** P/C source review and Root ORM constraint inspection
+**Affected files:** Brain source policy/record/ORM, company016 and native event capability
+
+The compiler emits HTML, but contracts and the database media CHECK allowed only
+plain text, Markdown and JSON. A type-only extension would still fail persistence.
+Adding016 also exposed the native-event capability's exact015 version guard.
+
+Keep truthful text/html and require derived origin/identity; add company016 with
+an equivalent named CHECK and preserve same-company deferred derivation FKs.
+Recognize exact015/016 event profiles with full physical-column checks. Normal
+downgrade refuses retained HTML without deleting evidence. Source reds, configured
+static13,3,847 full units and12 real restricted-PG/profile checks pass; independent
+audits pass. Original008/legacy history and failed first regression remain intact.
+
+See [the scoped checkpoint](company-system/DERIVED_HTML_SCHEMA_CHECKPOINT_2026-10-15.md).
+No production migration or native P/C execution follows from this qualification.
+
+---
+
 ## ERROR-137 — Generic managed tools could select the model-request attempt slice
 
 **Date:** 2026-10-15

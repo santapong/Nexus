@@ -10,6 +10,7 @@ from nexus.tests.csv_native_source import reviewed_sources
 
 
 def test_exact_unused_ordinary_root_is_eligible() -> None:
+    assert Path("/tmp/nexus-csv-native-pg-20261015-2") == ROOT
     require_root(ROOT, existing=ROOT.exists())
 
 
@@ -20,6 +21,7 @@ def test_other_root_or_namespace_denies(root: Path) -> None:
 
 
 def test_exact_socket_and_assigned_database_only() -> None:
+    assert DATABASE == "nexus_company_test_native_csv_engineering_v2"
     value = make_url(
         f"postgresql+asyncpg://santapong@/{DATABASE}"
         "?host=/tmp/nexus-release-tests-2026-10-13/socket&port=55438"
@@ -153,3 +155,19 @@ def test_audit_runner_preserves_real_prepare_run_and_reconcile_composition() -> 
     assert CsvObservedNodeRunner.run is NativeBuilderRunner.run
     assert CsvObservedNodeRunner.prepare is EngineeringNativeBuilderRunner.prepare
     assert CsvObservedNodeRunner.reconcile is EngineeringNativeBuilderRunner.reconcile
+
+
+def test_historical_exact_root_cannot_be_reused_by_current_fixture() -> None:
+    with pytest.raises(ValueError, match="CSV native"):
+        require_root(Path("/tmp/nexus-csv-native-pg-20261015-1"), existing=True)
+
+
+@pytest.mark.parametrize("application", [False, True])
+def test_historical_exact_database_cannot_be_reused_by_current_fixture(application: bool) -> None:
+    username = "nexus_company_app" if application else "santapong"
+    original = make_url(
+        f"postgresql+asyncpg://{username}@/nexus_company_test_native_csv_engineering"
+        "?host=/tmp/nexus-release-tests-2026-10-13/socket&port=55438"
+    )
+    with pytest.raises(ValueError, match="CSV native"):
+        require_database(original, application=application)

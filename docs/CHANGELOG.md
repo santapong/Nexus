@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify generated HTML persistence and company016
+
+### Added
+- Derived HTML contract/ORM support and additive company016 with evidence-preserving
+  downgrade refusal. Direct HTML remains denied; notification capability recognizes
+  exact015/016 with actual columns checked.
+- Fresh current CSV fixture identity for016; historical015 evidence remains intact.
+
+### Validation
+- 3,847 exact-source units, configured static13 and12 real PostgreSQL checks pass;
+  independent source/actual-evidence audits pass. See the generated HTML checkpoint.
+- No production migration, P/C execution or release activation is claimed.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Capture current host parent facts
 
 ### Validation
