@@ -11,21 +11,19 @@ from nexus.builder.contained_contracts import ParentObservation, ScopeExpectatio
 from nexus.builder.contained_diagnostics import error_kind
 from nexus.builder.contained_discovery import ContainedDiscovery, DiscoveryUnavailableError
 from nexus.builder.contained_evidence_types import (
-    ExactContainer,
     ObservationDeadline,
-    ObservedSample,
 )
+from nexus.builder.contained_issued_context import OwnedStart, open_owned_start
 from nexus.builder.contained_observer import ContainmentObserver
 from nexus.builder.contained_observer_io import OwnedObservationIO, _proc
 from nexus.builder.contained_parent_diagnostics import failure_parent_attempt
+from nexus.builder.contained_process_capture import _capture, _Prefix
 from nexus.builder.contained_process_contracts import (
     ContainedRunCapture,
     PreparedContainedLaunch,
     ProcessRunBinding,
     ProcessSampling,
-    assemble_capture,
     capture_limits,
-    process_diagnostic,
     require_spawn_ready,
     runtime_membership,
 )
@@ -34,7 +32,8 @@ from nexus.builder.contained_process_contracts import (
 )
 from nexus.builder.contained_query import clock_us
 from nexus.builder.contained_spawn_window import SpawnWindow
-from nexus.builder.process import ProcessCapture, engine_environment
+from nexus.builder.process import engine_environment
+from nexus.builder.systemd_scope_provider import SystemdScopeProvider
 
 
 class ProcessOwnershipUnresolvedError(ValueError):
@@ -48,21 +47,6 @@ class ProcessOwnershipUnresolvedError(ValueError):
     ) -> None:
         super().__init__(message)
         self.pending, self.process = pending, process  # Strong ownership, never a retry permit.
-
-
-class _Prefix:
-    """Keep at most the original cap, including when overflow or cancellation interrupts capture."""
-
-    def __init__(self, limit: int) -> None:
-        self.limit, self.body = limit, bytearray()
-
-    async def read(self, stream: asyncio.StreamReader) -> bytes:
-        while part := await stream.read(min(65536, self.limit - len(self.body) + 1)):
-            remaining = self.limit - len(self.body)
-            self.body.extend(part[:remaining])
-            if len(part) > remaining:
-                raise ValueError("Contained original output exceeds cap; prefix retained")
-        return bytes(self.body)
 
 
 class CurrentParents(Protocol):
@@ -100,6 +84,7 @@ class ContainedProcess:
         self.discovery = discovery if discovery is not None else ContainedDiscovery()
         self._clock, self._utc = clock_us, utc_now
 
+    # Keep the >50-line preissue ownership/last-window/spawn transaction and failure close together.
     async def start(
         self,
         launch: PreparedContainedLaunch,
@@ -115,9 +100,12 @@ class ContainedProcess:
         if deadline is None:
             raise ValueError("Contained start requires the original fixed operation end")
         process: asyncio.subprocess.Process | None = None
+        owner: OwnedStart | None = None
         environment = engine_environment()  # Resolve account/files before the final parent read.
         try:
             async with asyncio.timeout(self._remaining(deadline.end_us - 100_000)):
+                if isinstance(self.parents, SystemdScopeProvider):
+                    owner = await open_owned_start(binding, expectation, deadline.end_us)
                 window = await watch.before_spawn()
                 if (
                     not isinstance(window, SpawnWindow)
@@ -143,10 +131,18 @@ class ContainedProcess:
                     process, min(deadline.end_us, parent.deadline_us)
                 )
                 membership = runtime_membership(path, parent)
-                return StartedContainedProcess(process, parent, window, ticks, path, membership)
+                if owner is not None:
+                    owner.bind_spawn(process, parent, ticks)
+                return StartedContainedProcess(
+                    process, parent, window, ticks, path, membership, owner
+                )
         except BaseException:
-            if process is not None:
-                await self._cancel_spawned(process, deadline)
+            try:
+                if process is not None:
+                    await self._cancel_spawned(process, deadline)
+            finally:
+                if owner is not None:
+                    owner.close()
             raise
 
     def _remaining(self, end: int) -> float:
@@ -252,7 +248,12 @@ class ContainedProcess:
             if state.phase == "parent":
                 state.parent_attempt = failure_parent_attempt(failure, expectation)
         finally:
-            uncertain = await self._finish_runtime(started, out, err, wait, deadline)
+            try:
+                uncertain = await self._finish_runtime(started, out, err, wait, deadline)
+            finally:
+                if started.owned_start is not None:
+                    state.issued_cleanup = "closed" if started.owned_start.close() else "deferred"
+            uncertain = uncertain or state.issued_cleanup == "deferred"
         return _capture(
             started,
             deadline,
@@ -269,6 +270,7 @@ class ContainedProcess:
             state,
         )
 
+    # Keep discovery-seal consumption and post-only sampling in one >50-line state boundary.
     async def _monitor(
         self,
         started: StartedContainedProcess,
@@ -298,11 +300,25 @@ class ContainedProcess:
                         recorder=state.discovery,
                     )
                     state.sealed = container
+                    if started.owned_start is not None:
+                        if type(self.discovery) is not ContainedDiscovery:
+                            raise ValueError("Post-seal context requires concrete fixed discovery")
+                        state.issued_context = started.owned_start.seal(
+                            self.discovery.take_owned_seal(container)
+                        )
                 except DiscoveryUnavailableError:
                     await asyncio.wait((state.wait,), timeout=0.1)
                     continue  # Read-only name discovery; never repeat the issued process.
             state.phase = "parent"
-            parent = await self.parents.observe(expectation)
+            if state.issued_context is not None:
+                if not isinstance(self.parents, SystemdScopeProvider):
+                    raise ValueError("Post-seal parent requires concrete configured provider")
+                parent = await self.parents.observe_after_owned_spawn(
+                    expectation, state.issued_context
+                )
+                state.issued_identity = parent.issued_identity
+            else:
+                parent = await self.parents.observe(expectation)
             state.phase = "sample"
             row = await observer.sample(parent, state.sealed, deadline)
             state.samples.append(row)
@@ -352,48 +368,3 @@ def _consume_spawn(task: asyncio.Task[asyncio.subprocess.Process]) -> None:
     """Consume terminal failure; cancellation uncertainty never fabricates a reaped child."""
     if not task.cancelled():
         task.exception()
-
-
-def _capture(
-    started: StartedContainedProcess,
-    deadline: ObservationDeadline,
-    sealed: ExactContainer | None,
-    samples: list[ObservedSample],
-    stdout_prefix: _Prefix,
-    stderr_prefix: _Prefix,
-    wait: asyncio.Task[int],
-    elapsed_millis: int,
-    reason: str | None,
-    uncertain: bool,
-    clock: Callable[[], int],
-    binding: ProcessRunBinding,
-    state: ProcessSampling,
-) -> ContainedRunCapture:
-    process = started.process
-    capture = ProcessCapture(
-        stdout=bytes(stdout_prefix.body),
-        stderr=bytes(stderr_prefix.body),
-        exit_code=process.returncode if process.returncode is not None else -1,
-        elapsed_millis=elapsed_millis,
-        interruption=reason or ("capture_or_reap_unresolved" if uncertain else None),
-    )
-    result = assemble_capture(started, deadline, sealed, samples, capture, wait, reason, uncertain)
-    result = result.model_copy(update={"parent_attempt": state.parent_attempt})
-    result = result.model_copy(update={"diagnostic": process_diagnostic(binding, result, state)})
-    if clock() >= min(deadline.end_us, started.parent.deadline_us):
-        diagnostic = result.diagnostic
-        assert diagnostic is not None
-        return result.model_copy(
-            update={
-                "infrastructure": "unresolved",
-                "limitations": ("shared_deadline_expired",),
-                "diagnostic": diagnostic.model_copy(
-                    update={
-                        "infrastructure": "unresolved",
-                        "phase": "capture",
-                        "error_type": "TimeoutError",
-                    }
-                ),
-            }
-        )
-    return result

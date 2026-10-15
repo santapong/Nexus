@@ -1,6 +1,22 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Bind post-seal runtime membership to actual owned processes
+
+### Added
+- Opaque owned-start/full-ID discovery context and exact current runtime-leaf
+  directory/process proof, with unchanged strict pre-issue root checks and limits.
+- Explicit raw pre-issue/post-seal sample/diagnostic/sidecar identity and methodv5;
+  actual facts retained, deferred local-FD cleanup remains unresolved.
+
+### Validation
+- 414 focused plus five recipe checks, independent review and isolated2,981unit/
+  32.62s, strict/Ruff/format23 pass. Actual native qualification is still pending;
+  all four failed cases remain preserved without reissue or upgrade.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Preserve exact strategy check graph and proof descriptions
 
 ### Added

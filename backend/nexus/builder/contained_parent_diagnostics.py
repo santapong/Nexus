@@ -12,6 +12,7 @@ from pydantic import Field, ValidationError, model_validator
 
 from nexus.builder.contained_contracts import (
     ContainedValue,
+    HostPlacementIdentity,
     KernelScopeFacts,
     Positive,
     ScopeExpectation,
@@ -31,6 +32,7 @@ ParentStage = Literal[
     "kernel",
     "validate",
     "complete",
+    "issued_membership",
 ]
 ParentError = Literal[
     "none",
@@ -95,6 +97,9 @@ class ParentAttempt(ContainedValue):
     unit_observed: FactsDigest | None
     kernel_observed: FactsDigest | None
     facts_truncated: bool
+    issued_identity: HostPlacementIdentity | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def ordered_bounded_metadata(self) -> Self:
@@ -131,6 +136,7 @@ class ParentRecorder:
         self.queries: list[ParentQuery] = []
         self.unit: SystemdScopeFacts | None = None
         self.kernel: KernelScopeFacts | None = None
+        self.issued_identity: HostPlacementIdentity | None = None
 
     def begin_query(self, index: int, argv: tuple[str, ...]) -> None:
         if index != len(self.queries) or index >= 5:
@@ -192,6 +198,9 @@ class ParentRecorder:
                 "unit_observed": unit_digest.model_dump() if unit_digest else None,
                 "kernel_observed": kernel_digest.model_dump() if kernel_digest else None,
                 "facts_truncated": unit_large or kernel_large,
+                "issued_identity": self.issued_identity.model_dump()
+                if self.issued_identity
+                else None,
                 "error_type": kind,
                 "code": code,
             }

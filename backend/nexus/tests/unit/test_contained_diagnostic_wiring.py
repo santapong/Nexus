@@ -163,6 +163,14 @@ def test_parent_failure_metadata_requires_a_new_complete_method_identity() -> No
     }
 
 
+def test_issued_membership_requires_a_new_complete_method_identity() -> None:
+    from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
+
+    assert CONTAINED_EXECUTION_METHOD_SHA256 != (
+        "36ab659fa81c0adc21f016a7d7f3263c73a5cc924a418a2925dc245df7f6d78b"
+    )
+
+
 def test_services_keep_diagnostic_storage_separate_from_success_sidecars(tmp_path: Path) -> None:
     from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 

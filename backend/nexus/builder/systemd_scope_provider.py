@@ -18,6 +18,7 @@ from nexus.builder.contained_contracts import (
     UserManagerObservation,
     require_user_manager,
 )
+from nexus.builder.contained_issued_context import OwnedIssuedContext
 from nexus.builder.contained_kernel import collect_kernel
 from nexus.builder.contained_parent_diagnostics import ParentAttempt, ParentRecorder
 from nexus.builder.contained_query import (
@@ -29,7 +30,7 @@ from nexus.builder.contained_query import (
     BusctlReader,
     clock_us,
 )
-from nexus.builder.contained_scope import validate_current_scope
+from nexus.builder.contained_scope import validate_current_scope, validate_issued_scope
 
 
 class ScopeQueryReader(Protocol):
@@ -58,8 +59,26 @@ class SystemdScopeProvider:
 
     async def observe(self, expected: ScopeExpectation) -> ParentObservation:
         """Read exact current Unit/Scope and kernel facts again on every call."""
+        return await self._observe(expected, None)
+
+    async def observe_after_owned_spawn(
+        self,
+        expected: ScopeExpectation,
+        context: OwnedIssuedContext,
+    ) -> ParentObservation:
+        if type(context) is not OwnedIssuedContext or context.owner.expected != expected:
+            raise ValueError("Post-seal observation requires actual owned job context")
+        return await self._observe(expected, context)
+
+    async def _observe(
+        self,
+        expected: ScopeExpectation,
+        context: OwnedIssuedContext | None,
+    ) -> ParentObservation:
         start = self._clock()
         deadline = start + ObservationBounds().total_io_us
+        if context is not None:
+            deadline = min(deadline, context.owner.end_us)
         self._ordinal += 1
         recorder = ParentRecorder(self._ordinal, expected, start)
         self.last_diagnostic = None
@@ -67,7 +86,7 @@ class SystemdScopeProvider:
         # Keep reads, original validation, final clock and exact exception metadata in one
         # >50-line call boundary: a previous observation can never fill this failed attempt.
         try:
-            async with asyncio.timeout(3):
+            async with asyncio.timeout(max(0, deadline - start) / 1_000_000):
                 queries = query_arguments(expected.unit)
                 manager = await self._read_manager(queries, deadline, expected.uid, recorder)
                 recorder.stage = "resolve"
@@ -92,12 +111,28 @@ class SystemdScopeProvider:
                     else await asyncio.to_thread(collect_kernel, expected, manager)
                 )
                 recorder.kernel = kernel
+                if context is not None:
+                    recorder.stage = "issued_membership"
+                    recorder.issued_identity = await context.observe(expected, kernel, deadline)
                 end = self._clock()
                 recorder.stage = "validate"
                 if end > deadline:
                     recorder.code = "deadline"
                     raise ValueError("Scope observation exceeded the total IO deadline")
-                result = validate_current_scope(expected, unit, kernel, start, end)
+                if context is None:
+                    result = validate_current_scope(expected, unit, kernel, start, end)
+                else:
+                    if recorder.issued_identity is None:
+                        raise ValueError("Actual issued membership witness is unavailable")
+                    result = validate_issued_scope(
+                        expected,
+                        unit,
+                        kernel,
+                        recorder.issued_identity,
+                        context.seal.container,
+                        start,
+                        end,
+                    )
                 recorder.stage = "complete"
                 snapshot = recorder.finish(None, end)
                 end = self._clock()

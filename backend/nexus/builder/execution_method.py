@@ -5,6 +5,7 @@ import json
 from typing import Literal
 
 from nexus.builder.contained_contracts import ContainedValue, ObservationBounds
+from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256
 from nexus.builder.runtime_identity import RUNTIME_V2_METHOD_SHA256
 from nexus.builder.user_parent_identity import USER_PARENT_METHOD_SHA256
 
@@ -13,7 +14,7 @@ from nexus.builder.user_parent_identity import USER_PARENT_METHOD_SHA256
 CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
     json.dumps(
         {
-            "schema": "nexus.builder.contained-execution-method.v4",
+            "schema": "nexus.builder.contained-execution-method.v5",
             "fixed_inspect_template": "podman_go_field_ID_not_json_tag_Id",
             "diagnostics": {
                 "raw": "original_identity_complete_capture_metadata_before_decode",
@@ -34,6 +35,14 @@ CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
             },
             "selector": RUNTIME_V2_METHOD_SHA256,
             "parent": USER_PARENT_METHOD_SHA256,
+            "issued_parent": {
+                "method": ISSUED_PARENT_METHOD_SHA256,
+                "phase": "opaque_actual_owned_start_fixed_full_id_postseal_only",
+                "placement": "exact_runtime_leaf_actual_facts_original_root_caps",
+                "series": "stable_issued_identity_all_immutable_parent_facts",
+                "binding": "original_preissue_parent_to_issued_job_fence_full_id_samples_sidecar",
+                "ownership": "strong_pending_fd_io_and_child_no_hard_thread_cancellation_claim",
+            },
             "observer": "nexus.builder.contained-observation.v1",
             "store": "nexus.builder.containment-ref.v1",
             "source_clock": "db_query_start_monotonic_original_deadlines_utc_continuity_1s",

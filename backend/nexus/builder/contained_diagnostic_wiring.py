@@ -60,6 +60,15 @@ async def persist_raw(
         or record.interruption != interruption_kind(raw.capture.interruption)
         or record.samples != sample_trace(raw.samples)
         or record.parent_attempt != raw.parent_attempt
+        or record.issued_identity != raw.issued_identity
+        or record.issued_cleanup != raw.issued_cleanup
+        or (
+            raw.issued_identity is not None
+            and any(
+                getattr(raw.issued_identity, key) != getattr(expected, key)
+                for key in DiagnosticIdentity.model_fields
+            )
+        )
     ):
         raise ValueError("Contained raw diagnostic differs from original issued capture")
     return await _persist(record, services)

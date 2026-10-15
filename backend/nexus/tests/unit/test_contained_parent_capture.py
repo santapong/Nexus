@@ -9,7 +9,7 @@ from typing import cast
 import pytest
 
 import nexus.builder.contained_process as module
-from nexus.builder.contained_contracts import KernelScopeFacts
+from nexus.builder.contained_contracts import KernelScopeFacts, ParentObservation, ScopeExpectation
 from nexus.builder.contained_diagnostic_wiring import persist_raw
 from nexus.builder.contained_diagnostics import ContainmentDiagnosticStore, DiagnosticIdentity
 from nexus.builder.contained_discovery import ContainedDiscovery, decode_discovery
@@ -52,8 +52,15 @@ async def test_parent_failure_after_seal_is_retained_and_splice_denied(
     provider = SystemdScopeProvider(
         reader=FakeReader(reports() * 2), kernel_reader=kernel, clock_us=lambda: 12_020_000
     )
+
+    class PreissueOnlyParents:
+        """Nominate the old root failure; production services reject this test adapter."""
+
+        async def observe(self, expected: ScopeExpectation) -> ParentObservation:
+            return await provider.observe(expected)
+
     process = ContainedProcess(
-        provider,
+        PreissueOnlyParents(),
         cast(ContainedDiscovery, Discovery()),
         clock_us=lambda: 12_020_000,
         utc_now=lambda: datetime(2026, 10, 15, tzinfo=UTC) + timedelta(milliseconds=20),

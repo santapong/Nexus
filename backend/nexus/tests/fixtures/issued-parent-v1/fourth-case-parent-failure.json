@@ -1,0 +1,211 @@
+{
+  "attempt": {
+    "code": "failed_at_stage",
+    "error_type": "ValueError",
+    "expectation_sha256": "e84a2073003d479ebf8cb29717d01f8ce43d557e5769fe840d87fd95776ea3f7",
+    "facts_truncated": false,
+    "finished_us": 41805105649,
+    "kernel": {
+      "boot_id": "2513f12c-b0ba-43ee-8c8f-d6d713b3d5e4",
+      "cgroup_inode": 25888,
+      "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "controllers": [
+        "pids",
+        "memory",
+        "cpu"
+      ],
+      "cpu_period_us": 100000,
+      "cpu_quota_us": 200000,
+      "delegation_marker": "absent_user_manager",
+      "directory_uid": 1000,
+      "memory_bytes": 4294967296,
+      "mount_device": 29,
+      "mount_id": 35,
+      "mount_inode": 1,
+      "pids": 256,
+      "self_cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope/runtime",
+      "uid": 1000,
+      "user_manager": {
+        "manager": "user",
+        "query_route": "fixed_local_user_bus",
+        "uid": 1000,
+        "version": "261.2-1"
+      }
+    },
+    "kernel_observed": {
+      "byte_length": 680,
+      "encoding": "canonical-parsed-parent-facts.v1",
+      "sha256": "3066a762ef51c14766f9787fa5084ee69ba74e8eb3b52db1d1f1ace47433d968"
+    },
+    "ordinal": 4,
+    "queries": [
+      {
+        "argv_sha256": "2f59923feae1cc39ef129166dd9073e9588d86026fe210d2b467d13a898a9c4a",
+        "complete": true,
+        "error_type": "none",
+        "index": 0,
+        "observed_bytes": 27,
+        "observed_sha256": "5eadc855765b38ab46a7336299f61c9ae523346bf0bc19025fc50485e074b289",
+        "overflow": false,
+        "prefix_base64": "eyJ0eXBlIjoidSIsImRhdGEiOlsxMDAwXX0K"
+      },
+      {
+        "argv_sha256": "833aee8008c2dde60e21fea2e8dafd2c0092cccd2310354b85ac3e88e557ff4f",
+        "complete": true,
+        "error_type": "none",
+        "index": 1,
+        "observed_bytes": 30,
+        "observed_sha256": "f9e3f38c11e2db26ab5605390dbdc921b92bca9eec8237d32f0aba7b09b80d44",
+        "overflow": false,
+        "prefix_base64": "eyJ0eXBlIjoicyIsImRhdGEiOiIyNjEuMi0xIn0K"
+      },
+      {
+        "argv_sha256": "0577e29308f405fedd102942076be580c2856a3323b0952d787b685a5bf942b2",
+        "complete": true,
+        "error_type": "none",
+        "index": 2,
+        "observed_bytes": 123,
+        "observed_sha256": "ad53d7b540024eea717e41e4e3e92c42a9fe83e6bc5e2cdeb530ac5a7fbc4c7a",
+        "overflow": false,
+        "prefix_base64": "eyJ0eXBlIjoibyIsImRhdGEiOlsiL29yZy9mcmVlZGVza3RvcC9zeXN0ZW1kMS91bml0L25leHVzXzJkY29udGFpbmVkXzJkbmF0aXZlXzJkcGFyZW50ZGlhZ18yZG0xXzJkMjAyNjEwMTVfMmQxXzJlc2NvcGUiXX0K"
+      },
+      {
+        "argv_sha256": "528d76f10edae62bdeecc0c56697392b6af7f1069f427c2a47f1e49180873038",
+        "complete": true,
+        "error_type": "none",
+        "index": 3,
+        "observed_bytes": 248,
+        "observed_sha256": "741f480e71259154aa5c8810ea21be8fef31aa534a5ff55d43881ef1ecc36c7f",
+        "overflow": false,
+        "prefix_base64": "eyJ0eXBlIjoicyIsImRhdGEiOiJuZXh1cy1jb250YWluZWQtbmF0aXZlLXBhcmVudGRpYWctbTEtMjAyNjEwMTUtMS5zY29wZSJ9CnsidHlwZSI6InMiLCJkYXRhIjoibG9hZGVkIn0KeyJ0eXBlIjoicyIsImRhdGEiOiJhY3RpdmUifQp7InR5cGUiOiJheSIsImRhdGEiOls5NywyOCwxNSwyMjMsMTM5LDIxOCw2NSwxMTQsMTc1LDE4MSwyMzksMTk2LDU2LDIyOSwxMzMsMjExXX0KeyJ0eXBlIjoidCIsImRhdGEiOjQxODAwMzg0Mjg5fQo="
+      },
+      {
+        "argv_sha256": "b3ab281ffebf20ee59b650a01011a7f6316a271db434158b016f2c73e899146f",
+        "complete": true,
+        "error_type": "none",
+        "index": 4,
+        "observed_bytes": 407,
+        "observed_sha256": "3b3ce49c1e7b23d35dd87bc4a64c6060de3ba63489edc4642f5032390c46d363",
+        "overflow": false,
+        "prefix_base64": "eyJ0eXBlIjoicyIsImRhdGEiOiIvdXNlci5zbGljZS91c2VyLTEwMDAuc2xpY2UvdXNlckAxMDAwLnNlcnZpY2UvYXBwLnNsaWNlL25leHVzLWNvbnRhaW5lZC1uYXRpdmUtcGFyZW50ZGlhZy1tMS0yMDI2MTAxNS0xLnNjb3BlIn0KeyJ0eXBlIjoidCIsImRhdGEiOjQ1MDAwMDAwfQp7InR5cGUiOiJ0IiwiZGF0YSI6MH0KeyJ0eXBlIjoiYiIsImRhdGEiOnRydWV9CnsidHlwZSI6InQiLCJkYXRhIjo0Mjk0OTY3Mjk2fQp7InR5cGUiOiJ0IiwiZGF0YSI6MjAwMDAwMH0KeyJ0eXBlIjoidCIsImRhdGEiOjEwMDAwMH0KeyJ0eXBlIjoidCIsImRhdGEiOjI1Nn0KeyJ0eXBlIjoicyIsImRhdGEiOiJjb250cm9sLWdyb3VwIn0KeyJ0eXBlIjoiYiIsImRhdGEiOnRydWV9CnsidHlwZSI6InQiLCJkYXRhIjoxMDAwMDAwfQo="
+      }
+    ],
+    "stage": "validate",
+    "started_us": 41805084117,
+    "unit": {
+      "active_enter_us": 41800384289,
+      "active_state": "active",
+      "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "cpu_per_second_us": 2000000,
+      "cpu_period_us": 100000,
+      "delegated": true,
+      "invocation_id": "611c0fdf-8bda-4172-afb5-efc438e585d3",
+      "kill_mode": "control-group",
+      "load_state": "loaded",
+      "memory_bytes": 4294967296,
+      "pids": 256,
+      "randomized_extra_us": 0,
+      "runtime_us": 45000000,
+      "send_sigkill": true,
+      "stop_us": 1000000,
+      "unit": "nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "user_manager": {
+        "manager": "user",
+        "query_route": "fixed_local_user_bus",
+        "uid": 1000,
+        "version": "261.2-1"
+      }
+    },
+    "unit_observed": {
+      "byte_length": 640,
+      "encoding": "canonical-parsed-parent-facts.v1",
+      "sha256": "93c8f2a7749e341013ad036c53f15be737fd6ea45f8257ace5c3a79545555680"
+    }
+  },
+  "bootstrap": {
+    "deadline_us": 41845384289,
+    "expectation": {
+      "action_id": "b7e519d3-c7c7-5398-b23e-9d09dc21e4bf",
+      "boot_id": "2513f12c-b0ba-43ee-8c8f-d6d713b3d5e4",
+      "cgroup_inode": 25888,
+      "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "company_id": "00000000-0000-0000-0000-000000000001",
+      "cpu_period_us": 100000,
+      "cpu_quota_us": 200000,
+      "invocation_id": "611c0fdf-8bda-4172-afb5-efc438e585d3",
+      "launcher_nonce": "8846e36b-3f1a-5030-9292-9f9a07b86ea8",
+      "memory_bytes": 4294967296,
+      "minimum_remaining_us": 1000000,
+      "mount_device": 29,
+      "mount_id": 35,
+      "mount_inode": 1,
+      "pids": 256,
+      "run_id": "bfb21e99-0b67-4502-a1d3-40b4d2107a33",
+      "runtime_us": 45000000,
+      "stop_us": 1000000,
+      "task_id": "c755584b-ab89-4965-beae-23fbd76bd09d",
+      "trace_id": "bc1fc10d-8e23-4fd8-a719-db3513e792d4",
+      "uid": 1000,
+      "unit": "nexus-contained-native-parentdiag-m1-20261015-1.scope"
+    },
+    "kernel": {
+      "boot_id": "2513f12c-b0ba-43ee-8c8f-d6d713b3d5e4",
+      "cgroup_inode": 25888,
+      "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "controllers": [
+        "pids",
+        "memory",
+        "cpu"
+      ],
+      "cpu_period_us": 100000,
+      "cpu_quota_us": 200000,
+      "delegation_marker": "absent_user_manager",
+      "directory_uid": 1000,
+      "memory_bytes": 4294967296,
+      "mount_device": 29,
+      "mount_id": 35,
+      "mount_inode": 1,
+      "pids": 256,
+      "self_cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "uid": 1000,
+      "user_manager": {
+        "manager": "user",
+        "query_route": "fixed_local_user_bus",
+        "uid": 1000,
+        "version": "261.2-1"
+      }
+    },
+    "observed_end_us": 41801769485,
+    "observed_start_us": 41801744130,
+    "provider_method_sha256": "19652e7ab8db514c40be246191d60f56fca031dfd8ed0823fcf5a3264285ac5e",
+    "provider_version": "nexus.builder.user-parent-provider.v2",
+    "remaining_us": 43614804,
+    "schema_version": "nexus.builder.parent-observation.v2",
+    "unit": {
+      "active_enter_us": 41800384289,
+      "active_state": "active",
+      "cgroup_path": "/user.slice/user-1000.slice/user@1000.service/app.slice/nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "cpu_per_second_us": 2000000,
+      "cpu_period_us": 100000,
+      "delegated": true,
+      "invocation_id": "611c0fdf-8bda-4172-afb5-efc438e585d3",
+      "kill_mode": "control-group",
+      "load_state": "loaded",
+      "memory_bytes": 4294967296,
+      "pids": 256,
+      "randomized_extra_us": 0,
+      "runtime_us": 45000000,
+      "send_sigkill": true,
+      "stop_us": 1000000,
+      "unit": "nexus-contained-native-parentdiag-m1-20261015-1.scope",
+      "user_manager": {
+        "manager": "user",
+        "query_route": "fixed_local_user_bus",
+        "uid": 1000,
+        "version": "261.2-1"
+      }
+    }
+  },
+  "raw_sha256": "bb83b9a627f3d6a31f87381024104c537a6c6d1f5758598ade7f5a29ec35b10a",
+  "scope": "EXACTfourthfailedcase descriptivefacts only; no newliveauthority"
+}

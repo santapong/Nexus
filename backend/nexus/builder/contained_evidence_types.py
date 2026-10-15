@@ -124,6 +124,7 @@ class ObservedSample(ContainedValue):
         if self.started_us > self.finished_us:
             raise ValueError("Observation sample clock regressed")
         require_ancestry(self.parent, (*self.processes, *self.retired_processes))
+        require_issued_container(self.parent, self.container)
         retired = {process_key(row) for row in self.retired_processes}
         if len(retired) != len(self.retired_processes) or retired & {
             process_key(row) for row in self.processes
@@ -180,6 +181,23 @@ class ContainedObservation(ContainedValue):
         ) or self.provider_method_sha256 != self.parent.provider_method_sha256:
             raise ValueError("Sidecar identity or provider method differs")
         require_ancestry(self.parent, (*self.processes, *self.retired_processes))
+        owned = self.parent.issued_identity
+        if owned is not None and (
+            owned.company_id,
+            owned.action_id,
+            owned.original_intent_fence,
+            owned.spec_sha256,
+            owned.proposal_sha256,
+            owned.execution_method_sha256,
+        ) != (
+            self.identity.company_id,
+            self.identity.action_id,
+            self.identity.original_intent_fence,
+            self.spec_sha256,
+            self.proposal_sha256,
+            self.identity.execution_method_sha256,
+        ):
+            raise ValueError("Sidecar issued ownership differs from original result/fence")
         if (
             self.last_sample.parent != self.parent
             or self.last_sample.container != self.container
@@ -229,6 +247,21 @@ def require_processes(
     ):
         raise ValueError("Actual payload/conmon identities missing or ambiguous")
     require_ancestry(parent, processes)
+    owned = parent.issued_identity
+    if owned is not None:
+        for pid, ticks, role in (
+            (owned.collector_pid, owned.collector_start_ticks, "descendant"),
+            (owned.runtime_pid, owned.runtime_start_ticks, "runtime"),
+        ):
+            if (
+                sum(
+                    (row.pid, row.start_ticks, row.role, row.cgroup_path, row.cgroup_inode)
+                    == (pid, ticks, role, owned.runtime_path, owned.runtime_inode)
+                    for row in processes
+                )
+                != 1
+            ):
+                raise ValueError("Actual issued collector/runtime start and leaf witness missing")
     if container.runtime_pid is not None and (
         sum(row.role == "runtime" and row.pid == container.runtime_pid for row in processes) != 1
     ):
@@ -256,5 +289,25 @@ def process_key(row: ProcessIdentity) -> tuple[UUID, int, int]:
 
 
 def parent_identity(parent: ParentObservation) -> dict[str, object]:
-    """Fresh observed times may advance; original unit/boot/invocation/limits/inodes cannot."""
+    """Only three observation clocks vary; all root/kernel/stable issued identity stays bound."""
     return parent.model_dump(exclude={"observed_start_us", "observed_end_us", "remaining_us"})
+
+
+def require_issued_container(parent: ParentObservation, container: ExactContainer) -> None:
+    owned = parent.issued_identity
+    if owned is not None and (
+        owned.company_id,
+        owned.action_id,
+        owned.container_id,
+        owned.container_name,
+        owned.image_id,
+        owned.runtime_pid,
+    ) != (
+        container.company_id,
+        container.action_id,
+        container.container_id,
+        container.container_name,
+        container.image_id,
+        container.runtime_pid,
+    ):
+        raise ValueError("Post-seal sample binds another immutable issued container")

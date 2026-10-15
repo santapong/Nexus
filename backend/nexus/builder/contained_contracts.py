@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from typing import Annotated, Literal, Self
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from pydantic import ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest
+from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256, ISSUED_PARENT_VERSION
 from nexus.builder.user_parent_identity import (
     SUPPORTED_USER_SYSTEMD_VERSION,
     USER_PARENT_METHOD_SHA256,
@@ -128,15 +129,65 @@ class KernelScopeFacts(ContainedValue):
     pids: Positive
 
 
+class HostPlacementIdentity(ContainedValue):
+    """Stable observed post-seal facts; a portable description is never an ownership context."""
+
+    company_id: UUID
+    action_id: UUID
+    task_id: UUID
+    trace_id: UUID
+    run_id: UUID
+    original_intent_fence: Positive
+    spec_sha256: Digest
+    proposal_sha256: Digest
+    execution_method_sha256: Digest
+    container_id: Digest
+    container_name: str
+    image_id: Digest
+    boot_id: UUID
+    uid: Positive
+    collector_pid: Positive
+    collector_start_ticks: Positive
+    runtime_pid: Positive
+    runtime_start_ticks: Positive
+    mount_id: Positive
+    mount_device: Positive
+    mount_inode: Positive
+    scope_path: str
+    scope_inode: Positive
+    scope_uid: Positive
+    runtime_path: str
+    runtime_mount_id: Positive
+    runtime_device: Positive
+    runtime_inode: Positive
+    runtime_uid: Positive
+
+    @model_validator(mode="after")
+    def exact_leaf(self) -> Self:
+        if (
+            cgroup_components(self.runtime_path) != (*cgroup_components(self.scope_path), "runtime")
+            or self.runtime_mount_id != self.mount_id
+            or self.runtime_device != self.mount_device
+            or self.scope_uid != self.uid
+            or self.runtime_uid != self.uid
+            or self.collector_pid == self.runtime_pid
+            or self.scope_inode == self.runtime_inode
+            or self.container_name
+            != "nexus-builder-" + uuid5(self.company_id, str(self.action_id)).hex
+        ):
+            raise ValueError("Issued host description differs from exact owned runtime leaf")
+        return self
+
+
 class ParentObservation(ContainedValue):
     """Historical scope evidence; future effect gates must obtain another fresh observation."""
 
-    schema_version: Literal["nexus.builder.parent-observation.v2"] = (
-        "nexus.builder.parent-observation.v2"
-    )
-    provider_version: Literal["nexus.builder.user-parent-provider.v2"] = (
-        USER_PARENT_PROVIDER_VERSION
-    )
+    schema_version: Literal[
+        "nexus.builder.parent-observation.v2", "nexus.builder.parent-observation.v3"
+    ] = "nexus.builder.parent-observation.v2"
+    provider_version: Literal[
+        "nexus.builder.user-parent-provider.v2", "nexus.builder.user-issued-parent-provider.v1"
+    ] = USER_PARENT_PROVIDER_VERSION
     provider_method_sha256: Digest = USER_PARENT_METHOD_SHA256
     expectation: ScopeExpectation
     unit: SystemdScopeFacts
@@ -145,14 +196,63 @@ class ParentObservation(ContainedValue):
     observed_end_us: UInt
     deadline_us: Positive
     remaining_us: Positive
+    issued_identity: HostPlacementIdentity | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
-    @field_validator("provider_method_sha256")
-    @classmethod
-    def fixed_provider_method(cls, value: str) -> str:
+    # One conditional provider-tuple comparison keeps legacy and issued identity bindings visible.
+    @model_validator(mode="after")
+    def fixed_provider_method(self) -> Self:
         """This pin describes the provider only, never the unissued full runtime method."""
-        if value != USER_PARENT_METHOD_SHA256:
-            raise ValueError("User-parent provider method differs")
-        return value
+        if self.schema_version == "nexus.builder.parent-observation.v2":
+            if (
+                self.provider_method_sha256 != USER_PARENT_METHOD_SHA256
+                or self.provider_version != USER_PARENT_PROVIDER_VERSION
+                or self.issued_identity is not None
+            ):
+                raise ValueError("User-parent provider method differs")
+        elif (
+            self.provider_version != ISSUED_PARENT_VERSION
+            or self.provider_method_sha256 != ISSUED_PARENT_METHOD_SHA256
+            or self.issued_identity is None
+        ):
+            raise ValueError("Issued-parent provider identity is incomplete")
+        else:
+            owned = HostPlacementIdentity.model_validate(self.issued_identity.model_dump())
+            expected, kernel = self.expectation, self.kernel
+            if (
+                owned.company_id,
+                owned.action_id,
+                owned.task_id,
+                owned.trace_id,
+                owned.run_id,
+                owned.boot_id,
+                owned.uid,
+                owned.mount_id,
+                owned.mount_device,
+                owned.mount_inode,
+                owned.scope_path,
+                owned.scope_inode,
+                owned.scope_uid,
+                owned.runtime_path,
+            ) != (
+                expected.company_id,
+                expected.action_id,
+                expected.task_id,
+                expected.trace_id,
+                expected.run_id,
+                kernel.boot_id,
+                kernel.uid,
+                kernel.mount_id,
+                kernel.mount_device,
+                kernel.mount_inode,
+                kernel.cgroup_path,
+                kernel.cgroup_inode,
+                kernel.directory_uid,
+                kernel.self_cgroup_path,
+            ):
+                raise ValueError("Issued-parent observed placement differs from actual scope facts")
+        return self
 
 
 class ObservationBounds(ContainedValue):

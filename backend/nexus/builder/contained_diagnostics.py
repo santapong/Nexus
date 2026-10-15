@@ -13,7 +13,7 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
-from nexus.builder.contained_contracts import ContainedValue, Positive, UInt
+from nexus.builder.contained_contracts import ContainedValue, HostPlacementIdentity, Positive, UInt
 from nexus.builder.contained_evidence_store import (
     _directory,
     _exists,
@@ -202,6 +202,12 @@ class ProcessDiagnostic(ContainedValue):
     discovery: DiscoveryTrace
     samples: SampleTrace
     parent_attempt: ParentAttempt | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    issued_identity: HostPlacementIdentity | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    issued_cleanup: Literal["closed", "deferred"] | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
 

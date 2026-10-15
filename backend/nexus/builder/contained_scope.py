@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from nexus.builder.contained_contracts import (
+    HostPlacementIdentity,
     KernelScopeFacts,
     ParentObservation,
     ScopeExpectation,
@@ -10,6 +13,10 @@ from nexus.builder.contained_contracts import (
     cgroup_components,
     require_user_manager,
 )
+from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256, ISSUED_PARENT_VERSION
+
+if TYPE_CHECKING:
+    from nexus.builder.contained_evidence_types import ExactContainer
 
 
 def validate_current_scope(
@@ -80,6 +87,12 @@ def _require_unit(expected: ScopeExpectation, unit: SystemdScopeFacts) -> None:
 
 
 def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> None:
+    _require_root_kernel(expected, kernel)
+    if kernel.self_cgroup_path != expected.cgroup_path:
+        raise ValueError("Current owned kernel scope identity, controllers or exact caps differ")
+
+
+def _require_root_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> None:
     require_user_manager(kernel.user_manager, expected.uid)
     prefix = ("user.slice", f"user-{expected.uid}.slice", f"user@{expected.uid}.service")
     if cgroup_components(kernel.cgroup_path)[:3] != prefix or kernel.delegation_marker not in {
@@ -95,7 +108,6 @@ def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> Non
         expected.mount_device,
         expected.mount_inode,
         expected.cgroup_path,
-        expected.cgroup_path,
         expected.cgroup_inode,
         expected.memory_bytes,
         expected.cpu_quota_us,
@@ -110,7 +122,6 @@ def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> Non
         kernel.mount_device,
         kernel.mount_inode,
         kernel.cgroup_path,
-        kernel.self_cgroup_path,
         kernel.cgroup_inode,
         kernel.memory_bytes,
         kernel.cpu_quota_us,
@@ -119,3 +130,55 @@ def _require_kernel(expected: ScopeExpectation, kernel: KernelScopeFacts) -> Non
     )
     if actual != wanted or not {"cpu", "memory", "pids"}.issubset(kernel.controllers):
         raise ValueError("Current owned kernel scope identity, controllers or exact caps differ")
+
+
+def validate_issued_scope(
+    expected: ScopeExpectation,
+    unit: SystemdScopeFacts,
+    kernel: KernelScopeFacts,
+    identity: HostPlacementIdentity,
+    container: ExactContainer,
+    start_us: int,
+    end_us: int,
+) -> ParentObservation:
+    """Pure descriptions cannot activate this post-seal path; the provider requires live context."""
+    _require_unit(expected, unit)
+    _require_root_kernel(expected, kernel)
+    identity = HostPlacementIdentity.model_validate(identity.model_dump())
+    if (
+        container.company_id,
+        container.action_id,
+        container.container_id,
+        container.container_name,
+        container.image_id,
+        container.runtime_pid,
+    ) != (
+        identity.company_id,
+        identity.action_id,
+        identity.container_id,
+        identity.container_name,
+        identity.image_id,
+        identity.runtime_pid,
+    ):
+        raise ValueError("Issued parent binds another sealed immutable container")
+    if unit.user_manager != kernel.user_manager:
+        raise ValueError("Unit and kernel user manager observations differ")
+    deadline = unit.active_enter_us + unit.runtime_us
+    if (
+        not unit.active_enter_us <= start_us <= end_us
+        or deadline - end_us < expected.minimum_remaining_us
+    ):
+        raise ValueError("Scope deadline is expired, insufficient or clock order differs")
+    return ParentObservation(
+        schema_version="nexus.builder.parent-observation.v3",
+        provider_version=ISSUED_PARENT_VERSION,
+        provider_method_sha256=ISSUED_PARENT_METHOD_SHA256,
+        expectation=expected,
+        unit=unit,
+        kernel=kernel,
+        observed_start_us=start_us,
+        observed_end_us=end_us,
+        deadline_us=deadline,
+        remaining_us=deadline - end_us,
+        issued_identity=identity,
+    )

@@ -15,6 +15,7 @@ from nexus.builder.contained_diagnostics import (
     StreamObservation,
     error_kind,
 )
+from nexus.builder.contained_discovery_seal import FixedDiscoverySeal, _mint_fixed_discovery
 from nexus.builder.contained_evidence_types import ExactContainer
 from nexus.builder.contained_process_contracts import (
     OwnedName,
@@ -56,6 +57,15 @@ class DiscoveryUnavailableError(ValueError):
 class ContainedDiscovery:
     """Concrete bounded read-only discovery; no arbitrary caller command or mutable ID replay."""
 
+    def __init__(self) -> None:
+        self._last_seal: FixedDiscoverySeal | None = None
+
+    def take_owned_seal(self, container: ExactContainer) -> FixedDiscoverySeal:
+        seal, self._last_seal = self._last_seal, None
+        if seal is None or seal.container is not container:
+            raise ValueError("Actual fixed discovery seal is missing or replaced")
+        return seal
+
     # This transaction exceeds 50 lines to keep inspect, its original failure, child reaping,
     # and the final observed-byte record in one try/finally ownership boundary.
     async def discover(
@@ -67,12 +77,14 @@ class ContainedDiscovery:
         recorder: DiscoveryRecorder | None = None,
     ) -> ExactContainer:
         argv = discovery_argv(launch.binding)
+        self._last_seal = None
         started = clock_us()
         output, errors = _InspectStream(65536), _InspectStream(4096)
         process: asyncio.subprocess.Process | None = None
         tasks: list[asyncio.Task[bytes] | asyncio.Task[int]] = []
         failure: BaseException | None = None
         reaped = False
+        container: ExactContainer | None = None
         try:
             async with asyncio.timeout(_remaining(deadline_us - 100_000)):
                 process = await asyncio.create_subprocess_exec(
@@ -94,7 +106,8 @@ class ContainedDiscovery:
                         "Owned generated container is not currently discoverable"
                     )
                 assert isinstance(values[0], bytes)
-                return decode_discovery(values[0], launch, runtime_pid=runtime_pid)
+                container = decode_discovery(values[0], launch, runtime_pid=runtime_pid)
+                return container
         except BaseException as error:
             failure = error
             raise
@@ -106,6 +119,10 @@ class ContainedDiscovery:
                 failure = error
                 raise
             finally:
+                if failure is None and reaped and container is not None and output.complete:
+                    self._last_seal = _mint_fixed_discovery(
+                        container, launch.binding, runtime_pid, bytes(output.body)
+                    )
                 if recorder is not None:
                     attempt = InspectAttempt(
                         index=recorder.total + 1,

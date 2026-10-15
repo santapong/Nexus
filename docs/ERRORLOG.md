@@ -177,7 +177,7 @@ retained probes are linked in STRATEGY_PRODUCER_CHECKPOINT_2026-10-15.md.
 
 **Date:** 2026-10-15 (Asia/Bangkok)
 **Severity:** high
-**Status:** open
+**Status:** open (source correction qualified; actual runtime proof pending)
 **Found by:** actual methodv4 native qualification with retained parent facts
 **Affected files:** `builder/contained_scope.py`, issued-process parent layout (correction pending)
 
@@ -194,9 +194,11 @@ Runtime source research and a secure exact post-issuance layout correction are
 being reviewed; no generic descendant membership exception is accepted.
 
 ### Fix applied
-None yet. The new parent diagnostics retained the necessary facts. Preserve the
-fourth failed action/DB/object/unknown hold; implement and qualify a new method
-with actual owned-process/host/parent identity before any fresh execution case.
+An ownership-bound post-seal path now preserves actual runtime-leaf facts and
+unchanged root caps, while default pre-issue checks remain strict. Source414focus,
+five recipe checks, Root2,981unit/strict23 and independent review pass. Actual
+methodv5 qualification remains pending; retain the fourth failed case unchanged.
+See ISSUED_RUNTIME_MEMBERSHIP_CHECKPOINT_2026-10-15.md.
 
 ### Prevention
 Keep current live parent and workload layouts tied to actual runtime behavior.
