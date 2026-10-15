@@ -15,8 +15,11 @@ parent mount/boot/inode/UID/controller/numeric limits remained as expected.
 The actual retained facts reproduce the original pure kernel-validator denial.
 A counterfactual replacing only that self-path with the expected root lets the
 pure validator pass; that exercise is a diagnostic reproduction and grants no
-live permission. Read-only source investigation confirms Podman's implementation
-includes [moving to a runtime cgroup](https://raw.githubusercontent.com/containers/podman/v5.8.0/libpod/oci_conmon_linux.go).
+live permission. Podman's v5.8.0 implementation corroborates the mechanism:
+[split-mode creation calls the runtime move](https://raw.githubusercontent.com/containers/podman/v5.8.0/libpod/oci_conmon_common.go),
+whose [helper moves current-cgroup processes into its child](https://raw.githubusercontent.com/containers/podman/v5.8.0/vendor/go.podman.io/common/pkg/cgroups/utils_linux.go).
+This primary source is corroboration; it is not an execution trace of the locally
+installed5.8.6 binary. The actual retained self-path transition is local evidence.
 The next correction must model a legitimate issued-process layout with exact
 ownership/ancestry proof; a generic descendant-prefix exception is insufficient.
 No validator/layout change or new runtime retry accompanies this checkpoint.
@@ -44,6 +47,11 @@ Method: `36ab659fa81c0adc21f016a7d7f3263c73a5cc924a418a2925dc245df7f6d78b`.
  binding37 case files and actual current ledger/PID/unit/object observations.
 - Independent exact-facts reproduction: `11d374c1de184e87fcc352878db8f588843501d16943393ad3e8f9ff1803a855`,
  `ACTUAL_PARENT_PATH_REPLAY_1.json` in the parent-diagnostics source root.
+
+Independent review rehashed the37 case files,29 launch inputs and1,412 base files;
+recomputed both parsed-facts digests and all five complete query byte hashes;
+and independently confirmed only that self-path differs, with40,278,640us still
+remaining. It did not rerun or alter the failed case.
 
 Original intent fence1, tool1/model0, .010000 unknown/null remain conserved.
 Current fence2 is released; verifier is unissued. Separate read-only audit finds

@@ -9,6 +9,8 @@
   scope identity and resource caps match. Original result remains unknown.
 - Fourth failed action/DB/object/positive unknown hold preserved. A secure issued
   layout correction remains open; no retry or validation exception was installed.
+- Independent artifact review confirms the sole self-path mismatch; primary
+  runtime source corroborates process relocation without claiming binary tracing.
 
 **Authored by:** Codex and supervised qualification/research agents
 **PR:** not published
