@@ -1,5 +1,12 @@
 # Nexus implementation progress
 
+Latest actual milestone: [all-five fault-fixture setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
+completes with exit code 0 in 14.61s. Independent file/SQL joins verify five companies, 15 work
+registrations, five authorized unissued actions/holds, zero attempts/intents/leases
+and intact original windows. Source checks pass 290 focused tests and strict typing,
+lint and format checks on 38 files. The first packet and passive check are complete;
+actual fault cases and the full supervised release remain open.
+
 Latest: [second fault-fixture setup](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md).
 Fresh source passes289 focused/strict-lint-format38 and cross-hash-seed boundary
 checks. Actual setup passes source ingestion, plan and action authorization, then

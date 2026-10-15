@@ -11,6 +11,11 @@ pending. Full tree retention limits are explicit in each checkpoint.
 This index separates saved scoped proof from the full selected release.
 Normative exits remain SDD v0.2 and IMPLEMENTATION_PLAN.
 
+Latest: [all-five setup](CURRENT_V8_NEGATIVE_FIVE_CASE_SETUP_CHECKPOINT_2026-10-16.md)
+completes with exit code 0 in 14.61s with independent file/SQL joins and zero issued
+attempts/intents. The first packet and passive check are complete; actual current-V8
+fault qualification is next.
+
 The later [second setup](CURRENT_V8_NEGATIVE_SETUP2_CHECKPOINT_2026-10-16.md)
 passes source ingestion and plan/action authorization, then stops at a fixture
 runtime-recipe mismatch. Its unissued hold is preserved; actual fault qualification
@@ -33,9 +38,8 @@ remains open.
 
 ## Current next work
 
-Bind the fixture execution spec to its declared V2 policy and prepare a fresh
-Source4/namespace3 after both preserved setup failures. Real ingestion now passes;
-the later configuration mismatch is linked above. Then qualify five separate current-V8 faults:
+The declared V2 recipe and fresh Source4/namespace3 setup now pass. Preserve both
+earlier failed namespaces. Qualify five separate current-V8 faults:
 original parent expiry, cancellation, pause, source READ revocation and stale-fence
 release. Each retains native unknown history and one attempt under original
 clocks; no actual case has been released. Then qualify selected E/EV and independent acceptance

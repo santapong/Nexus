@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-16
 **Severity:** medium
-**Status:** open
+**Status:** fixed
 **Found by:** second actual setup and real-helper pure reproduction
 **Affected files:** private negative registration helper and its composition test
 
@@ -92,10 +92,10 @@ while its policy declares V2. The synthetic fixture sets V2 explicitly and misse
 this composition error. The descriptive-policy guard correctly rejects it.
 
 ### Fix applied
-An approved fresh two-file correction binds the spec recipe to its declared
-policy and tests complete real-helper configuration. Preserve the old action and
-held USD0.010000 reservation; the corrected proposal hash differs. Fresh actual
-setup remains pending.
+A fresh two-file correction binds the spec recipe to its declared policy and
+tests complete real-helper configuration. Source4 actual all-five setup then
+completes with exit code 0 in 14.61s. The old action and held USD0.010000 reservation stay intact;
+the corrected proposal hash differs. Native fault qualification remains open.
 
 ### Prevention
 Exercise the real helper chain and exact descriptive-policy binding before

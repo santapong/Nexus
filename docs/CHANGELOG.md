@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Complete actual five-case native-fault setup
+
+### Validation
+- Explicit recipe/policy binding passes complete real-helper composition and 290
+  coherent focused checks, plus configured strict typing, lint and format on 38 files.
+- Fresh normal001–016/public setup completes with exit code 0 in 14.61s for all five companies.
+  Independent file/SQL joins verify 15 unissued work rows, five authorized actions
+  and held reservations, zero attempts/intents/live leases and original windows.
+- The first parent-expiry packet and passive check are complete; neither issues work.
+- Earlier failed sources/namespaces/controls remain preserved. Actual current-V8
+  fault cases, selected E/EV and full supervised release remain open.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Validate fresh fixture source and retain second setup
 
 ### Validation
