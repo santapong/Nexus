@@ -748,3 +748,17 @@ preserved; no production CAS change or billing/source renewal was introduced.
 P/C supplied-data drafts are committed8d39e83 after the CommonMark correction,
 106 focused and Root3,182unit/59.00s/strict17. Native current-proof readers, owner
 choice/full revision2, native downstream publication and operating release remain.
+
+## 2026-10-15 — Owner proof reader and full-plan window source integration
+
+The actual-owner current-proof reader is committed943c5ec, with Root3,234unit and
+strict/lint/format19. It retains original/current protected proof and genuine
+credential windows without manufacturing an SV identity or lease. Actual owner SQL
+qualification is being prepared separately.
+
+The [full-plan window source checkpoint](PLAN_ADMISSION_WINDOW_CHECKPOINT_2026-10-15.md)
+adds dormant capture with all used grants, registered source policies, initial model
+alternatives, native/sender pins and original credential. Legacy aggregate coverage
+includes unused declared charters after independent review and a retained regression.
+Root combined3,253unit/54.77s and strict/lint/format12 pass. Full mixed admission,
+owner choice/revision2 and the twelve-row registered family remain unactivated.

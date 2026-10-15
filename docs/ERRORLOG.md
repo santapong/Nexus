@@ -74,6 +74,29 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-120 — New window narrowed the legacy aggregate resource set
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (dormant source/mock capture)
+**Found by:** independent admission-window source review
+**Affected files:** `management/plan_admission_metadata.py`
+
+The first capture derived aggregate expiry resources from used child grant pairs.
+Legacy final validation includes every declared charter's catalog resources, so an
+unused charter's expiring grant was omitted. A retained real ordinary four-child,
+five-charter mock-SQL case failed DID NOT RAISE in 1.35s. The aggregate helper now
+derives the exact legacy union internally; explicit qualified grant/source snapshots
+remain restricted to used resources. Predicate-faithful fake SQL covers the query.
+
+Nineteen focused, 226 compatibility and Root3,253unit/54.77s checks pass, with strict
+types/lint/format12 and independent review. Current full mixed admission already
+rejects the layout, so this is a future compatibility gap, not an active publication
+bypass. No actual SQL, source renewal or ledger mutation occurred. Preserve the
+original freeze/red and require actual revision2 composition proof separately.
+
+---
+
 ## ERROR-119 — SV attempt chronology could precede consumed authority
 
 **Date:** 2026-10-15

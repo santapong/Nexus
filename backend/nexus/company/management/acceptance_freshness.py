@@ -78,6 +78,21 @@ class RegisteredSourceFreshness:
         require_acceptance(current == previous)
         require_qualified_time(current, now)
 
+    async def capture_plan_heads_locked(
+        self,
+        session: AsyncSession,
+        scope: BrainReadScope,
+        source_ids: tuple[UUID, ...],
+        now: datetime,
+    ) -> tuple[QualifiedFreshness, ...]:
+        """Metadata-only qualification; caller retains actual owner/control/READ admission gates."""
+        require_acceptance(session.in_transaction() and now.utcoffset() is not None)
+        require_acceptance(len(source_ids) <= 32 and len(set(source_ids)) == len(source_ids))
+        result = await self._resolve(session, scope, source_ids)
+        require_acceptance(tuple(row.source_id for row in result) == source_ids)
+        require_qualified_time(result, await db_now(session))
+        return result
+
     async def revalidate_references(
         self,
         session: AsyncSession,

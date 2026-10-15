@@ -1,6 +1,25 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Retain full-plan admission expiry observations
+
+### Added
+- Dormant owner/full-plan capture retains exact grants, registered source policies,
+  initially eligible model alternatives and the genuine credential through later
+  proof reads. Model-free profiles retain their exact pins; pricing is unqualified.
+
+### Fixed
+- Preserve legacy aggregate expiry coverage of all declared charter resources,
+  including unused charters (ERROR120). Existing freshness methods remain unchanged.
+
+### Validation
+- Nineteen focused and 226 compatibility checks; Root3,253unit/54.77s and
+  strict/lint/format12 pass. Independent review is favorable. Full mixed admission,
+  owner revision2, actual SQL and authority activation remain separate.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Read current Strategy proof under the actual owner
 
 ### Added
