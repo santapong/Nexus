@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from nexus.builder.contained_contracts import ParentObservation
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.contained_evidence_types import ObservationDeadline
 from nexus.builder.contained_intent_check import ContainedParentIntentCheck
@@ -15,10 +16,40 @@ from nexus.builder.contained_process import ProcessOwnershipUnresolvedError
 from nexus.builder.contained_services import ContainmentServices
 from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
 from nexus.builder.policy import BuilderToolPolicy
+from nexus.builder.user_parent_identity import (
+    USER_PARENT_METHOD_SHA256,
+    USER_PARENT_PROVIDER_VERSION,
+)
 from nexus.company.management.canonical import canonical_sha256
 from nexus.tests.contained_observer_fixture import parent
 from nexus.tests.contained_process_fixture import Process
 from nexus.tests.unit.test_contained_runtime_identity import configured
+
+
+async def test_fresh_service_observe_rejects_readable_historical_profile(tmp_path: Path) -> None:
+    value = parent()
+    historical = ParentObservation.model_validate(
+        value.model_dump()
+        | {
+            "provider_version": USER_PARENT_PROVIDER_VERSION,
+            "provider_method_sha256": USER_PARENT_METHOD_SHA256,
+        }
+    )
+    services = ContainmentServices(
+        value.expectation, ContainmentEvidenceStore(tmp_path / "sidecars")
+    )
+    services.parents.observe = AsyncMock(return_value=historical)  # type: ignore[method-assign]
+    with pytest.raises(ValueError, match="current exact profile"):
+        await services.observe()
+
+
+async def test_fresh_service_returns_the_exact_current_observation(tmp_path: Path) -> None:
+    value = parent()
+    services = ContainmentServices(
+        value.expectation, ContainmentEvidenceStore(tmp_path / "sidecars")
+    )
+    services.parents.observe = AsyncMock(return_value=value)  # type: ignore[method-assign]
+    assert await services.observe() is value
 
 
 def test_full_implementation_pin_needs_exact_policy_and_scope_before_any_observation(

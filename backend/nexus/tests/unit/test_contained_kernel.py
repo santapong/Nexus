@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import nexus.builder.contained_kernel as kernel_module
+from nexus.builder import contained_observer_io
 from nexus.builder.contained_contracts import UserManagerObservation
 from nexus.builder.contained_kernel import collect_kernel, open_directory, read_bounded, read_uint
 from nexus.tests.unit.test_contained_scope import BOOT, GROUP, expectation, user_manager
@@ -69,7 +70,12 @@ def setup_kernel_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
     monkeypatch.setattr(kernel_module, "open_directory", redirected)
     monkeypatch.setattr(kernel_module, "_self_path", lambda: GROUP)
-    monkeypatch.setattr(kernel_module, "_mount_id", lambda: 32)
+    monkeypatch.setattr(
+        kernel_module,
+        "_mount_observation",
+        lambda: kernel_module.MountObservation(32, 100, "a" * 64, 1, 2),
+    )
+    monkeypatch.setattr(contained_observer_io, "_fd_mount_id", lambda fd: 32)
     monkeypatch.setattr(kernel_module, "_boot", lambda: BOOT)
     return group
 
@@ -111,3 +117,41 @@ def test_collector_records_actual_absence_under_supported_user_context(
     group = setup_kernel_tree(tmp_path, monkeypatch)
     os.removexattr(group, "user.delegate")
     assert collect_kernel(expectation(), user_manager()).delegation_marker == "absent_user_manager"
+
+
+def test_collector_rejects_namespace_replacement_even_with_same_mount_id(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    setup_kernel_tree(tmp_path, monkeypatch)
+    observations = iter(
+        [
+            kernel_module.MountObservation(32, 100, "a" * 64, 1, 2),
+            kernel_module.MountObservation(32, 100, "a" * 64, 1, 3),
+        ]
+    )
+    monkeypatch.setattr(kernel_module, "_mount_observation", lambda: next(observations))
+    with pytest.raises(ValueError, match="mount was replaced"):
+        collect_kernel(expectation(), user_manager())
+
+
+def test_visible_group_replacement_during_last_mount_read_denies(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    group = setup_kernel_tree(tmp_path, monkeypatch)
+    original_inode = group.stat().st_ino
+    observations = 0
+
+    def mount() -> kernel_module.MountObservation:
+        nonlocal observations
+        observations += 1
+        if observations == 2:
+            group.rename(group.with_name("old-held-group"))
+            group.mkdir()
+        return kernel_module.MountObservation(32, 100, "a" * 64, 1, 2)
+
+    monkeypatch.setattr(kernel_module, "_mount_observation", mount)
+    with pytest.raises(ValueError, match="replaced"):
+        value = kernel_module.collect_kernel(expectation(), user_manager())
+        assert value.cgroup_inode == original_inode
+        assert group.stat().st_ino != original_inode
+        assert observations == 2

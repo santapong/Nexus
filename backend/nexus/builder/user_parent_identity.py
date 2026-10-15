@@ -44,7 +44,10 @@ USER_PARENT_METHOD_SHA256 = hashlib.sha256(
 
 UserSystemdVersion = Literal["261.2-1", "262-1"]
 UserParentProviderVersion = Literal[
-    "nexus.builder.user-parent-provider.v2", "nexus.builder.user-parent-provider.v3"
+    "nexus.builder.user-parent-provider.v2",
+    "nexus.builder.user-parent-provider.v3",
+    "nexus.builder.user-parent-provider.v4",
+    "nexus.builder.user-parent-provider.v5",
 ]
 SUPPORTED_USER_SYSTEMD_262_VERSION: Literal["262-1"] = "262-1"
 USER_PARENT_262_PROVIDER_VERSION: Literal["nexus.builder.user-parent-provider.v3"] = (
@@ -78,7 +81,75 @@ USER_PARENT_PROFILES: MappingProxyType[str, tuple[UserParentProviderVersion, str
 
 
 def root_parent_profile(version: str) -> tuple[UserParentProviderVersion, str]:
-    """Exact daemon versions select one descriptive profile, never an activation grant."""
+    """Retained exact profiles identify historical reads, never a fresh issue allowance."""
     if type(version) is not str or version not in USER_PARENT_PROFILES:
         raise ValueError("User manager version has no closed root profile")
     return USER_PARENT_PROFILES[version]
+
+
+_MOUNTINFO64_DESCRIPTOR = {
+    "schema": "nexus.builder.mountinfo-reader.v2",
+    "mountinfo_bytes": 65_536,
+    "other_kernel_file_bytes": 4_096,
+    "overflow": "at_most_65537_actual_bytes_never_an_invented_total",
+    "read": "fixed_numeric_self_proc_fd_nofollow_nonblock_cloexec_finally_close",
+    "parser": "ascii_single_cgroup2_root_slash_target_sys_fs_cgroup_rw_canonical_id",
+    "namespace": "held_fixed_proc_mnt_namespace_device_inode_visible_before_after",
+    "collection": "repeat_uid_boot_self_path_held_visible_mount_group_fd_mount_id",
+    "metadata": "same_call_immutable_length_sha_status_original_exception_no_raw_body",
+    "deadline": "unchanged_original_io_and_job_end_no_hard_thread_cancellation_claim",
+}
+MOUNTINFO64_METHOD_SHA256 = hashlib.sha256(
+    json.dumps(_MOUNTINFO64_DESCRIPTOR, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
+CURRENT_USER_PARENT_PROVIDER_VERSION: Literal["nexus.builder.user-parent-provider.v4"] = (
+    "nexus.builder.user-parent-provider.v4"
+)
+CURRENT_USER_PARENT_262_PROVIDER_VERSION: Literal["nexus.builder.user-parent-provider.v5"] = (
+    "nexus.builder.user-parent-provider.v5"
+)
+
+
+def _current_method(version: str, schema: UserParentProviderVersion) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            {
+                **_USER_PARENT_V2_DESCRIPTOR,
+                "schema": schema,
+                "version": version,
+                "previous_profile": USER_PARENT_PROFILES[version],
+                "kernel_reader": MOUNTINFO64_METHOD_SHA256,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()
+
+
+CURRENT_USER_PARENT_METHOD_SHA256 = _current_method(
+    SUPPORTED_USER_SYSTEMD_VERSION, CURRENT_USER_PARENT_PROVIDER_VERSION
+)
+CURRENT_USER_PARENT_262_METHOD_SHA256 = _current_method(
+    SUPPORTED_USER_SYSTEMD_262_VERSION, CURRENT_USER_PARENT_262_PROVIDER_VERSION
+)
+CURRENT_USER_PARENT_PROFILES: MappingProxyType[str, tuple[UserParentProviderVersion, str]] = (
+    MappingProxyType(
+        {
+            SUPPORTED_USER_SYSTEMD_VERSION: (
+                CURRENT_USER_PARENT_PROVIDER_VERSION,
+                CURRENT_USER_PARENT_METHOD_SHA256,
+            ),
+            SUPPORTED_USER_SYSTEMD_262_VERSION: (
+                CURRENT_USER_PARENT_262_PROVIDER_VERSION,
+                CURRENT_USER_PARENT_262_METHOD_SHA256,
+            ),
+        }
+    )
+)
+
+
+def current_root_parent_profile(version: str) -> tuple[UserParentProviderVersion, str]:
+    """Select the exact current method; version prefixes and historical tuples never qualify."""
+    if type(version) is not str or version not in CURRENT_USER_PARENT_PROFILES:
+        raise ValueError("User manager version has no closed current root profile")
+    return CURRENT_USER_PARENT_PROFILES[version]

@@ -18,8 +18,8 @@ from nexus.builder.contained_kernel import collect_kernel
 from nexus.builder.contained_scope import validate_current_scope
 from nexus.builder.systemd_scope_provider import SystemdScopeProvider, decode_records
 from nexus.builder.user_parent_identity import (
-    USER_PARENT_METHOD_SHA256,
-    USER_PARENT_PROVIDER_VERSION,
+    CURRENT_USER_PARENT_METHOD_SHA256,
+    CURRENT_USER_PARENT_PROVIDER_VERSION,
 )
 from nexus.tests.unit.test_contained_kernel import setup_kernel_tree
 from nexus.tests.unit.test_contained_scope import (
@@ -38,8 +38,8 @@ def test_actual_missing_marker_remains_absence_and_new_versioned_description() -
     observed = validate_current_scope(expectation(), unit_facts(), kernel, 11_000_000, 12_000_000)
     assert observed.kernel.delegation_marker == "absent_user_manager"
     assert observed.schema_version == "nexus.builder.parent-observation.v2"
-    assert observed.provider_version == USER_PARENT_PROVIDER_VERSION
-    assert observed.provider_method_sha256 == USER_PARENT_METHOD_SHA256
+    assert observed.provider_version == CURRENT_USER_PARENT_PROVIDER_VERSION
+    assert observed.provider_method_sha256 == CURRENT_USER_PARENT_METHOD_SHA256
 
 
 @pytest.mark.parametrize(

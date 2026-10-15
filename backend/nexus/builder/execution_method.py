@@ -5,10 +5,16 @@ import json
 from typing import Literal
 
 from nexus.builder.contained_contracts import ContainedValue, ObservationBounds
-from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256, ISSUED_PARENT_PROFILES
+from nexus.builder.issued_parent_identity import (
+    CURRENT_ISSUED_PARENT_PROFILES,
+    ISSUED_PARENT_METHOD_SHA256,
+    ISSUED_PARENT_PROFILES,
+)
 from nexus.builder.runtime_identity import RUNTIME_V2_METHOD_SHA256
 from nexus.builder.user_parent_identity import (
-    USER_PARENT_262_METHOD_SHA256,
+    CURRENT_USER_PARENT_262_METHOD_SHA256,
+    CURRENT_USER_PARENT_PROFILES,
+    MOUNTINFO64_METHOD_SHA256,
     USER_PARENT_METHOD_SHA256,
     USER_PARENT_PROFILES,
 )
@@ -85,7 +91,7 @@ CONTAINED_EXECUTION_METHOD_V6_SHA256 = hashlib.sha256(
 
 
 # V6 remains byte-identifiable history. V7 binds the unchanged algorithms to both exact profiles.
-CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
+CONTAINED_EXECUTION_METHOD_V7_SHA256 = hashlib.sha256(
     json.dumps(
         {
             "schema": "nexus.builder.contained-execution-method.v7",
@@ -103,6 +109,24 @@ CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
 ).hexdigest()
 
 
+CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
+    json.dumps(
+        {
+            "schema": "nexus.builder.contained-execution-method.v8",
+            "previous_algorithm_sha256": CONTAINED_EXECUTION_METHOD_V7_SHA256,
+            "root_profiles": dict(CURRENT_USER_PARENT_PROFILES),
+            "issued_profiles": dict(CURRENT_ISSUED_PARENT_PROFILES),
+            "kernel_reader": MOUNTINFO64_METHOD_SHA256,
+            "fresh_parent": "current_exact_tuple_before_native_intent_spawn_owned_bind",
+            "historical": "old_exact_tuples_readable_never_reissued",
+            "default": "unconfigured",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+
+
 class ExecutionMethodCandidate(ContainedValue):
     """A candidate description cannot provide the later full activation pin."""
 
@@ -110,7 +134,7 @@ class ExecutionMethodCandidate(ContainedValue):
         "nexus.builder.execution-method-candidate.v1"
     )
     selector_sha256: str = RUNTIME_V2_METHOD_SHA256
-    provider_sha256: str = USER_PARENT_262_METHOD_SHA256
+    provider_sha256: str = CURRENT_USER_PARENT_262_METHOD_SHA256
     observer_version: Literal["nexus.builder.contained-observation.v1"] = (
         "nexus.builder.contained-observation.v1"
     )

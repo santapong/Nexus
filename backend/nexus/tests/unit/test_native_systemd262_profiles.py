@@ -12,18 +12,24 @@ from nexus.builder.contained_scope import validate_current_scope, validate_issue
 from nexus.builder.execution_method import (
     CONTAINED_EXECUTION_METHOD_SHA256,
     CONTAINED_EXECUTION_METHOD_V6_SHA256,
+    CONTAINED_EXECUTION_METHOD_V7_SHA256,
     execution_method_candidate,
 )
 from nexus.builder.issued_parent_identity import (
+    CURRENT_ISSUED_PARENT_PROFILES,
     ISSUED_PARENT_262_METHOD_SHA256,
     ISSUED_PARENT_METHOD_SHA256,
     ISSUED_PARENT_PROFILES,
+    current_issued_parent_profile,
     issued_parent_profile,
 )
 from nexus.builder.user_parent_identity import (
+    CURRENT_USER_PARENT_262_METHOD_SHA256,
+    CURRENT_USER_PARENT_PROFILES,
     USER_PARENT_262_METHOD_SHA256,
     USER_PARENT_METHOD_SHA256,
     USER_PARENT_PROFILES,
+    current_root_parent_profile,
     root_parent_profile,
 )
 from nexus.tests.contained_process_fixture import launch, parent
@@ -60,7 +66,9 @@ def observation(version: str, issued: bool = False) -> ParentObservation:
 @pytest.mark.parametrize("issued", [False, True])
 def test_exact_version_phase_profile_and_structural_wire(version: str, issued: bool) -> None:
     row = observation(version, issued)
-    wanted = issued_parent_profile(version) if issued else root_parent_profile(version)
+    wanted = (
+        current_issued_parent_profile(version) if issued else current_root_parent_profile(version)
+    )
     assert (row.provider_version, row.provider_method_sha256) == wanted
     assert row.schema_version == f"nexus.builder.parent-observation.v{3 if issued else 2}"
     assert row.unit.user_manager == row.kernel.user_manager == manager(version)
@@ -73,9 +81,15 @@ def test_exact_version_phase_profile_and_structural_wire(version: str, issued: b
 @pytest.mark.parametrize("issued", [False, True])
 def test_every_other_version_phase_or_hash_tuple_denies(version: str, issued: bool) -> None:
     row = observation(version, issued)
-    profiles = (*USER_PARENT_PROFILES.values(), *ISSUED_PARENT_PROFILES.values())
+    profiles = (
+        *USER_PARENT_PROFILES.values(),
+        *ISSUED_PARENT_PROFILES.values(),
+        *CURRENT_USER_PARENT_PROFILES.values(),
+        *CURRENT_ISSUED_PARENT_PROFILES.values(),
+    )
+    historical = issued_parent_profile(version) if issued else root_parent_profile(version)
     for provider, digest in profiles:
-        if (provider, digest) == (row.provider_version, row.provider_method_sha256):
+        if (provider, digest) in ((row.provider_version, row.provider_method_sha256), historical):
             continue
         for patch in (
             {"provider_version": provider, "provider_method_sha256": digest},
@@ -136,7 +150,11 @@ def test_262_cannot_inherit_261_provider_defaults() -> None:
     row.pop("provider_method_sha256")
     with pytest.raises(ValueError, match="provider method differs"):
         ParentObservation.model_validate(row)
-    legacy = observation("261.2-1")
+    fresh = observation("261.2-1")
+    provider, digest = root_parent_profile("261.2-1")
+    legacy = ParentObservation.model_validate(
+        fresh.model_dump() | {"provider_version": provider, "provider_method_sha256": digest}
+    )
     old = legacy.model_dump(exclude={"provider_version", "provider_method_sha256"})
     assert ParentObservation.model_validate(old) == legacy
 
@@ -198,12 +216,11 @@ def test_current_native_services_and_verifier_config_reject_legacy_v6(tmp_path: 
 
     store = ContainmentEvidenceStore(tmp_path / "sidecars")
     require_containment_configuration(store, CONTAINED_EXECUTION_METHOD_SHA256)
-    with pytest.raises(ValueError, match="configuration"):
-        require_containment_configuration(store, CONTAINED_EXECUTION_METHOD_V6_SHA256)
-    with pytest.raises(ValueError, match="method"):
-        ContainmentServices(
-            parent().expectation, store, method_sha256=CONTAINED_EXECUTION_METHOD_V6_SHA256
-        )
+    for previous in (CONTAINED_EXECUTION_METHOD_V6_SHA256, CONTAINED_EXECUTION_METHOD_V7_SHA256):
+        with pytest.raises(ValueError, match="configuration"):
+            require_containment_configuration(store, previous)
+        with pytest.raises(ValueError, match="method"):
+            ContainmentServices(parent().expectation, store, method_sha256=previous)
 
 
 @pytest.mark.parametrize("version", ["262", "262-1.extra", "262-2", "263-1", "261.2-1 ", ""])
@@ -240,7 +257,7 @@ def test_legacy_three_hashes_and_current_unactivated_candidate() -> None:
     )
     assert CONTAINED_EXECUTION_METHOD_SHA256 != CONTAINED_EXECUTION_METHOD_V6_SHA256
     candidate = execution_method_candidate()
-    assert candidate.provider_sha256 == USER_PARENT_262_METHOD_SHA256
+    assert candidate.provider_sha256 == CURRENT_USER_PARENT_262_METHOD_SHA256
     assert candidate.execution_ready is False
 
 

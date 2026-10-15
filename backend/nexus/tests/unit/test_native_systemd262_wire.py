@@ -8,6 +8,7 @@ import pytest
 
 from nexus.builder.contained_contracts import KernelScopeFacts, UserManagerObservation
 from nexus.builder.systemd_scope_provider import SystemdScopeProvider
+from nexus.builder.user_parent_identity import CURRENT_USER_PARENT_262_PROVIDER_VERSION
 from nexus.tests.unit.test_contained_scope import expectation, kernel_facts
 from nexus.tests.unit.test_systemd_scope_provider import FakeReader, reports
 
@@ -37,7 +38,7 @@ async def test_actual_captured_262_version_passes_real_five_reply_parser() -> No
     ).observe(expectation())
     assert len(reader.calls) == 5
     assert row.unit.user_manager.version == row.kernel.user_manager.version == "262-1"
-    assert row.provider_version == "nexus.builder.user-parent-provider.v3"
+    assert row.provider_version == CURRENT_USER_PARENT_262_PROVIDER_VERSION
 
 
 @pytest.mark.asyncio

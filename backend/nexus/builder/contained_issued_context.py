@@ -21,6 +21,7 @@ from nexus.builder.contained_discovery_seal import FixedDiscoverySeal
 from nexus.builder.contained_kernel import _boot, _mount_id, open_directory
 from nexus.builder.contained_observer_io import _fd_mount_id, _proc
 from nexus.builder.contained_query import clock_us
+from nexus.builder.contained_scope import require_current_parent_profile
 from nexus.builder.issued_diagnostics import (
     FailureRecorder,
     FieldName,
@@ -152,6 +153,7 @@ class OwnedStart:
         parent: ParentObservation,
         runtime_start: int | None,
     ) -> None:
+        require_current_parent_profile(parent)
         if (
             type(process) is not asyncio.subprocess.Process
             or self.process is not None

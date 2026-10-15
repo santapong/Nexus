@@ -13,8 +13,8 @@ from nexus.builder.contained_contracts import (
     cgroup_components,
     require_user_manager,
 )
-from nexus.builder.issued_parent_identity import issued_parent_profile
-from nexus.builder.user_parent_identity import root_parent_profile
+from nexus.builder.issued_parent_identity import current_issued_parent_profile
+from nexus.builder.user_parent_identity import current_root_parent_profile
 
 if TYPE_CHECKING:
     from nexus.builder.contained_evidence_types import ExactContainer
@@ -36,7 +36,7 @@ def validate_current_scope(
     remaining = deadline - end_us
     if not unit.active_enter_us <= start_us <= end_us or remaining < expected.minimum_remaining_us:
         raise ValueError("Scope deadline is expired, insufficient or clock order differs")
-    provider_version, provider_method = root_parent_profile(unit.user_manager.version)
+    provider_version, provider_method = current_root_parent_profile(unit.user_manager.version)
     return ParentObservation(
         provider_version=provider_version,
         provider_method_sha256=provider_method,
@@ -173,7 +173,7 @@ def validate_issued_scope(
         or deadline - end_us < expected.minimum_remaining_us
     ):
         raise ValueError("Scope deadline is expired, insufficient or clock order differs")
-    provider_version, provider_method = issued_parent_profile(unit.user_manager.version)
+    provider_version, provider_method = current_issued_parent_profile(unit.user_manager.version)
     return ParentObservation(
         schema_version="nexus.builder.parent-observation.v3",
         provider_version=provider_version,
@@ -187,3 +187,15 @@ def validate_issued_scope(
         remaining_us=deadline - end_us,
         issued_identity=identity,
     )
+
+
+def require_current_parent_profile(value: ParentObservation) -> None:
+    """A retained readable DTO cannot stand in for a current root or post-seal method."""
+    current = ParentObservation.model_validate(value.model_dump())
+    wanted = (
+        current_root_parent_profile(current.unit.user_manager.version)
+        if current.schema_version == "nexus.builder.parent-observation.v2"
+        else current_issued_parent_profile(current.unit.user_manager.version)
+    )
+    if (current.provider_version, current.provider_method_sha256) != wanted:
+        raise ValueError("Parent observation does not use the current exact profile")

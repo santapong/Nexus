@@ -12,8 +12,8 @@ from nexus.builder.contained_discovery import decode_discovery
 from nexus.builder.contained_parent_diagnostics import ParentAttempt
 from nexus.builder.contained_process_contracts import require_spawn_ready
 from nexus.builder.contained_scope import validate_current_scope, validate_issued_scope
-from nexus.builder.issued_parent_identity import ISSUED_PARENT_METHOD_SHA256
-from nexus.builder.user_parent_identity import USER_PARENT_METHOD_SHA256
+from nexus.builder.issued_parent_identity import CURRENT_ISSUED_PARENT_METHOD_SHA256
+from nexus.builder.user_parent_identity import CURRENT_USER_PARENT_METHOD_SHA256
 from nexus.tests.contained_process_fixture import binding, launch, parent, window
 from nexus.tests.unit.test_contained_discovery import body
 
@@ -55,7 +55,7 @@ def placement() -> HostPlacementIdentity:
 
 def test_preissue_default_identity_and_wire_remain_strict_root() -> None:
     current = parent()
-    assert current.provider_method_sha256 == USER_PARENT_METHOD_SHA256
+    assert current.provider_method_sha256 == CURRENT_USER_PARENT_METHOD_SHA256
     assert "issued_identity" not in current.model_dump()
     changed = current.kernel.model_copy(update={"self_cgroup_path": placement().runtime_path})
     with pytest.raises(ValueError, match="kernel scope"):
@@ -75,7 +75,11 @@ def test_issued_description_preserves_actual_path_and_distinct_provider_identity
         12_000_000,
     )
     assert value.schema_version == "nexus.builder.parent-observation.v3"
-    assert value.provider_method_sha256 == ISSUED_PARENT_METHOD_SHA256 != USER_PARENT_METHOD_SHA256
+    assert (
+        value.provider_method_sha256
+        == CURRENT_ISSUED_PARENT_METHOD_SHA256
+        != CURRENT_USER_PARENT_METHOD_SHA256
+    )
     assert value.kernel.self_cgroup_path == owned.runtime_path
     assert value.kernel.cgroup_path == current.kernel.cgroup_path
     assert value.issued_identity == owned

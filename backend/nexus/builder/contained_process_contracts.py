@@ -38,6 +38,7 @@ from nexus.builder.contained_process_diagnostics import (
 from nexus.builder.contained_process_diagnostics import (
     sample_trace as sample_trace,
 )
+from nexus.builder.contained_scope import require_current_parent_profile
 from nexus.builder.contained_spawn_window import SpawnWindow
 from nexus.builder.contracts import Digest
 from nexus.builder.process import ProcessCapture
@@ -263,6 +264,7 @@ def require_spawn_ready(
         or parent.issued_identity is not None
     ):
         raise ValueError("Preissue spawn requires strict original root observation")
+    require_current_parent_profile(parent)
     expected = ProcessRunBinding.model_validate(binding.model_dump())
     if prepared.binding != expected or (
         parent.expectation.company_id,

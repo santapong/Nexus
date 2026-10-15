@@ -74,6 +74,66 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-158 — Final mount read could outlive the visible group binding
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (shared source; actual qualification pending)
+**Found by:** independent kernel review using finite ordinary directories
+**Affected files:** builder/contained_kernel.py and its unit regression
+
+### What happened
+A finite second mount-observation callback renamed/recreated the expected group
+path after its visible check. The collector returned the original held inode even
+though the current path named a different inode. The exact repro failed with
+DID NOT RAISE against the first held reader component.
+
+### Root cause
+The held FD check after final mount IO established descriptor continuity without
+rebinding the visible expected path after that IO.
+
+### Fix applied
+The fresh V2 component reopens the visible group after final mount/boot/self-path
+reads and compares device/inode/UID and FD mount ID before publishing facts.
+Preserve the original source80541063 and unfavorable review9d173c71.
+
+### Prevention
+Keep the original real temporary-directory replacement regression. The same
+private manual collector interval is separately tracked during its integration;
+a shared producer fix alone does not repair another collector's ordering.
+
+---
+
+## ERROR-157 — Mount metadata exceeded the generic kernel-file cap
+
+**Date:** 2026-10-15
+**Severity:** high
+**Status:** fixed (source; actual qualification pending)
+**Found by:** read-only postfailure compatibility check
+**Affected files:** shared mount reader, exact parent profiles and execution method
+
+### What happened
+The current mount table contains5,142 bytes and the old4,096-byte generic read
+raises ValueError. This is a reproducible current compatibility condition; it does
+not identify the unretained original failing substep of ERROR-156.
+
+### Root cause
+A complete mount table used the same small bound as individual numeric kernel
+files. Increasing that generic bound would change unrelated reads and old method
+identities without describing those changes explicitly.
+
+### Fix applied
+Introduce one fixed-name64KiB reader, same-call complete/overflow/unavailable
+metadata, namespace/root/group binding and exact new current261/262 profiles.
+Keep all other kernel bounds and historical identities intact; V8 stays disabled.
+
+### Prevention
+Real finite fixtures cover5,142,65,536 and65,537-byte boundaries, malformed and
+ambiguous tables, namespace/path replacement, immutable read metadata, historical
+readability and rejection of historical tuples at fresh execution boundaries.
+
+---
+
 ## ERROR-156 — Actual full importer stopped before parent promotion
 
 **Date:** 2026-10-15

@@ -12,7 +12,17 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
-### Active continuation — 2026-10-15, full importer integration
+### Active continuation — 2026-10-15, bounded reader and current profiles
+
+The [coherent backend repair](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)
+passes4,216 units plus configured strict/lint/format17. Exact current261/262 root
+and issued identities bind the shared64KiB mount reader and final visible group
+recheck; old histories/V6/V7 stay preserved. V8 remains disabled. Next integrate
+repaired bounded parent telemetry and manual v2 profile in fresh source, then
+review/freeze one fresh public-data preparation attempt and qualify cache reuse.
+No current native execution or Company completion is established by these checks.
+
+### Earlier continuation — historical2026-10-15, full importer integration
 
 The [coherent finite importer candidate](FULL_CAS_SOURCE_CHECKPOINT_2026-10-15.md)
 is assembled and passes 343 checks plus configured strict/lint/format24. Its
@@ -41,7 +51,7 @@ Company-issued execution, full517 dependency import or business completion.
 | --- | --- | --- |
 | Native runtime | Preserve V5 startup/cleanup evidence and qualify negative semantics | V5 source122 checks; actual readiness/live trees/cleanup pass, while frozen137 rejects255/-1. Parent-timer/full V7 remain separate |
 | Preparation | Full517 offline CAS recipe using verified stage/tool ABI | [Actual complete input observation](CAS_INPUT_CHECKPOINT_2026-10-15.md) passes; finite import/artifact integrity remains pending |
-| Qualification | Current full V7/opaque-issued Company scenario planning | Fresh runtime/CAS/policy/template pins and actual original-authority/lease/permit/result/cleanup evidence |
+| Qualification | Current full V8/opaque-issued Company scenario planning | Fresh runtime/CAS/policy/template pins and actual original-authority/lease/permit/result/cleanup evidence |
 | Root integration | Preserve source/evidence and coordinate gates | Real selected StockFlow E/EV, P/C acceptance and full supervised release requirements |
 
 The [latest V5 diagnostic](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)

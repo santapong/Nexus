@@ -130,6 +130,7 @@
 | ADR-114 | Explicit model-free owner notification admission | accepted | 2026-10-14 |
 | ADR-121 | Separate fresh mixed sender authority from issued history | accepted (source) | 2026-10-15 |
 | ADR-122 | Assemble complete private engineering bodies through native bounded reads | accepted (source) | 2026-10-15 |
+| ADR-128 | Shared bounded mount reader with distinct current parent profiles | accepted (source) | 2026-10-15 |
 
 ---
 
@@ -3670,3 +3671,25 @@ The candidate remains unconfigured and execution_ready=false. Current execution
 and verification require new qualification/pins; historical V6 is not renewed.
 Tiny bootstrap normal/timeout evidence, opaque native issuance and full business
 execution remain separate qualifications.
+
+
+## ADR-128 — Shared bounded mount reader with distinct current parent profiles
+
+**Date:** 2026-10-15
+**Status:** accepted (source; actual qualification pending)
+
+Use one shared fixed-name mountinfo reader with a 65,536-byte complete bound and
+one-byte overflow sentinel. Keep the generic kernel-file bound at4,096 bytes.
+Retain same-call immutable length/hash/status metadata, held mount namespace,
+root/group descriptor identities and final visible group rebind after final
+mount/boot/membership reads. Finite path replacement tests verify this order;
+observations do not establish atomic protection from a hostile same-UID writer.
+
+Preserve historical261/262 root/issued tuples, canonical descriptors, default261
+wire fixture and V6/V7 method digests. New exact current261/262 root and issued
+identities bind the changed reader; fresh observation, service return, spawn and
+owned-start binding require current tuples. Historical DTOs remain readable.
+Full V8 describes the new composition with execution_ready=false and stays
+unconfigured pending actual native qualification. Old evidence cannot activate it.
+The private manual public-data importer adopts these through a new v2 profile,
+new source and a fresh namespace only after its own source qualification/review.

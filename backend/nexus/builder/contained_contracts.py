@@ -8,12 +8,17 @@ from uuid import UUID, uuid5
 from pydantic import ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from nexus.builder.contracts import BuilderValue, Digest
-from nexus.builder.issued_parent_identity import IssuedParentProviderVersion, issued_parent_profile
+from nexus.builder.issued_parent_identity import (
+    IssuedParentProviderVersion,
+    current_issued_parent_profile,
+    issued_parent_profile,
+)
 from nexus.builder.user_parent_identity import (
     USER_PARENT_METHOD_SHA256,
     USER_PARENT_PROVIDER_VERSION,
     UserParentProviderVersion,
     UserSystemdVersion,
+    current_root_parent_profile,
     root_parent_profile,
 )
 
@@ -210,19 +215,17 @@ class ParentObservation(ContainedValue):
         require_user_manager(self.kernel.user_manager, self.kernel.uid)
         if self.unit.user_manager != self.kernel.user_manager:
             raise ValueError("Unit and kernel user manager observations differ")
-        root_version, root_method = root_parent_profile(self.unit.user_manager.version)
-        issued_version, issued_method = issued_parent_profile(self.unit.user_manager.version)
+        manager = self.unit.user_manager.version
+        pair = self.provider_version, self.provider_method_sha256
         if self.schema_version == "nexus.builder.parent-observation.v2":
             if (
-                self.provider_method_sha256 != root_method
-                or self.provider_version != root_version
+                pair not in (root_parent_profile(manager), current_root_parent_profile(manager))
                 or self.issued_identity is not None
             ):
                 raise ValueError("User-parent provider method differs")
         elif (
             self.schema_version != "nexus.builder.parent-observation.v3"
-            or self.provider_version != issued_version
-            or self.provider_method_sha256 != issued_method
+            or pair not in (issued_parent_profile(manager), current_issued_parent_profile(manager))
             or self.issued_identity is None
         ):
             raise ValueError("Issued-parent provider identity is incomplete")

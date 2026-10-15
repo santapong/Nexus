@@ -1,5 +1,11 @@
 # Nexus implementation progress
 
+Latest backend source: the [bounded mount reader/current V8 checkpoint](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)
+passes4,216 units and configured strict/lint/format17 in a1,618-file held closure.
+Historical profiles remain readable, fresh execution requires current tuples and
+V8 stays disabled. Private manual importer telemetry and fresh actual preparation
+remain the next gate; the original full-3 failure stays preserved.
+
 The [dependency input checkpoint](CAS_INPUT_CHECKPOINT_2026-10-15.md) records35
 focused tests and actual complete517-package/901-tool observation/revalidation.
 This is read-only input evidence; full cache import and native execution remain held.
@@ -10,7 +16,7 @@ Its frozen137 expectation still rejects actual CLI255/inspect-1. Full cache
 preparation source proceeds through a separate recipe/monitor review; parent
 timer and native Company qualification remain open. [Pi preparation](PI_BUILDER_READINESS_CHECKPOINT_2026-10-15.md)
 records read-only prerequisites and the nine-package candidate, with no mutation.
-The latest coherent backend milestone is3fde994 with4,165 unit tests;
+The previous coherent backend milestone is3fde994 with4,165 unit tests;
 older source counts below describe their individual historical packages.
 
 **Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\

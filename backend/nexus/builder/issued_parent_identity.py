@@ -6,6 +6,8 @@ from types import MappingProxyType
 from typing import Final, Literal
 
 from nexus.builder.user_parent_identity import (
+    CURRENT_USER_PARENT_PROFILES,
+    MOUNTINFO64_METHOD_SHA256,
     SUPPORTED_USER_SYSTEMD_262_VERSION,
     SUPPORTED_USER_SYSTEMD_VERSION,
     USER_PARENT_262_METHOD_SHA256,
@@ -35,7 +37,10 @@ ISSUED_PARENT_METHOD_SHA256 = hashlib.sha256(
 
 
 IssuedParentProviderVersion = Literal[
-    "nexus.builder.user-issued-parent-provider.v1", "nexus.builder.user-issued-parent-provider.v2"
+    "nexus.builder.user-issued-parent-provider.v1",
+    "nexus.builder.user-issued-parent-provider.v2",
+    "nexus.builder.user-issued-parent-provider.v3",
+    "nexus.builder.user-issued-parent-provider.v4",
 ]
 ISSUED_PARENT_262_VERSION: Literal["nexus.builder.user-issued-parent-provider.v2"] = (
     "nexus.builder.user-issued-parent-provider.v2"
@@ -66,7 +71,61 @@ ISSUED_PARENT_PROFILES: MappingProxyType[str, tuple[IssuedParentProviderVersion,
 
 
 def issued_parent_profile(version: str) -> tuple[IssuedParentProviderVersion, str]:
-    """Post-seal profile selection preserves the exact manager and root-method binding."""
+    """Retained post-seal profiles preserve historical exact manager/root-method binding."""
     if type(version) is not str or version not in ISSUED_PARENT_PROFILES:
         raise ValueError("User manager version has no closed issued profile")
     return ISSUED_PARENT_PROFILES[version]
+
+
+CURRENT_ISSUED_PARENT_VERSION: Literal["nexus.builder.user-issued-parent-provider.v3"] = (
+    "nexus.builder.user-issued-parent-provider.v3"
+)
+CURRENT_ISSUED_PARENT_262_VERSION: Literal["nexus.builder.user-issued-parent-provider.v4"] = (
+    "nexus.builder.user-issued-parent-provider.v4"
+)
+
+
+def _current_method(version: str, schema: IssuedParentProviderVersion) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            {
+                **_ISSUED_PARENT_V1_DESCRIPTOR,
+                "schema": schema,
+                "manager_version": version,
+                "previous_profile": ISSUED_PARENT_PROFILES[version],
+                "root_provider": CURRENT_USER_PARENT_PROFILES[version],
+                "kernel_reader": MOUNTINFO64_METHOD_SHA256,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()
+
+
+CURRENT_ISSUED_PARENT_METHOD_SHA256 = _current_method(
+    SUPPORTED_USER_SYSTEMD_VERSION, CURRENT_ISSUED_PARENT_VERSION
+)
+CURRENT_ISSUED_PARENT_262_METHOD_SHA256 = _current_method(
+    SUPPORTED_USER_SYSTEMD_262_VERSION, CURRENT_ISSUED_PARENT_262_VERSION
+)
+CURRENT_ISSUED_PARENT_PROFILES: MappingProxyType[str, tuple[IssuedParentProviderVersion, str]] = (
+    MappingProxyType(
+        {
+            SUPPORTED_USER_SYSTEMD_VERSION: (
+                CURRENT_ISSUED_PARENT_VERSION,
+                CURRENT_ISSUED_PARENT_METHOD_SHA256,
+            ),
+            SUPPORTED_USER_SYSTEMD_262_VERSION: (
+                CURRENT_ISSUED_PARENT_262_VERSION,
+                CURRENT_ISSUED_PARENT_262_METHOD_SHA256,
+            ),
+        }
+    )
+)
+
+
+def current_issued_parent_profile(version: str) -> tuple[IssuedParentProviderVersion, str]:
+    """Fresh post-seal observations use only the current closed root/issued method pair."""
+    if type(version) is not str or version not in CURRENT_ISSUED_PARENT_PROFILES:
+        raise ValueError("User manager version has no closed current issued profile")
+    return CURRENT_ISSUED_PARENT_PROFILES[version]

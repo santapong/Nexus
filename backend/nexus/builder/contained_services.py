@@ -10,6 +10,7 @@ from nexus.builder.contained_plan import describe_contained_selectors
 from nexus.builder.contained_process import ContainedProcess, ProcessOwnershipUnresolvedError
 from nexus.builder.contained_process_contracts import RuntimeCapture
 from nexus.builder.contained_query import clock_us
+from nexus.builder.contained_scope import require_current_parent_profile
 from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
 from nexus.builder.policy import BuilderToolPolicy
@@ -105,7 +106,9 @@ class ContainmentServices:
 
     async def observe(self) -> ParentObservation:
         """Fresh boundaries obtain new facts; historical replay never invokes this method."""
-        return await self.parents.observe(self.expectation)
+        observed = await self.parents.observe(self.expectation)
+        require_current_parent_profile(observed)
+        return observed
 
     async def before_prepare(self, spec: BuilderExecutionSpec) -> None:
         """Set one finite job end before preparation; later observations cannot replenish it."""

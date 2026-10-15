@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Version the bounded mount reader and current native profiles
+
+### Changed
+- Share one fixed-name64KiB mountinfo reader with bounded immutable read metadata;
+  retain4KiB bounds for other kernel files and final visible group identity checks.
+- Introduce distinct current261/262 root/issued profiles and disabled V8 candidate;
+  preserve historical DTOs, six old identities, captured261 wire and V6/V7 methods.
+- Require current tuples at fresh service/spawn/owned-start boundaries.
+
+### Validation
+- Coherent1,618-file source passes4,216 unit tests, configured strict typing and
+  Ruff check/format across17 changed files. Independent reviews retain the first
+  path-replacement failure and verify the fresh repair/composition in scoped receipts.
+- Actual current native qualification, full cache import and Company release remain open.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-15] — Integrate finite public-cache preparation source
 
 ### Validation
