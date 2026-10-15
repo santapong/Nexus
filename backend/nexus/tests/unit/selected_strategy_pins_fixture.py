@@ -9,6 +9,10 @@ from nexus.builder.execution_method import CONTAINED_EXECUTION_METHOD_SHA256
 from nexus.builder.node_recipe import command_policies, command_references
 from nexus.builder.policy import BuilderToolPolicy
 from nexus.builder.runtime_identity import RUNTIME_V2, RUNTIME_V2_METHOD_SHA256
+from nexus.builder.selected_image_binding import (
+    NOMINATED_NODE_IMAGE_ID,
+    NOMINATED_NODE_IMAGE_REFERENCE,
+)
 from nexus.builder.selected_strategy_contracts import SelectedBuilderTemplate
 from nexus.builder.selected_strategy_pins import require_selected_builder_spec
 from nexus.company.brain.access_contracts import ResourceRef
@@ -43,7 +47,7 @@ class SelectedCase:
 
 
 def selected_case(verifier: bool = False) -> SelectedCase:
-    """Actual typed objects with synthetic hashes; no filesystem or credential authority."""
+    """Retained image identity pair; other supplied hashes remain synthetic, without authority."""
     # Keep one >50-line coherent description fixture rather than duplicate its linked pins.
     snapshot = strategy_case().command.snapshot
     assert snapshot is not None
@@ -74,14 +78,14 @@ def selected_case(verifier: bool = False) -> SelectedCase:
                 "model_profile": "verification.native.v1",
             }
         )
-    inputs = v4_inputs()
+    inputs = v4_inputs().model_copy(update={"image_id": NOMINATED_NODE_IMAGE_ID})
     assert candidate.tool is not None and candidate.patch_sha256 is not None
     policy = BuilderToolPolicy(
         company_id=bound.company_id,
         policy_symbol="selected.csv.v1",
         resource_symbol=candidate.tool.resource,
         repository_symbol=candidate_policy.repository.repository_symbol,
-        image="registry.example/selected@sha256:" + inputs.image_id,
+        image=NOMINATED_NODE_IMAGE_REFERENCE,
         commands=command_policies(),
         write_paths=candidate.write_paths,
         artifact_paths=("checks",),

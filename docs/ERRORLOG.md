@@ -78,7 +78,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-16
 **Severity:** high
-**Status:** open
+**Status:** fixed (source; native execution pending)
 **Found by:** parallel post-import dependency review and finite primary-validator repro
 **Affected files:** builder/selected_strategy_contracts.py and synthetic selected fixture
 
@@ -93,14 +93,15 @@ The guard compares identifiers for two different OCI objects. The pinned manifes
 contains the actual configuration correspondence; equality does not represent it.
 
 ### Fix applied
-Pending bounded exact trusted architecture/reference/manifest/configuration pair
-validation. No wildcard, generic inequality allowance or substituted identity.
+Use one exact trusted architecture/reference/manifest/configuration pair.
+No wildcard, generic inequality allowance or substituted identity.
 Keep runtime/native image observation, canonical policy and capability checks.
 The original finite repro and1failed2passed result remain preserved.
 
 ### Prevention
-Add a real-distinct-pair positive and wrong-reference/ID/cross-pair denials, while
-preserving old raw golden wires. Complete new runtime/template pins before fresh S.
+The distinct-real-pair positive and wrong-reference/ID/cross-pair denials pass.
+Preserve old raw golden wires. Full coherent regression passes4,247 units and
+independent source review is favorable. Complete new runtime/template pins before fresh S.
 
 ---
 
@@ -4524,7 +4525,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-073*
+*Next error ID: ERROR-161*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

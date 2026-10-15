@@ -2,9 +2,9 @@
 
 The [actual full public-cache preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s:
 517 packages, verified archive/tree, exact owned cleanup and unchanged21-container
-baseline. Independent actual FILE audit is favorable. Read-only reuse and the
-selected-template image-pair correction precede fresh
-runtime/Strategy pins and actual E/EV. Current complete V8 remains disabled.
+baseline. Independent actual FILE audit is favorable. Read-only reuse and fresh
+real runtime/Strategy pins precede actual E/EV. The selected image-pair source
+guard is fixed; current complete V8 remains disabled.
 
 **Started:** 2026-10-13 (Asia/Bangkok). **Goal:** deliver the agreed supervised company-system release with evidence, then follow the approved release workflow.
 
@@ -17,6 +17,11 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 **2026-10-14 ownership update:** the M1 offline exit has independent combined acceptance. M2 preparation now assigns shared Brain DTO/models to the model worker, deterministic ingestion/parser/blob/outbox to replay worker, permission-aware retrieval/context to planner, and current scope/ACL/migrations/API/acceptance integration to root. Actual package namespace is `backend/nexus/company/brain/`. Agree fields and method signatures before parallel writes; head migrations remain coordinator-owned. [M1 evidence](M1_OFFLINE_ACCEPTANCE_2026-10-14.md) and [M2 plan](BRAIN_IMPLEMENTATION_PLAN.md) define activation gates.
 
 ## Current wave
+
+The [selected image-pair source fix](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
+passes4,247 units and independent review. Next qualify read-only cache reuse, then
+freeze new actual runtime/CAS/policy/candidate/E-EV template descriptions before
+fresh Strategy. The completed full517 preparation supplies data, not Company authority.
 
 ### Active continuation — 2026-10-15, bounded reader and current profiles
 

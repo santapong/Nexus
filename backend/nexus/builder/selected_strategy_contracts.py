@@ -22,6 +22,7 @@ from nexus.builder.node_v4_recipe import v4_recipe_sha256
 from nexus.builder.paths import relative_path
 from nexus.builder.policy import BuilderToolPolicy
 from nexus.builder.runtime_identity import RUNTIME_V2, RUNTIME_V2_METHOD_SHA256
+from nexus.builder.selected_image_binding import require_selected_image_binding
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.harness.standing_contracts import ToolPermission
@@ -87,7 +88,7 @@ class SelectedBuilderTemplate(BuilderValue):
             or pins.csv_regression.mapping_sha256 != mapping_sha256()
             or pins.csv_regression.wrapper_sha256 != csv_wrapper_sha256()
             or self.architecture != pins.architecture
-            or policy.image.split("@sha256:")[-1] != pins.image_id
         ):
             raise ValueError("Selected full implementation, selector or Node CSV pins differ")
+        require_selected_image_binding(self.architecture, policy.image, pins.image_id)
         return self

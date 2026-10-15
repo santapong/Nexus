@@ -1,31 +1,36 @@
 # Nexus implementation progress
 
+Latest backend source: [selected image binding](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md)
+corrects the distinct manifest/config-ID join and passes4,247 coherent units plus
+focused/static checks and independent review. Public fields and native authority
+checks remain intact. Cache reuse and fresh real runtime/Strategy pins remain next.
+
 The [actual full public-cache preparation](FULL_CAS_PREPARATION_CHECKPOINT_2026-10-16.md) completes0 in41.072s:
 517 packages, verified archive/tree, exact owned cleanup and unchanged21-container
-baseline. Independent actual FILE audit is favorable. Read-only reuse and the
-selected-template image-pair correction precede fresh
-runtime/Strategy pins and actual E/EV. Current complete V8 remains disabled.
+baseline. Independent actual FILE audit is favorable. Read-only reuse and fresh
+real runtime/Strategy pins precede actual E/EV. The selected image-pair source
+guard is fixed; current complete V8 remains disabled.
 
-Latest backend source: the [bounded mount reader/current V8 checkpoint](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)
+Earlier backend source: the [bounded mount reader/current V8 checkpoint](MOUNTINFO64_CURRENT_V8_SOURCE_CHECKPOINT_2026-10-15.md)
 passes4,216 units and configured strict/lint/format17 in a1,618-file held closure.
 Historical profiles remain readable, fresh execution requires current tuples and
-V8 stays disabled. Private manual importer telemetry and fresh actual preparation
-remain the next gate; the original full-3 failure stays preserved.
+V8 stays disabled. Later manual telemetry and actual preparation are linked above;
+the original full-3 failure stays preserved.
 
 The [dependency input checkpoint](CAS_INPUT_CHECKPOINT_2026-10-15.md) records35
 focused tests and actual complete517-package/901-tool observation/revalidation.
-This is read-only input evidence; full cache import and native execution remain held.
+These are earlier read-only input observations; later full preparation is linked
+above, while native Company execution remains held.
 
-Current continuation: the [startup diagnostic checkpoint](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
+Earlier startup diagnostic: the [startup diagnostic checkpoint](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
 records122 focused diagnostic tests and actual V5 readiness/live trees/cleanup.
-Its frozen137 expectation still rejects actual CLI255/inspect-1. Full cache
-preparation source proceeds through a separate recipe/monitor review; parent
+Its frozen137 expectation still rejects actual CLI255/inspect-1. Later cache preparation has its own source/actual reviews; parent
 timer and native Company qualification remain open. [Pi preparation](PI_BUILDER_READINESS_CHECKPOINT_2026-10-15.md)
 records read-only prerequisites and the nine-package candidate, with no mutation.
 The previous coherent backend milestone is3fde994 with4,165 unit tests;
 older source counts below describe their individual historical packages.
 
-**Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
+**Checked:** 2026-10-16. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 
 Earlier package milestones: [P/C engineering prerequisite reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHECKPOINT_2026-10-15.md),

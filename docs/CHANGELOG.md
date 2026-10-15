@@ -1,6 +1,23 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Correct selected-template image identity binding
+
+### Fixed
+- Validate the nominated architecture/full manifest reference/config-ID tuple;
+  remove the false equality between identifiers for distinct OCI objects.
+- Reject aliases, unknown/equalized/cross-paired values without changing public
+  fields or native policy/capability/image checks. Keep raw old wires unchanged.
+
+### Validation
+- Coherent1,620-file backend passes4,247 unit tests; four-file focus129/configured
+  strict/Ruff check/format and independent source review pass.
+- Read-only cache reuse, fresh runtime/Strategy pins and actual Company execution
+  remain separate requirements. No image loading or authority activation.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Complete actual full public-cache preparation
 
 ### Validation

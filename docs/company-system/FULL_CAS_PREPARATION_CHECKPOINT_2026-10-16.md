@@ -61,9 +61,9 @@ description; subsequent configuration must adopt the actual new hash and paths.
 Next are a fresh bounded read-only reuse probe
 (status, denied store write and preserved executable mode), then fresh real Node-v4
 runtime/CAS/policy/candidate/selected-template pins before new Strategy inception.
-A separate selected-template image binding bug is reproduced: manifest reference
-and local image ID are incorrectly equated. A focused exact trusted-pair repair
-is underway. These are separate OCI identities; the [OCI configuration spec](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
+The separate selected-template image binding bug is [fixed in source](SELECTED_IMAGE_BINDING_CHECKPOINT_2026-10-16.md):
+use the exact trusted manifest-reference/config-ID pair rather than equating the
+two identifiers. These are separate OCI identities; the [OCI configuration spec](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
 defines ImageID from configuration JSON, while the [manifest](https://specs.opencontainers.org/image-spec/manifest/)
 references that configuration. Local retained manifest/config/runtime facts supply
 the specific correspondence; generic specification text does not qualify an image.

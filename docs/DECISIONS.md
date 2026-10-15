@@ -131,6 +131,7 @@
 | ADR-121 | Separate fresh mixed sender authority from issued history | accepted (source) | 2026-10-15 |
 | ADR-122 | Assemble complete private engineering bodies through native bounded reads | accepted (source) | 2026-10-15 |
 | ADR-128 | Shared bounded mount reader with distinct current parent profiles | accepted (source) | 2026-10-15 |
+| ADR-129 | Bind nominated image reference and configuration separately | accepted (source) | 2026-10-16 |
 
 ---
 
@@ -3693,3 +3694,26 @@ Full V8 describes the new composition with execution_ready=false and stays
 unconfigured pending actual native qualification. Old evidence cannot activate it.
 The private manual public-data importer adopts these through a new v2 profile,
 new source and a fresh namespace only after its own source qualification/review.
+
+
+## ADR-129 — Bind nominated image reference and configuration separately
+
+**Date:** 2026-10-16
+**Status:** accepted (source; native qualification remains separate)
+
+The selected CSV template incorrectly equated its immutable manifest-reference
+suffix with the installed image/configuration ID. Retained manifest, loaded-image
+and exact-reference preflight evidence records distinct c4d552… and8f3dff… values.
+The [OCI configuration specification](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
+defines ImageID from configuration JSON; the [manifest](https://specs.opencontainers.org/image-spec/manifest/)
+references that configuration. Neither equality nor arbitrary inequality binds them.
+
+Check one exact trusted tuple of architecture/full reference/manifest/configuration
+ID for the nominated amd64 image. Unknown references, aliases, architectures,
+coercions and cross-pairs deny pending their separate qualification. Preserve the
+existing public template fields and all other policy/source/runtime guards.
+Synthetic linked fixtures use the real distinct image pair while keeping their
+remaining data explicitly supplied. Raw historical golden wires remain unchanged.
+The tuple describes server configuration; actual native image observation, current
+capabilities/policy/owned parent, leases and permits remain required. No new public
+DTO, dependency, migration, image download or native authority follows from this fix.
