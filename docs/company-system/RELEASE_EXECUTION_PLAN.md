@@ -108,3 +108,9 @@ is source-qualified with319 focused/3,813 full units and independent review. It
 preserves each downstream actor's own scope, original windows and actual private
 sidecars. Continue the contained offline dependency/bootstrap and real selected
 E/EV gates, then protected P/C publication/check/acceptance and runtime wiring.
+
+
+Current-host note: the [tiny bootstrap attempt](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md)
+refused actual user manager262-1 before container start. Qualify current-manager raw
+parent facts and a fresh provider/method profile before the normal/timeout cache
+bootstrap sequence. The old normal attempt/namespace remains preserved.

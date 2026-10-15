@@ -9,7 +9,10 @@ accepted E/EV evidence; publication and execution wiring remain separate. The
 [bounded reader SQL](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md) and
 [mixed sender SQL](MIXED_SENDER_B2B_PG_CHECKPOINT_2026-10-15.md) stay qualified within
 their recorded scope. Public dependency/tool data is restored and audited;
-contained offline cache bootstrap and real StockFlow E/EV remain next. P/C native
+contained offline cache bootstrap and real StockFlow E/EV remain next. The first
+[tiny host probe](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md) stopped before
+container creation at the current262-1 versus qualified261.2-1 manager boundary;
+new compatibility qualification is required. P/C native
 publication, SDK/live email, ARM64 and supervised release stay open.
 
 ## Working contract

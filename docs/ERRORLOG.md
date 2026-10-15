@@ -74,6 +74,38 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-136 — Current user manager differs from the qualified bootstrap profile
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** open (new compatibility qualification required)
+**Found by:** Codex during the first actual tiny HostBootstrap run
+**Affected files:** private bootstrap source; native user-parent compatibility contract
+
+### What happened
+The normal probe stopped1.26s at UserManagerObservation validation before any
+container. Actual bus replies reportUID1000/systemd262-1; the frozen profile
+accepts261.2-1. Only two complete/reaped queries were captured, with no parent,
+container seal, runtime PID or payload evidence.
+
+### Root cause
+Historical profile compatibility was not reconciled against the current daemon
+version in the initial read-only namespace preflight. The actual version guard
+correctly refused the unsupported context. The time/cause of host change is unknown.
+
+### Current action
+Preserve failed source/root/packet/logs; no original retry or timeout run. Fresh
+postchecks show unit/cgroup/name absent and existing20-container inventory unchanged.
+Research actual262 behavior and qualify a fresh bounded raw parent diagnostic before
+extending the closed profile and its version-bound provider/execution identity.
+
+### Prevention
+Read current daemon UID/version against the declared supported profile before
+creating a scope. Do not fabricate a version or reuse historical execution proof.
+See [the failure checkpoint](company-system/HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md).
+
+---
+
 ## ERROR-135 — Retained engineering proof did not reread its private sidecars
 
 **Date:** 2026-10-15

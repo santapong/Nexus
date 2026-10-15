@@ -1,6 +1,18 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Record current-manager bootstrap refusal
+
+### Validation
+- Actual tiny normal probe stops1.26s before container creation: current user
+  manager262-1 differs from frozen261.2-1. Failed artifacts remain preserved.
+- Independent file audit confirms two complete/reaped query replies, no native
+  parent/runtime/payload and unchanged20-container inventory after the scope ends.
+- New compatibility qualification is required; no bootstrap/cache/runtime success.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Read accepted engineering evidence for presentation and support
 
 ### Added

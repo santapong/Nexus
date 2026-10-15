@@ -133,3 +133,10 @@ The [own-scope P/C engineering reader](CYCLE_ENGINEERING_PREREQUISITE_SOURCE_CHE
 passes319 focused/3,813 full units and independent review after the retained-sidecar
 repair. It remains dormant: actual selected E/EV plus independent acceptance,
 P/C protected publication/check/acceptance and the same-goal operating proof remain.
+
+
+The [first tiny HostBootstrap probe](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md)
+stopped1.26s before container creation: current manager262-1 is outside the frozen
+261.2-1 profile. Artifacts are preserved and current unit/cgroup/name are absent;
+no native parent/containment proof exists. Fresh compatibility/profile qualification
+must precede cache import or current-host builder qualification.
