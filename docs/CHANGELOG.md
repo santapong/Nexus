@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify complete protected body reads under real SQL
+
+### Validation
+- Five-case restricted SQL recipe passes28.18s: complete64KiB UTF-8 read, public
+  revocation, original eight-second next-page/final expiry and full-tail denial.
+- Preserve actual immutability/forcedRLS, zero native work/attempt/intent/hold and
+  stopped application sessions. One labelled isolated tail fault stays recorded.
+- First fixture failure and typed-catalog repair remain preserved (ERROR128).
+  Real StockFlow jobs, full timing, SDK/ARM64 and release gates remain open.
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Qualify mixed sender direct SQL and preserved history
 
 ### Validation

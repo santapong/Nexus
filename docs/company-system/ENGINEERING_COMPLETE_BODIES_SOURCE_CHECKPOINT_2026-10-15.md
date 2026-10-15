@@ -1,5 +1,8 @@
 # Complete engineering bodies — source checkpoint
 
+Subsequent [actual bounded reader SQL](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md)
+passes28.18s. The source-only evidence below remains scoped as recorded.
+
 Checked 2026-10-15, based on `e9ff56f`. Source/mock qualification only; actual
 restricted SQL reads, measured timing and the real StockFlow E/EV pair remain open.
 

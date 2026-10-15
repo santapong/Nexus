@@ -74,11 +74,52 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-129 — Runtime preflight inspected Docker before the configured Podman store
+
+**Date:** 2026-10-15
+**Severity:** low (operator observation)
+**Status:** fixed by exact configured-engine read-only inspection
+**Found by:** real Node-v4 runtime preflight
+**Affected files:** private preflight receipt; no production change
+
+Docker default reported the pinned image absent. The runtime descriptor names
+/usr/bin/podman --remote=false, whose separate store contains the exact declared
+image ID, digest and amd64/Linux platform. The initial observation could not
+support a claim about that configured store; the user-facing statement was corrected.
+
+Use the descriptor's binary/remote mode/user and exact image ref/ID before any
+recovery operation. Do not print Env/Config or credential data. Receipt
+real-node-v4-runtime-preflight-1.json cc8e507c records both scoped observations.
+Missing host CAS/tool/pnpm paths remain a separate verified prerequisite.
+
+---
+
+## ERROR-128 — Fixture compared PostgreSQL internal catalog char bytes with text
+
+**Date:** 2026-10-15
+**Severity:** low (fixture guard; no production reader change)
+**Status:** fixed in fresh v2; complete reader SQL passes28.18s
+**Found by:** first actual reader SQL recipe
+**Affected files:** private tail and final catalog inventory projections
+
+Four cases completed before the tail guard failed31.80s, before mutation. Pinned
+asyncpg decoded pg_trigger.tgenabled as bytes4f, while the unchanged strict guard
+required textO. Root's actual read-only catalog probe proved native comparison
+false and ::text comparison true, with every other owner/trigger/RLS field correct.
+
+Fresh v2 changed only both SQL projections to ::text and its closed fixture
+identities. No predicate, privilege, time limit, fault or production validation
+was relaxed. The first source/run/database and its original five blobs remain.
+Actual v2 app P0001 before/after the isolated fault and paired full-tail denial
+now pass; see ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md.
+
+---
+
 ## ERROR-127 — Private engineering consumer rejected complete results above one page
 
 **Date:** 2026-10-15
 **Severity:** medium
-**Status:** fixed in source/mock checks; actual reader SQL qualification pending
+**Status:** fixed; bounded five-case actual reader SQL v2 qualified
 **Found by:** real StockFlow preparation and bounded reader reproduction
 **Affected files:** engineering_inputs.py, engineering_acceptance.py, engineering_bodies.py
 

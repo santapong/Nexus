@@ -112,3 +112,11 @@ rollback and paused/inactive/expired-source issued history0HTTP/0body. Root SQL
 confirms24work/5intents+attempts/tool5/model0/queue2ENQUEUED/leases0/app0, with
 unknown/held money preserved. The first failure stays preserved. SDK/OS/liveemail,
 actual reader timing and real StockFlow E/EV/full pilot are still separate gates.
+
+[Bounded complete-body SQL v2](ENGINEERING_COMPLETE_BODIES_PG_CHECKPOINT_2026-10-15.md)
+passes28.18s for actual64KiB UTF8/currentREAD/revoke/original-expiry/tail-integrity.
+It preserves native page/proof/result caps, immutability/RLS and zero native
+execution/holds/app sessions. Maximum-body/full StockFlow timing remains unproven.
+Runtime preflight finds the exact configured Podman image present, while old/tmp
+CAS/tool/pnpm inputs are unavailable. Download-only recovery is being prepared;
+no public bytes have been reacquired or cache imported by that source preparation.
