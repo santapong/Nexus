@@ -829,3 +829,13 @@ preserves the final guard; fresh mixed intents require its concrete ordered pare
 composition before mutations. Known history/ordinary behavior remains covered;
 sender stays closed. Root3,637unit/51.66s and configured strict/lint/format25 pass.
 Actual SQL actor READ, genuine-parent positive intent and native E/EV remain separate.
+
+## 2026-10-15 — Actual selected actor/guard SQL qualified
+
+The [B2a PostgreSQL checkpoint](SELECTED_BUILDER_B2A_PG_CHECKPOINT_2026-10-15.md)
+passes163.45s across two fresh companies: actual E/EV READ, E approved-spec disclosure,
+exact missing/no-op gate denials, revoked target READ and original45s grant expiry
+after actual proof. Root fresh SQL confirms conserved four original attempts/model0,
+zero E intents/leases/app sessions and exact eight blobs per company. Source1's FTS
+issue was caught before execution and is preserved; fresh v2 fixed only fixture
+query/names. Genuine-parent positive intent, native E/EV and the full release remain.

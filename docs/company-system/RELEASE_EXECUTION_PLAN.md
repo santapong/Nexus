@@ -17,16 +17,17 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 Completed actual milestones now include B1 owner choice/revision2/replay and
 downstream-expiry rollback (97.41s), plus exact outer-timeout ledger recovery
 (1.944s, conserved unknown intent/attempt/hold). The coherent B2a source package
-adds selected actor/READ/spec/intent gates; its actual SQL/native proof is next.
+adds selected actor/READ/spec/intent gates. Its bounded actual actor/disclosure/
+denial SQL recipe now passes163.45s; genuine-parent/native E/EV remains next.
 The following older foundation/notification-wave tables
 are historical; current lane ownership is:
 
 | Owner | Current deliverable | Next evidence |
 | --- | --- | --- |
-| notification_profiles | Plan fresh selected-actor SQL qualification | Actual E/EV READ and pinned E disclosure; genuine-parent positive intent remains separate |
-| recovery_resume | Review combined B2a authority/intent integration | Exact concrete checks before mutations, current windows and immutable issued history |
-| engineering_resume | Review actor/selected-source window composition | Retained original eligibility, factory/catalog identity and final clocks |
-| Root | Integrate milestones and qualify actual cases | Fresh selected SQL, then native E/EV/full cycle and provider/ARM64/UAT/operations gates |
+| notification_profiles | Frozen private B2b sender foundation | Coherent shared context/ancestry/intent wiring and separate actual qualification |
+| recovery_resume | Native presentation/support publication plan | Own-role engineering evidence and real same-goal E/EV acceptance prerequisite |
+| engineering_resume | Terminal B2a SQL file audit | Exact ledgers, eight blobs per company and actual original-deadline scope |
+| Root | Publish qualified milestones and integrate coherent source | Genuine-parent/native E/EV, sender/full cycle and provider/ARM64/UAT/operations gates |
 
 The successful methodv6 M1/replay and native Strategy publication/expiry rollback
 are actual saved qualifications. Current-owner reads, outer termination/recovery

@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Qualify actual selected builder actor reads and guard denials
+
+### Validation
+- Fresh restricted PostgreSQL proves genuine E/EV task READ, E full-spec approved
+  disclosure, exact missing/no-op intent denials, revoked READ and original45s
+  grant expiry after actual proof. One two-company recipe passes163.45s.
+- Root fresh SQL confirms24work/four original attempts, no E intents, no active
+  leases and app0; money and exact16 blobs are conserved. Native jobs remain open.
+- Preserve the first unexecuted package's preflight FTS finding (ERROR124).
+
+**Authored by:** Codex and supervised qualification/review agents
+**PR:** not published
+
 ## [2026-10-15] — Research current provider prices for release qualification
 
 ### Documentation

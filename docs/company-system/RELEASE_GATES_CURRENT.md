@@ -60,6 +60,13 @@ requires a genuine current contained parent; EV execute additionally needs the r
 E trigger. Neither is replaced with fabricated receipt/lease/parent observations.
 Mixed sender stays closed pending its separate credential/ancestry ordering.
 
+The [actual B2a SQL slice](SELECTED_BUILDER_B2A_PG_CHECKPOINT_2026-10-15.md) now
+passes163.45s with actual E/EV task READ, pinned E disclosure, exact before-intent
+denials and original45s window expiry after proof. Root fresh SQL confirms all
+original attempts/money and eight blobs per company conserved, zero E intents and
+no active leases/application sessions. This closes the bounded READ/guard slice;
+genuine-parent positive intent, real E-triggered EV and full cycle remain open.
+
 The actual-owner proof reader in943c5ec now passes its separate four-company
 [actual SQL qualification](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md)
 in90.62s with conserved ledgers/blob metadata, final original-credential expiry,

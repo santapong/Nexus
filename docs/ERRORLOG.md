@@ -74,6 +74,29 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-124 — Fixture metadata suffix did not match PostgreSQL's dotted token
+
+**Date:** 2026-10-15
+**Severity:** low
+**Status:** fixed in fresh v2 fixture; original package preserved unexecuted
+**Found by:** independent preflight source review and Root read-only PostgreSQL probe
+**Affected files:** private selected_builder_pg_snapshot.py fixture
+
+The fixture searched selectedbuildermetadata, while the actual metadata contained
+only stockflow.synthetic.selectedbuildermetadata. PostgreSQL17.6 simple text search
+indexes that dotted symbol as one token. Root observed suffix=false/full-symbol=true
+before any fixture database/run was created; pure checks had not qualified retrieval.
+
+A fresh v2 source/run/DB/company namespace changes the query and mapping to the
+complete symbol. Its actual metadata bytes/query pass a second read-only FTS probe,
+then the real two-company READ/guard recipe passes163.45s. No production retriever,
+parser, indexing policy or accepted source bytes were changed. The first frozen
+source/packet stays unchanged and unexecuted. This was a preflight fixture finding,
+not an actual fixture SQL failure. Preserve exact query/serialized-byte probes for
+future retrieval-dependent qualification.
+
+---
+
 ## ERROR-123 — Credential wrapping would discard the selected source guard
 
 **Date:** 2026-10-15
