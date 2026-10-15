@@ -1,5 +1,11 @@
 # Nexus implementation progress
 
+Current continuation: the [startup diagnostic checkpoint](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md)
+records82 focused diagnostic tests and actual pre-readiness runc cgroup failure
+with retained CLI/stderr/state. Cleanup succeeds; execution qualification remains
+open. The latest coherent backend milestone is3fde994 with4,165 unit tests;
+older source counts below describe their individual historical packages.
+
 **Checked:** 2026-10-15. **Branch:** `feat/company-foundation`. **Baseline:** `6a8c8ef`.\
 Plan and time assumptions: [delivery roadmap](DELIVERY_ROADMAP.md).
 

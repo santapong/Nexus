@@ -74,6 +74,57 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-146 — Native startup cannot open the payload cgroup pids.max
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** open; failed source and namespace preserved
+**Found by:** actual diagnostic V3
+**Affected files:** private rootless HostBootstrap/controller setup
+
+CLI127 and retained stderr/state identify runc cgroup configuration failing on
+payload pids.max with ENOENT. State remains created with unset timestamps/PIDs0;
+its exit_code0 is not success. Current ancestors expose/enable cpu/memory/pids,
+but the removed parent subtree state is unavailable. Underlying setup/race cause
+is unproven. Research exact installed runtime semantics before a fresh reviewed
+remedy; preserve caps and require actual enforcement evidence. Cleanup passes.
+
+See [diagnostic evidence](company-system/HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md).
+
+---
+
+## ERROR-145 — Early startup failure bypassed stderr and extended-state capture
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed for diagnostic observability; startup qualification remains open
+**Found by:** actual diagnostic V2
+**Affected files:** private HostBootstrap diagnostic/operator tests
+
+The early seal failure retained CLI127 but never entered ready/terminal capture,
+leaving stderr unread and extended state absent. Fresh V3 eagerly owns one bounded
+stderr task and snapshots completed early-failure facts plus fixed sealed-ID state
+before freeze/cleanup.82 focused tests, configured static checks and source review
+pass. Its fresh actual failure preserves451 stderr bytes and the created-state
+cgroup error within the original deadline. Old evidence is not backfilled.
+
+---
+
+## ERROR-144 — Capture constructor could orphan tasks after a fallible initial mark
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed before fresh execution
+**Found by:** independent diagnostic V1 source review
+**Affected files:** private HostBootstrap RuntimeCapture constructor/test
+
+An initial stderr mark could throw after wait/export tasks were created but before
+the caller retained their handles. Fresh V2 performs all initial fallible marks
+before creating tasks. A semantic failure case verifies zero newly created tasks;
+78 focused tests and independent review pass. V1 remains preserved and unexecuted.
+
+---
+
 ## ERROR-143 — Tiny timeout outcome conflicts with its frozen terminal expectation
 
 **Date:** 2026-10-15

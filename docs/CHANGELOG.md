@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Record bounded startup diagnostic evidence
+
+### Validation
+- Fresh diagnostic source passes82 focused tests, configured static checks and
+  independent source review; actual early failure preserves CLI/stderr/state.
+- Actual runc payload cgroup startup failure remains open. Exact-ID cleanup and
+  later unchanged inventory are recorded separately from execution qualification.
+- Refresh the release frontier and record read-only Pi readiness limits; no runtime,
+  configuration, schema, worker activation or deployment changes accompany this entry.
+
+**Authored by:** Codex and supervised diagnostic/review agents
+**PR:** not published
+
 ## [2026-10-15] — Govern native presentation and support publication
 
 ### Added

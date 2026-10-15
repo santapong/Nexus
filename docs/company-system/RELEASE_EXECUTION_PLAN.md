@@ -12,7 +12,48 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
-### Active continuation — 2026-10-15
+### Active continuation — 2026-10-15,13:03UTC
+
+The current feature branch is pushed through3fde994. The coherent1,616-file
+publication/native-profile source passes4,165 units, configured strict typing and
+Ruff check/format30. Generated HTML/company016 separately passes12 actual fresh
+PostgreSQL checks. See [publication source](CYCLE_PUBLICATION_SOURCE_CHECKPOINT_2026-10-15.md)
+and [schema evidence](DERIVED_HTML_SCHEMA_CHECKPOINT_2026-10-15.md); these do not
+establish actual P/C operation or service activation.
+
+Current-host [normal bootstrap](HOST_BOOTSTRAP_262_CHECKPOINT_2026-10-15.md) passes
+1.20s. Its separate16.57s timeout attempt fails the frozen terminal expectation
+(-1 versus137), while exact-ID cleanup succeeds. Original failed sources and
+namespaces remain preserved. Neither outcome qualifies current full V7, opaque
+Company-issued execution, full517 dependency import or business completion.
+
+| Lane | Current work | Exit evidence |
+| --- | --- | --- |
+| Native runtime | Diagnose actual child-cgroup startup failure | Diagnostic V3 retains CLI127/stderr/created state; require a reviewed deterministic remedy and fresh qualification |
+| Preparation | Full517 offline CAS recipe using verified stage/tool ABI | Separate reviewed finite profile and actual artifact integrity; no legacy fixed-name CLI reuse |
+| Qualification | Current full V7/opaque-issued Company scenario planning | Fresh runtime/CAS/policy/template pins and actual original-authority/lease/permit/result/cleanup evidence |
+| Root integration | Preserve source/evidence and coordinate gates | Real selected StockFlow E/EV, P/C acceptance and full supervised release requirements |
+
+The [fresh diagnostic](HOST_TIMEOUT_DIAGNOSTIC_CHECKPOINT_2026-10-15.md) now
+captures the immediate startup failure: runc cannot open the payload's pids.max.
+This occurs before readiness or timeout. All current ancestor controllers are
+available, but the removed scope's child-controller state was not retained;
+the underlying setup/race cause remains under investigation. Source tests and
+cleanup do not qualify execution. Read-only Pi preparation also finds disabled
+memory control, no rootless runtime and a256MiB /var/tmp; its separate concrete
+change packet and explicit applicable approval remain prerequisites.
+
+The critical path is diagnostic evidence and explicit negative-recovery
+disposition, then bounded dependency preparation, new runtime/policy/template
+pins before fresh S inception, and actual current-native E/EV with independent
+acceptance. Real P/PV/C/CV publication/check/acceptance and the same-goal report/
+dashboard/email follow. Provider quality/cost, mixed SDK/OS, owner UAT, ARM64,
+private deployment and recovery/soak/rollback remain required release gates.
+Parallel source/recipe planning proceeds while an actual-runtime gate is held;
+it does not confer an execution permit. Fixed timeouts are failure limits, not
+measured completion estimates.
+
+### Earlier continuation — historical2026-10-15
 
 Completed actual milestones now include B1 owner choice/revision2/replay and
 downstream-expiry rollback (97.41s), plus exact outer-timeout ledger recovery
@@ -110,7 +151,9 @@ sidecars. Continue the contained offline dependency/bootstrap and real selected
 E/EV gates, then protected P/C publication/check/acceptance and runtime wiring.
 
 
-Current-host note: the [tiny bootstrap attempt](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md)
+Historical first-host note: the [tiny bootstrap attempt](HOST_BOOTSTRAP_TINY_FAILED_CHECKPOINT_2026-10-15.md)
 refused actual user manager262-1 before container start. Qualify current-manager raw
 parent facts and a fresh provider/method profile before the normal/timeout cache
 bootstrap sequence. The old normal attempt/namespace remains preserved.
+The active continuation above records later exact262 source, normal success and
+the still-failed timeout qualification; do not resume this historical first step.
