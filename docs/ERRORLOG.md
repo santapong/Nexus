@@ -74,6 +74,41 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-115 — Cache export cancellation lost owned filesystem operations
+
+**Date:** 2026-10-15
+**Severity:** medium
+**Status:** fixed (finite local filesystem-operation scope)
+**Found by:** Root unit regression and deterministic controlled-thread negatives
+**Affected files:** `builder/cache_stream.py`, `test_native_builder_cache_stream.py`
+
+### What happened and cause
+The initial full unit run left the export's pending file after cancellation.
+`to_thread(os.open)` could create a file before returning its descriptor to the
+awaiting task; cancellation happened before the original try/finally. Subsequent
+write/link operations could also outlive task cancellation and cleanup. A later
+whole-suite pass did not resolve this race. Two finite event-gated original tests
+failed/0.32s at open-after-create and link-after-commit boundaries.
+
+### Fix and verification
+One export now strongly retains its exact shielded pending filesystem task and
+actual descriptor/stream/inode/link state. It waits for that operation to finish
+through repeated cancellation before close and cleanup; cancellation rolls back
+only its own committed final link and pending file. Foreign final/staging files
+remain. Seven cache tests and 32 related checks pass, including live write and
+conflicting-link cancellation. Root 3,101unit/40.27s, strict/lint/format2 pass.
+Evidence: private `nexus-cache-stream-cancellation-20261015` and Root
+`nexus-cache-cancellation-root-integration-20261015/ROOT_INTEGRATION_RECEIPT_1.json`.
+
+### Limits and prevention
+There is no hard filesystem/cancellation wall bound: asyncio cannot kill a blocked
+filesystem thread. Identity-checked unlink assumes a task-owned private directory;
+it does not claim atomic conditional removal against adversarial replacement.
+Keep finite event gates, strong operation ownership and unconditional test cleanup.
+No actual cache build, native runtime, database or production effect was exercised.
+
+---
+
 ## ERROR-114 — Current strategy proof allowed blocked work and early body reads
 
 **Date:** 2026-10-15

@@ -1,6 +1,21 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-15] — Preserve cache export ownership through cancellation
+
+### Fixed
+- Retain the actual pending filesystem operation before awaiting open/write/link;
+  settle it before closing or removing owned files, including repeated cancellation.
+- Roll back an owned final link on cancellation while preserving foreign paths.
+  No hard thread cancellation or adversarial atomic-unlink guarantee is claimed.
+
+### Validation
+- Two deterministic original failures retained; seven cache and 32 related checks,
+  Root 3,101unit/40.27s and strict/lint/format2 pass. No actual cache build ran.
+
+**Authored by:** Codex and supervised implementation agent
+**PR:** not published
+
 ## [2026-10-15] — Describe one exact reviewed strategy candidate
 
 ### Added
