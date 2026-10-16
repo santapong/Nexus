@@ -1,5 +1,12 @@
 # Nexus implementation progress
 
+Latest production source: [original-owned stop/current V9](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
+passes 4,307 coherent backend tests and configured strict/lint/format on 11 files. It preserves
+the original container identity, one-shot stop, first denial and actual task/child/FD
+ownership across cancellation and late resource completion. Independent reproduced
+counterexamples pass after repair. Current execution remains unconfigured; private
+collector bridging and fresh five-case native qualification are next.
+
 Latest: [fresh setup, parent expiry and stopped cancellation](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md).
 Source5 passes 318 focused checks and actual all-five setup. Its parent-expiry and
 metadata-only recovery pass independent audits. Cancellation is detected in 228 ms,
@@ -204,7 +211,7 @@ The later [M2 integration checkpoint](M2_INTEGRATION_2026-10-14.md) replaces tha
 Five independent production findings are reproduced and closed; root retained
 ACL/schema13, context-model30, shared execution33, default model45, client21
 and real DBOS worker10 checks pass. Optional company-app integration7 and normal
-43-table profile proof pass. Whole current unit847 passes with19 existing
+43-table profile proof pass. Whole current unit847 passes with 19 existing
 warnings. Strict changed-package types pass; full thin-profile strict traversal
 reports10 absent optional legacy SDK imports, with existing CI type semantics
 recorded separately. Original30 source-derived answer score is17/30 with14/16
@@ -282,7 +289,7 @@ mandatory native reader so verifier sharing cannot rely on a declared reportId.
 
 Frozen treee2fbebd62c3542fea59f94662e9ac7da1b41262f at the isolated task snapshot
 contains the prior718fe91 plus40 explicit B/C/Root gateway/API files. Whole unit
-1015pass13.62s with19 existing warnings, strict40/Ruff40/format40 pass. Original
+1015pass13.62s with 19 existing warnings, strict40/Ruff40/format40 pass. Original
 model gateway45unit/PG33.22s passes after the final temporal hook; owner HTTP/API
 plus auth41checks9.59s (3actualPG +38unit) pass. Snapshot excludes actively written
 scheduler/report/cancellation/view packages, so this is a coherent core gate,

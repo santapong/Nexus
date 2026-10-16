@@ -6,6 +6,8 @@ from nexus.builder.contained_diagnostics import ContainmentDiagnosticStore
 from nexus.builder.contained_discovery import ContainedDiscovery
 from nexus.builder.contained_evidence_store import ContainmentEvidenceStore
 from nexus.builder.contained_evidence_types import ObservationDeadline
+from nexus.builder.contained_owned_stop import ContainedOwnedStop
+from nexus.builder.contained_owned_stop_io import OwnedStopIO
 from nexus.builder.contained_plan import describe_contained_selectors
 from nexus.builder.contained_process import ContainedProcess, ProcessOwnershipUnresolvedError
 from nexus.builder.contained_process_contracts import RuntimeCapture
@@ -91,6 +93,8 @@ class ContainmentServices:
             or type(self.process) is not ContainedProcess
             or self.process.parents is not self.parents
             or type(self.process.discovery) is not ContainedDiscovery
+            or type(self.process.stopper) is not ContainedOwnedStop
+            or type(self.process.stopper.io) is not OwnedStopIO
             or type(self.cleanup) is not ContainedCleanup
         ):
             raise ValueError("Contained concrete dependencies differ")

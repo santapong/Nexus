@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Protocol, cast
 
 from nexus.builder.contained_contracts import ParentObservation, ScopeExpectation
 from nexus.builder.contained_diagnostics import error_kind
@@ -16,6 +16,8 @@ from nexus.builder.contained_evidence_types import (
 from nexus.builder.contained_issued_context import OwnedStart, open_owned_start
 from nexus.builder.contained_observer import ContainmentObserver
 from nexus.builder.contained_observer_io import OwnedObservationIO, _proc
+from nexus.builder.contained_owned_stop import ContainedOwnedStop
+from nexus.builder.contained_owned_stop_lifecycle import finish_owned_cleanup
 from nexus.builder.contained_parent_diagnostics import failure_parent_attempt
 from nexus.builder.contained_process_capture import _capture, _Prefix
 from nexus.builder.contained_process_contracts import (
@@ -83,6 +85,8 @@ class ContainedProcess:
         self.parents = parents
         self.discovery = discovery if discovery is not None else ContainedDiscovery()
         self._clock, self._utc = clock_us, utc_now
+        self.stopper = ContainedOwnedStop(clock=clock_us)
+        self.cleanup_owners: set[asyncio.Future[object]] = set()
 
     # Keep the >50-line preissue ownership/last-window/spawn transaction and failure close together.
     async def start(
@@ -225,6 +229,7 @@ class ContainedProcess:
     ) -> ContainedRunCapture:
         capture_limits(stdout_limit, stderr_limit)
         started_us = self._clock()
+        stopper = self.stopper  # Retain the original configured stop across every awaited step.
         started = await self.start(launch, binding, expectation, watch, deadline)
         assert started.process.stdout is not None and started.process.stderr is not None
         stdout_prefix, stderr_prefix = _Prefix(stdout_limit), _Prefix(stderr_limit)
@@ -234,6 +239,7 @@ class ContainedProcess:
         observer = ContainmentObserver(OwnedObservationIO())  # NEW instance per issued job.
         state = ProcessSampling(out, err, wait)
         reason: str | None = None
+        first: BaseException | None = None
         try:
             if started.runtime_membership != "observed_path":
                 raise ValueError("Contained runtime parent path is unproven")
@@ -241,19 +247,28 @@ class ContainedProcess:
                 self._remaining(min(deadline.end_us, started.parent.deadline_us) - 100_000)
             ):
                 await self._monitor(started, launch, expectation, watch, deadline, observer, state)
-        except (OSError, ValueError, TimeoutError) as failure:
+        except BaseException as failure:
+            first = failure
+            if not isinstance(failure, (OSError, ValueError, TimeoutError)):
+                raise
             reason = type(failure).__name__
             state.error_type = error_kind(failure)
             state.errno = failure.errno if isinstance(failure, OSError) else None
             if state.phase == "parent":
                 state.parent_attempt = failure_parent_attempt(failure, expectation)
         finally:
-            try:
-                uncertain = await self._finish_runtime(started, out, err, wait, deadline)
-            finally:
-                if started.owned_start is not None:
-                    state.issued_cleanup = "closed" if started.owned_start.close() else "deferred"
-            uncertain = uncertain or state.issued_cleanup == "deferred"
+            finished = await finish_owned_cleanup(
+                stopper,
+                started,
+                binding,
+                deadline,
+                state,
+                first,
+                lambda: self._finish_runtime(started, out, err, wait, deadline),
+                self.cleanup_owners,
+                self._clock,
+            )
+            uncertain, state.issued_cleanup = finished.unresolved, finished.issued_cleanup
         return _capture(
             started,
             deadline,
@@ -340,10 +355,20 @@ class ContainedProcess:
         uncertain = False
         try:
             remaining = deadline.remaining_us(self._clock(), started.parent)
-            async with asyncio.timeout(remaining / 1_000_000):
+            async with asyncio.timeout(max(0, remaining - 100_000) / 1_000_000):
                 if process.returncode is None:
                     try:
-                        current, _ = await asyncio.to_thread(_proc, process.pid)
+
+                        def read(pid: int) -> tuple[int, str]:
+                            self._remaining(deadline.end_us - 100_000)
+                            return _proc(pid)
+
+                        probe = asyncio.create_task(asyncio.to_thread(read, process.pid))
+                        retained = cast(asyncio.Future[object], probe)
+                        self.cleanup_owners.add(retained)
+                        probe.add_done_callback(self.cleanup_owners.discard)
+                        probe.add_done_callback(_consume_owner)
+                        current, _ = await asyncio.shield(probe)
                         if (
                             started.runtime_start_ticks is None
                             or current != started.runtime_start_ticks
@@ -353,18 +378,23 @@ class ContainedProcess:
                             process.kill()  # Exact runtime; container cleanup stays Root-owned.
                     except (OSError, ValueError):
                         uncertain = True
-                values = await asyncio.gather(out, err, wait, return_exceptions=True)
+                values = await asyncio.shield(
+                    asyncio.gather(out, err, wait, return_exceptions=True)
+                )
                 uncertain = uncertain or any(isinstance(value, BaseException) for value in values)
         except TimeoutError:
             uncertain = True
-            for task in (out, err, wait):
-                if not task.done():
-                    task.cancel()
-            values = await asyncio.gather(out, err, wait, return_exceptions=True)
+            # Keep actual drains/wait and the shielded proc worker owned. A cancelled
+            # wrapper would not prove thread completion or reap the original child.
         return uncertain
 
 
 def _consume_spawn(task: asyncio.Task[asyncio.subprocess.Process]) -> None:
     """Consume terminal failure; cancellation uncertainty never fabricates a reaped child."""
+    if not task.cancelled():
+        task.exception()
+
+
+def _consume_owner[T](task: asyncio.Future[T]) -> None:
     if not task.cancelled():
         task.exception()

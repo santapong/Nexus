@@ -3717,3 +3717,45 @@ remaining data explicitly supplied. Raw historical golden wires remain unchanged
 The tuple describes server configuration; actual native image observation, current
 capabilities/policy/owned parent, leases and permits remain required. No new public
 DTO, dependency, migration, image download or native authority follows from this fix.
+
+## ADR-130 — Stop the original owned container before releasing run ownership
+
+**Date:** 2026-10-16
+**Status:** accepted for implementation; combined source and native qualification pending
+
+Actual cancellation qualification detects the native denial promptly, but killing
+the Podman client leaves the container tree alive. Introduce a distinct bounded
+running-stop operation. Existing cleanup v1 remains stopped-object inspection and
+removal; adding a force flag there would broaden a different authority boundary.
+
+The original opaque context, actual process and discovery seal select one full
+immutable container ID with its original company/action/name/image binding. A DTO,
+name, stored historical record or new execution lease cannot confer stop authority.
+Mark the context consumed before the first await; repeated/concurrent entry denies.
+Issue inspect, KILL only if running, wait and re-inspect under one five-second cap
+shortened by the original operation, parent and owner ends. No deadline renewal,
+container removal, replacement permit or financial reset accompanies the stop.
+
+The run owns shielded stop, command/capture/reap and finalizer tasks until settled.
+Preserve the original denial under repeated coordinator cancellation; defer context
+close when actual owners remain pending. Missing seals, expired budget and incomplete
+stop remain unproven. An engine stop result cannot replace whole-tree PID/start
+retirement under the original physical oracle.
+An already-issued CLI may finish late; its original unknown result stays unknown.
+Retain its actual resource-completion task/child until settlement, without another
+container command or positive result adoption. Distinguish that semantic uncertainty
+from pending resource ownership before metadata release or collector shutdown.
+
+Name and preserve the exact V8 method expression alongside V6/V7; a new current V9
+descriptor binds these changed semantics and stays unconfigured. Explicit old
+result/sidecar reads and metadata-only recovery remain supported. Fresh policy,
+service, dispatch and protected interpretation stay current-only; this does not
+introduce a historical execution or old-result republication mode.
+
+Private qualification output uses a dedicated complete canonical control record
+and separately retained bounded diagnostics. Adopt a completed original-owned
+report before waiting for physical retirement, preserving first cause on failure.
+Never strip historical mixed output into accepted wire or relax physical predicates.
+Test source boundaries first, then use fresh exact pins and an independent namespace
+for all five native fault cases. No schema, dependency or runtime activation follows
+from this decision. The old stopped wave and every consumed artifact remain intact.

@@ -109,7 +109,7 @@ CONTAINED_EXECUTION_METHOD_V7_SHA256 = hashlib.sha256(
 ).hexdigest()
 
 
-CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
+CONTAINED_EXECUTION_METHOD_V8_SHA256 = hashlib.sha256(
     json.dumps(
         {
             "schema": "nexus.builder.contained-execution-method.v8",
@@ -125,6 +125,40 @@ CONTAINED_EXECUTION_METHOD_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+
+
+# Stop permission comes from the original opaque owned context, never this description.
+# Preserve the exact V8 expression above so old evidence remains byte-identifiable.
+CONTAINED_EXECUTION_METHOD_V9_SHA256 = hashlib.sha256(
+    json.dumps(
+        {
+            "schema": "nexus.builder.contained-execution-method.v9",
+            "previous_algorithm_sha256": CONTAINED_EXECUTION_METHOD_V8_SHA256,
+            "owned_stop": {
+                "version": "nexus.builder.contained-owned-stop.v1",
+                "authority": "opaque_original_owner_actual_process_binding_and_discovery_seal",
+                "selection": "exact_full_id_original_name_image_company_action",
+                "protocol": "inspect_then_KILL_if_running_wait_then_stopped_inspect",
+                "issuance": "one_shot_original_context_reentry_denied_before_await",
+                "total_us": 5000000,
+                "reserve_us": 100000,
+                "stdout_bytes": 65536,
+                "stderr_bytes": 4096,
+                "clock": "one_shortened_original_operation_parent_owner_end_never_renewed",
+                "ownership": "shielded_actual_task_child_capture_reap_before_context_close",
+                "failure": "preserve_original_first_error_and_pending_owners",
+                "unsealed": "unknown_no_engine_selection",
+                "remove": False,
+                "proof": "unchanged_complete_PID_start_retirement_oracle_required",
+            },
+            "historical": "original_method_sidecar_fence_bytes_readable_never_reissued",
+            "default": "unconfigured",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+CONTAINED_EXECUTION_METHOD_SHA256 = CONTAINED_EXECUTION_METHOD_V9_SHA256
 
 
 class ExecutionMethodCandidate(ContainedValue):

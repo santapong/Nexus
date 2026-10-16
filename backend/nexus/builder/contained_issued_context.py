@@ -29,6 +29,7 @@ from nexus.builder.issued_diagnostics import (
 )
 
 if TYPE_CHECKING:
+    from nexus.builder.contained_evidence_types import ExactContainer
     from nexus.builder.contained_process_contracts import ProcessRunBinding
 
 _ISSUER = object()
@@ -322,12 +323,55 @@ class OwnedStart:
 
 
 class OwnedIssuedContext:
-    __slots__ = ("_issuer", "owner", "seal")
+    __slots__ = ("_issuer", "_original_seal", "_stop_end", "owner", "seal")
 
     def __init__(self, issuer: object, owner: OwnedStart, seal: FixedDiscoverySeal) -> None:
         if issuer is not _ISSUER or type(owner) is not OwnedStart:
             raise TypeError("Issued contexts cannot be deserialized or caller constructed")
         self._issuer, self.owner, self.seal = issuer, owner, seal
+        self._original_seal = seal
+        self._stop_end: int | None = None
+
+    # Keep the opaque issuer/owner/seal test in this cohesive boundary (>400-line
+    # exception) rather than exporting an issuer key or turning portable data into control.
+    def claim_owned_stop(self, end_us: int) -> None:
+        """Consume this original context once, before scheduling any control command."""
+        if self._stop_end is not None:
+            raise ValueError("Original owned stop transaction cannot be repeated")
+        if type(end_us) is not int or end_us > self.owner.end_us or self.owner._closed:
+            raise ValueError("Original owned stop end is unavailable")
+        _remaining(end_us)
+        self._stop_end = end_us
+
+    def require_owned_stop(
+        self,
+        owner: OwnedStart,
+        process: asyncio.subprocess.Process,
+        binding: ProcessRunBinding,
+        end_us: int,
+    ) -> ExactContainer:
+        """The original opaque owner may stop its sealed object, even after CLI exit."""
+        if (
+            type(self) is not OwnedIssuedContext
+            or self._issuer is not _ISSUER
+            or self.seal is not self._original_seal
+            or type(owner) is not OwnedStart
+            or owner._issuer is not _ISSUER
+            or self.owner is not owner
+            or owner.process is not process
+            or type(process) is not asyncio.subprocess.Process
+            or owner.binding != binding
+            or owner._closed
+            or not owner._sealed
+            or type(end_us) is not int
+            or end_us > owner.end_us
+            or (self._stop_end is not None and self._stop_end != end_us)
+        ):
+            raise ValueError("Running stop lacks its original owned context")
+        _remaining(end_us)
+        self.seal.require(binding, process.pid, self.seal.container)
+        _remaining(end_us)
+        return self.seal.container
 
     async def observe(
         self,

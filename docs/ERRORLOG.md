@@ -100,7 +100,7 @@ source package. The old capture, predicates and failed wave remain unchanged.
 
 **Date:** 2026-10-16
 **Severity:** high
-**Status:** open
+**Status:** fixed (source; native V9 qualification pending)
 **Found by:** actual cancellation retirement qualification
 **Affected files:** `backend/nexus/builder/contained_process.py` and owned lifecycle
 
@@ -116,7 +116,16 @@ uncertainty. Existing cleanup v1 is stopped-object removal and cannot confer thi
 new authority. No remove, replacement execution permit or financial reset occurs.
 Version the changed method, preserve old histories, then requalify in a fresh
 namespace. Finite ownership/cancellation/deadline tests and actual whole-tree
-qualification are separate requirements; neither is claimed complete here.
+qualification are separate requirements. The source result is recorded below;
+actual V9 qualification remains open.
+
+Source repair now passes 4,307 coherent backend tests, configured nonsilent
+strict/lint/format on 11 files and independent reproduced counterexamples. Candidate1's
+before-first-stop seal substitution and normal-drain cancellation timing gaps
+are preserved as failed tests; candidate2 fixes them and late issued-child
+ownership. Current V9 remains unconfigured. This fixes the source boundary;
+it does not repair the old failed wave or establish a new physical pass. See
+[the V9 source checkpoint](company-system/NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md).
 
 ---
 

@@ -1,5 +1,11 @@
 # Nexus release execution plan
 
+The [current V9 owned-stop production source](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
+passes 4,307 units and configured strict/lint/format on 11 files after independent concrete
+counterexamples. Finish private ownership/control-channel composition, then create
+the new exact production BASE and independent V9 qualification namespace. All five
+unchanged native fault cases precede selected StockFlow; default activation stays off.
+
 The [latest Source5 wave](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md)
 passes parent expiry and metadata-only recovery, then stops on cancellation:
 the native guard fires in 228 ms, but five recorded processes remain at the 10 s bound.
@@ -57,7 +63,8 @@ Agents work on disjoint files in the existing implementation checkout. They repo
 
 ## Current wave
 
-The current wave is source repair following Source5's stopped cancellation case.
+The production source repair following Source5's stopped cancellation case passes
+the coherent regression. Private ownership/control-channel composition is in progress.
 Its parent-expiry/recovery proof remains scoped to that actual run. The other
 three cases are unissued; all 24 retained containers and unknown financial history
 remain intact. A new method/source package still needs fresh native qualification.

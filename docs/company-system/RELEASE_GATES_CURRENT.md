@@ -1,9 +1,15 @@
 # Supervised release evidence index
 
+Latest production source: [owned stop/current V9](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
+passes 4,307 backend units plus configured strict typing and Ruff lint/format on 11 files.
+The original seal, one-shot control, first denial and actual resource ownership
+survive the repaired finite counterexamples. V6–V8 history reads remain distinct
+from fresh execution. Current V9 stays unconfigured pending fresh native qualification.
+
 Current frontier checked 2026-10-16: [Source5 parent expiry and metadata recovery](CURRENT_V8_NEGATIVE_ADMISSION_CHECKPOINT_2026-10-16.md)
 pass independent audits, but cancellation fails retirement and stops the wave.
 Pause, READ revocation and stale fence remain unissued. The next gate is source
-repair of owned-container termination and private report delivery, followed by
+composition of the repaired owned-container termination and private report delivery, followed by
 fresh native qualification under new exact method/source/action pins.
 
 Pushed backend `be18432` historically passes 4,247 units;
@@ -52,7 +58,7 @@ remains open.
 Source5's parent expiry/recovery pass, while cancellation fails the original
 retirement bound despite a working native guard. Preserve every used namespace,
 all unknown holds and the three unissued Source5 cases. Integrate/test the actual
-owned-stop and report-delivery repair, preserving named V6–V8 identities and
+owned-stop and report-delivery source, preserving named V6–V8 identities and
 current-only issuance gates. A new independent source/namespace must qualify all
 five cases; the old wave is never resumed. The five exits remain:
 original parent expiry, cancellation, pause, source READ revocation and stale-fence

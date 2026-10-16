@@ -1,6 +1,28 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Stop original owned containers on interrupted V9 runs
+
+### Fixed
+- Bind running stop to the original opaque context, construction-time seal and
+  immutable full ID. One-shot control cannot restart its cap through service replacement.
+- Stop before client drainage on a native denial; react promptly to first cancellation
+  during normal drainage. Keep actual tasks, late issued-child reaping and descriptor
+  ownership while preserving the original first error and unknown outcomes.
+- Distinguish actual resource settlement from semantic uncertainty. No container
+  removal, new execution permit, allowance reset or deadline renewal is introduced.
+
+### Validation
+- Root's 1,627-file coherent production source passes 4,307 unit tests with 19 existing
+  deprecation warnings in 78.41s; configured nonsilent strict typing and Ruff lint/format on 11 files pass.
+- Independent concrete counterexamples pass after repair. Exact V6–V8 identities and
+  historical reads remain preserved; fresh interpretation requires the current V9 pin.
+- Default V9 remains unconfigured. Private collector bridging, new exact source/pins
+  and all five actual native fault cases precede selected StockFlow and release.
+
+**Authored by:** Codex and supervised implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Qualify parent expiry and preserve cancellation failure
 
 ### Validation
@@ -982,7 +1004,7 @@
 - Compare the actual canonical identity bytes rather than unspecified frozenset
   JSON iteration order; preserve registration equality, binding and golden checks.
 - Retain the original coherent failure and unsuccessful partial seed probes.
-- Corrected coherent integration suite passes2,565/24.80s with19 existing warnings.
+- Corrected coherent integration suite passes2,565/24.80s with 19 existing warnings.
 
 **Authored by:** Codex
 **PR:** not published
