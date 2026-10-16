@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid5
 
 from pydantic import StrictBool
@@ -39,6 +40,12 @@ from nexus.execution.runtime_support import (
 )
 from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import CostHold, JournalAction
+
+if TYPE_CHECKING:
+    from nexus.execution.planning_preparation_recovery import (
+        PreparedWaitRecovery,
+        RecoveredPlanningWait,
+    )
 
 
 def next_segment_id(value: ExecutionSnapshot) -> UUID:
@@ -121,6 +128,29 @@ class ExecutionStore:
         self._management_catalog = management_catalog
         self._management_artifacts = management_artifacts
         self._management_freshness = management_freshness
+
+    async def recover_prepared_wait(self, check: PreparedWaitRecovery) -> RecoveredPlanningWait:
+        """Restore only a concrete proven unissued prepared planning prefix; never issue a lease."""
+        from nexus.execution.planning_preparation_recovery import PreparedWaitRecovery
+        from nexus.execution.runtime_approval_recovery import restore_wait_locked
+
+        if (
+            type(check) is not PreparedWaitRecovery
+            or check.services.execution is not self
+            or check.services.factory is not self._factory
+            or check.services.management.catalog is not self._management_catalog
+        ):
+            raise ExecutionDeniedError("Original prepared-wait runtime composition is unavailable")
+        check.require_current()
+        async with runtime_transaction(self._factory, check.scope, check.actor.identity) as (
+            session,
+            control,
+            _,
+        ):
+            row = await execution_row(session, check.scope)
+            result = await restore_wait_locked(self, session, control, row, check)
+        check.require_current()
+        return result
 
     async def recover_dispatched(
         self,

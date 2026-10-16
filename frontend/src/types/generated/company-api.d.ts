@@ -617,6 +617,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/companies/{company_id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** CurrentPage */
+        get: operations["ApiV2CompaniesCompanyIdNotificationsCurrentPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/notifications/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["ApiV2CompaniesCompanyIdNotificationsDraftIdDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/company-session/login": {
         parameters: {
             query?: never;
@@ -645,6 +679,227 @@ export interface paths {
         put?: never;
         /** Signup */
         post: operations["ApiV2CompanySessionSignupSignup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/model-qualification/actions/{action_id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch */
+        post: operations["ApiV2CompaniesCompanyIdModelQualificationActionsActionIdDispatchDispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/model-qualification/prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare */
+        post: operations["ApiV2CompaniesCompanyIdModelQualificationPreparePrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/model-qualification/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recipes */
+        get: operations["ApiV2CompaniesCompanyIdModelQualificationRecipesRecipes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/model-qualification/actions/{action_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Result */
+        get: operations["ApiV2CompaniesCompanyIdModelQualificationActionsActionIdResultResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/model-qualification/actions/{action_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["ApiV2CompaniesCompanyIdModelQualificationActionsActionIdStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/goals/{goal_id}/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bootstrap */
+        post: operations["ApiV2CompaniesCompanyIdPlanningGoalsGoalIdBootstrapBootstrap"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/actions/{action_id}/candidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidate */
+        get: operations["ApiV2CompaniesCompanyIdPlanningActionsActionIdCandidateCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/actions/{action_id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch */
+        post: operations["ApiV2CompaniesCompanyIdPlanningActionsActionIdDispatchDispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/actions/{action_id}/input": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Input */
+        get: operations["ApiV2CompaniesCompanyIdPlanningActionsActionIdInputInput"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/goals/{goal_id}/prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare */
+        post: operations["ApiV2CompaniesCompanyIdPlanningGoalsGoalIdPreparePrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/actions/{action_id}/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Propose */
+        post: operations["ApiV2CompaniesCompanyIdPlanningActionsActionIdProposalPropose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/actions/{action_id}/recover-wait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RecoverWait */
+        post: operations["ApiV2CompaniesCompanyIdPlanningActionsActionIdRecoverWaitRecoverWait"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/planning/goals/{goal_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["ApiV2CompaniesCompanyIdPlanningGoalsGoalIdStatusStatus"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1179,6 +1434,58 @@ export interface components {
             label: string;
             policy_version: string;
         };
+        /**
+         * BrainReadScope
+         * @description Server-derived audit/work identifiers; current locked access remains mandatory.
+         */
+        BrainReadScope: {
+            /**
+             * Schema Version
+             * @default nexus.company.brain.v1
+             * @constant
+             */
+            schema_version: "nexus.company.brain.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Task Id
+             * @default null
+             */
+            task_id: string | null;
+            /**
+             * Task Trace Id
+             * @default null
+             */
+            task_trace_id: string | null;
+            /**
+             * Actor Id
+             * @default null
+             */
+            actor_id: string | null;
+        };
         /** BudgetContent */
         BudgetContent: {
             /**
@@ -1578,6 +1885,128 @@ export interface components {
              */
             self_improvement_enabled: false;
         };
+        /**
+         * CompanyModelRequest
+         * @description One bounded server-authored SDK request, not a whole multi-call agent run.
+         */
+        CompanyModelRequest: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Attempt Id
+             * Format: uuid
+             */
+            attempt_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Registry Id */
+            registry_id: string;
+            /** Registry Revision */
+            registry_revision: string;
+            /** Price Version */
+            price_version: string;
+            /**
+             * Data Classification
+             * @enum {string}
+             */
+            data_classification: "public" | "internal" | "confidential" | "restricted";
+            bounds: components["schemas"]["TokenBounds"];
+            /** Input Text */
+            input_text: string;
+            /**
+             * System Text
+             * @default null
+             */
+            system_text: string | null;
+            /**
+             * Tools
+             * @default []
+             */
+            tools: components["schemas"]["ModelTool"][];
+            /** @default null */
+            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
+        };
+        /**
+         * CompanyModelResult
+         * @description Model response validity is distinct from known or uncertain billable usage.
+         */
+        CompanyModelResult: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "response" | "failed" | "denied" | "cancelled";
+            /**
+             * Billing
+             * @enum {string}
+             */
+            billing: "known" | "unknown" | "not_issued";
+            /** @default null */
+            usage: components["schemas"]["TokenUsage"] | null;
+            /**
+             * Text
+             * @default null
+             */
+            text: string | null;
+            /**
+             * Structured Json
+             * @default null
+             */
+            structured_json: string | null;
+            /**
+             * Tool Calls
+             * @default []
+             */
+            tool_calls: components["schemas"]["ToolProposal"][];
+            /**
+             * Error Code
+             * @default null
+             */
+            error_code: string | null;
+        };
         /** CompanyPauseState */
         CompanyPauseState: {
             /**
@@ -1900,6 +2329,51 @@ export interface components {
             /** @default [] */
             workspace_files: (string | unknown)[];
         };
+        /**
+         * CostQuote
+         * @description One conservative rounded amount bound to its exact dated price version.
+         */
+        CostQuote: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Price Version */
+            price_version: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Amount Usd */
+            amount_usd: string;
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "upper_bound" | "reported_usage";
+        };
+        /**
+         * CurrentWorkAcceptance
+         * @description Resolved native shape; actual protected proof/source qualification remains mandatory.
+         */
+        CurrentWorkAcceptance: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            acceptance: components["schemas"]["WorkAcceptance"];
+        };
         /** CustomerContent */
         CustomerContent: {
             /**
@@ -2032,6 +2506,20 @@ export interface components {
             kind: "Department";
             label: string;
             charter_version?: string | null;
+        };
+        /** DispatchPlanningRequest */
+        DispatchPlanningRequest: {
+            /** Expected Hash */
+            expected_hash: string;
+        };
+        /** DispatchQualificationRequest */
+        DispatchQualificationRequest: {
+            /**
+             * @default nexus.company.api.v1
+             * @constant
+             */
+            schema_version: "nexus.company.api.v1";
+            expected_hash: string;
         };
         /** DueIntent */
         DueIntent: {
@@ -2185,6 +2673,78 @@ export interface components {
             /** Proposal Sha256 */
             proposal_sha256: string;
             proposal: components["schemas"]["ActionProposal"];
+        };
+        /**
+         * ExecutionRegistration
+         * @description Server-authored logical run and frozen work/catalog contract, not new budget authority.
+         */
+        ExecutionRegistration: {
+            work: components["schemas"]["WorkItem"];
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Workflow Name */
+            workflow_name: string;
+            /** Workflow Version */
+            workflow_version: string;
+            /** Model Profile */
+            model_profile: string;
+            /** Model Registry Version */
+            model_registry_version: string;
+            quota: components["schemas"]["AttemptQuota"];
+        };
+        /**
+         * ExecutionSnapshot
+         * @description Authoritative lifetime counters and current lease/state for registered work.
+         */
+        ExecutionSnapshot: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            registration: components["schemas"]["ExecutionRegistration"];
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /** Parent Task Id */
+            parent_task_id: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked";
+            counters: components["schemas"]["LoopCounters"];
+            delegated: components["schemas"]["LoopCounters"];
+            /** Fence */
+            fence: number;
+            /** Worker Id */
+            worker_id: string | null;
+            /** Lease Principal Id */
+            lease_principal_id: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /** Segment Number */
+            segment_number: number;
+            /** Segment Id */
+            segment_id: string | null;
+            /** Waiting Action Id */
+            waiting_action_id: string | null;
         };
         /** GoalContent */
         GoalContent: {
@@ -2428,6 +2988,54 @@ export interface components {
             /** Inherited */
             inherited: boolean;
             cancellation: components["schemas"]["OwnerCancellation"];
+        };
+        /**
+         * InputEstimate
+         * @description Independent full SDK request upper bound, bound to the exact request and recipe.
+         */
+        InputEstimate: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Request Hash */
+            request_hash: string;
+            /** Registry Id */
+            registry_id: string;
+            /** Registry Revision */
+            registry_revision: string;
+            /** Recipe Id */
+            recipe_id: string;
+            /** Recipe Revision */
+            recipe_revision: string;
+            /** Input Text Tokens */
+            input_text_tokens: number;
+            /** System Text Tokens */
+            system_text_tokens: number;
+            /** Tool Schema Tokens */
+            tool_schema_tokens: number;
+            /** Output Schema Tokens */
+            output_schema_tokens: number;
+            /** Sdk Overhead Tokens */
+            sdk_overhead_tokens: number;
+            /** @default null */
+            whole_request: components["schemas"]["WholeRequestInputCeiling"] | null;
+        };
+        /**
+         * JsonSchemaDocument
+         * @description Bounded canonical schema text cannot mutate after authority hashing.
+         */
+        JsonSchemaDocument: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Schema Json */
+            schema_json: string;
         };
         /** KnownBaseline */
         KnownBaseline: {
@@ -2907,6 +3515,130 @@ export interface components {
              */
             status: "accepted_report" | "not_accepted" | "unknown";
         };
+        /**
+         * ModelInputRecipe
+         * @description Explicit trusted estimator/profile recipe; no production estimator is supplied here.
+         */
+        ModelInputRecipe: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Recipe Id */
+            recipe_id: string;
+            /** Revision */
+            revision: string;
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "reasoning" | "engineering" | "routine" | "verification" | "embeddings";
+            /** Minimum Score */
+            minimum_score: string;
+            /** Evaluation Suite Version */
+            evaluation_suite_version: string;
+            /** Conformance Reference */
+            conformance_reference: string;
+        };
+        /**
+         * ModelTool
+         * @description Function schema only; this is never an executable tool or hosted tool.
+         */
+        ModelTool: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            parameters: components["schemas"]["JsonSchemaDocument"];
+        };
+        /** NativeDigestBinding */
+        NativeDigestBinding: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Report Id
+             * Format: uuid
+             */
+            report_id: string;
+            /** Report Snapshot Sha256 */
+            report_snapshot_sha256: string;
+            /** Registration Sha256 */
+            registration_sha256: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "daily" | "weekly";
+            /** Due Bucket */
+            due_bucket: string;
+            /**
+             * Scheduled For
+             * Format: date-time
+             */
+            scheduled_for: string;
+        };
+        /**
+         * NativeNotificationSignal
+         * @description Trusted resolver data; caller declarations cannot grant meaningfulness or permission.
+         */
+        NativeNotificationSignal: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /** Event Ids */
+            event_ids: string[];
+            /**
+             * Subject Id
+             * Format: uuid
+             */
+            subject_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "decision_required" | "blocked" | "failed" | "cap_exhausted" | "work_accepted" | "idle" | "unchanged" | "candidate" | "metric_satisfied" | "digest_due";
+            /** State Sha256 */
+            state_sha256: string;
+            source_event: components["schemas"]["SourceTime"];
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** @default null */
+            acceptance: components["schemas"]["CurrentWorkAcceptance"] | null;
+            /** Budget Day */
+            budget_day?: string | null;
+            /** @default null */
+            digest: components["schemas"]["NativeDigestBinding"] | null;
+        };
         /** NativeReportOperatingProfile */
         NativeReportOperatingProfile: {
             /**
@@ -3019,6 +3751,238 @@ export interface components {
              * @description datetime with the constraint that the value must have timezone info
              */
             period_end: string;
+        };
+        /** NotificationDraft */
+        NotificationDraft: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Draft Id
+             * Format: uuid
+             */
+            draft_id: string;
+            /** Trigger Sha256 */
+            trigger_sha256: string;
+            signal: components["schemas"]["NativeNotificationSignal"];
+            /**
+             * Recipient Class
+             * @default owner
+             * @constant
+             */
+            recipient_class: "owner";
+            recipient_policy: components["schemas"]["OwnerRecipientPolicy"];
+            /** Policy Version */
+            policy_version: string;
+            /** Template Version */
+            template_version: string;
+            payload: components["schemas"]["NotificationPayload"];
+            /** Payload Sha256 */
+            payload_sha256: string;
+            provenance: components["schemas"]["NotificationProvenance"];
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Audit Trace Id
+             * Format: uuid
+             */
+            audit_trace_id: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /**
+             * Kind
+             * @default routine
+             * @enum {string}
+             */
+            kind: "routine" | "daily" | "weekly";
+            /**
+             * Due Bucket
+             * @default null
+             */
+            due_bucket: string | null;
+            /**
+             * Scheduled For
+             * @default null
+             */
+            scheduled_for: string | null;
+        };
+        /** NotificationInboxEntry */
+        NotificationInboxEntry: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            draft: components["schemas"]["NotificationDraft"];
+            /** @default null */
+            latest_submission: components["schemas"]["NotificationProviderObservation"] | null;
+            /** @default null */
+            latest_delivery: components["schemas"]["NotificationProviderObservation"] | null;
+            /** @default null */
+            latest_reconciliation: components["schemas"]["NotificationProviderObservation"] | null;
+        };
+        /** NotificationInboxPage */
+        NotificationInboxPage: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /**
+             * Notifications
+             * @default []
+             */
+            notifications: components["schemas"]["NotificationInboxEntry"][];
+            /**
+             * Next After Id
+             * @default null
+             */
+            next_after_id: string | null;
+        };
+        /** NotificationPayload */
+        NotificationPayload: {
+            /** Sender */
+            sender: string;
+            /** Recipient */
+            recipient: string;
+            /** Subject */
+            subject: string;
+            /** Text */
+            text: string;
+        };
+        /** NotificationProvenance */
+        NotificationProvenance: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Required Resource Ids
+             * @default []
+             */
+            required_resource_ids: string[];
+            /**
+             * Artifacts
+             * @default []
+             */
+            artifacts: components["schemas"]["ArtifactRevisionRef"][];
+            /**
+             * Source Heads
+             * @default []
+             */
+            source_heads: components["schemas"]["SourceHead"][];
+            /**
+             * Protection Deadlines
+             * @default []
+             */
+            protection_deadlines: string[];
+            /** Native Snapshot Sha256 */
+            native_snapshot_sha256: string;
+        };
+        /** NotificationProviderObservation */
+        NotificationProviderObservation: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Observation Id
+             * Format: uuid
+             */
+            observation_id: string;
+            /**
+             * Draft Id
+             * Format: uuid
+             */
+            draft_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Payload Sha256 */
+            payload_sha256: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "submission" | "delivery" | "reconciliation";
+            /** @default null */
+            submission: components["schemas"]["SubmissionResult"] | null;
+            /** @default null */
+            status: components["schemas"]["StatusResult"] | null;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /** Receipt Sha256 */
+            receipt_sha256: string;
+            /**
+             * Recorded By
+             * Format: uuid
+             */
+            recorded_by: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Audit Trace Id
+             * Format: uuid
+             */
+            audit_trace_id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
         };
         /** OperatingProjection */
         OperatingProjection: {
@@ -3140,6 +4104,49 @@ export interface components {
              * Format: date-time
              */
             recorded_at: string;
+        };
+        /**
+         * OwnerRecipientPolicy
+         * @description Declared server configuration; actual directory/policy lookup remains mandatory.
+         */
+        OwnerRecipientPolicy: {
+            /**
+             * Schema Version
+             * @default nexus.company.notification.v1
+             * @constant
+             */
+            schema_version: "nexus.company.notification.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Owner Id
+             * Format: uuid
+             */
+            owner_id: string;
+            /** Version */
+            version: string;
+            /** Sender */
+            sender: string;
+            /** Recipient */
+            recipient: string;
+            /**
+             * Registered At
+             * Format: date-time
+             */
+            registered_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
         };
         /**
          * PauseRequest
@@ -3359,9 +4366,352 @@ export interface components {
              */
             observed_at: string;
         };
+        /**
+         * PlanningBinding
+         * @description Server-captured issuance inputs; later formal publication must perform fresh CAS.
+         */
+        PlanningBinding: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Expected Plan Revision Id */
+            expected_plan_revision_id: string | null;
+            /** Context Manifest Sha256 */
+            context_manifest_sha256: string;
+        };
+        /** PlanningCandidateReview */
+        PlanningCandidateReview: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            bootstrap: components["schemas"]["PlanRevisionRef"];
+            origin: components["schemas"]["PlanningOriginRef"];
+            content: components["schemas"]["PlanningContent"];
+            manifest: components["schemas"]["ContextManifest"];
+            /**
+             * Model Recorded At
+             * Format: date-time
+             */
+            model_recorded_at: string;
+            /**
+             * Historical
+             * @default true
+             * @constant
+             */
+            historical: true;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** PlanningContent */
+        PlanningContent: {
+            /** Tasks */
+            tasks: components["schemas"]["PlanningTask"][];
+            /** Questions */
+            questions: string[];
+        };
+        /** PlanningDispatchRecord */
+        PlanningDispatchRecord: {
+            command: components["schemas"]["SegmentCommand"];
+            /** Workflow Id */
+            workflow_id: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "existing" | "enqueued";
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** PlanningGoalSelection */
+        PlanningGoalSelection: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /** Expected Current Revision Id */
+            expected_current_revision_id: string | null;
+        };
+        /**
+         * PlanningInputReview
+         * @description Owner-readable frozen input; none of these descriptive fields is a permit.
+         */
+        PlanningInputReview: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Descriptor Sha256 */
+            descriptor_sha256: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "google" | "openai_compatible" | "test";
+            /** Model Id */
+            model_id: string;
+            /** Maximum Reservation Usd */
+            maximum_reservation_usd: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            prepared: components["schemas"]["PreparedPlanningRequest"];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Execution Permitted
+             * @default false
+             * @constant
+             */
+            execution_permitted: false;
+        };
+        /** PlanningLifecycleStatus */
+        PlanningLifecycleStatus: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            bootstrap: components["schemas"]["PlanRevisionRef"] | null;
+            current: components["schemas"]["PlanRevisionRef"] | null;
+            /** Current State */
+            current_state: ("proposed" | "approved" | "revoked") | null;
+            /** Action Id */
+            action_id: string | null;
+            /** Proposal Sha256 */
+            proposal_sha256: string | null;
+            action_state: components["schemas"]["ActionState"] | null;
+            /** Owner Decision */
+            owner_decision: ("approved" | "rejected") | null;
+            /** Owner Decision Expires At */
+            owner_decision_expires_at: string | null;
+            /** Work State */
+            work_state: ("eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked") | null;
+            /** Workflow Id */
+            workflow_id: string | null;
+            /** Segment Id */
+            segment_id: string | null;
+            /** Native State */
+            native_state: ("intent" | "outcome_unknown" | "succeeded" | "failed") | null;
+            formal_proposal: components["schemas"]["PlanRevisionRef"] | null;
+            /** Resources Pending */
+            resources_pending: boolean;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** PlanningOriginRef */
+        PlanningOriginRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Kind
+             * @default registered-planning.v2
+             * @constant
+             */
+            kind: "registered-planning.v2";
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Source Plan Id
+             * Format: uuid
+             */
+            source_plan_id: string;
+            /**
+             * Source Plan Revision Id
+             * Format: uuid
+             */
+            source_plan_revision_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /**
+             * Artifact Id
+             * Format: uuid
+             */
+            artifact_id: string;
+            /** Artifact Sha256 */
+            artifact_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Context Manifest Sha256 */
+            context_manifest_sha256: string;
+            /** Content Sha256 */
+            content_sha256: string;
+            /** Mapping Revision */
+            mapping_revision: string;
+            /** Mapping Sha256 */
+            mapping_sha256: string;
+        };
+        /** PlanningPreparedRef */
+        PlanningPreparedRef: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            descriptor: components["schemas"]["ArtifactRevisionRef"];
+        };
+        /** PlanningTask */
+        PlanningTask: {
+            /** Key */
+            key: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string;
+            /** Acceptance */
+            acceptance: string[];
+            /** Depends On */
+            depends_on: string[];
+            /** Evidence Ids */
+            evidence_ids: string[];
+        };
+        /** PrepareQualificationRequest */
+        PrepareQualificationRequest: {
+            /**
+             * @default nexus.company.api.v1
+             * @constant
+             */
+            schema_version: "nexus.company.api.v1";
+            recipe_id: string;
+        };
         /** PrepareReportAuthor */
         PrepareReportAuthor: {
             reference: components["schemas"]["NativeReportProfileRef"];
+        };
+        /**
+         * PreparedPlanningAction
+         * @description Committed descriptions; no prompt, approval, hold, permit or company completion.
+         */
+        PreparedPlanningAction: {
+            action: components["schemas"]["ActionRecord"];
+            reference: components["schemas"]["PlanningPreparedRef"];
+            work: components["schemas"]["ExecutionSnapshot"];
+            quote: components["schemas"]["CostQuote"];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /**
+         * PreparedPlanningRequest
+         * @description Descriptive server preparation; decoding this cannot authorize a provider call.
+         */
+        PreparedPlanningRequest: {
+            request: components["schemas"]["CompanyModelRequest"];
+            context: components["schemas"]["AssembledContext"];
+            binding: components["schemas"]["PlanningBinding"];
+            scope: components["schemas"]["BrainReadScope"];
+            input_recipe: components["schemas"]["ModelInputRecipe"];
+            /** Request Sha256 */
+            request_sha256: string;
+            /** @default null */
+            input_estimate: components["schemas"]["InputEstimate"] | null;
+        };
+        /**
+         * PreparedQualification
+         * @description Actual committed work/pending-action descriptions, not a lease, approval or permit.
+         */
+        PreparedQualification: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            work: components["schemas"]["ExecutionSnapshot"];
+            action: components["schemas"]["ActionRecord"];
+            request: components["schemas"]["CompanyModelRequest"];
+            quote: components["schemas"]["CostQuote"];
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
         };
         /**
          * PrincipalAccess
@@ -3521,6 +4871,197 @@ export interface components {
             /** Invalidated */
             invalidated: boolean;
         };
+        /** QualificationDispatchRecord */
+        QualificationDispatchRecord: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            command: components["schemas"]["SegmentCommand"];
+            /** Workflow Id */
+            workflow_id: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "enqueued" | "existing";
+        };
+        /** QualificationEffectView */
+        QualificationEffectView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** State */
+            state: string;
+            /** Intent Fence */
+            intent_fence: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence Sha256S */
+            evidence_sha256s: string[];
+        };
+        /** QualificationHoldView */
+        QualificationHoldView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "held" | "unknown" | "reconciled";
+            /** Amount Usd */
+            amount_usd: string;
+            /** Actual Usd */
+            actual_usd: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+        };
+        /** QualificationRecipeView */
+        QualificationRecipeView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Recipe Id */
+            recipe_id: string;
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /** Revision */
+            revision: string;
+            /** Case Id */
+            case_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            /** Provider */
+            provider: string;
+            /** Model Id */
+            model_id: string;
+            /** Input Text */
+            input_text: string;
+            /** System Text */
+            system_text: string | null;
+            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
+            /** Request Output Cap */
+            request_output_cap: number;
+            maximum_reservation: components["schemas"]["CostQuote"] | null;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "current" | "unavailable";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
+        /** QualificationResultView */
+        QualificationResultView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "available" | "unavailable";
+            /** @default null */
+            provider_result: components["schemas"]["CompanyModelResult"] | null;
+            /**
+             * Native Outcome
+             * @default null
+             */
+            native_outcome: string | null;
+            /**
+             * Captured At
+             * @default null
+             */
+            captured_at: string | null;
+            /**
+             * Sha256
+             * @default null
+             */
+            sha256: string | null;
+            /**
+             * Actual Usd
+             * @default null
+             */
+            actual_usd: string | null;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
+        /** QualificationStatus */
+        QualificationStatus: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            action: components["schemas"]["ActionRecord"];
+            work: components["schemas"]["ExecutionSnapshot"];
+            hold: components["schemas"]["QualificationHoldView"] | null;
+            recipe: components["schemas"]["QualificationRecipeView"];
+            effect: components["schemas"]["QualificationEffectView"] | null;
+            dispatch: components["schemas"]["QualificationDispatchRecord"] | null;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
         /** RankedHandle */
         RankedHandle: {
             /**
@@ -3557,6 +5098,17 @@ export interface components {
              * @enum {string}
              */
             billing: "unissued" | "known" | "unconfirmed";
+        };
+        /** RecoverPlanningWaitRequest */
+        RecoverPlanningWaitRequest: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Expected Current Revision Id
+             * Format: uuid
+             */
+            expected_current_revision_id: string;
+            /** Expected Hash */
+            expected_hash: string;
         };
         /**
          * ReportData
@@ -3912,6 +5464,58 @@ export interface components {
             artifact_revision_id: string;
             sections: (string | unknown)[];
         };
+        /**
+         * SegmentCommand
+         * @description Server-authored continuation, with no callable, credentials or new budget in its payload.
+         */
+        SegmentCommand: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Segment Id
+             * Format: uuid
+             */
+            segment_id: string;
+        };
         /** SourceHead */
         SourceHead: {
             /**
@@ -3990,6 +5594,40 @@ export interface components {
             /** Basis */
             basis: string;
         };
+        /** StatusResult */
+        StatusResult: {
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "observed" | "unavailable" | "blocked";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "accepted" | "disabled" | "configuration_missing" | "recipient_policy" | "invalid_key" | "provider_rejected" | "provider_conflict" | "concurrent_unknown" | "network_unknown" | "provider_unknown" | "invalid_response" | "response_too_large" | "lookup_unavailable" | "content_mismatch" | "observed";
+            /**
+             * Provider Id
+             * Format: uuid
+             */
+            provider_id: string;
+            /**
+             * Provider Event
+             * @default null
+             */
+            provider_event: ("bounced" | "canceled" | "clicked" | "complained" | "delivered" | "delivery_delayed" | "failed" | "opened" | "queued" | "scheduled" | "sent" | "suppressed") | null;
+            /**
+             * Response Sha256
+             * @default null
+             */
+            response_sha256: string | null;
+            /**
+             * Delivery State
+             * @default unknown
+             * @enum {string}
+             */
+            delivery_state: "unknown" | "delayed" | "delivered" | "bounced" | "failed" | "suppressed" | "complained";
+        };
         /**
          * StrategySelectionRef
          * @description Descriptive comparison ref only; an actual owner decision must bind it later.
@@ -4016,6 +5654,35 @@ export interface components {
             candidate_id: string;
             /** Candidate Scope Sha256 */
             candidate_scope_sha256: string;
+        };
+        /** SubmissionResult */
+        SubmissionResult: {
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "accepted" | "rejected" | "unknown" | "blocked";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "accepted" | "disabled" | "configuration_missing" | "recipient_policy" | "invalid_key" | "provider_rejected" | "provider_conflict" | "concurrent_unknown" | "network_unknown" | "provider_unknown" | "invalid_response" | "response_too_large" | "lookup_unavailable" | "content_mismatch" | "observed";
+            /**
+             * Provider Id
+             * @default null
+             */
+            provider_id: string | null;
+            /**
+             * Response Sha256
+             * @default null
+             */
+            response_sha256: string | null;
+            /**
+             * Delivery State
+             * @default unknown
+             * @constant
+             */
+            delivery_state: "unknown";
         };
         /** SupportCaseContent */
         SupportCaseContent: {
@@ -4059,6 +5726,95 @@ export interface components {
              * @default null
              */
             next_due_after_id: string | null;
+        };
+        /**
+         * TokenBounds
+         * @description Per-call financial bounds and enforced total billed output cap.
+         *
+         *     input_tokens is an upper bound including framing, tools/schema and history.
+         *     max_output_tokens covers visible, hidden reasoning and formatting together.
+         *     The default requires combined context fit. An explicit reviewed whole-input
+         *     ceiling reserves cost without promising prompt fit or exact tokenization.
+         *     Output cap enforcement belongs to an evaluated adapter.
+         */
+        TokenBounds: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Input Tokens */
+            input_tokens: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /**
+             * Unit
+             * @default text_tokens
+             * @constant
+             */
+            unit: "text_tokens";
+            /**
+             * Output Cap Semantics
+             * @default total_including_reasoning
+             * @constant
+             */
+            output_cap_semantics: "total_including_reasoning";
+            /**
+             * Input Bound Kind
+             * @default null
+             */
+            input_bound_kind: "model_input_ceiling_v1" | null;
+        };
+        /**
+         * TokenUsage
+         * @description Complete normalized text usage; missing/unsupported charges retain a hold.
+         */
+        TokenUsage: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /**
+             * Cached Input Tokens
+             * @default 0
+             */
+            cached_input_tokens: number;
+            /**
+             * Reasoning Tokens
+             * @default 0
+             */
+            reasoning_tokens: number;
+            /**
+             * Usage Complete
+             * @default true
+             * @constant
+             */
+            usage_complete: true;
+        };
+        /**
+         * ToolProposal
+         * @description Validated model suggestion; execution needs a separate governed tool boundary.
+         */
+        ToolProposal: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Name */
+            name: string;
+            /** Call Id */
+            call_id: string | null;
+            /** Arguments Json */
+            arguments_json: string;
         };
         /** UTF8Span */
         UTF8Span: {
@@ -4250,6 +6006,34 @@ export interface components {
             artifacts: components["schemas"]["ArtifactRevisionRef"][];
             /** Check Recipe */
             check_recipe: string;
+        };
+        /**
+         * WholeRequestInputCeiling
+         * @description Complete financial upper bound, without fabricated per-component tokenization.
+         */
+        WholeRequestInputCeiling: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Method
+             * @default model_input_ceiling_v1
+             * @constant
+             */
+            method: "model_input_ceiling_v1";
+            /** Tokens */
+            tokens: number;
+            /** Registry Sha256 */
+            registry_sha256: string;
+            /** Model Sha256 */
+            model_sha256: string;
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /** Conformance Reference */
+            conformance_reference: string;
         };
         /**
          * WorkAcceptance
@@ -4554,904 +6338,6 @@ export interface components {
             receipts_next_after_id: string | null;
         };
         JsonValue: unknown;
-        /** PlanningOriginRef */
-        PlanningOriginRef: {
-            /**
-             * Schema Version
-             * @default nexus.company.management.v1
-             * @constant
-             */
-            schema_version: "nexus.company.management.v1";
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            /**
-             * Kind
-             * @default registered-planning.v2
-             * @constant
-             */
-            kind: "registered-planning.v2";
-            goal: components["schemas"]["GoalRevisionRef"];
-            /**
-             * Source Plan Id
-             * Format: uuid
-             */
-            source_plan_id: string;
-            /**
-             * Source Plan Revision Id
-             * Format: uuid
-             */
-            source_plan_revision_id: string;
-            /**
-             * Task Id
-             * Format: uuid
-             */
-            task_id: string;
-            /**
-             * Action Id
-             * Format: uuid
-             */
-            action_id: string;
-            /**
-             * Request Id
-             * Format: uuid
-             */
-            request_id: string;
-            /**
-             * Receipt Id
-             * Format: uuid
-             */
-            receipt_id: string;
-            /**
-             * Artifact Id
-             * Format: uuid
-             */
-            artifact_id: string;
-            /** Artifact Sha256 */
-            artifact_sha256: string;
-            /** Request Sha256 */
-            request_sha256: string;
-            /** Context Manifest Sha256 */
-            context_manifest_sha256: string;
-            /** Content Sha256 */
-            content_sha256: string;
-            /** Mapping Revision */
-            mapping_revision: string;
-            /** Mapping Sha256 */
-            mapping_sha256: string;
-        };
-        /**
-         * SegmentCommand
-         * @description Server-authored continuation, with no callable, credentials or new budget in its payload.
-         */
-        SegmentCommand: {
-            /**
-             * Schema Version
-             * @default nexus.company.v1
-             * @constant
-             */
-            schema_version: "nexus.company.v1";
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            /**
-             * Task Id
-             * Format: uuid
-             */
-            task_id: string;
-            /**
-             * Trace Id
-             * Format: uuid
-             */
-            trace_id: string;
-            /**
-             * Actor Id
-             * Format: uuid
-             */
-            actor_id: string;
-            /**
-             * Workspace Id
-             * Format: uuid
-             */
-            workspace_id: string;
-            /**
-             * Run Id
-             * Format: uuid
-             */
-            run_id: string;
-            /**
-             * Action Id
-             * Format: uuid
-             */
-            action_id: string;
-            /**
-             * Segment Id
-             * Format: uuid
-             */
-            segment_id: string;
-        };
-        /** QualificationDispatchRecord */
-        QualificationDispatchRecord: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            command: components["schemas"]["SegmentCommand"];
-            /** Workflow Id */
-            workflow_id: string;
-            /**
-             * Disposition
-             * @enum {string}
-             */
-            disposition: "enqueued" | "existing";
-        };
-        /**
-         * CostQuote
-         * @description One conservative rounded amount bound to its exact dated price version.
-         */
-        CostQuote: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Price Version */
-            price_version: string;
-            /**
-             * Currency
-             * @default USD
-             * @constant
-             */
-            currency: "USD";
-            /** Amount Usd */
-            amount_usd: string;
-            /**
-             * Basis
-             * @enum {string}
-             */
-            basis: "upper_bound" | "reported_usage";
-        };
-        /**
-         * JsonSchemaDocument
-         * @description Bounded canonical schema text cannot mutate after authority hashing.
-         */
-        JsonSchemaDocument: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Schema Json */
-            schema_json: string;
-        };
-        /** QualificationRecipeView */
-        QualificationRecipeView: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Recipe Id */
-            recipe_id: string;
-            /** Recipe Sha256 */
-            recipe_sha256: string;
-            /** Revision */
-            revision: string;
-            /** Case Id */
-            case_id: string;
-            goal: components["schemas"]["GoalRevisionRef"];
-            /** Provider */
-            provider: string;
-            /** Model Id */
-            model_id: string;
-            /** Input Text */
-            input_text: string;
-            /** System Text */
-            system_text: string | null;
-            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
-            /** Request Output Cap */
-            request_output_cap: number;
-            maximum_reservation: components["schemas"]["CostQuote"] | null;
-            /**
-             * Availability
-             * @enum {string}
-             */
-            availability: "current" | "unavailable";
-            /**
-             * Expires At
-             * Format: date-time
-             */
-            expires_at: string;
-            /**
-             * Profile Quality Evaluated
-             * @default false
-             * @constant
-             */
-            profile_quality_evaluated: false;
-        };
-        /**
-         * CompanyModelResult
-         * @description Model response validity is distinct from known or uncertain billable usage.
-         */
-        CompanyModelResult: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Request Id
-             * Format: uuid
-             */
-            request_id: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "response" | "failed" | "denied" | "cancelled";
-            /**
-             * Billing
-             * @enum {string}
-             */
-            billing: "known" | "unknown" | "not_issued";
-            /** @default null */
-            usage: components["schemas"]["TokenUsage"] | null;
-            /**
-             * Text
-             * @default null
-             */
-            text: string | null;
-            /**
-             * Structured Json
-             * @default null
-             */
-            structured_json: string | null;
-            /**
-             * Tool Calls
-             * @default []
-             */
-            tool_calls: components["schemas"]["ToolProposal"][];
-            /**
-             * Error Code
-             * @default null
-             */
-            error_code: string | null;
-        };
-        /**
-         * TokenUsage
-         * @description Complete normalized text usage; missing/unsupported charges retain a hold.
-         */
-        TokenUsage: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Input Tokens */
-            input_tokens: number;
-            /** Output Tokens */
-            output_tokens: number;
-            /**
-             * Cached Input Tokens
-             * @default 0
-             */
-            cached_input_tokens: number;
-            /**
-             * Reasoning Tokens
-             * @default 0
-             */
-            reasoning_tokens: number;
-            /**
-             * Usage Complete
-             * @default true
-             * @constant
-             */
-            usage_complete: true;
-        };
-        /**
-         * ToolProposal
-         * @description Validated model suggestion; execution needs a separate governed tool boundary.
-         */
-        ToolProposal: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Name */
-            name: string;
-            /** Call Id */
-            call_id: string | null;
-            /** Arguments Json */
-            arguments_json: string;
-        };
-        /** QualificationResultView */
-        QualificationResultView: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Availability
-             * @enum {string}
-             */
-            availability: "available" | "unavailable";
-            /** @default null */
-            provider_result: components["schemas"]["CompanyModelResult"] | null;
-            /**
-             * Native Outcome
-             * @default null
-             */
-            native_outcome: string | null;
-            /**
-             * Captured At
-             * @default null
-             */
-            captured_at: string | null;
-            /**
-             * Sha256
-             * @default null
-             */
-            sha256: string | null;
-            /**
-             * Actual Usd
-             * @default null
-             */
-            actual_usd: string | null;
-            /**
-             * Company Completed
-             * @default false
-             * @constant
-             */
-            company_completed: false;
-            /**
-             * Profile Quality Evaluated
-             * @default false
-             * @constant
-             */
-            profile_quality_evaluated: false;
-        };
-        /**
-         * ExecutionRegistration
-         * @description Server-authored logical run and frozen work/catalog contract, not new budget authority.
-         */
-        ExecutionRegistration: {
-            work: components["schemas"]["WorkItem"];
-            /**
-             * Run Id
-             * Format: uuid
-             */
-            run_id: string;
-            /** Workflow Name */
-            workflow_name: string;
-            /** Workflow Version */
-            workflow_version: string;
-            /** Model Profile */
-            model_profile: string;
-            /** Model Registry Version */
-            model_registry_version: string;
-            quota: components["schemas"]["AttemptQuota"];
-        };
-        /**
-         * ExecutionSnapshot
-         * @description Authoritative lifetime counters and current lease/state for registered work.
-         */
-        ExecutionSnapshot: {
-            /**
-             * Schema Version
-             * @default nexus.company.v1
-             * @constant
-             */
-            schema_version: "nexus.company.v1";
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            registration: components["schemas"]["ExecutionRegistration"];
-            /**
-             * Workspace Id
-             * Format: uuid
-             */
-            workspace_id: string;
-            /**
-             * Actor Id
-             * Format: uuid
-             */
-            actor_id: string;
-            /** Parent Task Id */
-            parent_task_id: string | null;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked";
-            counters: components["schemas"]["LoopCounters"];
-            delegated: components["schemas"]["LoopCounters"];
-            /** Fence */
-            fence: number;
-            /** Worker Id */
-            worker_id: string | null;
-            /** Lease Principal Id */
-            lease_principal_id: string | null;
-            /** Expires At */
-            expires_at: string | null;
-            /** Segment Number */
-            segment_number: number;
-            /** Segment Id */
-            segment_id: string | null;
-            /** Waiting Action Id */
-            waiting_action_id: string | null;
-        };
-        /** QualificationEffectView */
-        QualificationEffectView: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Action Id
-             * Format: uuid
-             */
-            action_id: string;
-            /** State */
-            state: string;
-            /** Intent Fence */
-            intent_fence: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Evidence Sha256S */
-            evidence_sha256s: string[];
-        };
-        /** QualificationHoldView */
-        QualificationHoldView: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "held" | "unknown" | "reconciled";
-            /** Amount Usd */
-            amount_usd: string;
-            /** Actual Usd */
-            actual_usd: string | null;
-            /**
-             * Day
-             * Format: date
-             */
-            day: string;
-        };
-        /** QualificationStatus */
-        QualificationStatus: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Observed At
-             * Format: date-time
-             */
-            observed_at: string;
-            action: components["schemas"]["ActionRecord"];
-            work: components["schemas"]["ExecutionSnapshot"];
-            hold: components["schemas"]["QualificationHoldView"] | null;
-            recipe: components["schemas"]["QualificationRecipeView"];
-            effect: components["schemas"]["QualificationEffectView"] | null;
-            dispatch: components["schemas"]["QualificationDispatchRecord"] | null;
-            /**
-             * Company Completed
-             * @default false
-             * @constant
-             */
-            company_completed: false;
-            /**
-             * Profile Quality Evaluated
-             * @default false
-             * @constant
-             */
-            profile_quality_evaluated: false;
-        };
-        /**
-         * CompanyModelRequest
-         * @description One bounded server-authored SDK request, not a whole multi-call agent run.
-         */
-        CompanyModelRequest: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            /**
-             * Task Id
-             * Format: uuid
-             */
-            task_id: string;
-            /**
-             * Trace Id
-             * Format: uuid
-             */
-            trace_id: string;
-            /**
-             * Actor Id
-             * Format: uuid
-             */
-            actor_id: string;
-            /**
-             * Action Id
-             * Format: uuid
-             */
-            action_id: string;
-            /**
-             * Attempt Id
-             * Format: uuid
-             */
-            attempt_id: string;
-            /**
-             * Request Id
-             * Format: uuid
-             */
-            request_id: string;
-            /** Registry Id */
-            registry_id: string;
-            /** Registry Revision */
-            registry_revision: string;
-            /** Price Version */
-            price_version: string;
-            /**
-             * Data Classification
-             * @enum {string}
-             */
-            data_classification: "public" | "internal" | "confidential" | "restricted";
-            bounds: components["schemas"]["TokenBounds"];
-            /** Input Text */
-            input_text: string;
-            /**
-             * System Text
-             * @default null
-             */
-            system_text: string | null;
-            /**
-             * Tools
-             * @default []
-             */
-            tools: components["schemas"]["ModelTool"][];
-            /** @default null */
-            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
-        };
-        /**
-         * ModelTool
-         * @description Function schema only; this is never an executable tool or hosted tool.
-         */
-        ModelTool: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Name */
-            name: string;
-            /** Description */
-            description: string;
-            parameters: components["schemas"]["JsonSchemaDocument"];
-        };
-        /**
-         * TokenBounds
-         * @description Per-call financial bounds and enforced total billed output cap.
-         *
-         *     input_tokens is an upper bound including framing, tools/schema and history.
-         *     max_output_tokens covers visible, hidden reasoning and formatting together.
-         *     The default requires combined context fit. An explicit reviewed whole-input
-         *     ceiling reserves cost without promising prompt fit or exact tokenization.
-         *     Output cap enforcement belongs to an evaluated adapter.
-         */
-        TokenBounds: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Input Tokens */
-            input_tokens: number;
-            /** Max Output Tokens */
-            max_output_tokens: number;
-            /**
-             * Unit
-             * @default text_tokens
-             * @constant
-             */
-            unit: "text_tokens";
-            /**
-             * Output Cap Semantics
-             * @default total_including_reasoning
-             * @constant
-             */
-            output_cap_semantics: "total_including_reasoning";
-            /**
-             * Input Bound Kind
-             * @default null
-             */
-            input_bound_kind: "model_input_ceiling_v1" | null;
-        };
-        /**
-         * PreparedQualification
-         * @description Actual committed work/pending-action descriptions, not a lease, approval or permit.
-         */
-        PreparedQualification: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            work: components["schemas"]["ExecutionSnapshot"];
-            action: components["schemas"]["ActionRecord"];
-            request: components["schemas"]["CompanyModelRequest"];
-            quote: components["schemas"]["CostQuote"];
-            /** Recipe Sha256 */
-            recipe_sha256: string;
-            /**
-             * Company Completed
-             * @default false
-             * @constant
-             */
-            company_completed: false;
-        };
-        /**
-         * BrainReadScope
-         * @description Server-derived audit/work identifiers; current locked access remains mandatory.
-         */
-        BrainReadScope: {
-            /**
-             * Schema Version
-             * @default nexus.company.brain.v1
-             * @constant
-             */
-            schema_version: "nexus.company.brain.v1";
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            /**
-             * Workspace Id
-             * Format: uuid
-             */
-            workspace_id: string;
-            /**
-             * Principal Id
-             * Format: uuid
-             */
-            principal_id: string;
-            /**
-             * Operation Id
-             * Format: uuid
-             */
-            operation_id: string;
-            /**
-             * Trace Id
-             * Format: uuid
-             */
-            trace_id: string;
-            /**
-             * Task Id
-             * @default null
-             */
-            task_id: string | null;
-            /**
-             * Task Trace Id
-             * @default null
-             */
-            task_trace_id: string | null;
-            /**
-             * Actor Id
-             * @default null
-             */
-            actor_id: string | null;
-        };
-        /**
-         * InputEstimate
-         * @description Independent full SDK request upper bound, bound to the exact request and recipe.
-         */
-        InputEstimate: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Request Hash */
-            request_hash: string;
-            /** Registry Id */
-            registry_id: string;
-            /** Registry Revision */
-            registry_revision: string;
-            /** Recipe Id */
-            recipe_id: string;
-            /** Recipe Revision */
-            recipe_revision: string;
-            /** Input Text Tokens */
-            input_text_tokens: number;
-            /** System Text Tokens */
-            system_text_tokens: number;
-            /** Tool Schema Tokens */
-            tool_schema_tokens: number;
-            /** Output Schema Tokens */
-            output_schema_tokens: number;
-            /** Sdk Overhead Tokens */
-            sdk_overhead_tokens: number;
-            /** @default null */
-            whole_request: components["schemas"]["WholeRequestInputCeiling"] | null;
-        };
-        /**
-         * ModelInputRecipe
-         * @description Explicit trusted estimator/profile recipe; no production estimator is supplied here.
-         */
-        ModelInputRecipe: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /** Recipe Id */
-            recipe_id: string;
-            /** Revision */
-            revision: string;
-            /**
-             * Profile
-             * @enum {string}
-             */
-            profile: "reasoning" | "engineering" | "routine" | "verification" | "embeddings";
-            /** Minimum Score */
-            minimum_score: string;
-            /** Evaluation Suite Version */
-            evaluation_suite_version: string;
-            /** Conformance Reference */
-            conformance_reference: string;
-        };
-        /**
-         * PlanningBinding
-         * @description Server-captured issuance inputs; later formal publication must perform fresh CAS.
-         */
-        PlanningBinding: {
-            goal: components["schemas"]["GoalRevisionRef"];
-            /**
-             * Plan Id
-             * Format: uuid
-             */
-            plan_id: string;
-            /** Expected Plan Revision Id */
-            expected_plan_revision_id: string | null;
-            /** Context Manifest Sha256 */
-            context_manifest_sha256: string;
-        };
-        /**
-         * PreparedPlanningRequest
-         * @description Descriptive server preparation; decoding this cannot authorize a provider call.
-         */
-        PreparedPlanningRequest: {
-            request: components["schemas"]["CompanyModelRequest"];
-            context: components["schemas"]["AssembledContext"];
-            binding: components["schemas"]["PlanningBinding"];
-            scope: components["schemas"]["BrainReadScope"];
-            input_recipe: components["schemas"]["ModelInputRecipe"];
-            /** Request Sha256 */
-            request_sha256: string;
-            /** @default null */
-            input_estimate: components["schemas"]["InputEstimate"] | null;
-        };
-        /**
-         * WholeRequestInputCeiling
-         * @description Complete financial upper bound, without fabricated per-component tokenization.
-         */
-        WholeRequestInputCeiling: {
-            /**
-             * Schema Version
-             * @default nexus.company.models.v1
-             * @constant
-             */
-            schema_version: "nexus.company.models.v1";
-            /**
-             * Method
-             * @default model_input_ceiling_v1
-             * @constant
-             */
-            method: "model_input_ceiling_v1";
-            /** Tokens */
-            tokens: number;
-            /** Registry Sha256 */
-            registry_sha256: string;
-            /** Model Sha256 */
-            model_sha256: string;
-            /** Recipe Sha256 */
-            recipe_sha256: string;
-            /** Conformance Reference */
-            conformance_reference: string;
-        };
-        /**
-         * PlanningInputReview
-         * @description Owner-readable frozen input; none of these descriptive fields is a permit.
-         */
-        PlanningInputReview: {
-            /**
-             * Company Id
-             * Format: uuid
-             */
-            company_id: string;
-            /**
-             * Action Id
-             * Format: uuid
-             */
-            action_id: string;
-            /** Proposal Sha256 */
-            proposal_sha256: string;
-            /** Request Sha256 */
-            request_sha256: string;
-            /** Descriptor Sha256 */
-            descriptor_sha256: string;
-            /**
-             * Provider
-             * @enum {string}
-             */
-            provider: "openai" | "google" | "openai_compatible" | "test";
-            /** Model Id */
-            model_id: string;
-            /** Maximum Reservation Usd */
-            maximum_reservation_usd: string;
-            /**
-             * Currency
-             * @default USD
-             * @constant
-             */
-            currency: "USD";
-            prepared: components["schemas"]["PreparedPlanningRequest"];
-            /**
-             * Company Completed
-             * @default false
-             * @constant
-             */
-            company_completed: false;
-            /**
-             * Execution Permitted
-             * @default false
-             * @constant
-             */
-            execution_permitted: false;
-        };
     };
     responses: never;
     parameters: never;
@@ -6245,7 +7131,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Request fulfilled, document follows */
+            /** @description Additional response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6287,7 +7173,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Request fulfilled, document follows */
+            /** @description Additional response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -6917,6 +7803,84 @@ export interface operations {
             };
         };
     };
+    ApiV2CompaniesCompanyIdNotificationsCurrentPage: {
+        parameters: {
+            query?: {
+                after_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationInboxPage"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdNotificationsDraftIdDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                draft_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationInboxEntry"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
     ApiV2CompanySessionLoginLogin: {
         parameters: {
             query?: never;
@@ -6976,6 +7940,528 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PilotSessionToken"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdModelQualificationActionsActionIdDispatchDispatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispatchQualificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationDispatchRecord"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdModelQualificationPreparePrepare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepareQualificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedQualification"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdModelQualificationRecipesRecipes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationRecipeView"][];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdModelQualificationActionsActionIdResultResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationResultView"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdModelQualificationActionsActionIdStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Request fulfilled, document follows */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QualificationStatus"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningGoalsGoalIdBootstrapBootstrap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanningGoalSelection"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanRevision"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningActionsActionIdCandidateCandidate: {
+        parameters: {
+            query: {
+                expected_current_revision_id: string;
+            };
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningCandidateReview"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningActionsActionIdDispatchDispatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispatchPlanningRequest"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningDispatchRecord"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningActionsActionIdInputInput: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningInputReview"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningGoalsGoalIdPreparePrepare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanningGoalSelection"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedPlanningAction"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningActionsActionIdProposalPropose: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanningGoalSelection"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanRevision"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningActionsActionIdRecoverWaitRecoverWait: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverPlanningWaitRequest"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedPlanningAction"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdPlanningGoalsGoalIdStatusStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningLifecycleStatus"];
                 };
             };
             /** @description Bad request syntax or unsupported method */

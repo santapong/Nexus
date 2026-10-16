@@ -32,6 +32,8 @@ from nexus.company.management.transactions import (
     management_owner_transaction,
 )
 from nexus.core.llm.company_registry import ModelRegistry, Provider
+from nexus.execution.planning_lifecycle import PlanningLifecycle
+from nexus.execution.planning_lifecycle_contracts import PlanningLifecycleRead
 from nexus.harness.canonical import action_hash
 from nexus.harness.journal_models import JournalAction
 from nexus.harness.model_authorizer_contracts import model_action_parameters
@@ -144,6 +146,19 @@ class PlanningInputReader:
         *,
         end_us: int,
     ) -> PlanningInputReview:
+        """Compatibility view retaining the protected read's original shortened cutoff."""
+        result = await self.read(scope, identity, action_id, end_us=end_us)
+        require_time(result.read_end_us)
+        return result.value
+
+    async def read(
+        self,
+        scope: CompanyControlScope,
+        identity: VerifiedIdentity,
+        action_id: UUID,
+        *,
+        end_us: int,
+    ) -> PlanningLifecycleRead[PlanningInputReview]:
         """Metadata first, then final awaited protected READ, then immutable CPU-only joins."""
         end_us = read_end(end_us)
         self._composition()
@@ -188,7 +203,7 @@ class PlanningInputReader:
             raise ManagementDeniedError("Complete planning input response exceeds its bound")
         self._composition()
         require_time(end_us)
-        return view
+        return PlanningLifecycleRead(view, end_us)
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,10 +211,43 @@ class PlanningApiServices:
     """Optional data-only owner routes; construction opens no DB, worker or provider."""
 
     reads: PlanningInputReader
+    lifecycle: PlanningLifecycle | None = None
     directory: PersistentCompanyDirectory = field(init=False)
+    _lifecycle_binding: tuple[object, ...] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         if type(self.reads) is not PlanningInputReader:
             raise ValueError("Planning API requires its concrete protected input reader")
         self.reads._composition()
         object.__setattr__(self, "directory", PersistentCompanyDirectory(self.reads.factory))
+        object.__setattr__(self, "_lifecycle_binding", (self.reads, self.lifecycle, self.directory))
+        self.require_lifecycle()
+
+    def require_lifecycle(self) -> PlanningLifecycle | None:
+        """Optional product routes share the exact protected input and native graph."""
+        if any(
+            a is not b
+            for a, b in zip(
+                (self.reads, self.lifecycle, self.directory), self._lifecycle_binding, strict=True
+            )
+        ):
+            raise ManagementDeniedError("Original planning API lifecycle changed")
+        self.reads._composition()
+        value = self.lifecycle
+        if value is None:
+            return None
+        from nexus.execution.planning_lifecycle import PlanningLifecycle
+
+        if value is not None:
+            if (
+                type(value) is not PlanningLifecycle
+                or self.reads.store is not value.services.prepared
+                or self.directory._factory is not value.factory
+                or canonical_sha256(self.reads.registry)
+                != canonical_sha256(value.config.catalog.models)
+            ):
+                raise ManagementDeniedError(
+                    "Planning lifecycle differs from actual protected input graph"
+                )
+            value.require_composition()
+        return value

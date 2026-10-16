@@ -4,22 +4,28 @@
 and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexus is
 the sole delivery target; StockFlow is an optional later test.
 
-The full isolated owner/planning flow now passes: actual HTTP/restricted-PG/DBOS,
-one SDK MockTransport request, a protected candidate, formal same-root revision2,
-owner approval and no-request replay. Source, builder-denial and conservation
-gates pass. Root4,926 units/114.55s and strict/Ruff6 pass; the independent restricted
-READ ONLY audit confirms one model attempt/intent and reconciled test cost, with
-no leases/connections. All earlier failed databases/holds stay preserved. This
-proves the isolated planner protocol; live model quality, owner application and
-whole-company release remain open. See the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
+The actual owner application/recovery test passes38.43s: public bootstrap and
+separate approvals, persisted pending-request interruption, cold recomposition,
+explicit same-request wait recovery, exact review/decision, atomic dispatch and
+one actual SDK MockTransport call, candidate, same-root revision2 and no-call
+replay. A separate restricted READ ONLY audit confirms one attempt/intent/dispatch,
+reconciled test cost and no leases/connections. The frozen source1 passes5,034
+units/strictRuff32; the minimal reviewed startup repair passes17/strictRuff2.
+Frontend request/state/render, TypeScript and build checks pass. See the
+[owner application checkpoint](OWNER_PLANNING_APPLICATION_CHECKPOINT_2026-10-16.md).
+The earlier isolated planner protocol passes actual HTTP/restricted-PG/DBOS, one
+SDK MockTransport request, a protected candidate and same-root revision2/owner
+approval/replay. Its separate conservation audit and all earlier failed state
+remain preserved. Neither SDK-mock result qualifies live model quality or browser
+acceptance. Cold recomposition is not process restart.
 
 The isolated local Knowledge/citation/goal preview and its real API/database
 journey are implemented. Owner account initialization and signed-in browser
 acceptance remain pending; password entry stays with the owner. The preview has
 no configured model/provider/worker activation or seeded successful work.
 
-Next: connect the actual storedr1 lifecycle, explicit application/worker and
-owner bootstrap/prepare/dispatch/candidate/proposal controls; qualify recovery.
+Next: autonomous governed Nexus code authoring and whole-cycle model accounting,
+while the signed-in owner journey and genuine provider setup remain pending.
 Autonomous code authoring, whole-cycle model accounting, Strategy/presentation/
 support, current bounded builder/ARM64, reporting/email, private deployment,
 independent restore/rollback and24-hour soak remain required. Native activation

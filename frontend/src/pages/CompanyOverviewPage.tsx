@@ -8,6 +8,7 @@ import { CompanyQueryState, instant, StateLabel } from '@/components/company/Com
 import { CompanyPageNavigation } from '@/components/company/CompanyPageNavigation'
 import { CompanyPausePanel } from '@/components/company/CompanyPausePanel'
 import { GoalMetricHistory } from '@/components/company/GoalMetricHistory'
+import { CompanyGoalPlanning } from '@/components/company/CompanyGoalPlanning'
 
 export function CompanyOverviewPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -36,6 +37,7 @@ export function CompanyOverviewPage() {
           <p className="text-xs text-gray-500">Exact deadline: {instant(goal.due.actionable_at)}
             {goal.due.actionable_basis === 'operator_explicit' && ' · Set explicitly'}</p>
           <GoalMetricHistory company={identity.company_id} goal={goal.reference.goal_id} />
+          <CompanyGoalPlanning key={goal.reference.revision_id} goal={goal.reference} paused={data.paused} />
         </div>)}
         {data.goals.length === 0 && <p className="text-sm text-gray-400">No goals in this page.</p>}
       </section>

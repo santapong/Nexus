@@ -13,7 +13,7 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | **Actual isolated HTTP/PG/DBOS/SDK-mock flow passes** through one protected candidate, formal same-root revision2, owner approval and no-request replay | Connect the validated runtime to the owner application and qualify genuine model operation |
+| Management-generated planning | **Actual public owner application/recovery passes HTTP/PG/DBOS/SDK-mock**, candidate, same-root revision2 and no-call replay; separate conservation audit passes | Genuine compatible operating profile/model quality and owner browser acceptance |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
@@ -21,6 +21,22 @@ The supervised release is incomplete; default native execution stays off.
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
 ## Latest actual result
+
+The actual public owner application/recovery scenario passes38.43s. It proposes
+and separately approves r1, interrupts after genuine pending publication, cold
+recomposes the production graph, recovers the same saved unissued request, reviews
+and decides its exact input, dispatches the fixed DBOS worker and records one SDK
+MockTransport call. Protected candidate, formal same-root r2, separate approval,
+replay and current-source denials pass. A separate restricted RR READ ONLY audit
+confirms seven registered/native Work, one attempt/intent/dispatch/revision event,
+no leases/connections andUSD0.000120 test cost settled fromUSD0.400512.
+
+The source1 cohort passes5,034 units/130.34s and strict/Ruff32; a reviewed minimal
+startup fix passes17 focused cases/strictRuff2, closing ERROR-204. Frontend
+request/state/render, TypeScript and build checks pass. All1,732 selected source/
+document pins remain stable during the one actual invocation. No live model
+quality, process restart, new owner preview activation or browser UAT is claimed.
+See the [owner application checkpoint](OWNER_PLANNING_APPLICATION_CHECKPOINT_2026-10-16.md).
 
 The complete isolated planning test now passes24.49s: real owner approval and
 atomic dispatch, one SDK request over MockTransport, a protected candidate,
@@ -30,8 +46,8 @@ and strict/Ruff6 pass with stable source. A separate restricted read-only audit
 confirms seven registered/native Work, one attempt/intent/dispatch/revision event,
 no leases/connections and test-ledgerUSD0.000120 settled fromUSD0.400512. Builder
 denial and late source-revocation assertions pass. All four earlier failed
-databases and held money remain preserved. Live quality, owner application
-wiring, actual builder and company-cycle acceptance remain open. See the
+databases and held money remain preserved. Live quality, owner browser, actual
+builder and complete company-cycle acceptance remain open. See the
 [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md) and ERROR-195–199.
 
 The current planning source package adds the complete registered GoalDefinition
@@ -52,7 +68,7 @@ author. Its report covers selected engineering work, not whole-cycle planning
 costs. The42-file component passes302 focused checks and configured strict/Ruff
 checks. Root's combined4,891-unit run and strict/Ruff85 pass with stable source;
 independent combined review closes two reproduced P2 findings. Subsequent actual
-runtime progress and its remaining worker blocker are recorded above. No new model, native builder or live delivery
+runtime and application progress are recorded above. No new model, native builder or live delivery
 was activated. See the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
 
 Actual SDK-mock and blocked-file tests found cancellation could outlive its
@@ -100,14 +116,12 @@ The later-turn check at04:05:48UTC confirms the same two PID/start identities an
 HTTP200 from both services. This qualifies local turn survival; the old exit
 cause remains unknown and production durability/24-hour soak remain unproven.
 
-The original management audit identified a material product gap: PlanStore accepted
-a caller-supplied plan, and the existing company worker was an offline TestModel
-adapter. The protected generated-result bridge now addresses formal proposal
-mapping, but there is no connected production planning producer yet. A server-built,
-owner-approved planning-only plan can reuse current Work/model gates, but its
-permanent root cannot be silently replaced by the current zero-model native
-engineering root. The Nexus planning/native composition needs explicit
-implementation while preserving the goal's original allowance and counters.
+The original management audit found caller-supplied plans and an offline TestModel
+worker. The current application now connects a server-built planning proposal,
+governed producer and protected formal-revision bridge under one permanent root.
+Its actual SDK-mock acceptance preserves original allowances/counters. Compatible
+genuine governance, actors, source grants and qualified models remain operational
+prerequisites; the old no-provider preview is not silently relabeled or reset.
 
 The integrated model package adds whole-input financial reservations, original
 registry/model proof joins, a governed planning-result consumer and a separate
@@ -148,7 +162,7 @@ that same goal through proposed plan, authorized work, verification and report.
 | Outcome | Remaining effort forecast | Current limit |
 | --- | --- | --- |
 | Knowledge/goal browser acceptance | Up to half a focused day after sign-in handoff | Owner has the sign-in page |
-| Governed model qualification and generated planning candidate | 2–4 focused-day budget from the revised plan, conditional on provider qualification | Database/SDK-mock checkpoint passed; owner/runtime bridge and live quality remain open |
+| Governed model qualification and generated planning candidate | Original2–4 focused-day budget retained; re-estimate after genuine provider inputs | Public application/recovery checkpoint passed; real provider operation/quality and browser acceptance remain open |
 | Same-goal plan/action/verification/report cycle | Re-estimate after representative builder qualification | Native builder gate unresolved |
 | Full supervised release | No defensible committed date yet | Complete cycle, operations/recovery and24-hour soak still required |
 
@@ -157,8 +171,8 @@ The earlier6–20November range is historical. Do not restart the old1–2-day l
 preview target: the preview/API slice exists and its browser acceptance is pending.
 
 The approval→hold→intent→SDK-mock→protected evidence→receipt checkpoint passes.
-Next connect owner/runtime preparation and the planning candidate to a reviewable
-formal proposal. Root coordinates three bounded lanes: implementation,
+Next implement governed autonomous code authoring and whole-cycle model accounting
+using the reviewed next-package gaps. Root coordinates bounded implementation,
 actual integration and one combined boundary review. No new framework,
 StockFlow feature or repeated builder wave is on that path. Focused checks run
 during implementation; the full relevant regression runs once on the integrated

@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from nexus.api.company_planning_routes import DispatchPlanningRequest, RecoverPlanningWaitRequest
 from nexus.company.access import PrincipalAccess
 from nexus.company.management.action_review_contracts import ActionReview
 from nexus.company.management.api_contracts import PlanDecision
@@ -18,7 +19,14 @@ from nexus.company.management.owner_view_contracts import (
     WorkView,
 )
 from nexus.company.pilot_session import PilotLogin, PilotSessionToken, PilotSignup
+from nexus.execution.planning_dispatch import PlanningDispatchRecord
+from nexus.execution.planning_lifecycle_contracts import (
+    PlanningCandidateReview,
+    PlanningGoalSelection,
+    PlanningLifecycleStatus,
+)
 from nexus.execution.planning_owner_reads import PlanningInputReview
+from nexus.execution.planning_preparation import PreparedPlanningAction
 from nexus.execution.qualification_read_contracts import (
     QualificationDispatchRecord,
     QualificationRecipeView,
@@ -51,6 +59,13 @@ def export(source: Path, destination: Path) -> None:
         QualificationStatus,
         PreparedQualification,
         PlanningInputReview,
+        PlanningGoalSelection,
+        PlanningLifecycleStatus,
+        PlanningCandidateReview,
+        PreparedPlanningAction,
+        PlanningDispatchRecord,
+        DispatchPlanningRequest,
+        RecoverPlanningWaitRequest,
     ):
         # Optional model-check response definitions come from the concrete backend
         # models even when that service is unmounted. This adds no runtime route.

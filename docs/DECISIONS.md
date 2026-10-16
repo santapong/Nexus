@@ -20,6 +20,8 @@
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
+| ADR-135 | One explicit owner planning application and unissued-wait recovery | actual HTTP/PG/DBOS/SDK-mock scenario and separate conservation audit pass | 2026-10-16 |
+| ADR-134 | Persist exact planning input and retain the original Nexus root | isolated SDK-mock runtime proven; live quality and product activation pending | 2026-10-16 |
 | ADR-133 | Fixed owner qualification dispatch and protected planning provenance | implemented; runtime integration partial plus read-only audit | 2026-10-16 |
 | ADR-127 | Preserve exact native manager histories with a distinct unconfigured full method | accepted | 2026-10-15 |
 | ADR-126 | Require native dual-output publication and independent acceptance under own scope | accepted | 2026-10-15 |
@@ -3929,3 +3931,55 @@ approval/replay and negative builder/source gates. It uses one SDK MockTransport
 request and synthetic eligibility; live quality, restart, owner browser, actual
 builder and complete-company qualification remain open. Root4,926 units and
 strict/Ruff6 pass. Earlier failures and the V4 held reservation remain unchanged.
+
+## ADR-135 — One explicit owner planning application and unissued-wait recovery
+
+**Date:** 2026-10-16
+**Status:** actual public application/unissued-wait recovery passes with SDK mock;
+genuine models, browser and process recovery remain separate
+**Decided by:** Codex within the approved supervised Company Brain delivery
+**Relates to:** ADR-132–134 and the Nexus-focused delivery plan
+
+### Context
+The isolated protocol passes but a product owner needs one connected lifecycle
+across HTTP, protected input, management storage and the fixed worker. Preparation
+can persist a pending action before the native await-approval transition. Repeating
+bootstrap or restarting with artificial base plans would lose its actual provenance.
+
+### Decision
+Compose one concrete graph from a private hash-pinned server configuration and
+the real approved plan/head loader. Management and planning routes share its exact
+lifecycle, native factory, protected stores, context reader and immutable policies.
+Public bodies select the configured goal/head or exact action/hash; they cannot
+set actors, allowance, providers, credentials or queue. Bootstrap proposes r1,
+owner approval remains separate, and a generated candidate needs another formal
+proposal and owner approval under the original root.
+
+Use explicit API, worker and migration modes. API/worker boot verifies the actual
+configured signer, restricted current company schema and durable DBOS database;
+it does not create an owner, goal, charter, plan, model qualification or approval.
+Fresh actor/model readiness is checked at its original operational boundaries.
+Do not require fresh model credentials before reading an already-issued result.
+Migration is explicit with a same-target administrative descriptor, never implicit
+on server startup. Keep the original host executor and actual retirement tasks.
+
+Expose an explicit recover-wait operation for the exact sole pending, unissued
+model action. Genuine current owner and actor checks, original source/read windows,
+Goal/head, immutable saved input and native snapshot CAS are mandatory. Reject
+live leases, used/delegated counters, ambiguous/issued/held/dispatched prefixes and
+expired or foreign decisions. Restore only await-approval/fence and clear eligible
+expired unissued metadata in one transaction. Exact replay changes no counters or
+fence. Recovery grants no new time, action, root, allowance, lease or SDK request.
+
+### Alternatives considered
+Restarting per UI operation or substituting a caller-built base plan breaks the
+stored-plan/provenance join. Broad retry/reset would hide issued uncertainty.
+Mandatory fresh-model readiness at startup would block historical result reads
+and owner audit after credential expiry. Reuse the existing schema and SDKs.
+
+### Consequences
+The owner can review and advance one supervised planning lifecycle. Recovery is
+deliberately limited to the proved unissued gap; dispatched-worker/process recovery,
+live provider quality and the full company cycle need their own evidence. Original
+request/source/JWT ends survive final serialization. No new migration, dependency,
+paid call, preview reset, deployment or authority promotion follows from composition.

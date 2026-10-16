@@ -1,10 +1,16 @@
 """Supervised owner direction/plan HTTP operations reuse native current-authority stores."""
 
+from __future__ import annotations
+
+import asyncio
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from litestar import post
 from litestar.di import NamedDependency
 from litestar.exceptions import ValidationException
+from litestar.openapi.datastructures import ResponseSpec
 from litestar.params import FromPath
 from litestar.response import Response
 from litestar.types import ExceptionHandlersMap
@@ -36,7 +42,11 @@ from nexus.company.management.control_support import ManagementConflictError
 from nexus.company.management.goal_store import GoalRevisionRecord
 from nexus.company.management.governance import CharterRevision, MandateRevision
 from nexus.company.management.lifecycle import PlanRevision
+from nexus.company.management.planning_native_facts import clock_us, require_time
 from nexus.execution.runtime_contracts import ExecutionDeniedError
+
+if TYPE_CHECKING:
+    from nexus.execution.planning_lifecycle import PlanningLifecycle
 
 
 def unavailable(
@@ -61,6 +71,62 @@ def invalid(
     return Response(ApiError(status_code=422, detail="Invalid management request"), status_code=422)
 
 
+def expired(_: CompanyRequest, __: TimeoutError) -> Response[ApiError]:
+    return Response(
+        ApiError(status_code=503, detail="Plan request expired; inspect the current plan"),
+        status_code=503,
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+async def _planning_approval(
+    request: CompanyRequest,
+    services: ManagementApiServices,
+    lifecycle: PlanningLifecycle,
+    company_id: UUID,
+    revision_id: UUID,
+    data: PlanDecision,
+) -> Response[bytes]:
+    # R2 reconstructs its reader from the actual saved base; owner JWT time starts
+    # before directory IO, and the returned source cutoff only shortens this end.
+    before_us, before_utc = clock_us(), datetime.now(UTC)
+    credential = await require_company_credential(request)
+    end = min(
+        before_us + 30_000_000,
+        before_us + (credential.expires_at - before_utc) // timedelta(microseconds=1),
+    )
+    require_time(end)
+    credential.require_time(datetime.now(UTC))
+    async with asyncio.timeout(max(0, end - clock_us()) / 1_000_000):
+        scope = await resolve_company_control(
+            request,
+            services.directory,
+            company_id=company_id,
+            capability=Capability.GRANT,
+        )
+    if (
+        scope.principal_id != credential.identity.principal_id
+        or require_company_identity(request) != credential.identity
+    ):
+        raise AccessDeniedError("Original planning approval identity changed")
+    require_time(end)
+    credential.require_time(datetime.now(UTC))
+    result = await lifecycle.approve(
+        scope,
+        credential,
+        revision_id,
+        data.exact_hash,
+        data.expected_current_revision_id,
+        end_us=end,
+    )
+    end = min(end, result.read_end_us)
+    require_time(end)
+    raw = result.value.model_dump_json(by_alias=True).encode()
+    credential.require_time(datetime.now(UTC))
+    require_time(end)
+    return Response(raw, media_type="application/json", headers={"Cache-Control": "no-store"})
+
+
 async def _owner(
     request: CompanyRequest, services: ManagementApiServices, company_id: UUID
 ) -> tuple[CompanyControlScope, VerifiedIdentity]:
@@ -83,6 +149,7 @@ class CompanyManagementController(CompanyManagementReadController):
         ValidationError: invalid,
         ValidationException: invalid,
         ValueError: invalid,
+        TimeoutError: expired,
     }
 
     @post("/mandate", status_code=200)
@@ -154,7 +221,13 @@ class CompanyManagementController(CompanyManagementReadController):
             credential=credential,
         )
 
-    @post("/plans/{plan_revision_id:uuid}/approve", status_code=200)
+    @post(
+        "/plans/{plan_revision_id:uuid}/approve",
+        status_code=200,
+        responses={
+            200: ResponseSpec(data_container=PlanRevision, generate_examples=False),
+        },
+    )
     async def approve_plan(
         self,
         request: CompanyRequest,
@@ -162,7 +235,17 @@ class CompanyManagementController(CompanyManagementReadController):
         plan_revision_id: FromPath[UUID],
         data: PlanDecision,
         management_services: NamedDependency[ManagementApiServices],
-    ) -> PlanRevision:
+    ) -> PlanRevision | Response[bytes]:
+        lifecycle = management_services.require_lifecycle()
+        if lifecycle is not None:
+            return await _planning_approval(
+                request,
+                management_services,
+                lifecycle,
+                company_id,
+                plan_revision_id,
+                data,
+            )
         scope, identity = await _owner(request, management_services, company_id)
         credential = (
             await require_company_credential(request)

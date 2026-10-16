@@ -1,6 +1,44 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Compose the supervised owner planning application
+
+### Added
+- One concrete stored-plan lifecycle shared by management, protected input and
+  fixed planning services: bootstrap, separate r1 approval, prepare, exact action
+  review/decision, dispatch, status/candidate, formal revision and separate approval.
+- Explicit private configured API/worker/migration modes; minimal boot preserves
+  issued historical reads while actual fresh model/actor gates remain unchanged.
+- Exact unissued wait recovery with current owner/actor, original source ends,
+  immutable pending input and native CAS; replay renews no window or allowance.
+- Owner interface/API/schema controls with strict Goal/head/action-hash bodies.
+
+### Fixed
+- Distinct recipe digest domains, post-flush recovery cutoff, final private-input
+  cutoff and original host-executor retirement (ERROR-200–203).
+
+### Validation
+- Frozen43 source passes5,034 unit tests/130.34s with19 existing warnings, no
+  failures/skips, configured strict/Ruff32 and1,718 stable Python/exporter hashes.
+  Focused API and frontend request/state/render/TypeScript/build checks pass.
+- Independent review finds duplicate one-shot queue selection (ERROR-204); repair
+  removes only the redundant wrapper call/import. Real launcher/pinned SDK red
+  and forward,17 focused cases/strictRuff2 and independent final review pass.
+- Actual public application scenario passes38.43s: controlled pending-publication
+  interruption, cold recomposition, same-request wait recovery, exact decisions,
+  atomic dispatch/DBOS/one SDK MockTransport call, same-root r2 approval/replay and
+  current-source denials. All1,732 runtime source/document pins stay stable.
+- Separate restricted RR READ ONLY/rollback audit verifies seven registrations/
+  native Work, one attempt/intent/dispatch/revision event and no leases/connections.
+  USD0.400512 reservation settles to test-ledgerUSD0.000120. All earlier state stays
+  retained; cold recomposition is not process restart or live quality acceptance.
+
+No live model, signed-in owner browser, native builder, preview reset, deployment
+or release activation follows. Full company-cycle acceptance remains open.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Complete the isolated owner-to-planning revision flow
 
 ### Fixed

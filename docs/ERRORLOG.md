@@ -72,6 +72,178 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-204 — Application and fixed worker both select the one-shot DBOS queue
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (source, real-launcher regression and actual application/DBOS acceptance)
+**Found by:** independent combined owner application review
+**Affected files:** execution/planning_application_runtime.py and paired runtime units
+
+### What happened
+The application wrapper calls DBOS.listen_queues before launch_planning_worker,
+which calls the same API again. Pinned DBOS3.2 rejects the second call with
+listen_queues called more than once. The source makes fresh worker startup fail;
+the actual application acceptance run is held before release.
+
+### Root cause
+The wrapper duplicated the fixed launcher's queue selection. Focused startup tests
+replaced that launcher and therefore did not exercise their real composition.
+
+### Fix applied
+Remove only the redundant wrapper selection and unused import. The launcher
+retains its original fixed queue. Exact byte reconstruction proves every other
+executor/retirement line is unchanged. The real imported launcher and unchanged
+installed SDK method reproduce the original exception before launch; the repaired
+runtime/operator17 tests pass4.56s, with configured strict/Ruff2. Independent
+source-AST composition also permits exactly one selection/launch/registration.
+All41 other source paths remain stable. Original failure and source1 are retained.
+
+### Prevention
+test_real_launcher_composes_pinned_one_shot_listen_api_exactly_once exercises the
+real launcher with supplied SQL/SDK delivery and actual one-shot SDK behavior.
+Final independent review SHA7d967303a6590d7f07b68ed46d68fce937104c3389e522e3318a22326f5c71c2
+closes the P1 within source/finite scope. The separate actual public application
+test passes38.43s through DBOS startup, one SDK MockTransport request, recovered
+wait and same-root r2/approval/replay. Original host executor remains usable after
+destroy. Separate restricted READ ONLY audit confirms no leases/app connections;
+no live provider, process restart or whole-company acceptance follows.
+
+---
+
+## ERROR-203 — SDK teardown runs on the SDK-owned default executor
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (source and finite executor qualification; actual startup remains separate)
+**Found by:** planning application implementation and exact-helper executor reproduction
+**Affected files:** execution/planning_application_runtime.py and paired runtime units
+
+### What happened
+After DBOS adopts the event loop's default executor, asyncio.to_thread(DBOS.destroy)
+uses that SDK pool. The retained exact-helper probe runs destroy on
+planning-probe-sdk_0; its supplied destroy shuts that pool, and subsequent host
+to_thread work fails with cannot schedule new futures after shutdown.
+
+### Root cause
+Pinned DBOS3.2 register_queue_async configures the loop's default executor. A
+default-executor call does not identify the original host executor after launch.
+The reproduction uses actual ThreadPoolExecutors with supplied SDK teardown; it
+does not establish an observed production process-start or restart failure.
+
+### Fix applied
+Capture the actual original loop/executor before SDK launch. Retain the real
+teardown future, call public DBOS.destroy on that explicit host executor, and
+restore the host default. Partial launch and repeated caller cancellation keep
+the same actual retirement owner. Original errors remain visible.
+
+### Prevention
+test_actual_host_executor_survives_sdk_adoption_and_repeated_destroy_cancellation
+and partial-launch/wrong-loop/closed-host cases cover the boundary. Final author
+checks44 and configured strict/Ruff12 pass; Root's combined5,034 units and
+strict/Ruff32 pass. Exact repro SHA491664425a92ee75e66ffb7235406b02daa9b783514670b3be2579725e2dcc15.
+The later actual application38.43s test also launches real DBOS, verifies the
+original host executor after public destroy and leaves no app connections.
+Process recovery still requires its separate evidence.
+
+---
+
+## ERROR-202 — Final private-input serialization loses the loaded source cutoff
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (source and finite actual-router/protected-file regression)
+**Found by:** owner HTTP implementation during exact input forwarding verification
+**Affected files:** execution/planning_owner_reads.py, api/company_planning_routes.py
+
+### What happened
+The protected reader correctly shortens access to150ms, but returns a bare input
+value. A second route serialization completes at250ms under the longer original
+request end and returns200 instead of503. The retained counterexample uses the
+actual router and private file, with supplied native/source facts and clock.
+
+### Root cause
+Checking an inner serialization does not preserve its source access window across
+the caller's final serialization. The value alone cannot carry that shortened end.
+
+### Fix applied
+PlanningInputReader.read returns an internal value/read_end_us pair. The route
+passes its conservative shortened end into the complete alias-correct serializer.
+Legacy input-only callers retain their checked input interface. No public DTO,
+monotonic timestamp or posted authority field is added.
+
+### Prevention
+test_input_response_preserves_actual_shortened_store_cutoff_through_serialization
+preserves exact scope/identity/action forwarding and the original two-pass red.
+Its forward passes3.84s; final API11 and strict/Ruff4 pass. Red pins
+SHA4bc350643e95a560e049f12d5cb9252ef617a53c0d084ecf3e04bdd7f385013b.
+Root5,034 units pass; this finite test does not replace actual SQL or browser UAT.
+
+---
+
+## ERROR-201 — Wait recovery performs another read after its flush crosses expiry
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (source and finite transaction-delivery regression)
+**Found by:** Root recovery implementation during original-window verification
+**Affected files:** execution/runtime_approval_recovery.py and paired recovery units
+
+### What happened
+The supplied native flush crosses the original operation end. Recovery starts a
+second scalars read before checking the clock. The retained red fails with two
+reads where only the first was allowed; it does not establish a committed expired
+transition or an issued effect.
+
+### Root cause
+The transition checked before flushing and after later metadata reads, leaving
+an intervening await beyond the caller's original window.
+
+### Fix applied
+Run check.require_current immediately after flush and before more metadata IO.
+Keep the actual transition task until settlement and rollback after cancellation;
+the same immutable snapshot, unissued-prefix proof and original ends still apply.
+
+### Prevention
+test_expiry_during_flush_stops_before_more_recovery_reads reproduces the boundary.
+Final recovery34 and strict/Ruff6 pass; actual asyncio cancellation ownership is
+tested with supplied SQL/source delivery and emulated rollback. The subsequent
+actual application test proves positive same-request PostgreSQL wait restoration;
+cancellation during a real SQL flush/rollback remains unqualified. Root5,034 units
+also pass.
+
+---
+
+## ERROR-200 — Owner input validation equates different recipe hash domains
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (frontend source/request/state/render checks)
+**Found by:** owner planning interface implementation using producer-derived hashes
+**Affected files:** frontend/src/hooks/companyPlanningState.ts and planning checks
+
+### What happened
+The interface compared whole_request.recipe_sha256 to the native action's
+input_recipe_hash. A fixture gave them the same string and hid rejection of a
+legitimate prepared input. The real recipe produces distinct management-proof
+and raw model-action digests, as in ERROR-199's server-side identity distinction.
+
+### Root cause
+Two fields named as recipe hashes do not necessarily share a canonicalization
+domain. A convenient identical fixture erased that difference.
+
+### Fix applied
+Validate each digest in its own domain and preserve exact descriptor/native/
+request/registry and recipe ID/revision joins. Server reconstruction of all nine
+model-action parameters remains authoritative. Add no browser hash serializer.
+
+### Prevention
+Use genuine distinct producer-derived fixture hashes. Request/state/escaped-render
+checks, TypeScript and build pass. Proof SHA9ee6b3bc08b1d913c80827ed889c2acc4356715ac670e2299f0da43cf4da66cd.
+Signed-in owner browser acceptance remains pending; source checks do not prove it.
+
+---
+
 ## ERROR-199 — Planning history compares different recipe fingerprint formats
 
 **Date:** 2026-10-16

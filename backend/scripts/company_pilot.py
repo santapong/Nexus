@@ -20,6 +20,7 @@ from nexus.company.pilot_governance import populate_governance
 from nexus.company.pilot_plan import populate_plan
 from nexus.company.pilot_preview import create_preview_database, publish_preview_mandate
 from nexus.company.pilot_setup import initialize_task, private_bytes
+from nexus.execution.planning_operator import planning_mode, validate_planning_arguments
 from nexus.settings import settings
 
 
@@ -265,11 +266,16 @@ def main() -> None:
             "qualification-api",
             "qualification-worker",
             "qualification-migrate",
+            "planning-api",
+            "planning-worker",
+            "planning-migrate",
         ],
     )
     parser.add_argument("--root", type=Path)
     parser.add_argument("--qualification-config", type=Path)
     parser.add_argument("--qualification-config-sha")
+    parser.add_argument("--planning-config", type=Path)
+    parser.add_argument("--planning-config-sha")
     parser.add_argument("--worker-credential-fd", type=int)
     parser.add_argument("--admin-database-fd", type=int)
     parser.add_argument("--host", choices=["127.0.0.1", "::1"], default="127.0.0.1")
@@ -285,9 +291,27 @@ def main() -> None:
     parser.add_argument("--docs-manifest", type=Path)
     parser.add_argument("--docs-manifest-sha")
     args = parser.parse_args()
+    if args.mode.startswith("planning-"):
+        try:
+            validate_planning_arguments(args)
+        except ValueError as error:
+            parser.error(str(error))
+        try:
+            planning_mode(args)
+        except Exception as error:
+            sys.stderr.write(
+                json.dumps(
+                    {"status": "planning_startup_failed", "error_type": type(error).__name__}
+                )
+                + "\n"
+            )
+            raise SystemExit(1) from None
+        return
     if args.mode in {"qualification-api", "qualification-worker", "qualification-migrate"}:
         if (
             args.root is not None
+            or args.planning_config is not None
+            or args.planning_config_sha is not None
             or args.qualification_config is None
             or args.qualification_config_sha is None
             or not 1024 <= args.port <= 65535
@@ -316,6 +340,8 @@ def main() -> None:
         return
     if (
         args.root is None
+        or args.planning_config is not None
+        or args.planning_config_sha is not None
         or args.qualification_config is not None
         or args.qualification_config_sha is not None
         or args.worker_credential_fd is not None

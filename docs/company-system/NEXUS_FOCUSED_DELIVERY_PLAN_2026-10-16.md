@@ -100,10 +100,10 @@ records the exact activation prerequisites and conditional cost arithmetic.
 
 | Lane | Owner | Next concrete result |
 | --- | --- | --- |
-| Product coordination and integration | Root | Publish the validated planning-runtime milestone; compose the explicit application/worker and qualify recovery |
-| Owner lifecycle | Implementation lane | Load actual approvedr1 and connect server-built bootstrap/prepare/dispatch/status/candidate/proposal without provenance bypass |
-| Owner HTTP/interface | Interface lane | Expose the lifecycle through genuine owner windows and explicit, separately reviewed planning controls |
-| Isolated runtime verification | Complete for current cohort | SDK-mock candidate/same-root revision/owner approval/replay passes;4,926 units and strict/Ruff6 pass; preserve failedV4 hold/dispatch |
+| Product coordination and integration | Root | Publish actual application/recovery milestone; implement governed code authoring and whole-cycle accounting |
+| Owner lifecycle and application | Actual HTTP/PG/DBOS/SDK-mock acceptance passed38.43s | Same saved unissued action recovered after interruption, one request, candidate/r2/approval/replay; genuine operation remains separate |
+| Owner HTTP/interface | Implemented; focused API/frontend checks passed | Verify the signed-in browser after the owner returns control; current no-provider preview remains unchanged |
+| Actual runtime verification | Public application/recovery and separate restricted conservation audit passed | Preserve no-duplicate/conservation evidence, source1's5,034 units/strictRuff32 and minimal startup repair17/strictRuff2; owner UAT and real model quality remain open |
 
 Keep Root plus at most three workers. Work is disjoint; one worker owns each
 implementation package. Root integrates at concrete milestones.

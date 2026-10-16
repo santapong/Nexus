@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { companySessionVersion } from '@/api/company'
 import { CompanyPlanningInput } from '@/components/company/CompanyPlanningInput'
+import { CompanyGoalPlanning } from '@/components/company/CompanyGoalPlanning'
 import { CompanyQueryState } from '@/components/company/CompanyStatus'
 import { Button } from '@/components/ui/button'
 import { useCompanyView } from '@/hooks/useCompany'
@@ -28,6 +29,8 @@ function PlanningDecision({ review, input, paused, refreshing }: {
     </section> : null}
     {decision.isError ? <p role="alert" className="text-sm text-red-400">{decision.error.message}</p> : null}
     {decision.isSuccess ? <p role="status" className="text-sm text-emerald-500">Exact owner decision saved.</p> : null}
+    <CompanyGoalPlanning key={input.prepared.binding.goal.revision_id}
+      goal={input.prepared.binding.goal} paused={paused} initiallyOpen allowDispatch />
   </div>
 }
 

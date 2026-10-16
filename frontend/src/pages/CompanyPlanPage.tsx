@@ -7,6 +7,7 @@ import { CommitmentForm } from '@/components/company/CommitmentForm'
 import { MetricObservationForm } from '@/components/company/MetricObservationForm'
 import { MetricOutcomeLedger } from '@/components/company/MetricOutcomeLedger'
 import { ReportSnapshotForm } from '@/components/company/ReportSnapshotForm'
+import { CompanyGoalPlanning } from '@/components/company/CompanyGoalPlanning'
 
 export function CompanyPlanPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -51,6 +52,8 @@ export function CompanyPlanPage() {
         {JSON.stringify(declaration, null, 2)}</pre>
     </details>
     <PlanDecisionPanel key={data.reference.sha256} plan={data} current={current.data} paused={company.data.paused} />
+    {data.is_current_head && <CompanyGoalPlanning key={declaration.goal.revision_id}
+      goal={declaration.goal} paused={company.data.paused} initiallyOpen />}
     {data.state === 'approved' && data.is_current_head && <CommitmentForm key={data.reference.sha256} plan={data} paused={company.data.paused} />}
     {data.state === 'approved' && data.is_current_head && data.declaration.verification.length > 0 &&
       <ReportSnapshotForm key={data.reference.sha256} plan={data} paused={company.data.paused} />}
