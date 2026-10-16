@@ -74,6 +74,57 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-174 — Diagnostic exec namespace cannot resolve setup model annotations
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** Root actual fresh V9 all-five setup
+**Affected files:** external `launch-setup-1.py` diagnostic wrapper
+
+Setup exits1 in3.72s at `Manifest.model_validate_json`: Pydantic reports
+`Manifest` incomplete because `Literal` cannot be resolved. The traceback is
+before company schema installation or any native case; preparation already created
+the empty target database. Complete stdout is empty;
+complete stderr and safe exception metadata are retained with the original clock.
+
+The wrapper compiles verified script bytes into a new dictionary claiming
+`__name__='__main__'`, without registering that dictionary as the actual module.
+The script uses postponed annotations. Its imported names therefore differ from
+the module namespace Pydantic consults. Direct passive CLI checks exercise the
+normal module path and do not cover this wrapper-only failure.
+
+An independent definitions-only reproduction confirms the same error for the
+unregistered namespace and successful model validation with a registered module.
+Receipt SHA-256 is
+`5342cfab21af47784f4ccd732e463a9789a2c80f5d040c6e4b48272417d474c9`.
+Use a normal
+direct pinned CLI or a correctly registered module for a future separately frozen
+operation; preserve the failed control, source and database. No fix or successful
+setup rerun is claimed here. Test the exact launch mechanism before live setup.
+
+---
+
+## ERROR-173 — Passive setup invocation omits required source digest
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed
+**Found by:** Root published V9 setup passive check
+**Affected files:** external operator invocation
+
+The first `--check-only` invocation omits mandatory `--source-sha` and argparse
+exits2 before backend imports, database access or scope creation. The failed
+receipt remains preserved. The corrected passive invocation supplies the frozen
+source digest and completes0 in1.07s with database_opened=false,
+scope_started=false and source_files1664. Source/E bytes and authority are unchanged.
+
+Render required arguments from published help for both passive and release
+commands. A passing passive invocation does not qualify a different wrapper's
+execution namespace or prove live setup.
+
+---
+
 ## ERROR-172 — Diagnostic output and late parsing mask the retained first denial
 
 **Date:** 2026-10-16
@@ -4859,7 +4910,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-173*
+*Next error ID: ERROR-175*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

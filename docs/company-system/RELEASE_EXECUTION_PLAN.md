@@ -1,5 +1,13 @@
 # Nexus release execution plan
 
+**Current owner view:** [16 October progress and remaining
+schedule](RELEASE_STATUS_2026-10-16.md). V9 private source composition/freeze is
+complete. Actual fixture preparation passes; all-five setup then stops at a
+diagnostic-launcher model-namespace failure before company schema installation/native cases.
+Resolve and qualify that exact launch path before a fresh setup. All five native
+cases and selected StockFlow execution remain open. The composition instructions
+immediately below describe the preceding checkpoint.
+
 The [current V9 owned-stop production source](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
 passes 4,307 units and configured strict/lint/format on 11 files after independent concrete
 counterexamples. Finish private ownership/control-channel composition, then create

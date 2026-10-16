@@ -1,6 +1,26 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Publish owner progress and remaining release forecast
+
+### Changed
+- Add one concise milestone/status page separating implemented components,
+  executed acceptance and remaining release exits. Link it from the progress,
+  execution plan and historical roadmap.
+- Forecast15–25 further working days for supervised release, with explicit
+  uncertainty, access assumptions and reforecast gates. Preserve the original
+  whole-program estimate and deferred Board promotion requirements.
+
+### Validation
+- Check current pushed production7acbb8b and retained acceptance receipts. Fresh
+  V9 fixture preparation passes; setup exits1 before native cases with a
+  diagnostic-launcher model-namespace error. No release completion is claimed.
+- Documentation-only update; verify relative links and Git whitespace. Existing
+  4,307 backend tests and354 private fixture checks are prior scoped evidence.
+
+**Authored by:** Codex with bounded independent status/diagnosis checks
+**PR:** not published
+
 ## [2026-10-16] — Stop original owned containers on interrupted V9 runs
 
 ### Fixed

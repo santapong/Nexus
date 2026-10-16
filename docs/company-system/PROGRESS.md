@@ -1,5 +1,14 @@
 # Nexus implementation progress
 
+**Owner status, checked 2026-10-16:** [current milestone table and remaining
+schedule](RELEASE_STATUS_2026-10-16.md). Planning target is 15–25 further working
+days for the supervised release, with low confidence until native StockFlow and
+ARM64 qualification. Current V9 private composition passes354 focused checks plus
+strict/lint/format checks; actual fixture preparation passes, then setup fails in
+the diagnostic launcher's Pydantic namespace before company schema installation
+or native cases. Release stays open. The older source-composition next steps
+below are historical.
+
 Latest production source: [original-owned stop/current V9](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
 passes 4,307 coherent backend tests and configured strict/lint/format on 11 files. It preserves
 the original container identity, one-shot stop, first denial and actual task/child/FD
