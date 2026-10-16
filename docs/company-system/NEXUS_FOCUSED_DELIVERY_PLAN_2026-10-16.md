@@ -45,6 +45,11 @@ including current source integration and browser checks. This is a target with
 unresolved setup dependencies, not a verified completion time or release promise.
 Show a concrete local preview as soon as this slice works.
 
+Current execution checkpoint: Knowledge search/citation/goal UI and the isolated
+Nexus-document preview are implemented and running locally. Source checks pass;
+signed-in browser verification and owner acceptance remain open. Complete this
+journey before expanding its product lane to plan proposal and same-goal reporting.
+
 ## Active work and completion criteria
 
 | Lane | Owner | Next concrete result |

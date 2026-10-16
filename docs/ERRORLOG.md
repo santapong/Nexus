@@ -74,6 +74,108 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-183 — Integration test directory violates native builder path policy
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed
+**Found by:** full owner-preview backend unit regression
+**Affected files:** local verification command only; no production change
+
+### What happened
+The full run used a private owner-home basetemp. Five existing Node builder
+cases correctly rejected those paths before reaching their intended assertions;
+4,309 other cases passed and1 was skipped.
+
+### Fix applied
+Preserve that log and recheck exactly the five failures with the same source,
+configuration and plugins under a fresh private /var/tmp directory. All5 pass
+in1.47s. Do not weaken owner-home mount denial or claim one all-green full run.
+
+### Prevention
+Keep sandbox fixture basetemp outside owner homes. Private account/credential
+state has a different requirement and stays in its own private local directory.
+The existing reproduction reference already documented this distinction; put
+the test-path reminder in the skill entrypoint so a worker sees it before running.
+
+---
+
+## ERROR-182 — Goal UI rejects every preview citation with unknown freshness
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** independent preview integration review
+**Affected files:** frontend/src/hooks/companyGoalDraft.ts, CompanyGoalDraft.tsx
+
+### What happened
+The pinned document profile has no freshness TTL, so its current citations have
+unknown freshness. The UI required fresh evidence, making goal creation
+impossible even after refresh. GoalStore permits current available evidence with
+unknown freshness and revalidates it transactionally.
+
+### Fix applied
+Align this unknown-baseline goal form with GoalStore: reject stale/historical
+sources, show an explicit unknown-freshness warning, and retain the unknown
+baseline and exact citation. Do not invent a TTL, source date or measurement.
+
+### Prevention
+The actual helper regression fails before the repair and passes afterward,
+including unknown baseline, exact citation and historical/revalidation denial.
+Independent narrow forward-check passes. Signed-in browser acceptance is separate.
+
+---
+
+## ERROR-181 — Ordinary query refresh discards an unsaved cited goal
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** mitigated
+**Found by:** Root integration review before browser acceptance
+**Affected files:** CompanyLayout.tsx, CompanyKnowledgePage.tsx, CompanyEvidenceDetail.tsx
+
+### What happened
+Returning a loading screen whenever a loaded query is fetching unmounts the
+goal form, losing its draft, request ID and unconfirmed mutation state on normal
+focus/access refresh.
+
+### Fix applied
+Keep the loaded same-session subtree mounted during revalidation; pause changes
+with a disabled owner fieldset and submission guards. Errors and principal,
+company or session replacement still hide/reset protected data. Focused checks,
+TypeScript and build pass. Actual browser draft-retention acceptance remains open.
+
+### Prevention
+Check both draft preservation on ordinary refresh and protected-data removal on
+denial/session replacement in the signed-in owner journey.
+
+---
+
+## ERROR-180 — Alembic interpolates the encoded local socket URL
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** actual isolated Nexus owner-preview bootstrap
+**Affected files:** backend/scripts/company_pilot.py
+
+### What happened
+SQLAlchemy renders the socket path with percent encoding. Passing that URL
+directly to Alembic Config.set_main_option causes interpolation failure after
+exclusive database creation and before migrations.
+
+### Fix applied
+Escape percent signs at the Alembic configuration seam. A real Config roundtrip
+test fails before the repair and passes afterward. Preserve the first empty
+database/state/logs; a fresh second database completes normal company001–016
+migrations and public-service document/mandate setup. Existing UAT is untouched.
+
+### Prevention
+test_actual_alembic_config_preserves_encoded_socket_url checks the exact URL
+observed by the migration command and application-role grant.
+
+---
+
 ## ERROR-179 — Fault-record rejection loses its original reason and candidate
 
 **Date:** 2026-10-16
@@ -5033,7 +5135,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-180*
+*Next error ID: ERROR-184*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

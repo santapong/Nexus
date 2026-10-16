@@ -86,6 +86,7 @@ def test_offline_catalog_has_finite_qualification_and_no_model_request_permissio
         "company.report.check.v1",
     }
     assert "model.request.v1" not in {row.tool for row in catalog.tools}
+    assert config.sdk_receipt is not None
     config.sdk_receipt.write_text(
         json.dumps(
             {

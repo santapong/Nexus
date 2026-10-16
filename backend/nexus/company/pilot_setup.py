@@ -9,7 +9,12 @@ from pathlib import Path
 from uuid import uuid4
 
 from nexus.api.auth import hash_password
-from nexus.company.pilot_config import PilotConfig
+from nexus.company.pilot_config import (
+    PREVIEW_PROFILE,
+    PilotConfig,
+    PilotProfile,
+    preview_database_name,
+)
 from nexus.company.pilot_session_store import PilotCredential, PilotCredentialFile, save_credentials
 
 UAT_DATABASE = "postgresql+asyncpg://nexus_company_app@/nexus_company_test_owner_uat?host=/tmp/nexus-release-tests-2026-10-13/socket&port=55438"
@@ -21,7 +26,21 @@ def private_json(path: Path, payload: object) -> None:
         json.dump(payload, stream, sort_keys=True, indent=2)
 
 
-def new_config(root: Path, sdk_receipt: Path) -> PilotConfig:
+def new_config(
+    root: Path,
+    sdk_receipt: Path | None,
+    *,
+    profile: PilotProfile = "disposable-supervised-owner-uat-v1",
+    database_name: str | None = None,
+    docs_manifest: Path | None = None,
+    docs_manifest_sha256: str | None = None,
+) -> PilotConfig:
+    database_url = UAT_DATABASE
+    if profile == PREVIEW_PROFILE:
+        name = preview_database_name(database_name or "")
+        database_url = UAT_DATABASE.replace("nexus_company_test_owner_uat", name)
+    elif database_name is not None or docs_manifest is not None or docs_manifest_sha256 is not None:
+        raise ValueError("UAT defaults cannot select preview database or documents")
     return PilotConfig(
         **{
             field: uuid4()
@@ -42,15 +61,27 @@ def new_config(root: Path, sdk_receipt: Path) -> PilotConfig:
                 "check_resource_id",
             )
         },
+        profile=profile,
         created_at=datetime.now(UTC),
-        database_url=UAT_DATABASE,
+        database_url=database_url,
         blob_root=root / "blobs",
         account_file=root / "accounts.json",
         sdk_receipt=sdk_receipt,
+        docs_manifest=docs_manifest,
+        docs_manifest_sha256=docs_manifest_sha256,
     )
 
 
-def initialize_task(root: Path, sdk_receipt: Path, password: str | None = None) -> PilotConfig:
+def initialize_task(
+    root: Path,
+    sdk_receipt: Path | None,
+    password: str | None = None,
+    *,
+    profile: PilotProfile = "disposable-supervised-owner-uat-v1",
+    database_name: str | None = None,
+    docs_manifest: Path | None = None,
+    docs_manifest_sha256: str | None = None,
+) -> PilotConfig:
     root.mkdir(parents=True, mode=0o700, exist_ok=True)
     if root.is_symlink() or root.stat().st_mode & 0o077:
         raise ValueError("UAT task directory must be private")
@@ -59,7 +90,18 @@ def initialize_task(root: Path, sdk_receipt: Path, password: str | None = None) 
             raise FileExistsError("An initialized UAT task cannot be overwritten")
     if password is not None and not 12 <= len(password) <= 256:
         raise ValueError("Disposable UAT password must contain 12 to 256 characters")
-    config = new_config(root, sdk_receipt)
+    config = new_config(
+        root,
+        sdk_receipt,
+        profile=profile,
+        database_name=database_name,
+        docs_manifest=docs_manifest,
+        docs_manifest_sha256=docs_manifest_sha256,
+    )
+    if profile == PREVIEW_PROFILE:
+        from nexus.company.pilot_preview import preview_documents
+
+        preview_documents(config)  # Fail before credentials or database creation.
     owner_password = password or secrets.token_urlsafe(24)
     member_password = secrets.token_urlsafe(24)
     invitation = secrets.token_urlsafe(32)

@@ -1,5 +1,6 @@
 """Explicit disposable operator bootstrap calls actual native services, never test fixtures."""
 
+import asyncio
 import hashlib
 from dataclasses import dataclass
 from uuid import UUID, uuid5
@@ -14,7 +15,7 @@ from nexus.company.brain.sources import ArtifactRevisionRef, IngestCommand, Sour
 from nexus.company.directory_contracts import CompanyRegistration, MembershipChange
 from nexus.company.management.artifact_target_store import ArtifactTargetStore
 from nexus.company.pilot_composition import PilotServices
-from nexus.company.pilot_config import PilotConfig
+from nexus.company.pilot_config import PREVIEW_PROFILE, PilotConfig
 from nexus.company.pilot_sources import PRIVATE_TEXT, PUBLIC_TEXT, pilot_sources
 from nexus.harness.journal_contracts import CompanyPolicy, LedgerScope
 
@@ -27,8 +28,16 @@ async def bootstrap_directory(services: PilotServices, config: PilotConfig) -> N
         CompanyPolicy(
             company_id=config.company_id,
             owner_id=config.owner_id,
-            policy_version="uat-supervised-v1",
-            price_version="uat-offline-v1",
+            policy_version=(
+                "nexus-preview-supervised-v1"
+                if config.profile == PREVIEW_PROFILE
+                else "uat-supervised-v1"
+            ),
+            price_version=(
+                "nexus-preview-no-provider-v1"
+                if config.profile == PREVIEW_PROFILE
+                else "uat-offline-v1"
+            ),
         ),
         LedgerScope(
             company_id=config.company_id,
@@ -53,9 +62,10 @@ async def bootstrap_directory(services: PilotServices, config: PilotConfig) -> N
 
 
 async def bootstrap_sources(factory: async_sessionmaker[AsyncSession], config: PilotConfig) -> None:
+    registry = await asyncio.to_thread(pilot_sources, config)
     store = BrainIngestionStore(
         factory,
-        pilot_sources(config),
+        registry,
         ProtectedBlobStore(config.blob_root, storage_symbol="uat.local-blobs.v1"),
     )
     scope = BrainReadScope(
@@ -65,8 +75,10 @@ async def bootstrap_sources(factory: async_sessionmaker[AsyncSession], config: P
         operation_id=config.control().operation_id,
         trace_id=config.control().trace_id,
     )
-    for seed in source_seeds(config):
+    for seed in await asyncio.to_thread(source_seeds, config):
         await ingest_seed(store, scope, config, seed)
+    if config.profile == PREVIEW_PROFILE:
+        return
     targets = ArtifactTargetStore(factory)
     for target in (config.report_resource_id, config.check_resource_id):
         await targets.provision(
@@ -85,9 +97,25 @@ class SourceSeed:
     key: str
     text: str
     readers: tuple[UUID, ...]
+    revision: str = "uat-synthetic-v1"
 
 
 def source_seeds(config: PilotConfig) -> tuple[SourceSeed, ...]:
+    if config.profile == PREVIEW_PROFILE:
+        from nexus.company.pilot_preview import document_symbol, preview_documents
+
+        return tuple(
+            SourceSeed(
+                uuid5(config.public_source_id, document.pin.path),
+                uuid5(config.public_resource_id, document.pin.path),
+                document_symbol(index),
+                document.pin.path,
+                document.text,
+                (config.owner_id, config.author_id, config.verifier_id, config.member_id),
+                document.commit,
+            )
+            for index, document in enumerate(preview_documents(config))
+        )
     return (
         SourceSeed(
             config.public_source_id,
@@ -127,8 +155,11 @@ async def ingest_seed(
     artifact = ArtifactRevisionRef(
         company_id=config.company_id,
         artifact_id=uuid5(seed.source_id, "uat-artifact"),
-        artifact_revision_id=uuid5(seed.source_id, "uat-artifact-v1"),
-        revision="uat-synthetic-v1",
+        artifact_revision_id=uuid5(
+            seed.source_id,
+            f"document:{seed.revision}" if config.profile == PREVIEW_PROFILE else "uat-artifact-v1",
+        ),
+        revision=seed.revision,
         sha256=hashlib.sha256(raw).hexdigest(),
         byte_length=len(raw),
     )

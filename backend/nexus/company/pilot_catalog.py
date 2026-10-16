@@ -8,7 +8,7 @@ from decimal import Decimal
 from nexus.company.brain.access_contracts import ResourceRef
 from nexus.company.management.check_contracts import REPORT_CHECK_RECIPE
 from nexus.company.management.plan_support import NamedPlanResource, PlanAdmissionCatalog
-from nexus.company.pilot_config import PilotConfig
+from nexus.company.pilot_config import PREVIEW_PROFILE, PilotConfig
 from nexus.core.llm.company_registry import (
     EvaluationEvidence,
     ModelHealth,
@@ -23,6 +23,8 @@ CHECK_TARGET = "uat.artifact.check"
 
 
 def offline_registration(config: PilotConfig) -> ModelRegistration:
+    if config.sdk_receipt is None:
+        raise ValueError("Actual offline SDK qualification is unavailable")
     raw = config.sdk_receipt.read_bytes()
     receipt = json.loads(raw)
     if (
@@ -62,6 +64,20 @@ def offline_registration(config: PilotConfig) -> ModelRegistration:
 
 
 def pilot_catalog(config: PilotConfig) -> PlanAdmissionCatalog:
+    if config.profile == PREVIEW_PROFILE:
+        return PlanAdmissionCatalog(
+            company_id=config.company_id,
+            models=ModelRegistry(
+                company_id=config.company_id,
+                revision="nexus-preview-no-models-v1",
+                pricebook_version="nexus-preview-no-provider-v1",
+                models=(),
+            ),
+            admitted_profiles=frozenset(),
+            check_recipes=frozenset(),
+            tools=(),
+            resources=(),
+        )
     registry = ModelRegistry(
         company_id=config.company_id,
         revision="uat-only-offline-v1",

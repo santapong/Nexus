@@ -19,6 +19,7 @@ import {
   Moon,
   Menu,
   X,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useApprovals } from '@/hooks/useApprovals'
@@ -60,6 +61,7 @@ const navItems: NavItem[] = [
 
 const companyNav: NavItem[] = [
   { label: 'Today', path: '/company/today', icon: <LayoutDashboard size={18} /> },
+  { label: 'Knowledge', path: '/company/knowledge', icon: <BookOpen size={18} /> },
   { label: 'Company', path: '/company/overview', icon: <Users size={18} /> },
   { label: 'Approvals', path: '/company/approvals', icon: <ListTodo size={18} /> },
 ]

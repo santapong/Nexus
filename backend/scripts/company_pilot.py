@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from nexus.company.pilot_actions import populate_proposals
 from nexus.company.pilot_bootstrap import bootstrap_directory, bootstrap_sources
 from nexus.company.pilot_composition import compose_pilot, pilot_app
-from nexus.company.pilot_config import PilotConfig
+from nexus.company.pilot_config import PREVIEW_PROFILE, PilotConfig
 from nexus.company.pilot_governance import populate_governance
 from nexus.company.pilot_plan import populate_plan
+from nexus.company.pilot_preview import create_preview_database, publish_preview_mandate
 from nexus.company.pilot_setup import initialize_task, private_bytes
 from nexus.settings import settings
 
@@ -26,24 +27,26 @@ def config_at(root: Path) -> PilotConfig:
     return config
 
 
-def migrate_owned() -> None:
+def migrate_owned(pilot: PilotConfig) -> None:
     from alembic.config import Config
 
     from alembic import command
 
-    settings.company_database_url = "postgresql+asyncpg://santapong@/nexus_company_test_owner_uat?host=/tmp/nexus-release-tests-2026-10-13/socket&port=55438"
+    if pilot.profile == PREVIEW_PROFILE:
+        create_preview_database(pilot)
     config = Config()
     config.set_main_option(
         "script_location", str(Path(__file__).resolve().parents[1] / "company_alembic")
     )
+    config.set_main_option("sqlalchemy.url", pilot.admin_database_url.replace("%", "%%"))
     command.upgrade(config, "head")
-    asyncio.run(grant_app())
+    asyncio.run(grant_app(pilot.admin_database_url))
 
 
-async def grant_app() -> None:
+async def grant_app(database_url: str) -> None:
     from sqlalchemy import text
 
-    engine = create_async_engine(settings.company_database_url)
+    engine = create_async_engine(database_url)
     try:
         async with engine.begin() as connection:
             await connection.execute(
@@ -63,9 +66,29 @@ async def bootstrap(config: PilotConfig) -> None:
     engine = create_async_engine(config.database_url)
     try:
         factory = async_sessionmaker(engine, expire_on_commit=False)
-        services = compose_pilot(factory, config)
+        services = await asyncio.to_thread(compose_pilot, factory, config)
         await bootstrap_directory(services, config)
         await bootstrap_sources(factory, config)
+        if config.profile == PREVIEW_PROFILE:
+            preview_mandate = await publish_preview_mandate(services.management.controls, config)
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "scope": config.profile,
+                        "company_id": str(config.company_id),
+                        "api": "http://127.0.0.1:9188",
+                        "credential_file": str(
+                            config.account_file.parent / "browser-credentials.json"
+                        ),
+                        "mandate": preview_mandate.model_dump(mode="json"),
+                        "providers": False,
+                        "queue": False,
+                        "builder": False,
+                    }
+                )
+                + "\n"
+            )
+            return
         mandate, charters, goal = await populate_governance(services, config)
         revision, payload = await populate_plan(services, config, mandate, charters, goal)
         await populate_proposals(factory, services, config, revision, payload)
@@ -113,14 +136,26 @@ def main() -> None:
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--sdk-receipt", type=Path)
     parser.add_argument("--prompt-password", action="store_true")
+    parser.add_argument(
+        "--profile",
+        choices=["disposable-supervised-owner-uat-v1", PREVIEW_PROFILE],
+        default="disposable-supervised-owner-uat-v1",
+    )
+    parser.add_argument("--database-name")
+    parser.add_argument("--docs-manifest", type=Path)
+    parser.add_argument("--docs-manifest-sha")
     args = parser.parse_args()
     if args.mode == "init":
-        if args.sdk_receipt is None:
+        if args.profile != PREVIEW_PROFILE and args.sdk_receipt is None:
             parser.error("--sdk-receipt required for explicit initialization")
         initialize_task(
             args.root,
             args.sdk_receipt,
             getpass.getpass("Disposable UAT owner password: ") if args.prompt_password else None,
+            profile=args.profile,
+            database_name=args.database_name,
+            docs_manifest=args.docs_manifest,
+            docs_manifest_sha256=args.docs_manifest_sha,
         )
         sys.stdout.write(
             json.dumps({"task_directory": str(args.root), "credentials_are_private": True}) + "\n"
@@ -128,10 +163,12 @@ def main() -> None:
         return
     config = config_at(args.root)
     if args.mode == "bootstrap":
-        migrate_owned()
+        migrate_owned(config)
         asyncio.run(bootstrap(config))
         return
     if args.mode == "execute-report":
+        if config.profile == PREVIEW_PROFILE:
+            parser.error("Local owner preview has no execution profile")
         asyncio.run(run_report(config))
         return
     import uvicorn

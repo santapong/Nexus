@@ -10,15 +10,39 @@ The supervised release is incomplete; default native execution stays off.
 | Capability | Current state | Next observable result |
 | --- | --- | --- |
 | Architecture, contracts and governance | Implemented; scoped PostgreSQL/DBOS approval, budget and recovery acceptance passed | Current integrated operating profile and real usage |
-| Company Brain | Backend/offline acceptance passed29/30 with all critical cases; genuine LLM quality remains open | Owner searches actual Nexus evidence and opens citations |
-| Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist | Connect Knowledge and goal creation, then verify the populated owner journey |
-| Knowledge → goal UI | **In progress** | Actual authenticated search/evidence and mandate-aware saved goal, using existing API |
+| Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
+| Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
+| Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation** | Resolve the collector's missing validation reason, then pass current fault and representative Nexus build gates |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
 ## Latest actual result
+
+The local frontend is running at <http://127.0.0.1:5188/company/login> with the
+backend on loopback port9188. A fresh, isolated preview uses the normal company
+migrations and public services to load three exact Nexus documents from commit
+`4b581f1`. Its owner mandate permits goal creation. No goals, plans, work or
+successful outcomes were seeded. Models, providers, queue workers and native
+execution remain off.
+
+The new Knowledge page calls the real authenticated Brain and management APIs.
+It displays source excerpts, dates, freshness and provenance, then saves a cited
+goal with an explicitly unknown baseline. Ordinary access refresh preserves the
+draft while pausing mutations. Source-policy review caught and fixed a mismatch:
+current citations with unknown freshness are allowed with a warning, matching
+GoalStore; stale or historical sources remain blocked.
+
+Focused frontend checks, TypeScript and production build pass. The backend's13
+focused preview/configuration tests and strict/lint/format checks pass. The full
+unit run reports4,309 passed,1 skipped and5 temporary-path failures: the check
+used an owner-home directory that the builder correctly rejects. Those exact5
+cases pass with a fresh private temporary directory outside the owner home;
+production guards are unchanged. This is a full run plus a focused corrected-path
+recheck, not a single all-green full run. These source checks do not establish
+browser acceptance. The visible Nexus sign-in page is handed to the owner for
+password entry, following the owner's browser-control preference.
 
 Current production backend repair passes4,307 unit tests at7acbb8b. The newer
 private qualification source separately passes382 tests and strict/lint/format45.
@@ -38,10 +62,11 @@ actions, budgets and clocks stay preserved.
 
 ## What you should see next
 
-A real local **Knowledge → cited evidence → Nexus goal → Today/Work/Report**
-journey is the next reviewable product milestone, targeted for1–2 focused working
-days including integration/browser checks. Saving a goal will show its actual
-state; it will not imply automatic execution while intake is disabled.
+A real local **Knowledge → cited evidence → saved Nexus goal → company view**
+is ready for signed-in browser verification. The original1–2 focused working day
+target included this integration and acceptance, which remain open. Saving a goal
+does not create a plan or execute work. The following product milestone connects
+that same goal through proposed plan, authorized work, verification and report.
 
 The full release ETA will be re-estimated after that journey and a representative
 Nexus builder run. The earlier6–20November date range is historical, low-confidence
@@ -57,7 +82,8 @@ Automatic Meta Harness and dedicated graph infrastructure remain deferred.
 
 Current Pi read-only evidence confirms disabled memory control and missing
 rootless tools. Configuration/installation/reboot and live provider/email/deploy
-steps need their concrete approved setup. No new owner input is requested here.
+steps need their concrete approved setup. Local password entry is the current
+browser handoff; it does not authorize provider, email or deployment activation.
 
 Detailed history: [release evidence index](RELEASE_GATES_CURRENT.md),
 [actual setup and timing](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md).

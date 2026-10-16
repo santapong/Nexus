@@ -6,7 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Button } from '@/components/ui/button'
 import { useCompanyIdentity } from '@/hooks/useCompany'
 import type { CompanyIdentity } from '@/types/company'
-import { CompanyApiError, setCompanySessionToken } from '@/api/company'
+import { CompanyApiError, companySessionVersion, setCompanySessionToken } from '@/api/company'
 
 export function CompanyLayout() {
   const [dark, setDark] = useState(() => localStorage.getItem('nexus-theme') !== 'light')
@@ -42,7 +42,7 @@ export function CompanyLayout() {
         {import.meta.env.VITE_COMPANY_UAT === 'true' && <p role="status"
           className="text-xs text-amber-500 border border-amber-700/40 rounded-lg px-4 py-3">
           Local supervised UAT · disposable task profile</p>}
-        {identity.isPending || identity.isFetching ? <p role="status" className="text-gray-400">Checking your current company access…</p>
+        {identity.isPending ? <p role="status" className="text-gray-400">Checking your current company access…</p>
           : identity.isError ? <div role="alert" className="rounded-lg border border-gray-800 bg-gray-900 p-6 space-y-3">
             <h2 className="text-lg font-semibold text-white">Company access unavailable</h2>
             <p className="text-gray-400">{identity.error instanceof CompanyApiError && identity.error.status === 401
@@ -55,12 +55,15 @@ export function CompanyLayout() {
             <div className="flex flex-wrap gap-3 items-center justify-between text-xs text-gray-400">
               <span className="flex items-center gap-2"><ShieldCheck size={15} className="text-indigo-400" /> Current owner access</span>
               <span className="font-mono break-all">Company {current.company_id}</span></div>
-            <nav aria-label="Company views" className="flex gap-1 border-b border-gray-800">
-              {[['Today', '/company/today'], ['Company', '/company/overview'], ['Approvals', '/company/approvals']].map(([label, to]) =>
+            <nav aria-label="Company views" className="flex flex-wrap gap-1 border-b border-gray-800">
+              {[['Today', '/company/today'], ['Knowledge', '/company/knowledge'], ['Company', '/company/overview'], ['Approvals', '/company/approvals']].map(([label, to]) =>
                 <NavLink key={to} to={to} className={({ isActive }) => `px-4 py-3 text-sm border-b-2 ${isActive
                   ? 'border-indigo-500 text-white' : 'border-transparent text-gray-400 hover:text-gray-100'}`}>{label}</NavLink>)}
             </nav>
-            <Outlet context={current satisfies CompanyIdentity} />
+            {identity.isFetching && <p role="status" className="text-sm text-gray-400">Rechecking company access… Changes are paused and your current draft is preserved.</p>}
+            <fieldset key={`${current.company_id}:${current.principal_id}:${companySessionVersion()}`} disabled={identity.isFetching} className="min-w-0" aria-busy={identity.isFetching}>
+              <Outlet context={current satisfies CompanyIdentity} />
+            </fieldset>
           </>}
       </main>
     </div>

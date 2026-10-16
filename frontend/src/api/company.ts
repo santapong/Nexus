@@ -7,6 +7,7 @@ import type {
   MetricObservationIntent, MetricObservationRecord, MetricObservationPage,
   NewReportSnapshot, SavedOperatingReport, ResolveReportProfile,
   NativeReportProfileRef, NativeReportOperatingProfile, NativeReportPreparedAction,
+  BrainSearchRead, BrainRetrievalResult, MaterializedEvidence, GoalPublish, GoalRevisionRecord,
 } from '@/types/company'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
@@ -57,6 +58,12 @@ const base = (id: string) => `/api/v2/companies/${encodeURIComponent(id)}/manage
 const query = (after?: string | null) => after ? `?after_id=${encodeURIComponent(after)}` : ''
 
 export const companyApi = {
+  searchKnowledge: (id: string, body: BrainSearchRead) => companyFetch<BrainRetrievalResult>(
+    `/api/v2/companies/${encodeURIComponent(id)}/brain/search`, { method: 'POST', body: JSON.stringify(body) }),
+  evidence: (id: string, evidence: string) => companyFetch<MaterializedEvidence>(
+    `/api/v2/companies/${encodeURIComponent(id)}/brain/evidence/${encodeURIComponent(evidence)}`),
+  createGoal: (id: string, body: GoalPublish) => companyFetch<GoalRevisionRecord>(
+    base(id) + '/goals', { method: 'POST', body: JSON.stringify(body) }),
   saveReport: (id: string, body: NewReportSnapshot) => companyFetch<SavedOperatingReport>(
     base(id) + '/reports/', { method: 'POST', body: JSON.stringify(body) }),
   report: (id: string, report: string) => companyFetch<SavedOperatingReport>(

@@ -6,7 +6,7 @@ from nexus.company.brain.base import SourceTime
 from nexus.company.brain.scope_support import BrainDeniedError
 from nexus.company.brain.source_registry import SourcePolicy, SourceRegistry, SourceSnapshot
 from nexus.company.brain.sources import SourceRegistration
-from nexus.company.pilot_config import PilotConfig
+from nexus.company.pilot_config import PREVIEW_PROFILE, PilotConfig
 from nexus.core.llm.company_registry import DataClassification
 
 PUBLIC_TEXT = (
@@ -55,6 +55,10 @@ class PilotSourceReader:
 
 
 def pilot_sources(config: PilotConfig) -> SourceRegistry:
+    if config.profile == PREVIEW_PROFILE:
+        from nexus.company.pilot_preview import preview_registry
+
+        return preview_registry(config)
     policies = tuple(
         SourcePolicy(
             source_symbol=symbol,

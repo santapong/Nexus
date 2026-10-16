@@ -1,6 +1,36 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Add the Nexus knowledge-to-goal owner preview
+
+### Added
+- Authenticated Knowledge search, materialized source citation/provenance and
+  mandate-aware goal creation, linked into the existing owner workspace.
+- Closed local Nexus preview profile with exact committed document pins, fresh
+  exclusive test database and normal migrations/public services. No goals, work,
+  model/provider clients, queue workers or successful outcomes are seeded.
+
+### Fixed
+- Preserve an unsaved same-session goal during ordinary access/citation refresh,
+  pause mutations while revalidating and hide protected content on denial.
+- Allow current unknown-freshness citations with an explicit warning for an
+  unknown-baseline goal, matching backend policy; reject stale/historical sources.
+- Preserve percent-encoded socket URLs through Alembic configuration.
+
+### Validation
+- Backend13 focused preview/configuration tests and strict/lint/format checks pass.
+  Integrated unit run:4,309 passed/1 skipped/5 owner-home temporary-path failures;
+  those exact5 pass on corrected private temporary paths with unchanged guards.
+  The first failure log is retained; this is not a single all-green full run.
+- Frontend input/API/session checks, TypeScript and production build pass. The
+  source-policy counterexample passes an independent narrow forward-check.
+- Actual preview bootstrap, backend health/authentication denial and CORS pass.
+  Signed-in browser flow and owner acceptance remain pending at the password
+  handoff. Native execution remains disabled; supervised release is incomplete.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Focus delivery on Nexus and usable owner journeys
 
 ### Changed
