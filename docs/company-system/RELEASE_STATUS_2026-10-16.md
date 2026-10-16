@@ -14,7 +14,7 @@ The supervised release is incomplete; default native execution stays off.
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
-| Bounded builder | **Blocked from activation** | Resolve the collector's missing validation reason, then pass current fault and representative Nexus build gates |
+| Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
@@ -56,9 +56,13 @@ were not saved. The outcome and USD0.010000 hold remain unknown/unbilled; its le
 is released. The wave is stopped; the other four actions remain unissued.
 No parent-expiry, whole-tree retirement or current-V9 qualification pass is claimed.
 
-The builder task now focuses on that exact observability gap before another run.
-Brain, management and owner UI work continue in parallel. Old frozen runs,
-actions, budgets and clocks stay preserved.
+The bounded diagnostics task finishes within its90-minute timebox: a separate
+eight-file patch passes143 finite checks and independent source review. It adds
+closed rejection reasons and a bounded, explicitly UNVALIDATED candidate while
+preserving all original predicates, deadlines and worker ownership. It is held
+outside the product checkout; no new native case has run and the original exact
+failure remains unrecoverable. Complete the owner journey before another native
+wave. Old frozen runs, actions, budgets and clocks stay preserved.
 
 ## What you should see next
 

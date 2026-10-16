@@ -10,7 +10,9 @@ work or completion were seeded. Native activation
 remains blocked: Source2 passes382 source checks/setup audit, then its first
 actual case fails FaultSnapshot validation after one attempt; unknown hold and
 released lease are retained, four cases remain unissued. Exact original predicate
-is not recoverable, so minimal diagnostics precede another run. Full release open.
+is not recoverable. The separate minimal diagnostics patch now passes143 source
+checks and independent review, within its timebox; it is held, with no new native
+run. Full release open.
 
 ## Historical implementation and qualification checkpoints
 

@@ -27,6 +27,9 @@
 - Actual preview bootstrap, backend health/authentication denial and CORS pass.
   Signed-in browser flow and owner acceptance remain pending at the password
   handoff. Native execution remains disabled; supervised release is incomplete.
+- The separately held builder-diagnostics patch finishes within its timebox:
+  143 finite checks and independent source review pass. No new native run or
+  builder activation is claimed; original failed evidence stays preserved.
 
 **Authored by:** Codex and bounded implementation/review agents
 **PR:** not published

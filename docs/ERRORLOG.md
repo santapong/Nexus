@@ -204,6 +204,12 @@ be a FaultRef or accepted physical witness. No predicate/clock/limit relaxation
 or speculative retry. Actual audit SHA6b8d9d93… and diagnosis SHA5eaab6da… are
 linked from the current progress page; minimal source repair is in progress.
 
+Later source-only checkpoint: held patch14f92acc adds closed reasons and separate
+bounded UNVALIDATED candidates. Its143 finite checks/static8 and independent
+predicate/order/deadline/worker-ownership review pass within the90-minute timebox.
+No actual native retry or qualification follows, and the original failing
+candidate/predicate remain unrecoverable. The defect stays open for actual proof.
+
 ---
 
 ## ERROR-178 — Staging forward misses dynamically constructed operator suffixes
