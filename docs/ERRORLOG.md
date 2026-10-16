@@ -76,7 +76,7 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 **Date:** 2026-10-16
 **Severity:** medium
-**Status:** open (narrow producer/history repair in progress)
+**Status:** fixed (wire-compatible source and actual restricted planning runtime)
 **Found by:** actual restricted-PG planning runtime v4 and read-only predicate audit
 **Affected files:** execution/planning_history.py and model action recipe identity
 
@@ -99,6 +99,22 @@ or changing whole-input/management proof hashes. Add a producer-to-history
 regression and crossed-recipe denial. Preserve this failed database, original
 action, dispatch and held money; no reset, refund or retry of that work.
 Predicate audit SHAe160ba41ae451aa70e835670e26eb539a89b72ca3960eb23dafd8ad6f507fd05.
+
+The producer and history now share model_action_recipe_hash, with the original
+sorted compact JSON algorithm unchanged. Root AST comparisons preserve all nine
+parameter keys/eight other values, the exact old hash expression, the whole-input
+estimate guard and every other native history condition. Original ASCII/Unicode
+wire digests and a real producer→history/crossed-recipe regression pass. No issued
+action is rewritten and the management proof hash remains a separate domain.
+
+Root4,926 units/114.55s and strict/Ruff6 pass with1,693 stable Python hashes.
+Fresh actual v5 passes1test/24.49s: one SDK MockTransport request, protected
+candidate, formal same-root revision2, owner approval/replay, builder denials and
+late source-revocation conservation. Independent restricted RR READ ONLY/rollback
+audit confirms seven registrations/native Work, one attempt/intent/dispatch/
+revision event, no leases/connections and model costUSD0.000120 settled from the
+USD0.400512 reservation. These are test-ledger amounts, not vendor billing or
+live model quality. Original failedv4 and its held money remain untouched.
 
 
 ## ERROR-198 — Planning action review discards the first static-source expiry

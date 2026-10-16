@@ -142,16 +142,45 @@ reset, refund or rewritten history. V4 observation SHA
 integrated receipt SHA
 `9107826dfb8004976f0f882ab1ac25e5a7630e1ce9ad41a5736f2c65b667473b`.
 
+The history repair extracts the existing model-action recipe hash and reuses it
+in history. It changes no issued wire identity, management/whole-input proof
+domain or other history gate. Producer→history and crossed-recipe cases, literal
+ASCII/Unicode hashes and62 focused tests pass. Root verifies AST equivalence,
+then passes4,926 units/114.55s and strict/Ruff6 with1,693 stable Python hashes.
+Source hold SHA`5fd9031061f0cbeafa7be65281524503647d409802c6dd7a602e3a7064b40fcb`.
+
+Fresh V5 completes the isolated flow in24.49s (wrapper25.803149s): real owner/
+Brain/goal/governance/r1, protected preparation, exact review/decision, atomic
+dispatch and DBOS worker, one actual SDK over MockTransport, protected historical
+candidate, formal same-root revision2, owner approval and replay. Disabling the
+credential/provider sources before issued-history replay adds no POST or lookup.
+Missing concrete builder gates deny before effect; revoking owner source access
+denies later approval replay. All63 assertion ASTs remain unchanged fromV4;
+only the two fixture namespace literals move toV5.
+
+Root's separate restricted RR READ ONLY/rollback snapshot confirms seven
+registered/native Work, one attempt/intent/dispatch/revision event and no leases
+or app connections. The model reservationUSD0.400512 reconciles to test-ledger
+USD0.000120; daily/work held totals are zero. The builder negative case retains
+an unissued zero-dollar hold and consumes no tool attempt. These are SDK-mock
+costs, not vendor billing. All1,693 runtime pins remain stable. V1–V4 failures
+and their data/holds are preserved unchanged. V5 observation SHA
+`2ad531b3d6fdb1bf12a24a4f9af7d06ad20e07779aae885cae2bc97f3c4d5645`;
+Root integrated receipt SHA
+`b0029c8aff69ef2c828dd268993d67fa958ae9d4855274f41e16782cbd775d07`.
+This proves the isolated planner/owner protocol; live model quality, restart,
+actual builder, owner browser and whole-company acceptance remain open.
+
 ## Remaining delivery gates
 
 - Configure the real application, model catalog/quality and current owner/actor
   credentials; connect initial goal preparation and explicit dispatch in the
   owner flow. Opt-in qualification application composition itself is source
   checked, not a running provider qualification.
-- Repair the exact model-action recipe identity in native history, then complete
-  restricted PostgreSQL/DBOS/SDK-mock integration through revision2. Concrete
-  general review is now proven through the actual owner/dispatch prefix. Preserve
-  actual failures, held money and original windows rather than resetting state.
+- Connect the validated runtime to the owner application: actual storedr1 loader,
+  bootstrap, preparation, explicit dispatch, status/candidate and formal proposal
+  controls. Preserve provenance and separate approvals; passing the isolated
+  test does not configure the owner's preview.
 - Qualify initial preparation recovery. It is currently an explicit trusted
   operation, with no accepted crash-recovery proof between pending publication
   and owner-wait transition.

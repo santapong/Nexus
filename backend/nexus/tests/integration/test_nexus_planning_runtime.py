@@ -117,7 +117,7 @@ from nexus.tests.integration.nexus_planning_runtime_fixture import (
 from nexus.tests.integration.test_company_directory import migrate
 from nexus.tests.unit.test_company_provider_conformance import KEY, response
 
-DATABASE = "nexus_company_test_nexus_planning_runtime_v4"
+DATABASE = "nexus_company_test_nexus_planning_runtime_v5"
 SOCKET = "/tmp/nexus-release-tests-2026-10-13/socket"
 
 

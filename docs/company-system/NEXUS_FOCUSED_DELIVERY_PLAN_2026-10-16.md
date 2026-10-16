@@ -100,10 +100,10 @@ records the exact activation prerequisites and conditional cost arithmetic.
 
 | Lane | Owner | Next concrete result |
 | --- | --- | --- |
-| Product coordination and integration | Root | Publish the validated owner-review repair; connect the actual owner application flow |
-| Model operation | Implementation lane | Prepare genuine bounded provider conformance/quality without relaxing ordinary model eligibility |
-| Actual database integration | Integration worker | Correct the model-action recipe/history digest join, then complete SDK candidate and same-root revision assertions; preserve the failed V4 hold/dispatch |
-| Combined boundary review | Complete for owner-review repair | First-static-expiry defect fixed; stable4,922-unit and strict/Ruff8 checks pass; actual review/decision/dispatch prefix passes |
+| Product coordination and integration | Root | Publish the validated planning-runtime milestone; compose the explicit application/worker and qualify recovery |
+| Owner lifecycle | Implementation lane | Load actual approvedr1 and connect server-built bootstrap/prepare/dispatch/status/candidate/proposal without provenance bypass |
+| Owner HTTP/interface | Interface lane | Expose the lifecycle through genuine owner windows and explicit, separately reviewed planning controls |
+| Isolated runtime verification | Complete for current cohort | SDK-mock candidate/same-root revision/owner approval/replay passes;4,926 units and strict/Ruff6 pass; preserve failedV4 hold/dispatch |
 
 Keep Root plus at most three workers. Work is disjoint; one worker owns each
 implementation package. Root integrates at concrete milestones.
@@ -166,11 +166,12 @@ preparation, dispatch/status/result API, DBOS worker and Model Checks interface
 are implemented and pass the combined source checks. Actual HTTP/DBOS/SDK-mock core
 assertions pass; the original run retains a final fixture status failure and the
 remaining conservation is proven by a separate read-only audit. The formal
-planning-result bridge passes real restricted PostgreSQL proposal/owner
-approval/replay. Neither is configured in the owner's preview. Next persist the
-full prepared planning input before approval, expose its exact owner disclosure
-and compose the actual qualification/planning runtime with the same governance
-stores. Prepare genuine provider conformance and representative quality for
+planning-result bridge and complete isolated planning runtime now pass restricted
+PostgreSQL/HTTP/DBOS/SDK-mock candidate, same-root proposal/owner approval and
+replay. Neither is configured in the owner's preview. Exact input persistence/
+disclosure is complete; next connect the owner application lifecycle and explicit
+worker configuration through the same governance stores. Prepare genuine provider
+conformance and representative quality for
 explicit live approval. A full-release date
 is still not defensible while native builder qualification is unresolved.
 

@@ -4,21 +4,22 @@
 and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexus is
 the sole delivery target; StockFlow is an optional later test.
 
-The latest owner planning repair passes4,922 backend units, strict/Ruff8 and
-independent source review. The actual restricted PostgreSQL/HTTP/DBOS run now
-passes protected and generic review, exact owner decision and atomic dispatch/
-replay. Its worker stops before SDK at a distinct recipe-fingerprint mismatch.
-One heldUSD0.400512 reservation and its dispatch remain conserved; all four failed
-databases are retained. No full planning runtime, live model quality or company
-cycle is claimed. See the [exact planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
+The full isolated owner/planning flow now passes: actual HTTP/restricted-PG/DBOS,
+one SDK MockTransport request, a protected candidate, formal same-root revision2,
+owner approval and no-request replay. Source, builder-denial and conservation
+gates pass. Root4,926 units/114.55s and strict/Ruff6 pass; the independent restricted
+READ ONLY audit confirms one model attempt/intent and reconciled test cost, with
+no leases/connections. All earlier failed databases/holds stay preserved. This
+proves the isolated planner protocol; live model quality, owner application and
+whole-company release remain open. See the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
 
 The isolated local Knowledge/citation/goal preview and its real API/database
 journey are implemented. Owner account initialization and signed-in browser
 acceptance remain pending; password entry stays with the owner. The preview has
 no configured model/provider/worker activation or seeded successful work.
 
-Next: correct the model-action recipe identity join, finish the governed SDK
-candidate/same-root revision, then connect the real owner application lifecycle.
+Next: connect the actual storedr1 lifecycle, explicit application/worker and
+owner bootstrap/prepare/dispatch/candidate/proposal controls; qualify recovery.
 Autonomous code authoring, whole-cycle model accounting, Strategy/presentation/
 support, current bounded builder/ARM64, reporting/email, private deployment,
 independent restore/rollback and24-hour soak remain required. Native activation

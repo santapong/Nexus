@@ -96,12 +96,18 @@ class InputEstimator(Protocol):
         ...
 
 
+def model_action_recipe_hash(recipe: ModelInputRecipe) -> str:
+    """Hash the original model-action recipe wire domain, preserving issued action bytes."""
+    recipe = ModelInputRecipe.model_validate(recipe.model_dump())
+    canonical = json.dumps(recipe.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
 def model_action_parameters(
     call: CompanyModelRequest, recipe: ModelInputRecipe
 ) -> dict[str, JsonValue]:
     """Create the exact owner-approved model action parameters from trusted composition."""
     recipe = ModelInputRecipe.model_validate(recipe.model_dump())
-    canonical = json.dumps(recipe.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
     return {
         "request_hash": request_hash(call),
         "request_id": str(call.request_id),
@@ -111,7 +117,7 @@ def model_action_parameters(
         "price_version": call.price_version,
         "input_recipe_id": recipe.recipe_id,
         "input_recipe_revision": recipe.revision,
-        "input_recipe_hash": hashlib.sha256(canonical.encode()).hexdigest(),
+        "input_recipe_hash": model_action_recipe_hash(recipe),
     }
 
 

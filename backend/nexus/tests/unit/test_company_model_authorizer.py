@@ -12,6 +12,7 @@ from nexus.harness.model_authorizer_contracts import (
     InputEstimate,
     ModelInputRecipe,
     model_action_parameters,
+    model_action_recipe_hash,
     require_input_estimate,
 )
 from nexus.tests.unit.test_company_provider_conformance import request
@@ -97,3 +98,36 @@ def test_recipe_hash_prevents_same_version_quality_threshold_substitution() -> N
     assert model_action_parameters(request(), current) != model_action_parameters(
         request(), changed
     )
+
+
+def test_shared_recipe_hash_preserves_original_issued_wire_digest() -> None:
+    """Literal was computed from the original producer before helper extraction."""
+    fixed = "d004945b965896171aea9aebf10014f2f441cb681eab79c9e0e78c4a6c16c919"
+    assert model_action_recipe_hash(recipe()) == fixed
+    assert model_action_parameters(request(), recipe())["input_recipe_hash"] == fixed
+    unicode_recipe = recipe().model_copy(update={"conformance_reference": "fixture:ขอบเขต"})
+    assert (
+        model_action_recipe_hash(unicode_recipe)
+        == "a58d415160040b749f233f4b6f6c1bdf8f63a63233ffae69c31226c7fb6966d3"
+    )
+    assert set(model_action_parameters(request(), recipe())) == {
+        "request_hash",
+        "request_id",
+        "attempt_id",
+        "registry_id",
+        "registry_revision",
+        "price_version",
+        "input_recipe_id",
+        "input_recipe_revision",
+        "input_recipe_hash",
+    }
+
+
+def test_recipe_wire_domain_remains_distinct_from_management_proof() -> None:
+    from nexus.company.management.canonical import canonical_sha256
+
+    assert (
+        canonical_sha256(recipe())
+        == "86c0e3440329bebb30b416a675abac1866ca3037d852724be4aa6430e8c0e00e"
+    )
+    assert model_action_recipe_hash(recipe()) != canonical_sha256(recipe())

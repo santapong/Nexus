@@ -1,6 +1,32 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Complete the isolated owner-to-planning revision flow
+
+### Fixed
+- Planning history reuses the original model-action recipe hash. Extracting the
+  shared helper preserves all nine parameters and issued ASCII/Unicode wire
+  digests; management and whole-input proof hashes stay unchanged (ERROR-199).
+
+### Validation
+- 62 focused checks and configured strict/Ruff4 pass. Root verifies producer/
+  history AST equivalence, then passes4,926 units/114.55s with19 existing warnings,
+  no failures/skips, strict/Ruff6 and1,693 stable Python source hashes.
+- Actual fresh restricted-PG/HTTP/DBOS/SDK-mock scenario passes24.49s: exact
+  owner review/decision, atomic dispatch/replay, one protected candidate, formal
+  same-root revision2, owner approval/replay, builder denial and source revocation.
+- Separate restricted READ ONLY/rollback audit confirms seven registrations/
+  native Work, one attempt/intent/dispatch/revision event and no leases or app
+  connections. The model reservationUSD0.400512 settles to test-ledgerUSD0.000120.
+  OriginalV1–V4 failures and V4 held money remain unchanged.
+
+Owner application wiring is next. This proves the isolated protocol with synthetic
+eligibility and SDK MockTransport, without live quality, browser, restart, actual
+builder, full company cycle or release activation claims. Frontend is unchanged.
+
+**Authored by:** Codex and bounded implementation agents
+**PR:** not published
+
 ## [2026-10-16] — Review protected planning actions through the owner approval path
 
 ### Fixed

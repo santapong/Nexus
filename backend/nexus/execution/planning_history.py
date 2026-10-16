@@ -10,7 +10,6 @@ from uuid import uuid5
 
 from sqlalchemy import text
 
-from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.planning_prepared_contracts import (
     PlanningModelParameters,
 )
@@ -36,6 +35,7 @@ from nexus.harness.journal_budget import billing_day
 from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import CostHold, JournalAction
 from nexus.harness.journal_submission import pending_action_record
+from nexus.harness.model_authorizer_contracts import model_action_recipe_hash
 
 
 @dataclass(frozen=True)
@@ -124,7 +124,7 @@ async def native_history(
                 services.management.catalog.models.pricebook_version,
                 services.recipe.recipe_id,
                 services.recipe.revision,
-                canonical_sha256(services.recipe),
+                model_action_recipe_hash(services.recipe),
             )
             or work.model_registry_version != parameters.registry_revision
             or work.model_profile != services.recipe.profile

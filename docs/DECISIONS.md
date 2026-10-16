@@ -3873,8 +3873,8 @@ SDKs, existing schema and stores; add no dependency or migration here.
 ## ADR-134 — Persist exact planning input and retain the original Nexus root
 
 **Date:** 2026-10-16
-**Status:** components and exact owner review/decision/dispatch integration proven;
-full worker/same-root runtime and application activation remain pending
+**Status:** isolated owner/worker/same-root runtime proven with SDK MockTransport;
+owner application activation, live quality and full operating release remain pending
 
 Persist the full prepared planning request before publishing its pending native
 action. Use protected immutable body/descriptor storage and a hash-bound resource
@@ -3922,3 +3922,10 @@ disclosure cutoff remains binding even when a later read sees refreshed access.
 Fresh actual V4 passes review, decision and atomic dispatch but fails before SDK
 at the separate recipe-hash identity join. Its original held reservation and all
 failed databases remain retained; no full-runtime claim follows (ERROR-197–199).
+
+The subsequent wire-compatible recipe hash extraction closes ERROR-199. FreshV5
+passes the full isolated planner/owner scenario, including same-root revision2,
+approval/replay and negative builder/source gates. It uses one SDK MockTransport
+request and synthetic eligibility; live quality, restart, owner browser, actual
+builder and complete-company qualification remain open. Root4,926 units and
+strict/Ruff6 pass. Earlier failures and the V4 held reservation remain unchanged.

@@ -13,7 +13,7 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | Actual protected/generic review, exact owner decision, atomic dispatch/replay and DBOS launch pass; worker stops before SDK at a recipe-identity mismatch | Repair the history digest join, prove SDK/same-root revision and configure the owner application journey |
+| Management-generated planning | **Actual isolated HTTP/PG/DBOS/SDK-mock flow passes** through one protected candidate, formal same-root revision2, owner approval and no-request replay | Connect the validated runtime to the owner application and qualify genuine model operation |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
@@ -22,15 +22,16 @@ The supervised release is incomplete; default native execution stays off.
 
 ## Latest actual result
 
-The general planning action review now verifies the concrete protected input and
-complete current native/source binding. Independent review also closes a first
-static-source expiry gap. Root4,922 units/117.39s and strict/Ruff8 pass with stable
-source. Fresh V4 passes owner review/decision, atomic dispatch/replay and actual
-DBOS launch, then stops before SDK at a recipe-fingerprint mismatch in history.
-Separate restricted read-only audits confirm one authorized consumed action,
-one dispatch, a heldUSD0.400512 reservation, zero attempts/intents and no leases
-or app connections. That hold and all four failed databases remain preserved.
-No model request was issued by this runtime test; see the
+The complete isolated planning test now passes24.49s: real owner approval and
+atomic dispatch, one SDK request over MockTransport, a protected candidate,
+formal same-root revision2 and owner approval/replay with no second request.
+The recipe-hash repair preserves issued wire identities. Root4,926 units/114.55s
+and strict/Ruff6 pass with stable source. A separate restricted read-only audit
+confirms seven registered/native Work, one attempt/intent/dispatch/revision event,
+no leases/connections and test-ledgerUSD0.000120 settled fromUSD0.400512. Builder
+denial and late source-revocation assertions pass. All four earlier failed
+databases and held money remain preserved. Live quality, owner application
+wiring, actual builder and company-cycle acceptance remain open. See the
 [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md) and ERROR-195–199.
 
 The current planning source package adds the complete registered GoalDefinition
@@ -75,8 +76,8 @@ current citations with unknown freshness are allowed with a warning, matching
 GoalStore; stale or historical sources remain blocked.
 
 Focused frontend checks, TypeScript and production build pass. The backend's13
-focused preview/configuration tests and strict/lint/format checks pass. The latest
-integrated unit run passes all4,686 tests in204.26s with no failures or skips,
+focused preview/configuration tests and strict/lint/format checks pass. An earlier
+integrated unit run passed all4,686 tests in204.26s with no failures or skips,
 including owner qualification and formal planning proposal cases. Strict typing
 and Ruff check/format pass for all37 changed Python paths. It uses fresh private non-home
 temporary paths. The earlier path-related failure/recheck remains preserved in
