@@ -7,6 +7,7 @@ import hashlib
 import os
 import stat
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Self, cast
 from uuid import UUID, uuid4, uuid5
@@ -80,6 +81,14 @@ class QualificationEvidence(BaseModel):
         ):
             raise ValueError("Qualification evidence differs from its original issued observation")
         return self
+
+
+@dataclass(frozen=True, slots=True)
+class IssuedQualificationEvidence:
+    """Actual protected bytes and derived reference, never a fresh call permission."""
+
+    reference: ArtifactRef
+    evidence: QualificationEvidence
 
 
 def _signature(value: os.stat_result) -> tuple[int, ...]:
@@ -224,13 +233,13 @@ class FileQualificationEvidenceStore:
         current(end_us)
         return await self._owned(lambda: self._write(value, raw, end_us), end_us)
 
-    def _read(self, reference: ArtifactRef, end_us: int) -> QualificationEvidence:
-        path = Path(reference.reference)
+    def _read_path(
+        self, path: Path, reference: ArtifactRef | None, end_us: int
+    ) -> IssuedQualificationEvidence:
         if (
             not path.is_relative_to(self._root)
             or path.resolve() != path
             or len(path.relative_to(self._root).parts) != 3
-            or path.relative_to(self._root).parts[0] != str(reference.company_id)
         ):
             raise ValueError("Qualification evidence reference escapes its exact store")
         roots = self._directories(path, end_us, create=False)
@@ -240,10 +249,11 @@ class FileQualificationEvidenceStore:
             before = _signature(os.fstat(stream.fileno()))
             raw = stream.read(MAX_EVIDENCE + 1)
             value = QualificationEvidence.model_validate_json(raw)
+            observed = self._reference(path, raw, value)
             if (
                 len(raw) > MAX_EVIDENCE
                 or path != self._path(value)
-                or reference != self._reference(path, raw, value)
+                or (reference is not None and reference != observed)
                 or _signature(os.fstat(stream.fileno())) != before
                 or _signature(path.stat(follow_symlinks=False)) != before
             ):
@@ -252,7 +262,43 @@ class FileQualificationEvidenceStore:
         if _signature(path.stat(follow_symlinks=False)) != before:
             raise ValueError("Qualification evidence changed while closing read descriptor")
         current(end_us)
-        return value
+        return IssuedQualificationEvidence(observed, value)
+
+    def _read(self, reference: ArtifactRef, end_us: int) -> QualificationEvidence:
+        return self._read_path(Path(reference.reference), reference, end_us).evidence
 
     async def load(self, reference: ArtifactRef, *, end_us: int) -> QualificationEvidence:
         return await self._owned(lambda: self._read(reference, end_us), end_us)
+
+    async def find_issued(
+        self, request: CompanyModelRequest, intent: EffectRecord, *, end_us: int
+    ) -> IssuedQualificationEvidence | None:
+        """Discover only the native request's canonical complete file after interrupted saving.
+
+        Reconstruct its reference from actual bytes. Missing bytes are unknown;
+        a present envelope must match the entire original issuance family.
+        """
+        request = CompanyModelRequest.model_validate_json(request.model_dump_json(by_alias=True))
+        intent = EffectRecord.model_validate_json(intent.model_dump_json())
+        path = (
+            self._root
+            / str(request.company_id)
+            / str(request.action_id)
+            / f"{request.request_id}.json"
+        )
+
+        def read() -> IssuedQualificationEvidence | None:
+            try:
+                found = self._read_path(path, None, end_us)
+            except FileNotFoundError:
+                current(end_us)
+                return None
+            original = intent.model_copy(
+                update={"state": "intent", "receipt": None, "verification": None}
+            )
+            if found.evidence.request != request or found.evidence.intent != original:
+                raise ValueError("Qualification protected bytes differ from actual native issuance")
+            current(end_us)
+            return found
+
+        return await self._owned(read, end_us)

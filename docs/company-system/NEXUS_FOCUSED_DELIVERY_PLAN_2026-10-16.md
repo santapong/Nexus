@@ -122,8 +122,10 @@ implementation package. Root integrates at concrete milestones.
   at integration; repeat when a change/failure justifies it. Review auth, spend,
   ownership and recovery at combined milestones; forward-check the original
   counterexample after a repair.
-- Explicitly restart completed workers when assigning new work; queued messages
-  alone do not start a turn. Avoid coordinator waits on an idle worker.
+- Assign every new implementation, repair or execution task with `followup_task`,
+  including recently active workers. `send_message` carries information only;
+  it can silently queue work after a worker completes. Check the actual task
+  status before waiting. The HTTP alias repair exposed this coordination error.
 - Update one current [progress page](RELEASE_STATUS_2026-10-16.md) with delivered,
   in-progress, blocked and next states. Preserve detailed audit history separately.
 - Before ending a substantial work session, record the changed product behavior,
@@ -148,9 +150,17 @@ The qualification approval→intent→SDK→protected evidence→receipt checkpo
 passes actual restricted-PG delivery and mock HTTP, without paid calls or the
 owner's browser account. Both providers share one permanent1USD/12-request Work;
 two known results settle and a third unknown keeps its full hold. This does not
-enable either model or evaluate company-task quality. Next connect owner/runtime
-preparation and planning-candidate presentation with the same existing governance
-stores, then prepare the concrete live qualification packet. A full-release date
+enable either model or evaluate company-task quality. Owner qualification
+preparation, dispatch/status/result API, DBOS worker and Model Checks interface
+are implemented and pass the combined source checks. Actual HTTP/DBOS/SDK-mock core
+assertions pass; the original run retains a final fixture status failure and the
+remaining conservation is proven by a separate read-only audit. The formal
+planning-result bridge passes real restricted PostgreSQL proposal/owner
+approval/replay. Neither is configured in the owner's preview. Next persist the
+full prepared planning input before approval, expose its exact owner disclosure
+and compose the actual qualification/planning runtime with the same governance
+stores. Prepare genuine provider conformance and representative quality for
+explicit live approval. A full-release date
 is still not defensible while native builder qualification is unresolved.
 
 ## Release finish

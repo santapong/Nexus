@@ -57,7 +57,7 @@ def prepared_inputs() -> tuple[
         input_text=context.input_text,
         system_text=context.system_text,
         data_classification=context.manifest.data_classification,
-        output_schema=planning_schema(binding),
+        output_schema=planning_schema(binding, manifest=context.manifest),
     )
     return call, context, binding, scope, recipe(), lease
 
@@ -65,8 +65,18 @@ def prepared_inputs() -> tuple[
 def test_preparation_freezes_schema_context_recipe_scope_and_request_hash() -> None:
     call, context, binding, scope, selected, _ = prepared_inputs()
     prepared = prepare_planning_request(call, context, binding, scope=scope, input_recipe=selected)
-    assert prepared.request.output_schema == planning_schema(binding)
+    assert prepared.request.output_schema == planning_schema(binding, manifest=context.manifest)
     assert prepared.binding == binding
+
+
+def test_new_planning_schema_retains_complete_original_manifest_for_durable_review() -> None:
+    import json
+
+    _, context, binding, _, _, _ = prepared_inputs()
+    schema = planning_schema(binding, manifest=context.manifest)
+    annotation = json.loads(json.loads(schema.document)["$comment"])
+    assert annotation["version"] == "nexus.company.planning-binding.v2"
+    assert annotation["context_manifest"] == context.manifest.model_dump(mode="json")
 
 
 @pytest.mark.parametrize("field", ["goal", "cas"])
@@ -80,7 +90,9 @@ def test_changed_server_reference_cannot_reuse_the_approved_request(field: str) 
         changed = binding.model_copy(update={"expected_plan_revision_id": UUID(int=99)})
     with pytest.raises(ValueError):
         prepare_planning_request(call, context, changed, scope=scope, input_recipe=selected)
-    rebound = call.model_copy(update={"output_schema": planning_schema(changed)})
+    rebound = call.model_copy(
+        update={"output_schema": planning_schema(changed, manifest=context.manifest)}
+    )
     assert request_hash(rebound) != request_hash(call)
     assert model_action_parameters(rebound, selected) != model_action_parameters(call, selected)
     prepare_planning_request(rebound, context, changed, scope=scope, input_recipe=selected)

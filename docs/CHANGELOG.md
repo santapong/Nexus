@@ -1,6 +1,51 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Connect governed model operations to owner review
+
+### Added
+- Owner Model Checks catalog, exact public input/cost disclosure, distinct
+  preparation/approval/dispatch controls and protected native result display.
+  Signed-owner API intake accepts fixed recipe IDs or exact action hashes only.
+- Fixed DBOS qualification worker, atomic dispatch and native recovery with actual
+  worker identity, original SDK/file task ownership and one permanent allowance.
+- Protected planning-source bridge and explicit server task mapping into a formal
+  proposal. Full bounded context provenance, current goal/head and exact native
+  result joins protect proposal, approval and replay under the original root.
+
+### Fixed
+- Controller-scoped nested `schema_json` serialization at the actual HTTP
+  boundary; strict response decoding remains unchanged (ERROR-189).
+- Planning fixtures and predicates now use actual journal authorized/consumed_at
+  semantics and harness action hashes (ERROR-190).
+- Correct runtime fixture status/segment assumptions; retain original failed runs
+  and use a separately scoped read-only conservation audit (ERROR-191).
+- New worker tasks use an explicit follow-up turn; informational messages alone
+  can remain queued when a worker completes.
+
+### Validation
+- 4,686 backend units pass in204.26s, no failures/skips;19 existing warnings.
+  Configured nonsilent strict typing and Ruff check/format pass37 Python paths.
+  All1,633 Python hashes stay stable during the combined run; afterward only
+  exporter import/format cleanup changes, with unchanged non-import AST.
+- Frontend exact review/session/unknown-result checks, TypeScript and production
+  build pass. Generated response definitions follow concrete serialization aliases.
+- Actual restricted-PG planner test passes1/29.63s, including same-root proposal,
+  owner approval/replay, stale/forged provenance and protected-file tamper denial.
+- Qualification actual HTTP/DBOS/SDK-mock core reaches three results. The original
+  pytest retains its final expected-status failure; a separate restricted
+  read-only audit passes remaining conservation. No runtime all-green claim.
+- One combined current auth/spend/provenance/ownership/UI review finds no material
+  issue. Reviewer-authored planning interiors have composition review only.
+
+The owner preview remains unconfigured for models. Complete prepared-input
+durability, initial planning producer, application composition, genuine provider
+quality, owner browser UAT, builder and full release gates remain open. No paid
+request, automatic model activation, authority promotion or deployment occurred.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Integrate governed model qualification and planning components
 
 ### Added

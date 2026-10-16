@@ -20,6 +20,7 @@
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
+| ADR-133 | Fixed owner qualification dispatch and protected planning provenance | implemented; runtime integration partial plus read-only audit | 2026-10-16 |
 | ADR-127 | Preserve exact native manager histories with a distinct unconfigured full method | accepted | 2026-10-15 |
 | ADR-126 | Require native dual-output publication and independent acceptance under own scope | accepted | 2026-10-15 |
 | ADR-125 | Preserve truthful generated HTML with derived-only company016 persistence | accepted | 2026-10-15 |
@@ -3823,3 +3824,48 @@ Keep original finite deadlines and actual SDK/file/settlement task ownership.
 Late work cannot become positive or authorize a second request. Reuse the pinned
 SDKs, native stores and company schema; no new framework, dependency, database
 migration, paid request or runtime activation follows from these components.
+
+## ADR-133 — Fixed owner qualification dispatch and protected planning provenance
+
+**Date:** 2026-10-16
+**Status:** implemented; qualification runtime core plus separate conservation
+audit and actual planning PG integration verified; product activation remains open
+
+Reuse the current signed-owner decision endpoint, fixed server qualification
+recipes and permanent qualification Work. HTTP accepts only a configured recipe
+ID or the exact pending action hash. Preparation, approval and dispatch are
+distinct operations. Atomic native authorization/hold/dispatch enqueues one fixed
+DBOS workflow with a portable SegmentCommand; HTTP never selects actor, model,
+budget, endpoint, credentials or queue. The worker requires its actual configured
+identity witness and retains original SDK/filesystem tasks through cancellation.
+
+Between known cases, use the existing bounded execute claim and await-approval
+transition for the exact approved, unconsumed action. This staging consumes no
+model allowance and cannot reset the original root. Native segment indices and
+model-attempt counts are different counters. Issued replay reads/reconciles exact
+native and protected facts without a new SDK request or fresh authorization.
+Unknown outcomes retain their holds and stop further dispatch. A captured response
+cannot upgrade a later failed native outcome. Result reads require current owner
+and artifact READ before bytes, followed by native/hash/hold checks after reads.
+
+The Model Checks interface discloses exact public input, model, output cap and
+maximum financial reservation, then requires explicit review/approval/dispatch.
+Generated API types use the strict serialization aliases; the controller-scoped
+Pydantic encoder preserves nested `schema_json` without changing other routes.
+No result claims profile quality, model eligibility or company completion.
+
+Planning binding v2 retains the complete bounded ContextManifest in the existing
+hash-bound output schema. V1 remains historical and cannot be promoted. An optional
+path-free PlanPayload origin joins actual native action/request/receipt/protected
+model evidence with current GoalRef and plan-head CAS. An unconfigured or forged
+reader denies. The concrete reader checks original native state, source authority,
+protected bytes and final heads; the bridge maps exact allowed task keys through
+server allocations/roles and mandatory dependencies. Proposal/approval preserves
+the original procedure, root, planning child and lifetime counters.
+
+A posted origin or model-generated identity cannot replace this verification.
+The owner preview still has no configured model catalog, connected planning
+producer or launched qualification worker. Full prepared-input durability, owner
+planning disclosure, runtime composition, genuine provider conformance/quality and
+the explicit mixed planning/native profile remain delivery work. Reuse the pinned
+SDKs, existing schema and stores; add no dependency or migration here.

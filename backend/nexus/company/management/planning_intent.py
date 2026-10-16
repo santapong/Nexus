@@ -38,7 +38,7 @@ class PreparedPlanningRequest(ValueContract):
         manifest, authority = context.manifest, context.manifest.authority
         if (
             call.tools
-            or call.output_schema != planning_schema(self.binding)
+            or call.output_schema != planning_schema(self.binding, manifest=manifest)
             or request_hash(call) != self.request_sha256
             or canonical_sha256(manifest) != self.binding.context_manifest_sha256
             or self.binding.goal.company_id != call.company_id

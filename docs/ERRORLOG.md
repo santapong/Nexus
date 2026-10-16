@@ -72,6 +72,64 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-191 — Runtime fixture confuses denied HTTP status and segment counters
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (fixture; original failed execution preserved)
+**Found by:** Codex integration worker during actual qualification runtime checks
+**Affected files:** `backend/nexus/tests/integration/test_company_qualification_runtime.py`
+
+The real owner HTTP/DBOS/SDK-mock path completed three requests and correctly
+denied a fourth while an outcome was unknown. The fixture expected422 rather than
+the observed403, so pytest failed before final SQL conservation assertions.
+The first read-only audit also incorrectly equated three model attempts with
+native segment sequence. Exact retained command identities prove segments2/4/6;
+the short staging claims occupy1/3/5. Production behavior was not changed.
+
+Correct the status expectation to403. Preserve the failed54.75s test, both used
+source versions and the failed read-only audit. A separate single restricted
+repeatable-read READ ONLY transaction with explicit rollback verifies one1USD
+Work/quota12/used3, three attempts/intents/dispatches/DBOS workflows, two known
+settled results, one unknown hold, no live lease and an unconsumed fourth action
+without a hold. This is not a retroactive all-green runtime test or a replay.
+See `READ_ONLY_CONSERVATION_2.json` in the private qualification-runtime checks2.
+
+## ERROR-190 — Planning supplied facts use the wrong native action state/hash
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** Codex planning worker during actual-source/native ABI reconciliation
+**Affected files:** `planning_native_facts.py` and paired planning unit fixtures
+
+Supplied SQL fixtures assumed a `consumed` action state and management canonical
+hash. The actual journal retains `authorized` with `consumed_at` and uses the
+harness `action_hash`. Align the fixture with the real ABI first; the resulting
+semantic failures then drive the two production predicates. The156 focused checks
+pass after repair. A separate actual restricted-PG planner run passes proposal,
+owner approval/replay and conservation; this does not turn supplied SQL tests into
+database evidence. Compare serializers and native row transitions at their real
+write sites before treating synthetic fixtures as authoritative.
+
+## ERROR-189 — Nested qualification HTTP model loses its strict JSON alias
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** Codex integration worker during real owner qualification HTTP intake
+**Affected files:** `company_qualification_routes.py`, paired route tests
+
+The actual prepared-action HTTP response emitted internal `document` for
+JsonSchemaDocument instead of the required `schema_json` alias. Strict decoding
+failed after preparation and before any decision, dispatch, lease or SDK request.
+The first database/source/log remain retained. Use Litestar's supported controller
+type encoder with `model_dump(mode="json", by_alias=True)` for nested Pydantic
+responses. Do not weaken the decoder or alter global serialization. Actual-router
+strict preparation/recipe/status/result roundtrips and53 focused auth/HTTP/OpenAPI
+checks pass; the later actual runtime reaches all three provider-mock outcomes.
+Check the serialized route response, including nested aliases, at the HTTP boundary.
+
 <!-- New entries go here, below this line, newest first -->
 
 ## ERROR-188 — Native qualification intent does not require its concrete goal check

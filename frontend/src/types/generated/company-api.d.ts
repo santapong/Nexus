@@ -1400,7 +1400,9 @@ export interface components {
         /** CommitmentPublish */
         CommitmentPublish: {
             definition: components["schemas"]["CommitmentDefinition"];
+            /** Version */
             version: string;
+            /** Expected Revision Id */
             expected_revision_id: string | null;
         };
         /** CommitmentRevision */
@@ -2995,7 +2997,9 @@ export interface components {
         };
         /** PilotLogin */
         PilotLogin: {
+            /** Email */
             email: string;
+            /** Password */
             password: string;
         };
         /** PilotSessionToken */
@@ -3011,8 +3015,11 @@ export interface components {
         };
         /** PilotSignup */
         PilotSignup: {
+            /** Email */
             email: string;
+            /** Password */
             password: string;
+            /** Invitation */
             invitation: string;
         };
         /** PilotUser */
@@ -3039,7 +3046,9 @@ export interface components {
         };
         /** PlanDecision */
         PlanDecision: {
+            /** Exact Hash */
             exact_hash: string;
+            /** Expected Current Revision Id */
             expected_current_revision_id: string | null;
         };
         /** PlanHeadView */
@@ -3079,6 +3088,10 @@ export interface components {
              * @default []
              */
             verification: components["schemas"]["VerificationIntent"][];
+            /** @default null */
+            strategy_selection: components["schemas"]["StrategySelectionRef"] | null;
+            /** @default null */
+            planning_origin: components["schemas"]["PlanningOriginRef"] | null;
         };
         /** PlanPropose */
         PlanPropose: {
@@ -3802,6 +3815,33 @@ export interface components {
             /** Basis */
             basis: string;
         };
+        /**
+         * StrategySelectionRef
+         * @description Descriptive comparison ref only; an actual owner decision must bind it later.
+         */
+        StrategySelectionRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            brief: components["schemas"]["ArtifactRevisionRef"];
+            /**
+             * Acceptance Id
+             * Format: uuid
+             */
+            acceptance_id: string;
+            /** Candidate Id */
+            candidate_id: string;
+            /** Candidate Scope Sha256 */
+            candidate_scope_sha256: string;
+        };
         /** SupportCaseContent */
         SupportCaseContent: {
             /**
@@ -4325,6 +4365,682 @@ export interface components {
             receipts_next_after_id: string | null;
         };
         JsonValue: unknown;
+        /** PlanningOriginRef */
+        PlanningOriginRef: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Kind
+             * @default registered-planning.v2
+             * @constant
+             */
+            kind: "registered-planning.v2";
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Source Plan Id
+             * Format: uuid
+             */
+            source_plan_id: string;
+            /**
+             * Source Plan Revision Id
+             * Format: uuid
+             */
+            source_plan_revision_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /**
+             * Artifact Id
+             * Format: uuid
+             */
+            artifact_id: string;
+            /** Artifact Sha256 */
+            artifact_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Context Manifest Sha256 */
+            context_manifest_sha256: string;
+            /** Content Sha256 */
+            content_sha256: string;
+            /** Mapping Revision */
+            mapping_revision: string;
+            /** Mapping Sha256 */
+            mapping_sha256: string;
+        };
+        /**
+         * SegmentCommand
+         * @description Server-authored continuation, with no callable, credentials or new budget in its payload.
+         */
+        SegmentCommand: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Segment Id
+             * Format: uuid
+             */
+            segment_id: string;
+        };
+        /** QualificationDispatchRecord */
+        QualificationDispatchRecord: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            command: components["schemas"]["SegmentCommand"];
+            /** Workflow Id */
+            workflow_id: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "enqueued" | "existing";
+        };
+        /**
+         * CostQuote
+         * @description One conservative rounded amount bound to its exact dated price version.
+         */
+        CostQuote: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Price Version */
+            price_version: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /** Amount Usd */
+            amount_usd: string;
+            /**
+             * Basis
+             * @enum {string}
+             */
+            basis: "upper_bound" | "reported_usage";
+        };
+        /**
+         * JsonSchemaDocument
+         * @description Bounded canonical schema text cannot mutate after authority hashing.
+         */
+        JsonSchemaDocument: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Schema Json */
+            schema_json: string;
+        };
+        /** QualificationRecipeView */
+        QualificationRecipeView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Recipe Id */
+            recipe_id: string;
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /** Revision */
+            revision: string;
+            /** Case Id */
+            case_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            /** Provider */
+            provider: string;
+            /** Model Id */
+            model_id: string;
+            /** Input Text */
+            input_text: string;
+            /** System Text */
+            system_text: string | null;
+            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
+            /** Request Output Cap */
+            request_output_cap: number;
+            maximum_reservation: components["schemas"]["CostQuote"] | null;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "current" | "unavailable";
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
+        /**
+         * CompanyModelResult
+         * @description Model response validity is distinct from known or uncertain billable usage.
+         */
+        CompanyModelResult: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "response" | "failed" | "denied" | "cancelled";
+            /**
+             * Billing
+             * @enum {string}
+             */
+            billing: "known" | "unknown" | "not_issued";
+            /** @default null */
+            usage: components["schemas"]["TokenUsage"] | null;
+            /**
+             * Text
+             * @default null
+             */
+            text: string | null;
+            /**
+             * Structured Json
+             * @default null
+             */
+            structured_json: string | null;
+            /**
+             * Tool Calls
+             * @default []
+             */
+            tool_calls: components["schemas"]["ToolProposal"][];
+            /**
+             * Error Code
+             * @default null
+             */
+            error_code: string | null;
+        };
+        /**
+         * TokenUsage
+         * @description Complete normalized text usage; missing/unsupported charges retain a hold.
+         */
+        TokenUsage: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /**
+             * Cached Input Tokens
+             * @default 0
+             */
+            cached_input_tokens: number;
+            /**
+             * Reasoning Tokens
+             * @default 0
+             */
+            reasoning_tokens: number;
+            /**
+             * Usage Complete
+             * @default true
+             * @constant
+             */
+            usage_complete: true;
+        };
+        /**
+         * ToolProposal
+         * @description Validated model suggestion; execution needs a separate governed tool boundary.
+         */
+        ToolProposal: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Name */
+            name: string;
+            /** Call Id */
+            call_id: string | null;
+            /** Arguments Json */
+            arguments_json: string;
+        };
+        /** QualificationResultView */
+        QualificationResultView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "available" | "unavailable";
+            /** @default null */
+            provider_result: components["schemas"]["CompanyModelResult"] | null;
+            /**
+             * Native Outcome
+             * @default null
+             */
+            native_outcome: string | null;
+            /**
+             * Captured At
+             * @default null
+             */
+            captured_at: string | null;
+            /**
+             * Sha256
+             * @default null
+             */
+            sha256: string | null;
+            /**
+             * Actual Usd
+             * @default null
+             */
+            actual_usd: string | null;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
+        /**
+         * ExecutionRegistration
+         * @description Server-authored logical run and frozen work/catalog contract, not new budget authority.
+         */
+        ExecutionRegistration: {
+            work: components["schemas"]["WorkItem"];
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /** Workflow Name */
+            workflow_name: string;
+            /** Workflow Version */
+            workflow_version: string;
+            /** Model Profile */
+            model_profile: string;
+            /** Model Registry Version */
+            model_registry_version: string;
+            quota: components["schemas"]["AttemptQuota"];
+        };
+        /**
+         * ExecutionSnapshot
+         * @description Authoritative lifetime counters and current lease/state for registered work.
+         */
+        ExecutionSnapshot: {
+            /**
+             * Schema Version
+             * @default nexus.company.v1
+             * @constant
+             */
+            schema_version: "nexus.company.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            registration: components["schemas"]["ExecutionRegistration"];
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /** Parent Task Id */
+            parent_task_id: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked";
+            counters: components["schemas"]["LoopCounters"];
+            delegated: components["schemas"]["LoopCounters"];
+            /** Fence */
+            fence: number;
+            /** Worker Id */
+            worker_id: string | null;
+            /** Lease Principal Id */
+            lease_principal_id: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /** Segment Number */
+            segment_number: number;
+            /** Segment Id */
+            segment_id: string | null;
+            /** Waiting Action Id */
+            waiting_action_id: string | null;
+        };
+        /** QualificationEffectView */
+        QualificationEffectView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** State */
+            state: string;
+            /** Intent Fence */
+            intent_fence: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Evidence Sha256S */
+            evidence_sha256s: string[];
+        };
+        /** QualificationHoldView */
+        QualificationHoldView: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "held" | "unknown" | "reconciled";
+            /** Amount Usd */
+            amount_usd: string;
+            /** Actual Usd */
+            actual_usd: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+        };
+        /** QualificationStatus */
+        QualificationStatus: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            action: components["schemas"]["ActionRecord"];
+            work: components["schemas"]["ExecutionSnapshot"];
+            hold: components["schemas"]["QualificationHoldView"] | null;
+            recipe: components["schemas"]["QualificationRecipeView"];
+            effect: components["schemas"]["QualificationEffectView"] | null;
+            dispatch: components["schemas"]["QualificationDispatchRecord"] | null;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Profile Quality Evaluated
+             * @default false
+             * @constant
+             */
+            profile_quality_evaluated: false;
+        };
+        /**
+         * CompanyModelRequest
+         * @description One bounded server-authored SDK request, not a whole multi-call agent run.
+         */
+        CompanyModelRequest: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Attempt Id
+             * Format: uuid
+             */
+            attempt_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Registry Id */
+            registry_id: string;
+            /** Registry Revision */
+            registry_revision: string;
+            /** Price Version */
+            price_version: string;
+            /**
+             * Data Classification
+             * @enum {string}
+             */
+            data_classification: "public" | "internal" | "confidential" | "restricted";
+            bounds: components["schemas"]["TokenBounds"];
+            /** Input Text */
+            input_text: string;
+            /**
+             * System Text
+             * @default null
+             */
+            system_text: string | null;
+            /**
+             * Tools
+             * @default []
+             */
+            tools: components["schemas"]["ModelTool"][];
+            /** @default null */
+            output_schema: components["schemas"]["JsonSchemaDocument"] | null;
+        };
+        /**
+         * ModelTool
+         * @description Function schema only; this is never an executable tool or hosted tool.
+         */
+        ModelTool: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            parameters: components["schemas"]["JsonSchemaDocument"];
+        };
+        /**
+         * TokenBounds
+         * @description Per-call financial bounds and enforced total billed output cap.
+         *
+         *     input_tokens is an upper bound including framing, tools/schema and history.
+         *     max_output_tokens covers visible, hidden reasoning and formatting together.
+         *     The default requires combined context fit. An explicit reviewed whole-input
+         *     ceiling reserves cost without promising prompt fit or exact tokenization.
+         *     Output cap enforcement belongs to an evaluated adapter.
+         */
+        TokenBounds: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Input Tokens */
+            input_tokens: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /**
+             * Unit
+             * @default text_tokens
+             * @constant
+             */
+            unit: "text_tokens";
+            /**
+             * Output Cap Semantics
+             * @default total_including_reasoning
+             * @constant
+             */
+            output_cap_semantics: "total_including_reasoning";
+            /**
+             * Input Bound Kind
+             * @default null
+             */
+            input_bound_kind: "model_input_ceiling_v1" | null;
+        };
+        /**
+         * PreparedQualification
+         * @description Actual committed work/pending-action descriptions, not a lease, approval or permit.
+         */
+        PreparedQualification: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            work: components["schemas"]["ExecutionSnapshot"];
+            action: components["schemas"]["ActionRecord"];
+            request: components["schemas"]["CompanyModelRequest"];
+            quote: components["schemas"]["CostQuote"];
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
     };
     responses: never;
     parameters: never;

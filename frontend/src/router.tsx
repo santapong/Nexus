@@ -23,6 +23,7 @@ import { CompanyApprovalsPage } from '@/pages/CompanyApprovalsPage'
 import { CompanyActionReviewPage } from '@/pages/CompanyActionReviewPage'
 import { CompanyLoginPage } from '@/pages/CompanyLoginPage'
 import { CompanyKnowledgePage } from '@/pages/CompanyKnowledgePage'
+import { CompanyModelChecksPage } from '@/pages/CompanyModelChecksPage'
 
 export const router = createBrowserRouter([
   { path: '/company/login', element: <CompanyLoginPage /> },
@@ -36,6 +37,8 @@ export const router = createBrowserRouter([
       { path: 'today', element: <CompanyTodayPage /> },
       { path: 'overview', element: <CompanyOverviewPage /> },
       { path: 'knowledge', element: <CompanyKnowledgePage /> },
+      { path: 'model-checks', element: <CompanyModelChecksPage /> },
+      { path: 'model-checks/actions/:actionId', element: <CompanyModelChecksPage /> },
       { path: 'plans/:planId', element: <CompanyPlanPage /> },
       { path: 'work/:taskId', element: <CompanyWorkPage /> },
       { path: 'reports/:reportId', element: <CompanyReportPage /> },

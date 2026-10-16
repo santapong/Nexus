@@ -55,9 +55,12 @@ from nexus.execution.runtime_models import ExecutionWork
 from nexus.harness.journal_models import CompanyControl
 
 if TYPE_CHECKING:
+    from nexus.company.management.planning_source_reader import PlanningSourceReader
     from nexus.company.strategy.current_proof_reader import StrategyCurrentProofReader
 
 
+# This cohesive >400-line store keeps both exact-origin checks adjacent to the
+# existing atomic proposal/approval, permanent root and replay registration gates.
 class ManagementPlanStore:
     """No intake endpoint, model invocation, dispatch or paid authority is installed here."""
 
@@ -68,6 +71,7 @@ class ManagementPlanStore:
         *,
         source_freshness: PlanSourceFreshness | None = None,
         strategy_proof_reader: StrategyCurrentProofReader | None = None,
+        planning_reader: PlanningSourceReader | None = None,
     ) -> None:
         validate_cycle_catalog(catalog.cycle_admission, catalog)
         self.factory, self.catalog = (
@@ -77,6 +81,17 @@ class ManagementPlanStore:
         self.directory = PersistentCompanyDirectory(factory)
         self.source_freshness = source_freshness
         self.strategy_proof_reader = strategy_proof_reader
+        self.planning_reader = planning_reader
+        if planning_reader is not None:
+            from nexus.company.management.planning_source_reader import PlanningSourceReader
+
+            if (
+                type(planning_reader) is not PlanningSourceReader
+                or planning_reader.factory is not factory
+            ):
+                raise ManagementDeniedError(
+                    "Planning reader must share the exact PlanStore factory"
+                )
         if strategy_proof_reader is not None:
             from nexus.company.strategy.current_proof_reader import StrategyCurrentProofReader
 
@@ -97,8 +112,16 @@ class ManagementPlanStore:
         *,
         expected_current_revision_id: UUID | None,
         credential: AuthenticatedWorkerIdentity | None = None,
+        end_us: int | None = None,
     ) -> PlanRevision:
         """Save a fully validated immutable proposal without reserving any root or child."""
+        from nexus.company.management.planning_native_facts import read_end
+
+        origin_end = read_end(end_us) if payload.planning_origin is not None else None
+        if origin_end is not None and (
+            self.planning_reader is None or self.planning_reader.factory is not self.factory
+        ):
+            raise ManagementDeniedError("Planning origin requires its configured concrete reader")
         for quota in (payload.procedure.quota, *(row.quota for row in payload.children)):
             require_exact_cycle_quota(quota)
         payload = PlanPayload.model_validate(payload.model_dump(warnings=False))
@@ -108,6 +131,17 @@ class ManagementPlanStore:
             _,
         ):
             await require_plan_not_cancelled(session, scope.company_id, payload)
+            if origin_end is not None:
+                assert self.planning_reader is not None
+                await self.planning_reader.revalidate_locked(
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    payload,
+                    target_revision_id=None,
+                    end_us=origin_end,
+                )
             if is_full_transition(payload, self.catalog):
                 return await propose_transition_locked(
                     self,
@@ -128,7 +162,22 @@ class ManagementPlanStore:
             await validate_plan(
                 session, control, scope, identity, payload, self.catalog, self.source_freshness
             )
-            return record
+            if origin_end is not None:
+                assert self.planning_reader is not None
+                await self.planning_reader.revalidate_locked(
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    payload,
+                    target_revision_id=record.plan_revision_id,
+                    end_us=origin_end,
+                )
+        if origin_end is not None:
+            from nexus.company.management.planning_native_facts import require_time
+
+            require_time(origin_end)
+        return record
 
     async def approve_and_register(
         self,
@@ -139,14 +188,32 @@ class ManagementPlanStore:
         *,
         expected_current_revision_id: UUID | None,
         credential: AuthenticatedWorkerIdentity | None = None,
+        end_us: int | None = None,
     ) -> PlanRevision:
         """Approve exact stored data and atomically delegate each existing/new M1 registration."""
+        from nexus.company.management.planning_native_facts import read_end
+
+        origin_end = read_end(end_us)
         async with management_owner_transaction(self.factory, scope, identity) as (
             session,
             control,
             _,
         ):
             record, head = await self._target(session, scope, plan_revision_id, exact_hash)
+            if record.payload.planning_origin is not None:
+                if self.planning_reader is None or self.planning_reader.factory is not self.factory:
+                    raise ManagementDeniedError(
+                        "Planning origin requires its configured concrete reader"
+                    )
+                await self.planning_reader.revalidate_locked(
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    record.payload,
+                    target_revision_id=record.plan_revision_id,
+                    end_us=origin_end,
+                )
             await require_plan_not_cancelled(session, scope.company_id, record.payload)
             if is_full_transition(record.payload, self.catalog):
                 return await approve_transition_locked(
@@ -169,39 +236,58 @@ class ManagementPlanStore:
                 self.catalog,
                 self.source_freshness,
             )
-            if head.state == "approved" and head.current_revision_id == record.plan_revision_id:
-                return record
-            require_cas(head.current_revision_id, expected_current_revision_id)
-            if head.state == "revoked" and head.current_revision_id == record.plan_revision_id:
-                raise ManagementDeniedError("A revoked plan needs an explicit new bounded revision")
-            now = await db_clock(session)
-            procedure = await ensure_procedure(
-                session, self.directory, scope, identity, record.payload, now
+            already_approved = (
+                head.state == "approved" and head.current_revision_id == record.plan_revision_id
             )
-            decision = await decision_locked(session, scope, record, "approve", now)
-            await consume_revision(session, scope, record, procedure, decision.decision_id, now)
-            await register_children(
-                session,
-                self.directory,
-                scope,
-                identity,
-                record.payload,
-                record.plan_revision_id,
-                charters,
-            )
-            head.current_revision_id, head.state = record.plan_revision_id, "approved"
-            head.procedure_id, head.decision_id = procedure.procedure_id, decision.decision_id
-            await session.flush()
-            await validate_plan(
-                session,
-                control,
-                scope,
-                identity,
-                record.payload,
-                self.catalog,
-                self.source_freshness,
-            )
-            return record
+            if not already_approved:
+                require_cas(head.current_revision_id, expected_current_revision_id)
+                if head.state == "revoked" and head.current_revision_id == record.plan_revision_id:
+                    raise ManagementDeniedError(
+                        "A revoked plan needs an explicit new bounded revision"
+                    )
+                now = await db_clock(session)
+                procedure = await ensure_procedure(
+                    session, self.directory, scope, identity, record.payload, now
+                )
+                decision = await decision_locked(session, scope, record, "approve", now)
+                await consume_revision(session, scope, record, procedure, decision.decision_id, now)
+                await register_children(
+                    session,
+                    self.directory,
+                    scope,
+                    identity,
+                    record.payload,
+                    record.plan_revision_id,
+                    charters,
+                )
+                head.current_revision_id, head.state = record.plan_revision_id, "approved"
+                head.procedure_id, head.decision_id = procedure.procedure_id, decision.decision_id
+                await session.flush()
+                await validate_plan(
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    record.payload,
+                    self.catalog,
+                    self.source_freshness,
+                )
+            if record.payload.planning_origin is not None:
+                assert self.planning_reader is not None
+                await self.planning_reader.revalidate_locked(
+                    session,
+                    control,
+                    scope,
+                    identity,
+                    record.payload,
+                    target_revision_id=record.plan_revision_id,
+                    end_us=origin_end,
+                )
+        if record.payload.planning_origin is not None:
+            from nexus.company.management.planning_native_facts import require_time
+
+            require_time(origin_end)
+        return record
 
     async def revoke(
         self,

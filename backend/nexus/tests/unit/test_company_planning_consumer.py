@@ -60,7 +60,9 @@ def composition(
 ) -> tuple[RegisteredPlanningConsumer, PreparedPlanningRequest]:
     call, context, binding, scope, recipe, lease = prepared_inputs()
     registry = planning_registry(provider)
-    call = call.model_copy(update={"bounds": TokenBounds(input_tokens=8000, max_output_tokens=256)})
+    call = call.model_copy(
+        update={"bounds": TokenBounds(input_tokens=28000, max_output_tokens=256)}
+    )
     prepared = prepare_planning_request(call, context, binding, scope=scope, input_recipe=recipe)
     factory = async_sessionmaker[AsyncSession]()
     contexts = PersistentContextAssembler(
@@ -111,7 +113,10 @@ def planning_registry(provider: str) -> ModelRegistry:
         update={
             "models": (
                 registry.models[0].model_copy(
-                    update={"allowed_data": frozenset({"internal", "confidential"})}
+                    update={
+                        "allowed_data": frozenset({"internal", "confidential"}),
+                        "context_window": 30000,
+                    }
                 ),
             )
         }
@@ -237,7 +242,7 @@ async def test_actual_sdk_single_post_and_recorded_file_readback(
     assert stored.request.output_schema == prepared.request.output_schema
     assert stored.request.output_schema is not None
     annotation = json.loads(json.loads(stored.request.output_schema.document)["$comment"])
-    assert annotation["version"] == "nexus.company.planning-binding.v1"
+    assert annotation["version"] == "nexus.company.planning-binding.v2"
     assert annotation["sha256"] == canonical_sha256(prepared.binding)
     assert annotation["binding"] == prepared.binding.model_dump(mode="json")
     if semantic == "valid":

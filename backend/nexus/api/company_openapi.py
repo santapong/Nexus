@@ -38,6 +38,13 @@ from nexus.company.notifications.inbox_contracts import (
     NotificationInboxPage,
 )
 from nexus.company.pilot_session import PilotSessionToken
+from nexus.execution.qualification_read_contracts import (
+    QualificationDispatchRecord,
+    QualificationRecipeView,
+    QualificationResultView,
+    QualificationStatus,
+)
+from nexus.execution.qualification_service import PreparedQualification
 
 RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     PrincipalAccess,
@@ -63,6 +70,11 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     NativeReportPreparedAction,
     NotificationInboxEntry,
     NotificationInboxPage,
+    QualificationRecipeView,
+    QualificationStatus,
+    QualificationDispatchRecord,
+    QualificationResultView,
+    PreparedQualification,
 )
 
 

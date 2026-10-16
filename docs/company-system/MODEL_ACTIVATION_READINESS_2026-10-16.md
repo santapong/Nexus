@@ -77,8 +77,14 @@ The new governed planning consumer returns a bounded historical candidate and
 preserves its original goal/plan-head binding. These components and the separate
 qualification path pass4,588 backend units and configured strict/lint/format31;
 actual restricted-PG/SDK-mock qualification passes. This is not activation.
-The owner goal→planning bridge, formal candidate mapping, actual quality and
-runtime wiring remain open. Legacy `preflight.py`/`factory.py` direct Agent.run
+The owner qualification API, fixed DBOS worker and Model Checks UI are now
+implemented. Actual owner HTTP/DBOS/SDK-mock core assertions reach three results;
+the original run preserves a final fixture expected-status failure and separate
+read-only conservation audit. The concrete protected planning-source bridge and
+formal mapping also pass actual restricted-PG proposal/owner approval/replay.
+The initial planning producer, complete prepared-input durability/disclosure,
+actual quality and opt-in application composition remain open. The owner's
+preview stays unconfigured. Legacy `preflight.py`/`factory.py` direct Agent.run
 paths are not Company-budgeted activation commands. No ready paid CLI is claimed.
 
 Peer management source audit also identifies a later boundary: current native E/EV profile requires an engineering root with model_requests0 and exactly2 children. A reasoning/planning root that consumed model requests cannot simply become that native pair. Ordinary model-plan revision is supported; same-goal mixed planning/native composition needs a separate bounded design, not quota/root replacement.

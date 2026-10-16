@@ -13,8 +13,8 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | **In progress**; governed historical-candidate consumer integrated and source-checked, but no connected owner planner | Connect owner/runtime preparation and formal proposal presentation with current goal/head checks |
-| Genuine model operation | Whole-input bounds and separate qualification service/client integrated; actual restricted-PG/SDK-mock path passes | Owner/runtime wiring, concrete live conformance packet and representative quality; models remain disabled |
+| Management-generated planning | Real restricted-PG result → formal proposal → owner approval/replay passes under the original goal/root; current source/goal/head checks are implemented | Persist and disclose the prepared input, connect the initial-plan producer/worker and owner presentation |
+| Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified | Opt-in application composition, real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
@@ -38,9 +38,9 @@ GoalStore; stale or historical sources remain blocked.
 
 Focused frontend checks, TypeScript and production build pass. The backend's13
 focused preview/configuration tests and strict/lint/format checks pass. The latest
-integrated unit run passes all4,588 tests in132.45s with no failures or skips,
-including the model/planning/qualification cases. Strict typing and Ruff
-check/format pass for all31 changed Python paths. It uses fresh private non-home
+integrated unit run passes all4,686 tests in204.26s with no failures or skips,
+including owner qualification and formal planning proposal cases. Strict typing
+and Ruff check/format pass for all37 changed Python paths. It uses fresh private non-home
 temporary paths. The earlier path-related failure/recheck remains preserved in
 ERROR-183; it is not retroactively relabeled. Source checks do not establish
 browser acceptance. The visible Nexus sign-in page remains handed to the owner for
@@ -61,9 +61,10 @@ The later-turn check at04:05:48UTC confirms the same two PID/start identities an
 HTTP200 from both services. This qualifies local turn survival; the old exit
 cause remains unknown and production durability/24-hour soak remain unproven.
 
-The management audit confirms a material product gap: PlanStore accepts a
-caller-supplied plan, and the existing company worker is an offline TestModel
-adapter. There is no connected production LLM planner yet. A server-built,
+The original management audit identified a material product gap: PlanStore accepted
+a caller-supplied plan, and the existing company worker was an offline TestModel
+adapter. The protected generated-result bridge now addresses formal proposal
+mapping, but there is no connected production planning producer yet. A server-built,
 owner-approved planning-only plan can reuse current Work/model gates, but its
 permanent root cannot be silently replaced by the current zero-model native
 engineering root. The Nexus planning/native composition needs explicit
@@ -144,7 +145,59 @@ Actual stopped Source2 audit:
 SHA6b8d9d9310518b5e625e8296d94ae76e858069c59ac40bf059dfb84df8618bb7.
 The historical evidence directory name does not define the current product scope.
 
-Current model-package evidence:
+## Current owner/model/planning integration
+
+The Model Checks page now discloses each fixed public request, provider/model,
+output cap and maximum reservation. Preparation, owner approval and dispatch are
+separate controls. Current action/hash/session checks guard each operation; native
+status and protected-result hashes drive result display. Unknown usage retains its
+hold and stops further dispatch. A historical known result remains readable after
+a later request becomes unknown. Frontend source checks, TypeScript and production
+build pass. This is not signed-in browser acceptance.
+
+The actual isolated owner HTTP → atomic dispatch → fixed DBOS worker → pinned SDK
+with mock HTTP → protected result path completes three requests. Two settle at a
+combined test-ledger0.000245USD; missing usage preserves a0.478413USD unknown hold.
+The fourth dispatch is correctly denied403. The original pytest fails because
+its fixture expected422 before its final SQL assertions. A separate restricted
+repeatable-read READ ONLY audit with explicit rollback verifies all remaining
+conservation: one1USD/quota12/used3 Work, exactly three attempts/intents/dispatches
+and successful DBOS workflow returns, no live lease, and no fourth hold. Native
+segments2/4/6 include intervening staging claims; they are not six model calls.
+Both failed runtime runs and the first failed read-only audit remain retained.
+This is not one all-green runtime test, vendor usage or company completion.
+
+The planner's separate actual restricted-PG test passes in29.63s: real Brain
+ingestion/citation and complete-input estimation → one governed SDK-mock request →
+known native receipt/reconciled hold/released lease → current protected-source
+reader → formal proposal → owner approval/replay. The original procedure/root and
+planning child remain unchanged, the root revision count is one, and replay sends
+no further request. Forged/foreign/stale origin and tampered protected bytes deny.
+Source refinements after the run have separately scoped checks; the executed
+source is retained. No real provider quality or connected owner planner is claimed.
+
+The owner's local preview remains unchanged: empty catalog, no launched model
+worker or planner producer. On the owner's first-login report, the existing-account
+form was switched to invitation setup and the known preview email filled. Password
+and invitation entry remain with the owner; no sign-in acceptance is recorded.
+
+Next implement durable prepared planning inputs and exact owner disclosure, then
+the server-owned bootstrap/producer and explicit application runtime composition.
+Use the existing permanent root and native governance. Genuine conformance/profile
+quality needs a concrete owner-approved provider packet; builder and release
+operations remain full release gates. The earlier2–4-focused-day model/planner
+budget remains an effort estimate, not a full-release promise.
+
+Current integration evidence:
+`/var/tmp/nexus-qualification-runtime-checks-20261016-2/RUNTIME_INTEGRATION_RECEIPT_1.json`,
+SHA dcf0d238916fa45b875fbc5915a8d1767702c05da5afc63343ef148483f359f5;
+planner receipt
+`/var/tmp/nexus-planning-proposal-pg-checks-20261016-1/WORKER_PLANNING_PROPOSAL_PG_RECEIPT_1.json`,
+SHA9dec493952705336c7f69df718a19b924bd43acfa971446bb1cbf20c8f3819e6.
+Combined source review reports no material finding, with its author's planning
+interiors excluded from independent semantic credit.
+
+Previous model-package evidence:
 `/var/tmp/nexus-model-package-integration-20261016-1/UNIT_RESULT.json` and
 `STATIC_RESULT.json`; actual PG receipt
 `/var/tmp/nexus-model-qualification-pg-checks-20261016-1/WORKER_MODEL_QUALIFICATION_PG_RECEIPT_1.json`,

@@ -18,6 +18,7 @@ from nexus.company.management.base import (
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.governance import CharterRevisionRef
 from nexus.company.management.plan_choice_contracts import StrategySelectionRef
+from nexus.company.management.planning_origin_contracts import PlanningOriginRef
 from nexus.execution.runtime_contracts import AttemptQuota
 
 
@@ -78,6 +79,9 @@ class PlanPayload(ManagementContract):
     strategy_selection: StrategySelectionRef | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    planning_origin: PlanningOriginRef | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @field_validator("plan", mode="before")
     @classmethod
@@ -88,6 +92,8 @@ class PlanPayload(ManagementContract):
 
     @model_validator(mode="after")
     def partition_and_graph(self) -> Self:
+        if self.planning_origin is not None and self.planning_origin.goal != self.goal:
+            raise ValueError("Planning origin must retain this exact measured goal")
         require_company(
             self.company_id,
             self.plan,
@@ -95,6 +101,7 @@ class PlanPayload(ManagementContract):
             self.mandate,
             self.procedure,
             self.strategy_selection,
+            self.planning_origin,
             *self.charters,
             *self.children,
             *self.verification,

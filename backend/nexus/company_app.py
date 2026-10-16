@@ -18,6 +18,7 @@ from nexus.api.company_metric_routes import CompanyMetricController
 from nexus.api.company_native_report_routes import CompanyNativeReportController
 from nexus.api.company_notification_routes import CompanyNotificationInboxController
 from nexus.api.company_openapi import CompanyJsonRenderPlugin, CompanyYamlRenderPlugin
+from nexus.api.company_qualification_routes import CompanyQualificationController
 from nexus.api.company_routes import CompanyController, company_health, validation_error_handler
 from nexus.api.company_session_routes import CompanySessionController
 from nexus.company.brain.api_services import BrainServices
@@ -25,6 +26,7 @@ from nexus.company.management.api_services import ManagementApiServices
 from nexus.company.notifications.api_services import NotificationApiServices
 from nexus.company.pilot_session import PilotSessionService
 from nexus.company.services import CompanyServices
+from nexus.execution.qualification_dispatch import QualificationApiServices
 
 
 def create_company_app(
@@ -34,6 +36,7 @@ def create_company_app(
     management_services: ManagementApiServices | None = None,
     notification_services: NotificationApiServices | None = None,
     pilot_sessions: PilotSessionService | None = None,
+    qualification_services: QualificationApiServices | None = None,
     cors_config: CORSConfig | None = None,
 ) -> Litestar:
     """Fail closed on signer configuration before building an isolated company profile.
@@ -97,6 +100,17 @@ def create_company_app(
             provide_pilot_sessions, use_cache=True, sync_to_thread=False
         )
         route_handlers.append(CompanySessionController)
+
+    if qualification_services is not None:
+        mounted_qualification = qualification_services
+
+        def provide_qualification_services() -> QualificationApiServices:
+            return mounted_qualification
+
+        dependencies["qualification_services"] = Provide(
+            provide_qualification_services, use_cache=True, sync_to_thread=False
+        )
+        route_handlers.append(CompanyQualificationController)
 
     return Litestar(
         route_handlers=route_handlers,

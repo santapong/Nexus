@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import Field, field_validator, model_validator
 
 from nexus.company.brain.base import SHA256, ValueContract
+from nexus.company.brain.context import ContextManifest
 from nexus.company.contracts.knowledge import ArtifactRef
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.goals import GoalRevisionRef
@@ -95,7 +96,9 @@ class PlanningContent(ValueContract):
             raise ValueError("Planning content cites evidence absent from its context")
 
 
-def planning_schema(binding: PlanningBinding | None = None) -> JsonSchemaDocument:
+def planning_schema(
+    binding: PlanningBinding | None = None, *, manifest: ContextManifest | None = None
+) -> JsonSchemaDocument:
     """Closed content schema, optionally bound to exact server refs before approval.
 
     The bounded annotation contains data only and enters the approved request hash.
@@ -104,17 +107,39 @@ def planning_schema(binding: PlanningBinding | None = None) -> JsonSchemaDocumen
     document = PlanningContent.model_json_schema()
     if binding is not None:
         binding = PlanningBinding.model_validate_json(binding.model_dump_json())
+        if manifest is None or canonical_sha256(manifest) != binding.context_manifest_sha256:
+            raise ValueError("Planning v2 requires its complete exact original context manifest")
+        manifest = ContextManifest.model_validate_json(manifest.model_dump_json())
         document["$comment"] = json.dumps(
             {
-                "version": "nexus.company.planning-binding.v1",
+                "version": "nexus.company.planning-binding.v2",
                 "binding": binding.model_dump(mode="json"),
                 "sha256": canonical_sha256(binding),
+                "context_manifest": manifest.model_dump(mode="json"),
             },
             sort_keys=True,
             separators=(",", ":"),
             allow_nan=False,
         )
     return JsonSchemaDocument(schema_json=json.dumps(document))
+
+
+def planning_annotation(schema: JsonSchemaDocument) -> tuple[PlanningBinding, ContextManifest]:
+    """V1 stays historical; only complete v2 inputs can support formal provenance."""
+    annotation = json.loads(json.loads(schema.document).get("$comment", "{}"))
+    if (
+        not isinstance(annotation, dict)
+        or set(annotation) != {"version", "binding", "sha256", "context_manifest"}
+        or annotation["version"] != "nexus.company.planning-binding.v2"
+    ):
+        raise ValueError("Planning origin requires a complete v2 server annotation")
+    binding = PlanningBinding.model_validate_json(json.dumps(annotation["binding"]))
+    manifest = ContextManifest.model_validate_json(json.dumps(annotation["context_manifest"]))
+    if annotation["sha256"] != canonical_sha256(binding) or schema != planning_schema(
+        binding, manifest=manifest
+    ):
+        raise ValueError("Planning annotation/schema/hash differs from its exact inputs")
+    return binding, manifest
 
 
 class PlanningBinding(ValueContract):

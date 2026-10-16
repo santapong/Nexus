@@ -56,7 +56,7 @@ export function CompanyLayout() {
               <span className="flex items-center gap-2"><ShieldCheck size={15} className="text-indigo-400" /> Current owner access</span>
               <span className="font-mono break-all">Company {current.company_id}</span></div>
             <nav aria-label="Company views" className="flex flex-wrap gap-1 border-b border-gray-800">
-              {[['Today', '/company/today'], ['Knowledge', '/company/knowledge'], ['Company', '/company/overview'], ['Approvals', '/company/approvals']].map(([label, to]) =>
+              {[['Today', '/company/today'], ['Knowledge', '/company/knowledge'], ['Company', '/company/overview'], ['Approvals', '/company/approvals'], ['Model checks', '/company/model-checks']].map(([label, to]) =>
                 <NavLink key={to} to={to} className={({ isActive }) => `px-4 py-3 text-sm border-b-2 ${isActive
                   ? 'border-indigo-500 text-white' : 'border-transparent text-gray-400 hover:text-gray-100'}`}>{label}</NavLink>)}
             </nav>

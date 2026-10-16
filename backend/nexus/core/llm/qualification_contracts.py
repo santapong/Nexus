@@ -30,6 +30,9 @@ from nexus.core.llm.company_registry import ModelRegistration
 from nexus.harness.journal_contracts import LedgerScope
 
 WORKFLOW = "company.model-qualification.v1"
+VERSION = "v1"
+QUEUE = "nexus.model-qualification"
+APPLICATION = "nexus-model-qualification"
 PROFILE = "qualification-only.v1"
 TOOL = "model.qualify.v1"
 SDK_MODULES = (

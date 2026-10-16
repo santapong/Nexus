@@ -40,9 +40,11 @@ from nexus.core.llm.qualification_contracts import (
     recipe_hash,
     target_set_hash,
 )
+from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.runtime_contracts import AttemptQuota, ExecutionRegistration, ExecutionSnapshot
 from nexus.execution.runtime_registration import register_locked
 from nexus.execution.runtime_support import db_now, snapshot
+from nexus.harness.canonical import action_hash
 from nexus.harness.journal_contracts import ActionRecord, LedgerScope
 from nexus.harness.journal_models import CompanyControl
 from nexus.harness.journal_submission import submit_pending_locked
@@ -133,6 +135,66 @@ class QualificationPreparationService:
     def _target_set(self, recipe: QualificationRecipe) -> str:
         """One canonical complete target/config set survives all cases under this goal."""
         return target_set_hash(recipe.registry_revision, recipe.qualification_target_sha256s)
+
+    def configured_recipes(self) -> tuple[QualificationRecipe, ...]:
+        """Return frozen server descriptions; no current eligibility or call allowance."""
+        return self._recipes
+
+    def recipe_for_action(
+        self, command: SegmentCommand, record: ActionRecord
+    ) -> QualificationRecipe:
+        """Select exact immutable history without time/IO/writes or reconstructed authority.
+
+        Caller must bind command workspace/segment to actual native work/dispatch;
+        this pure selector has neither of those rows and grants no permission.
+        """
+        command = SegmentCommand.model_validate_json(command.model_dump_json())
+        record = ActionRecord.model_validate_json(record.model_dump_json(by_alias=True))
+        proposal = record.proposal
+        selected = tuple(
+            value
+            for value in self._recipes
+            if recipe_hash(value) == proposal.parameters.get("recipe_sha256")
+        )
+        if len(selected) != 1:
+            raise ManagementDeniedError("Qualification action has no exact configured recipe")
+        recipe = selected[0]
+        task = uuid5(recipe.goal.goal_id, "nexus:model-qualification:task:v1")
+        trace = uuid5(recipe.goal.goal_id, "nexus:model-qualification:trace:v1")
+        digest = recipe_hash(recipe)
+        ledger = LedgerScope(
+            company_id=recipe.goal.company_id,
+            principal_id=proposal.actor_id,
+            task_id=task,
+            trace_id=trace,
+        )
+        command.require_scope(ledger)
+        call = qualification_request(
+            recipe,
+            ledger,
+            action_id=uuid5(task, f"qualification-action:v1:{digest}"),
+            request_id=uuid5(task, f"qualification-request:v1:{digest}"),
+        )
+        assert recipe.target.price is not None
+        if (
+            record.company_id != recipe.goal.company_id
+            or proposal.company_id != recipe.goal.company_id
+            or (proposal.task_id, proposal.trace_id, proposal.action_id)
+            != (task, trace, call.action_id)
+            or command.action_id != call.action_id
+            or command.run_id != uuid5(recipe.goal.goal_id, "nexus:model-qualification:run:v1")
+            or (proposal.tool, proposal.tool_version, proposal.resource)
+            != (TOOL, "v1", f"model-qualification:{recipe.target.registry_id}")
+            or proposal.revision != 1
+            or proposal.preconditions != ()
+            or proposal.price_version != recipe.target.price.version
+            or proposal.parameters != qualification_parameters(recipe, call)
+            or record.proposal_hash != action_hash(proposal)
+        ):
+            raise ManagementDeniedError(
+                "Qualification action differs from its immutable recipe/run"
+            )
+        return recipe
 
     async def prepare_qualification(
         self, scope: CompanyControlScope, identity: VerifiedIdentity, recipe_id: str

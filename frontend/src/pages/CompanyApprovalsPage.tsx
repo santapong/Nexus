@@ -32,8 +32,9 @@ export function CompanyApprovalsPage() {
         <p className="text-sm text-gray-400">{action.resource_symbol} · Estimated {money(action.estimated_cost_usd)}</p>
         <p className="text-xs text-gray-500">{action.authority_observation.replace(/_/g, ' ')}{action.owner_decision && ` · ${action.owner_decision.decision} · expires ${instant(action.owner_decision.expires_at)}`}</p>
         <p className="text-xs text-gray-500 font-mono break-all">Exact proposal {action.proposal_sha256}</p>
-        <Link className="text-xs text-indigo-400" to={`/company/work/${action.task_id}`}>Inspect work and costs</Link>
-        <Link className="block text-sm text-indigo-400" to={`/company/actions/${action.action_id}`}>Review exact action</Link>
+        {action.tool !== 'model.qualify.v1' && <Link className="text-xs text-indigo-400" to={`/company/work/${action.task_id}`}>Inspect work and costs</Link>}
+        <Link className="block text-sm text-indigo-400" to={action.tool === 'model.qualify.v1'
+          ? `/company/model-checks/actions/${action.action_id}` : `/company/actions/${action.action_id}`}>Review exact action</Link>
       </div>)}
     </section>
     <CompanyPageNavigation after={after} onChange={setAfter} continuations={[
