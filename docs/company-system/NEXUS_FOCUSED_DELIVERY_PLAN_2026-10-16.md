@@ -40,10 +40,11 @@ actual API/database. Goal creation must respect the current owner mandate and
 retain an unsaved draft if a mandate restriction denies it. Saving a goal must
 not imply a plan or worker has executed.
 
-Planning target: 1–2 focused working days for this reviewable local journey,
-including current source integration and browser checks. This is a target with
-unresolved setup dependencies, not a verified completion time or release promise.
-Show a concrete local preview as soon as this slice works.
+The local preview and API/database journey are now available. The original
+1–2-day target is retained as history, rather than restarted at every update.
+Remaining acceptance is the signed-in browser journey after the owner returns
+control of the sign-in page. Engineering work on independent prerequisites
+continues during that handoff.
 
 Current execution checkpoint: Knowledge search/citation/goal UI and the isolated
 Nexus-document preview are implemented. A separate real HTTP/PostgreSQL journey
@@ -75,19 +76,21 @@ Concrete model/planner sequence after this audit:
 4. Add explicit Nexus mixed planning/native admission with the same permanent
    goal root and counters; qualify the actual native builder before activation.
 
-The endpoint resolver and Google single-request guard now have focused source
-checks and independent review. The [provider readiness packet](MODEL_ACTIVATION_READINESS_2026-10-16.md)
-records current official candidates, conditional small-pilot arithmetic and the
-remaining code/quality gates. It is not ready spend or deployment authorization.
+The endpoint resolver and Google single-request guard have source checks and
+independent review. Complete-input financial bounds, a governed planning-result
+consumer and a separate qualification preparation/client are being integrated.
+Their focused checks do not establish actual PostgreSQL delivery, live provider
+quality or a connected owner planner. The [provider readiness packet](MODEL_ACTIVATION_READINESS_2026-10-16.md)
+records the exact activation prerequisites and conditional cost arithmetic.
 
 ## Active work and completion criteria
 
 | Lane | Owner | Next concrete result |
 | --- | --- | --- |
-| Product integration and current plan | Root | One current owner progress view, real local pilot setup, integrated browser verification and focused release backlog |
-| Knowledge and goals | Product worker | Typed Brain search/evidence UI, citation-backed goal creation, existing authenticated navigation; type/build and real browser proof |
-| Builder blocker | Harness worker | Reproducible failing predicate or minimal safe original-failure diagnostics with finite tests; then one bounded qualification run when ready |
-| Local preview setup | Setup worker | Isolated authenticated preview with real Nexus documents and a fresh legitimate owner mandate; operations packet follows at its milestone |
+| Product coordination and integration | Root | Keep this sequence current; integrate the model package and expose its next usable owner operation |
+| Model request implementation | Implementation worker | Hold the bounded qualification/client contracts and preserve ordinary model eligibility |
+| Actual database integration | Integration worker | Real restricted PostgreSQL approval/hold/lease/receipt flow using actual SDKs over mock HTTP |
+| Combined boundary review | Review worker | One review of current auth, spend, goal binding and resource ownership; concrete defects only |
 
 Keep Root plus at most three workers. Work is disjoint; one worker owns each
 implementation package. Root integrates at concrete milestones.
@@ -96,6 +99,12 @@ implementation package. Root integrates at concrete milestones.
 
 - Track owner-visible capabilities and completed journeys. Source copies, packet
   preparation and test counts are supporting evidence, not delivery milestones.
+- Freeze new framework and feature expansion until the first complete Nexus
+  operating cycle works. Root owns the critical path; workers implement disjoint
+  deliverables rather than independently replanning the project.
+- Keep at most three worker lanes active. The builder diagnosis has produced its
+  bounded result and is parked while model/planner integration proceeds; do not
+  reserve an idle lane or repeat native setup to create apparent progress.
 - Keep one prioritized builder blocker. Timebox diagnosis to90 focused minutes;
   produce a reproducer or a small diagnostics fix. Report the evidence and next
   decision when the timebox ends. Do not blindly launch another native wave.
@@ -118,6 +127,26 @@ implementation package. Root integrates at concrete milestones.
 - Before ending a substantial work session, record the changed product behavior,
   actual validation, exact remaining blocker and next deliverable. Do not repeat
   unchanged status as progress or move a target date without explaining why.
+
+## Remaining effort forecast
+
+These are engineering effort budgets from this checkpoint, not additive calendar
+promises. Work can overlap; owner handoffs, provider approval and Pi setup are
+dependencies with unknown waiting time. Re-estimate a failed gate from its actual
+failure rather than repeatedly shifting an unchanged target.
+
+| Next outcome | Remaining effort budget | Completion evidence |
+| --- | --- | --- |
+| Owner knowledge/goal acceptance | Up to half a focused day after sign-in handoff | Rendered search, citation, draft refresh, save and persisted goal |
+| Governed model qualification and generated planning candidate | 2–4 focused days, conditional on actual SDK/provider qualification | Real ledger integration, approved bounded provider probes, protected result and visible reviewable candidate |
+| Same-goal Nexus plan/action/verification/report cycle | Estimate after the first representative builder qualification | Actual Nexus change and independent verification under unchanged lifetime caps |
+| Private supervised release | Estimate after that complete cycle | Owner UAT, notifications, ARM64/private access, independent restore/rollback and 24-hour soak |
+
+The next measurable engineering checkpoint is the integrated qualification
+approval→intent→SDK→protected evidence→receipt path, with actual database delivery
+and mock HTTP. It does not require a paid call or the owner's browser account.
+Publish its result or exact blocker in the next progress update. A full-release
+date is still not defensible while native qualification is unresolved.
 
 ## Release finish
 

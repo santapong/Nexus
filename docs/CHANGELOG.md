@@ -1,6 +1,28 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Track Nexus delivery outcomes and reduce parallel work
+
+### Changed
+- Keep Nexus as the sole release target and replace stale worker assignments with
+  three bounded lanes: model implementation, actual database integration and one
+  combined boundary review. Root coordinates the critical path.
+- Record delivered preview/API behavior separately from pending browser acceptance,
+  live planning, builder activation and operational release gates. Preserve the
+  original preview target rather than restarting it at each progress update.
+- Add remaining effort budgets and the next concrete database/SDK checkpoint;
+  retain uncertainty around builder qualification and the full release date.
+- Replace the conditional2048-token/0.05USD activation proposal with explicit
+  conservative full-input/output qualification holds. No paid call is approved.
+
+### Validation
+- Documentation reconciled against current source, component receipts, fresh
+  Git remote refs and the real local preview/API results. Model package integration
+  is still in progress; this entry does not claim its completion or activation.
+
+**Authored by:** Codex
+**PR:** not published
+
 ## [2026-10-16] — Verify goal persistence and bound provider requests
 
 ### Added

@@ -21,22 +21,58 @@ Observed runtime: `/home/santapong/.codex/nexus-local-runtime-20261014/bin/pytho
 
 **Concrete Google blocker:** installed2.30.1 `_extra_utils.should_enable_automatic_continuation` defaults true; async Models loops HTTP hops on continuation tokens. PydanticAI2.54 Google config construction and Company SDK path do not explicitly disable it. Retry attempts1 is not continuation control. The proposed512 cap is below documented long-decode use, but a one-intent/one-POST invariant must not depend on that assumption. Disable via a supported seam and test a mocked continuation response before live Google use; no third-party patch or API switch. [Official continuation default and opt-out](https://ai.google.dev/gemini-api/docs/generate-content/long-decode). The supported repair uses the existing bounded response hook: WireObserver captures valid first-hop usage, then continuation markers are rejected before SDK adoption. The actual SDK/mock regression changes from two POSTs to one, with failed status and no adopted output. All71 focused conformance checks and independent source review pass. This does not disable the SDK default globally or prove live provider qualification. See ADR-131.
 
-## Proposed small qualification envelope — not spend authorization
+## Proposed qualification envelope — not spend authorization
 
-One company, one Bangkok-day ledger, one permanent owner-reviewed parent allocation `0.050000USD`; at most3 separately approved calls per provider, concurrency1. Each call: all-framing input≤2048, total output≤512, endpoint timeout30s, public fixtures, tools empty; each client is one-use. Fully framed input must be proven by the missing trusted pure estimator, not caller text length. Output-cap truncation is failure, not quality success.
+The old2048-input/0.05USD proposal was conditional on an estimator that did not
+exist. It is superseded for activation planning. The implemented candidate instead
+reserves the full reviewed input ceiling. That is a conservative financial bound,
+not proof that a prompt fits or a vendor will accept it. No guessed tokenizer or
+unproven framing overhead supplies that guarantee.
 
-At the fetched rates, six-decimal ceiling quotes are OpenAI`0.003840` and Google`0.001895` per call; three of each reserve at most`0.017205USD`. This is token arithmetic conditional on complete supported usage/cap semantics, not an invoice or permission. All existing held+spent money counts against CompanyPolicy≤5USD on `Asia/Bangkok` date under CompanyControl; parent/child lifetime requests and USD cannot reset on retry, revision, refresh or midnight. Both providers must share this company budget; separate companies are not a way to multiply the cap. Current budget/unknown holds were not queried. Stop on first denied/failed/unknown outcome; do not retry or switch providers after an ambiguous request.
+| Provider | Financial input ceiling | Unqualified financial output ceiling | First output-cap probe hold | Later512-output quote, only after cap qualification |
+| --- | --- | --- | --- | --- |
+| OpenAI | 400000 | 128000 | 0.876000USD | 0.302304USD |
+| Google | 1048576 | 65536 | 0.478413USD | 0.315853USD |
+
+The actual requested output remains512. Before output-cap behavior is qualified,
+the financial hold covers the documented full output ceiling too. Known actual
+usage settles the hold; missing/ambiguous usage retains it. Arithmetic uses the
+exact dated candidate prices above and six-decimal ceiling rounding.
+
+The separate operational qualification goal uses one permanent owner-reviewed
+Work allocation, proposed1.000000USD, with at most12 lifetime model attempts and
+zero tools/rework/plan revisions. Both providers share that same Work and company
+budget; its fixed target set is pinned. This allowance does not promise12 calls
+or a complete six-call pilot: current held+spent money can deny the next request.
+Changing a recipe, goal revision, day or request ID cannot reset the root.
+
+Concurrency is1, public fixtures only, no tools, endpoint timeout30s, original
+finite approval/recipe/price windows and one-use clients. Company held+spent money
+counts against≤5USD on the `Asia/Bangkok` date under CompanyControl. Current live
+budget/unknown holds were not queried. Stop on the first denied/failed/unknown
+outcome; do not retry or switch providers after an ambiguous request. Neither
+this packet nor the native preparation service approves or sends a paid call.
 
 ## Fresh no-model company: supported ordering and missing pieces
 
 1. Keep current preview unactivated: `pilot_catalog(PREVIEW_PROFILE)` has zero models/profiles. Freeze a proposed complete candidate registry/PriceCards outside active work. Obtain genuine dated health, exact SDK/API conformance and profile evaluation receipts first; do not turn docs, TestModel score1 or an observation DTO into live eligibility.
-2. **Bootstrap gap:** normal adapter/routing require enabled/current healthy/evaluated models before a governed call. Empty/unknown rows cannot bootstrap themselves. Reuse genuine prior qualification receipts if available and exact; otherwise a reviewed budgeted bootstrap qualification producer is still missing. Never bypass the gate by writing healthy/evaluation values. Resolve this before building the first active model registry.
+2. **Bootstrap integration:** normal adapter/routing require enabled/current healthy/evaluated models before a governed call. Empty/unknown rows cannot bootstrap themselves. A separate public-only qualification service/client is now under integration, using actual owner approval, native holds/attempts/leases and its own protected evidence. Its result never claims profile quality or enables a model. Actual database delivery and approved live conformance are still required. Never write invented healthy/evaluation values.
 3. Freeze initial exact enabled registry, dated shared pricebook, admitted profiles and source/role catalog before immutable planning Work. Observations can only refresh health/evaluations for original row SHA and originally declared profiles; cannot add a model/profile, enable it, or change endpoint/prices. The preview empty registry cannot be activated with an observation alone.
 4. After prerequisites, use normal company001–016 and restricted application connections, then create public company/membership/goal/source/charter state and an owner-reviewed **planning-only initial PlanPayload** with permanently bounded model children using `ManagementPlanStore.propose/approve_and_register`. This admits model spend before generating a fuller revision2. A CompanyControlScope alone authorizes no request. Preserve the same root, quota, request/action IDs and budget; each call needs its actual signed actor/current execute lease and exact registered owner approval.
 5. Existing execution seam: `ExecutionStore.claim` + `CompanyJournal.submit/approve_registered/authorize_registered`; bind `model_action_parameters(call, recipe)` and conservative quote to `model.request.v1`. Compose `PersistentModelCallAuthorizer(...management,resources,input_estimator,recipe,evidence_store,observations)` and `GovernedModelClient(...same registry/observations,execution,lease,identity).request_once`. Pre-intent/final/pre-SDK current checks remain mandatory. Protected ModelEvidence/native receipt/cost recording and bounded release follow; unknown or unconfirmed recording preserves the hold and consumed request.
 6. Review actual request count, resolved model identity, raw usage, protected receipt and ledger before the next call. WireObserver currently requires exact returned OpenAI `model`/Google `modelVersion`, explicit reasoning/thought usage, totals and supported units. Actual Google alias spelling/zero-thought fields are unverified; mismatch stays denied/unknown, not silently normalized. Smoke/JSON checks prove compatibility only; representative Nexus reasoning/routine/verification quality remains separately measured and owner-reviewed.
 
-The initial audit found no production concrete EndpointResolver, InputEstimator, non-test GovernedModelClient caller, live qualification producer or owner goal→planning registration/action bridge. The new endpoint resolver now passes52 focused fake-key checks, strict/lint checks and independent source review; it is not wired into an active catalog. The estimator, genuine qualification bootstrap, management consumer and owner goal→planning bridge remain open. Existing `core/llm/preflight.py` and generic `factory.py` use Agent.run/direct provider paths: they are **not** Company budgeted activation commands. There is no ready paid-activation CLI to run.
+The initial audit found no production concrete EndpointResolver, InputEstimator,
+non-test GovernedModelClient caller, live qualification producer or owner
+goal→planning bridge. The endpoint resolver is source-checked. The new
+FullContextInputEstimator pins actual reviewed source/version/registry/model/recipe
+identity; its whole-input mode keeps normal allowed-data and eligibility rules.
+The new governed planning consumer returns a bounded historical candidate and
+preserves its original goal/plan-head binding. These components and the separate
+qualification path are under integration, rather than completed activation.
+The owner goal→planning bridge, formal candidate mapping, actual quality and
+runtime wiring remain open. Legacy `preflight.py`/`factory.py` direct Agent.run
+paths are not Company-budgeted activation commands. No ready paid CLI is claimed.
 
 Peer management source audit also identifies a later boundary: current native E/EV profile requires an engineering root with model_requests0 and exactly2 children. A reasoning/planning root that consumed model requests cannot simply become that native pair. Ordinary model-plan revision is supported; same-goal mixed planning/native composition needs a separate bounded design, not quota/root replacement.
 
@@ -48,6 +84,14 @@ Future verification only, **not run here**, from `backend`:
 env -u PYTHONPATH -u OPENAI_API_KEY -u GOOGLE_API_KEY -u GEMINI_API_KEY PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/santapong/.codex/nexus-local-runtime-20261014/bin/python -m pytest -p pytest_asyncio.plugin -p anyio.pytest_plugin -p no:cacheprovider -q nexus/tests/unit/test_company_model_registry.py nexus/tests/unit/test_company_model_pricing.py nexus/tests/unit/test_company_model_authorizer.py nexus/tests/unit/test_company_model_client.py nexus/tests/unit/test_company_model_observations.py nexus/tests/unit/test_company_model_eligibility_gateway.py
 ```
 
-Then Root reviews concrete resolver/estimator/bootstrap/proposer composition plus pinned-SDK mock one-POST/cap/usage/expiry negatives. Existing restricted-PostgreSQL gateway tests are a later separate release recipe, never pointed at a current company by this packet. Only after that and an explicit frozen paid packet may the six-call ceiling be considered. Required actual receipt: exact source/SDK/model/API/price/inputs, one native attempt per HTTP call, current original role/source windows, output/cost normalization, observed latency, recording/release status and independent quality findings. Provider account access, capacity, invoices and quality remain unknown. No new harness is proposed.
+Then Root reviews the combined resolver/estimator/qualification/planning boundary
+and pinned-SDK one-POST/cap/usage/expiry negatives. The fresh restricted-PG
+qualification integration uses its own exact test database, actual native stores
+and SDKs over mock HTTP; it never targets the owner's preview. Only after this
+passes can a concrete frozen paid packet be considered. Required actual receipt:
+exact source/SDK/model/API/price/inputs, one native attempt per HTTP call, original
+role/source windows, output/cost normalization, latency, recording/release status
+and independent quality findings. Provider accounts, invoices and quality remain
+unknown. No new agent framework is proposed.
 
 Detailed original audit/source pins are retained locally at `/var/tmp/nexus-provider-readiness-20261016-1/READ_PINS.json`; original gateway/eligibility/pricing plans remain context rather than live qualification. Packet is ready for source planning and owner review, not activation.

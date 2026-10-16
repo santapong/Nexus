@@ -8,8 +8,12 @@ preview is running at loopback5188/9188 with three committed Nexus documents.
 The separate real API/database knowledge→citation→goal→fresh-company-view
 regression passes with a synthetic test account; owner password entry and
 signed-in browser acceptance remain pending. The management audit identifies
-missing live planner integration and provider setup; formal plan stores/offline
-workers do not prove autonomous management. No preview goals,
+missing live planner integration and provider setup; the complete-input estimator,
+governed planning consumer and separate qualification path are now being
+integrated. Formal plan stores/offline workers do not prove autonomous management.
+The restored preview's identical processes survive a later turn with HTTP200.
+The current plan records remaining effort budgets, three bounded worker lanes
+and one combined milestone review. No preview goals,
 work or completion were seeded. Native activation
 remains blocked: Source2 passes382 source checks/setup audit, then its first
 actual case fails FaultSnapshot validation after one attempt; unknown hold and
