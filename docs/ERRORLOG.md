@@ -74,6 +74,81 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-186 — Google SDK continuation sends two POSTs under one model claim
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed
+**Found by:** pinned SDK/provider-readiness audit and actual SDK over mock HTTP
+**Affected files:** backend/nexus/core/llm/company_adapter_sdk.py
+
+### What happened
+google-genai2.30.1 defaults to automatic continuation. Retry attempts1 still lets
+a CONTINUATION response cause a second POST. The regression reproduces two HTTP
+requests under one mocked authorizer claim; no live provider request or native
+journal issuance was used by that unit regression.
+
+### Fix applied
+Use the supported response hook: bounded WireObserver first, then reject
+continuation finish/token markers before SDK adoption. Keep valid first-hop usage
+for known billing; absent/malformed/overflow usage stays unknown. All such results
+fail without output or a second request. Do not change SDK/API/retry/output limits
+or patch dependencies. See ADR-131.
+
+### Prevention
+New actual-SDK/mock-HTTP regressions check continuation variants, missing usage,
+invalid responses, normal provider success and disabled retry. Focused conformance
+passes71 cases. Genuine provider/model qualification remains separate and open.
+
+---
+
+## ERROR-185 — Saved goal hides its desired date when no exact time is set
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed
+**Found by:** current owner-journey integration review
+**Affected files:** frontend/src/pages/CompanyOverviewPage.tsx, hooks/companyGoalDraft.ts
+
+### What happened
+The creation form preserves a desired day without inventing an exact deadline,
+but the company view displayed only actionable_at. A correctly saved desired
+date appeared merely as Not scheduled.
+
+### Fix applied
+Show the original desired value, precision and basis separately from any exact
+deadline. Unknown dates stay explicit; no midnight or execution time is inferred.
+The focused day/month/unknown regression fails before its helper exists and
+passes afterward. TypeScript/build checks pass; browser acceptance stays open.
+
+---
+
+## ERROR-184 — Local preview servers are absent after the browser handoff
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** mitigated
+**Found by:** next-turn live process and HTTP recheck
+**Affected files:** local preview launch procedure; no application data change
+
+### What happened
+The old backend tool handle was missing, both fixed listeners were absent and
+both HTTP checks refused connection. The PostgreSQL socket still accepted
+connections. The exact prior exit cause is unknown.
+
+### Fix applied
+Restore the same state2 without initialization or account changes, using detached
+local processes with private logs and saved PID/start identities. Both are adopted
+by PID1 in distinct sessions; backend/frontend/proxy health and unauthenticated
+denial pass after launcher exit. Later-turn survival is still unverified.
+
+### Prevention
+Check the saved actual process identity and live HTTP boundary before presenting
+the preview as available. A saved receipt or old tool handle is not liveness or
+deployment durability. Preserve the old state/logs and diagnose rather than reset.
+
+---
+
 ## ERROR-183 — Integration test directory violates native builder path policy
 
 **Date:** 2026-10-16
@@ -5141,7 +5216,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-184*
+*Next error ID: ERROR-187*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

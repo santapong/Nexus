@@ -13,6 +13,8 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
+| Management-generated planning | **Missing company-runtime integration**; formal plan validation/approval stores exist | Registered, bounded planning work through the governed model client; model output cannot supply authority or bindings |
+| Genuine model operation | Explicit endpoint resolver and Google continuation guard are implemented/source-checked; estimator, genuine qualification and live consumer remain open | Finish [provider readiness](MODEL_ACTIVATION_READINESS_2026-10-16.md), then qualify actual requests/quality within the daily limit |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
@@ -35,14 +37,36 @@ current citations with unknown freshness are allowed with a warning, matching
 GoalStore; stale or historical sources remain blocked.
 
 Focused frontend checks, TypeScript and production build pass. The backend's13
-focused preview/configuration tests and strict/lint/format checks pass. The full
-unit run reports4,309 passed,1 skipped and5 temporary-path failures: the check
-used an owner-home directory that the builder correctly rejects. Those exact5
-cases pass with a fresh private temporary directory outside the owner home;
-production guards are unchanged. This is a full run plus a focused corrected-path
-recheck, not a single all-green full run. These source checks do not establish
-browser acceptance. The visible Nexus sign-in page is handed to the owner for
+focused preview/configuration tests and strict/lint/format checks pass. The latest
+integrated unit run passes all4,382 tests in86.89s with no failures or skips,
+including the new endpoint/continuation cases. It uses fresh private non-home
+temporary paths. The earlier path-related failure/recheck remains preserved in
+ERROR-183; it is not retroactively relabeled. Source checks do not establish
+browser acceptance. The visible Nexus sign-in page remains handed to the owner for
 password entry, following the owner's browser-control preference.
+
+A separate isolated API/database regression now passes the real chain: HTTP
+signup/login → committed Nexus document search → materialized citation → the
+frontend-shaped goal request → persisted goal in a fresh client's company view.
+The baseline stays unknown and the desired day retains a null exact time. It uses
+a synthetic test account in its own database; the owner's preview/invitation is
+untouched. This proves the API/database journey, not the browser or owner UAT.
+The goal overview also now displays desired date/precision/basis separately from
+an exact deadline.
+
+A fresh live check found both old preview processes absent after the handoff.
+The same state was restored with detached local processes and private logs;
+backend, frontend and proxy checks pass, including unauthenticated denial.
+Survival across a later turn still needs checking; no deployment durability is
+claimed from the restoration.
+
+The management audit confirms a material product gap: PlanStore accepts a
+caller-supplied plan, and the existing company worker is an offline TestModel
+adapter. There is no connected production LLM planner yet. A server-built,
+owner-approved planning-only plan can reuse current Work/model gates, but its
+permanent root cannot be silently replaced by the current zero-model native
+engineering root. The Nexus planning/native composition needs explicit
+implementation while preserving the goal's original allowance and counters.
 
 Current production backend repair passes4,307 unit tests at7acbb8b. The newer
 private qualification source separately passes382 tests and strict/lint/format45.

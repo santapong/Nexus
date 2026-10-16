@@ -5,7 +5,11 @@ and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexu
 the sole delivery target; StockFlow is an optional later test. Knowledge/goal UI
 and an isolated real local preview are now implemented and source-checked; the
 preview is running at loopback5188/9188 with three committed Nexus documents.
-Owner password entry and signed-in browser acceptance remain pending. No goals,
+The separate real API/database knowledge→citation→goal→fresh-company-view
+regression passes with a synthetic test account; owner password entry and
+signed-in browser acceptance remain pending. The management audit identifies
+missing live planner integration and provider setup; formal plan stores/offline
+workers do not prove autonomous management. No preview goals,
 work or completion were seeded. Native activation
 remains blocked: Source2 passes382 source checks/setup audit, then its first
 actual case fails FaultSnapshot validation after one attempt; unknown hold and

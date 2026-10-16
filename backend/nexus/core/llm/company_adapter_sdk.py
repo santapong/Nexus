@@ -38,6 +38,27 @@ from nexus.core.llm.company_registry import ModelRegistration
 from nexus.core.llm.company_wire_usage import WireObserver
 
 
+def _require_single_google_response(response: httpx2.Response) -> None:
+    """Fail before the pinned SDK can follow its automatic continuation loop."""
+    if not 200 <= response.status_code < 300:
+        return
+    body = response.json()  # WireObserver already read and bounded the complete body.
+    if not isinstance(body, dict) or not isinstance(body.get("candidates", []), list):
+        raise ValueError("Google response shape is unavailable")
+    for candidate in body.get("candidates", []):
+        if (
+            not isinstance(candidate, dict)
+            or any(
+                candidate.get(key) == "CONTINUATION" for key in ("finishReason", "finish_reason")
+            )
+            or any(
+                candidate.get(key) not in (None, "")
+                for key in ("continuationToken", "continuation_token")
+            )
+        ):
+            raise ValueError("Google continuation requires a separate governed request")
+
+
 def parameters(request: CompanyModelRequest) -> ModelRequestParameters:
     """Thaw validated canonical JSON only at the third-party SDK schema boundary."""
     # The SDK accepts arbitrary JSON Schema; the canonical document was validated.
@@ -69,10 +90,16 @@ async def sdk_model(
     row: ModelRegistration, endpoint: ServerEndpoint, observer: WireObserver
 ) -> AsyncIterator[Model]:
     """Yield one explicit API model with provider retries disabled and no environment fallback."""
+
+    async def observe(response: httpx2.Response) -> None:
+        await observer.observe(response)
+        if row.provider == "google":
+            _require_single_google_response(response)
+
     async with httpx2.AsyncClient(
         transport=endpoint.transport,
         timeout=endpoint.timeout_seconds,
-        event_hooks={"response": [observer.observe]},
+        event_hooks={"response": [observe]},
     ) as http:
         profile: ModelProfile = {
             "supports_tools": "tools" in row.capabilities,

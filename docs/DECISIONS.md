@@ -3759,3 +3759,33 @@ Never strip historical mixed output into accepted wire or relax physical predica
 Test source boundaries first, then use fresh exact pins and an independent namespace
 for all five native fault cases. No schema, dependency or runtime activation follows
 from this decision. The old stopped wave and every consumed artifact remain intact.
+
+## ADR-131 — Reject Google continuation at the bounded response hook
+
+**Date:** 2026-10-16
+**Status:** implemented; offline SDK checks passed, live qualification remains open
+
+The pinned google-genai2.30.1 client automatically follows continuation responses.
+Retry attempts1 does not disable that loop. A real SDK test with mock HTTP shows
+two POSTs under one mocked authorizer claim. PydanticAI2.54 does not expose the client's
+automatic-continuation option through its supported Google model settings.
+
+Keep the existing SDK/API and public HTTP response hook. First run the bounded
+WireObserver so supported first-hop usage is retained. Then reject continuation
+finish/token markers before the SDK can parse and follow them. Malformed,
+oversized or unsupported usage fails earlier and stays unknown. A supported
+first-hop charge can stay known, but continuation never becomes successful text,
+a tool proposal or an implicit second billable call.
+
+Do not patch dependency internals, use wire extra_body as a client-side flag,
+upgrade the SDK by assumption or change the provider API. Ordinary Google/OpenAI
+responses, output caps, retry settings, authority and durable intent/hold handling
+stay unchanged. Mock-HTTP conformance and current-source integration are required;
+neither establishes live provider quality or activates the empty preview catalog.
+
+The separate concrete endpoint resolver accepts only explicitly configured named
+bindings for the currently supported official OpenAI Responses/Google GenerateContent
+bases. It resolves an injected Settings credential at runtime without caching,
+discovery or fallback. Credentials remain absent from model request/result DTOs.
+Resolver configuration is not model eligibility, invocation authority or setup
+approval. No migration or dependency change follows from this decision.

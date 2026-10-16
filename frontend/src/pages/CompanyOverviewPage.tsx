@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useCompanyView } from '@/hooks/useCompany'
+import { desiredGoalDate } from '@/hooks/companyGoalDraft'
 import type { CompanyIdentity } from '@/types/company'
 import { CompanyBudgetPanel } from '@/components/company/CompanyBudgetPanel'
 import { CompanyQueryState, instant, StateLabel } from '@/components/company/CompanyStatus'
@@ -31,7 +32,9 @@ export function CompanyOverviewPage() {
             <p>{metric.metric_id} · Target {metric.comparator} {metric.target} {metric.unit}</p>
             <p className="text-xs mt-1">{metric.baseline?.kind === 'known' ? `Recorded baseline ${metric.baseline.value}`
               : metric.baseline?.kind === 'unknown' ? metric.baseline.reason : 'Baseline unavailable for current access'}</p></div>)}
-          <p className="text-xs text-gray-500">{instant(goal.due.actionable_at)}</p>
+          <p className="text-xs text-gray-400">{desiredGoalDate(goal.due)}</p>
+          <p className="text-xs text-gray-500">Exact deadline: {instant(goal.due.actionable_at)}
+            {goal.due.actionable_basis === 'operator_explicit' && ' · Set explicitly'}</p>
           <GoalMetricHistory company={identity.company_id} goal={goal.reference.goal_id} />
         </div>)}
         {data.goals.length === 0 && <p className="text-sm text-gray-400">No goals in this page.</p>}

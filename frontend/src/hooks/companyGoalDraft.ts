@@ -1,4 +1,4 @@
-import type { BrainRetrievalResult, BrainSearchRead, CompanyIdentity, CompanyView, GoalPublish, MaterializedEvidence } from '@/types/company'
+import type { BrainRetrievalResult, BrainSearchRead, CompanyIdentity, CompanyView, DueIntent, GoalPublish, MaterializedEvidence } from '@/types/company'
 
 export interface GoalDraftValues { title: string; target: string; due: string; reason: string }
 export interface CitationSummary { evidenceId: string; label: string; sourceDate: string; ingestedAt: string }
@@ -24,6 +24,11 @@ export function searchRequest(value: string): BrainSearchRead {
   if (!query || new TextEncoder().encode(query).length > 2000)
     throw new Error('Enter a search of up to 2,000 UTF-8 bytes.')
   return { search: { query, explicit_evidence_ids: [], entity_ids: [], claim_kinds: [], include_history: false } }
+}
+
+export function desiredGoalDate(due: DueIntent): string {
+  const source = due.source_time
+  return `Desired date: ${source.value ?? 'Unknown'} (${source.precision}) · ${source.basis}`
 }
 
 export function goalAvailability(identity: CompanyIdentity, company: CompanyView, evidence: MaterializedEvidence, revalidating = false): string | null {

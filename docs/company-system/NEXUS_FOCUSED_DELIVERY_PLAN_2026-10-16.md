@@ -46,9 +46,39 @@ unresolved setup dependencies, not a verified completion time or release promise
 Show a concrete local preview as soon as this slice works.
 
 Current execution checkpoint: Knowledge search/citation/goal UI and the isolated
-Nexus-document preview are implemented and running locally. Source checks pass;
-signed-in browser verification and owner acceptance remain open. Complete this
-journey before expanding its product lane to plan proposal and same-goal reporting.
+Nexus-document preview are implemented. A separate real HTTP/PostgreSQL journey
+now passes search/citation/goal publication and fresh-client persistence without
+using the owner's account. Signed-in browser verification and owner acceptance
+remain open. Keep that handoff pending; independent model/planner prerequisites
+can proceed without claiming the owner milestone is complete.
+
+The next actual management package must connect a governed model request to plan
+generation. Existing PlanStore validation and offline TestModel output are not
+that loop. Reuse a server-built, owner-approved planning-only Work registration,
+bounded model intent/client and protected result; server code supplies actor,
+charter, allocation and catalog bindings. Preserve one permanent goal procedure
+and all consumed/delegated slices through revisions. The current zero-model
+native-pair root cannot replace a prior reasoning root. Implement an explicit
+Nexus planning/native composition before claiming that same-goal transition.
+Do not substitute a descriptive outline store for the required management loop.
+
+Concrete model/planner sequence after this audit:
+
+1. Finish the trusted complete-input estimator and genuine bounded qualification
+   bootstrap. Empty/unknown models cannot qualify themselves through normal
+   eligibility; no manufactured healthy/evaluation records or direct legacy
+   provider call is an activation path.
+2. Configure the real qualified catalog and owner-approved charters, then connect
+   a registered planning worker to the existing model intent/client/result gates.
+3. Validate generated content and create a reviewable formal proposal with
+   server-selected identities/resources/allowance. Keep approval separate.
+4. Add explicit Nexus mixed planning/native admission with the same permanent
+   goal root and counters; qualify the actual native builder before activation.
+
+The endpoint resolver and Google single-request guard now have focused source
+checks and independent review. The [provider readiness packet](MODEL_ACTIVATION_READINESS_2026-10-16.md)
+records current official candidates, conditional small-pilot arithmetic and the
+remaining code/quality gates. It is not ready spend or deployment authorization.
 
 ## Active work and completion criteria
 

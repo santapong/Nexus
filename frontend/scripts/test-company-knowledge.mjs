@@ -10,7 +10,7 @@ try {
   const destination = join(directory, 'knowledge.mjs')
   await build({ entryPoints: ['src/hooks/companyGoalDraft.ts'], bundle: true, platform: 'node',
     format: 'esm', outfile: destination, logLevel: 'silent' })
-  const { searchRequest, goalAvailability, goalRequest, citationSummaries } = await import(pathToFileURL(destination))
+  const { searchRequest, goalAvailability, goalRequest, citationSummaries, desiredGoalDate } = await import(pathToFileURL(destination))
   const id = '10000000-0000-4000-8000-000000000001'
   const identity = { company_id: id, principal_id: id, owner_id: id, membership_role: 'owner',
     company_active: true, workspace_active: true, principal_active: true, membership_active: true }
@@ -37,6 +37,13 @@ try {
     schema_version: 'nexus.company.brain.v1', company_id: id, evidence_id: id })
   assert.deepEqual(request.definition.due.source_time, { precision: 'day', value: '2026-11-02', basis: 'Owner selected date' })
   assert.equal(request.definition.due.actionable_at, null)
+  assert.equal(desiredGoalDate(request.definition.due),
+    'Desired date: 2026-11-02 (day) · Owner selected date')
+  assert.equal(desiredGoalDate({ source_time: { precision: 'unknown', value: null, basis: 'No deadline selected' },
+    actionable_at: null, actionable_basis: null }), 'Desired date: Unknown (unknown) · No deadline selected')
+  assert.equal(desiredGoalDate({ source_time: { precision: 'month', value: '2026-11', basis: 'Owner supplied month' },
+    actionable_at: '2026-11-15T04:00:00Z', actionable_basis: 'operator_explicit' }),
+    'Desired date: 2026-11 (month) · Owner supplied month')
   assert.equal(request.expected_revision_id, null)
   assert.equal(request.definition.mandate.revision_id, company.mandate.revision.revision_id)
   const undated = { ...evidence, freshness: 'unknown' }

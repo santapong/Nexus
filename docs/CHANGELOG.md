@@ -1,6 +1,41 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Verify goal persistence and bound provider requests
+
+### Added
+- Isolated real HTTP/PostgreSQL knowledge→citation→goal→fresh-company-view
+  regression using committed Nexus documents and a synthetic test account.
+- Explicit server-owned SettingsEndpointResolver for the supported official
+  OpenAI Responses/Google GenerateContent bindings. Credentials are resolved at
+  runtime with no caching, discovery, fallback or client construction.
+- Provider readiness packet and the concrete remaining estimator, genuine
+  qualification, live planner and Nexus mixed planning/native integration work.
+
+### Fixed
+- Preserve desired date/precision/basis in the saved-goal view separately from
+  an exact deadline; unknown dates stay explicit and no time is inferred.
+- Reject Google SDK continuation before SDK adoption. Actual SDK/mock HTTP first
+  reproduced two POSTs under one mocked claim. The public response hook now keeps
+  valid first-hop usage and fails without output or a second request; invalid
+  usage remains unknown. SDK/API/retry/output bounds stay unchanged (ADR-131).
+- Restore the same local preview state after both old processes disappeared,
+  retaining private logs and actual detached process identities. Later-turn
+  survival remains unverified; no deployment durability is claimed.
+
+### Validation
+- Latest integrated backend unit run:4,382 passed in86.89s, no failures/skips.
+  Only the preserved unrelated untracked strategy test is explicitly excluded.
+- Real isolated API/database journey:1 passed in13.38s; configured strict/lint
+  checks pass. Owner preview data and invitation are untouched.
+- Endpoint52 and SDK/conformance71 focused checks, configured strict/lint/format
+  checks and combined independent source review pass. No live provider calls.
+- Frontend focused checks, TypeScript and final production build pass. Owner
+  browser acceptance, genuine model operation and full release remain open.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Add the Nexus knowledge-to-goal owner preview
 
 ### Added
