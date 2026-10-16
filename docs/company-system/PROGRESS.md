@@ -9,8 +9,12 @@ The separate real API/database knowledge→citation→goal→fresh-company-view
 regression passes with a synthetic test account; owner password entry and
 signed-in browser acceptance remain pending. The management audit identifies
 missing live planner integration and provider setup; the complete-input estimator,
-governed planning consumer and separate qualification path are now being
-integrated. Formal plan stores/offline workers do not prove autonomous management.
+governed planning consumer and separate qualification path are now integrated and
+pass4,588 backend units plus strict/lint/format31. Real restricted-PG/SDK-mock
+qualification passes: both providers share one permanent Work allowance, replay
+makes no extra request and missing usage retains an unknown hold. Owner/runtime
+planning wiring and actual provider quality remain open. Formal plan stores or
+offline workers do not prove autonomous management.
 The restored preview's identical processes survive a later turn with HTTP200.
 The current plan records remaining effort budgets, three bounded worker lanes
 and one combined milestone review. No preview goals,

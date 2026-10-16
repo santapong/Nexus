@@ -3789,3 +3789,37 @@ bases. It resolves an injected Settings credential at runtime without caching,
 discovery or fallback. Credentials remain absent from model request/result DTOs.
 Resolver configuration is not model eligibility, invocation authority or setup
 approval. No migration or dependency change follows from this decision.
+
+## ADR-132 — Separate financial input bounds, qualification and planning authority
+
+**Date:** 2026-10-16
+**Status:** implemented; combined source and restricted-PG/SDK-mock integration pass;
+live qualification and owner/runtime planning integration remain pending
+
+Reserve the reviewed model's complete input ceiling when exact local framing
+cannot be proven. Encode this as explicit whole-input financial mode; preserve
+legacy request/quote bytes when the optional mode is absent. It is not a prompt
+fit certificate. Original registry/model/recipe/source/version hashes must join
+the actual request at intent and immediately before SDK use. Existing data
+allowlists and normal healthy/evaluated model eligibility remain required.
+
+Unknown disabled models use a distinct public-only SDK qualification operation.
+It has a dedicated owner goal, fixed server catalog and permanent shared Work
+allocation, exact approvals, current goal/mandate, native attempts/holds/leases
+and separate protected evidence. It cannot reuse a delivery procedure goal,
+enable a model, assert profile quality or complete company work. Both providers
+share the fixed target set and lifetime allowance; changing a case or day cannot
+reset it. Until output-cap conformance is known, the financial hold also covers
+the full reviewed output ceiling while the requested cap stays small.
+
+The governed planning consumer binds the server's original goal and plan-head
+comparison into its fixed output schema. An actual protected known result may
+become a bounded historical candidate. Formal proposal mapping must recheck the
+current goal/head and supply authority, identities, resources and allowances from
+server configuration. Valid JSON cannot approve work, change caps or replace a
+goal's permanent reasoning root with the existing zero-model native pair.
+
+Keep original finite deadlines and actual SDK/file/settlement task ownership.
+Late work cannot become positive or authorize a second request. Reuse the pinned
+SDKs, native stores and company schema; no new framework, dependency, database
+migration, paid request or runtime activation follows from these components.

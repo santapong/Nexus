@@ -74,6 +74,70 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-188 — Native qualification intent does not require its concrete goal check
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed
+**Found by:** independent preparation/integration and native boundary source review
+**Affected files:** execution/effect_store.py; new qualification intent boundary
+
+### What happened
+The qualification client supplies its actual QualificationIntentCheck, but the
+native EffectStore accepts an optional hook. The newly introduced qualification
+Work is outside delivery-plan admission, so a generic begin call can omit its
+current goal/target/financial check while retaining ordinary approval/lease gates.
+Source review found this before activation or actual database qualification.
+
+### Fix applied
+Require the exact concrete qualification check at the native permit boundary,
+bound to the original factory/store/lease/identity/action. Pin classification and
+composition across awaits and recheck before commit. Preserve issued replay as
+reconciliation-only, and preserve ordinary nonqualification behavior. The frozen
+gate checks original work/action bindings after awaited checks and final flush.
+
+### Prevention
+Actual supplied-session EffectStore regressions first show13 semantic failures,
+including None/no-op/composite checks minting permits, then98 combined focused
+cases pass. Configured strict/lint/format checks pass. A real restricted-PG case
+then rejects the absent check on the original execute lease while preserving the
+exact work snapshot, hold and absent intent; the correct client subsequently
+records its actual SDK-mock result. The integrated4,588-unit run is green.
+This is native database/SDK-mock proof, not paid provider qualification.
+
+---
+
+## ERROR-187 — Whole-input financial mode lacks actual identity joins
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (source checks; live integration remains separate)
+**Found by:** combined estimator/native-consumer source review and synthetic regressions
+**Affected files:** model_input_estimator.py, model_authorizer_contracts.py,
+company_adapters.py, company_routing.py, model_intent.py, model_evidence.py
+
+### What happened
+The new whole-input proof carried registry/model hashes without consumers joining
+them to the actual original selection. Five synthetic splice cases did not deny.
+A blanket public-only condition also rejected authorized internal Brain input
+even when the original model allowlist and normal authority admitted it. This
+occurred in unactivated source; no provider request or active catalog was used.
+
+### Fix applied
+Join actual full registry/original model identities at intent and final/pre-SDK,
+and saved original model identity when reading protected evidence. Keep normal
+data allowlists rather than a blanket public-only condition in financial mode.
+The distinct qualification operation remains public-only. Preserve the absent
+optional mode and old golden wire bytes. See ADR-132.
+
+### Prevention
+The original six semantic counterexamples pass after repair.113 focused cases
+and configured strict/lint/format checks on nine paths pass, including authorized
+internal SDK mocks and unchanged-public-registry denial before claim or POST.
+This proves the checked source scope, not actual native PostgreSQL or paid usage.
+
+---
+
 ## ERROR-186 — Google SDK continuation sends two POSTs under one model claim
 
 **Date:** 2026-10-16
@@ -127,7 +191,7 @@ passes afterward. TypeScript/build checks pass; browser acceptance stays open.
 
 **Date:** 2026-10-16
 **Severity:** medium
-**Status:** mitigated
+**Status:** fixed (local turn-survival scope)
 **Found by:** next-turn live process and HTTP recheck
 **Affected files:** local preview launch procedure; no application data change
 
@@ -140,7 +204,9 @@ connections. The exact prior exit cause is unknown.
 Restore the same state2 without initialization or account changes, using detached
 local processes with private logs and saved PID/start identities. Both are adopted
 by PID1 in distinct sessions; backend/frontend/proxy health and unauthenticated
-denial pass after launcher exit. Later-turn survival is still unverified.
+denial pass after launcher exit. The later-turn check at2026-10-16T04:05:48UTC
+confirms the same two PID/start identities and bothHTTP200. The original exit
+cause stays unknown; this does not qualify deployment durability or24-hour soak.
 
 ### Prevention
 Check the saved actual process identity and live HTTP boundary before presenting
@@ -5216,7 +5282,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-187*
+*Next error ID: ERROR-189*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

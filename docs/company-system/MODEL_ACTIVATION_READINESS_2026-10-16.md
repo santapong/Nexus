@@ -1,6 +1,12 @@
 # Nexus multi-provider readiness and remaining activation work
 
-Checked 2026-10-16, including source follow-ups to the audit at40024f5. **Activation is blocked, not performed.** The provider research/source fixes did not inspect key values/presence or credential stores, contact provider accounts/APIs, access DB/native/Pi services or change active configuration. Official documentation was fetched; local source and installed package metadata were read. No live quality or evaluation is claimed.
+Checked2026-10-16, including source follow-ups to the audit at40024f5 and the
+later actual restricted-PG/SDK-mock qualification integration. **Activation has
+not been performed.** Original research fetched official documentation and read
+local source/package metadata. The later test used a fresh isolated database and
+native ledger services, with fake keys and mock provider HTTP. Neither accessed
+provider accounts, credential stores, Pi/native builder services or the owner's
+preview data. Active configuration stays unchanged; no live quality is claimed.
 
 ## Exact nominated pair
 
@@ -56,7 +62,7 @@ this packet nor the native preparation service approves or sends a paid call.
 ## Fresh no-model company: supported ordering and missing pieces
 
 1. Keep current preview unactivated: `pilot_catalog(PREVIEW_PROFILE)` has zero models/profiles. Freeze a proposed complete candidate registry/PriceCards outside active work. Obtain genuine dated health, exact SDK/API conformance and profile evaluation receipts first; do not turn docs, TestModel score1 or an observation DTO into live eligibility.
-2. **Bootstrap integration:** normal adapter/routing require enabled/current healthy/evaluated models before a governed call. Empty/unknown rows cannot bootstrap themselves. A separate public-only qualification service/client is now under integration, using actual owner approval, native holds/attempts/leases and its own protected evidence. Its result never claims profile quality or enables a model. Actual database delivery and approved live conformance are still required. Never write invented healthy/evaluation values.
+2. **Bootstrap integration:** normal adapter/routing require enabled/current healthy/evaluated models before a governed call. Empty/unknown rows cannot bootstrap themselves. A separate public-only qualification service/client now passes actual native PostgreSQL approval/hold/attempt/lease/evidence/receipt integration using pinned SDKs over mock HTTP. Its result never claims profile quality or enables a model. Owner/runtime wiring and approved live conformance are still required. Never write invented healthy/evaluation values.
 3. Freeze initial exact enabled registry, dated shared pricebook, admitted profiles and source/role catalog before immutable planning Work. Observations can only refresh health/evaluations for original row SHA and originally declared profiles; cannot add a model/profile, enable it, or change endpoint/prices. The preview empty registry cannot be activated with an observation alone.
 4. After prerequisites, use normal company001–016 and restricted application connections, then create public company/membership/goal/source/charter state and an owner-reviewed **planning-only initial PlanPayload** with permanently bounded model children using `ManagementPlanStore.propose/approve_and_register`. This admits model spend before generating a fuller revision2. A CompanyControlScope alone authorizes no request. Preserve the same root, quota, request/action IDs and budget; each call needs its actual signed actor/current execute lease and exact registered owner approval.
 5. Existing execution seam: `ExecutionStore.claim` + `CompanyJournal.submit/approve_registered/authorize_registered`; bind `model_action_parameters(call, recipe)` and conservative quote to `model.request.v1`. Compose `PersistentModelCallAuthorizer(...management,resources,input_estimator,recipe,evidence_store,observations)` and `GovernedModelClient(...same registry/observations,execution,lease,identity).request_once`. Pre-intent/final/pre-SDK current checks remain mandatory. Protected ModelEvidence/native receipt/cost recording and bounded release follow; unknown or unconfirmed recording preserves the hold and consumed request.
@@ -69,7 +75,8 @@ FullContextInputEstimator pins actual reviewed source/version/registry/model/rec
 identity; its whole-input mode keeps normal allowed-data and eligibility rules.
 The new governed planning consumer returns a bounded historical candidate and
 preserves its original goal/plan-head binding. These components and the separate
-qualification path are under integration, rather than completed activation.
+qualification path pass4,588 backend units and configured strict/lint/format31;
+actual restricted-PG/SDK-mock qualification passes. This is not activation.
 The owner goal→planning bridge, formal candidate mapping, actual quality and
 runtime wiring remain open. Legacy `preflight.py`/`factory.py` direct Agent.run
 paths are not Company-budgeted activation commands. No ready paid CLI is claimed.
@@ -84,11 +91,14 @@ Future verification only, **not run here**, from `backend`:
 env -u PYTHONPATH -u OPENAI_API_KEY -u GOOGLE_API_KEY -u GEMINI_API_KEY PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 /home/santapong/.codex/nexus-local-runtime-20261014/bin/python -m pytest -p pytest_asyncio.plugin -p anyio.pytest_plugin -p no:cacheprovider -q nexus/tests/unit/test_company_model_registry.py nexus/tests/unit/test_company_model_pricing.py nexus/tests/unit/test_company_model_authorizer.py nexus/tests/unit/test_company_model_client.py nexus/tests/unit/test_company_model_observations.py nexus/tests/unit/test_company_model_eligibility_gateway.py
 ```
 
-Then Root reviews the combined resolver/estimator/qualification/planning boundary
-and pinned-SDK one-POST/cap/usage/expiry negatives. The fresh restricted-PG
-qualification integration uses its own exact test database, actual native stores
-and SDKs over mock HTTP; it never targets the owner's preview. Only after this
-passes can a concrete frozen paid packet be considered. Required actual receipt:
+The combined resolver/estimator/qualification/planning source review and
+pinned-SDK one-POST/cap/usage/expiry checks pass. The fresh restricted-PG
+qualification integration passes in its own exact test database using actual
+native stores and SDKs over mock HTTP; it never targets the owner's preview.
+Two providers share one1USD/12-attempt Work; two known mock-usage charges settle,
+the third unknown keeps0.478413USD held, and replay adds no request. No model is
+enabled or evaluated by this result. Owner/runtime wiring must be concrete before
+the frozen paid packet is ready. Required actual live receipt:
 exact source/SDK/model/API/price/inputs, one native attempt per HTTP call, original
 role/source windows, output/cost normalization, latency, recording/release status
 and independent quality findings. Provider accounts, invoices and quality remain

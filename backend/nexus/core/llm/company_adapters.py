@@ -27,6 +27,7 @@ from nexus.core.llm.company_eligibility import (
     eligibility_provenance,
     validated_observations,
 )
+from nexus.core.llm.company_input_bounds import require_model_input_bounds
 from nexus.core.llm.company_pricing import CostQuote, quote_cost, reconcile_cost
 from nexus.core.llm.company_registry import ModelRegistration, ModelRegistry
 from nexus.core.llm.company_wire_usage import WireObserver
@@ -57,10 +58,9 @@ def _registration(
         | ({"tools"} if request.tools else set())
         | ({"structured_output"} if request.output_schema else set())
     )
-    if (
-        not required <= row.capabilities
-        or request.bounds.max_output_tokens > row.max_output_tokens
-        or request.bounds.input_tokens + request.bounds.max_output_tokens > row.context_window
+    require_model_input_bounds(row, request.bounds)
+    if not required <= row.capabilities or (
+        request.bounds.input_bound_kind is not None and request.tools
     ):
         raise ValueError("model request exceeds catalog capabilities/context/output")
     if (row.provider, row.api_family) not in {

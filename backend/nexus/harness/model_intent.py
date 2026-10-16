@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.contracts.actions import ActionProposal, ApprovalDecision
 from nexus.company.directory_models import RegisteredWork
+from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.model_observations import ModelEligibilityObservation
 from nexus.core.llm.company_adapter_contracts import CompanyModelRequest
 from nexus.core.llm.company_eligibility import (
@@ -110,6 +111,7 @@ class ModelIntentCheck:
             raise ValueError("Model quotation differs from current eligible catalog quotation")
         estimate = self.estimator.estimate(self.call, self.registry, self.recipe)
         require_input_estimate(self.call, estimate, self.recipe)
+        self._require_whole_identity(estimate, model)
         self.model, self.estimate, self.billing_at, self.hold = (
             plan.primary.model,
             estimate,
@@ -133,6 +135,10 @@ class ModelIntentCheck:
         """Use the same observation without moving the committed billing clock."""
         if self._prepared_policy is None or self.model is None or self.estimate is None:
             raise ValueError("Model temporal qualification has not been prepared")
+        if self.estimate.whole_request is not None:
+            if self.original_model is None:
+                raise ValueError("Model input identity has no original catalog model")
+            self._require_whole_identity(self.estimate, self.original_model)
         if (
             self._approval_expires is None
             or min(self._approval_expires, self.lease.expires_at) <= now
@@ -143,6 +149,15 @@ class ModelIntentCheck:
         )
         if current.primary.model != self.model or current.primary.quote != self.quote:
             raise ValueError("Prepared model or quote changed before final intent")
+
+    def _require_whole_identity(self, estimate: InputEstimate, model: ModelRegistration) -> None:
+        """Join financial proof to actual server values, including before SDK reuse."""
+        whole = estimate.whole_request
+        if whole is not None and (
+            whole.registry_sha256 != canonical_sha256(self.registry)
+            or whole.model_sha256 != canonical_sha256(model)
+        ):
+            raise ValueError("Whole-input identity differs from actual registry/original model")
 
     def require_selection(
         self,

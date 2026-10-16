@@ -1,6 +1,44 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Integrate governed model qualification and planning components
+
+### Added
+- Explicit whole-input financial reservation with reviewed model/source/version
+  pins and original registry/model/recipe identity joins. Normal data allowlists
+  remain enforced; old default codecs/hashes stay unchanged.
+- Separate public-only qualification preparation/client/protected evidence.
+  Fixed configured targets share one permanent goal-derived Work allocation and
+  quota. Preparation cannot approve, spend, enable models or complete company work.
+- Required concrete qualification check at the native permit boundary, preserving
+  original composition across awaits and final flush; issued replay never retries.
+- Governed registered planning consumer and bounded historical candidate under
+  the server's original goal/plan-head binding. Formal mapping and runtime/owner
+  wiring remain separate work; generated content cannot supply authority.
+
+### Fixed
+- Whole-input identity splices and rejection of explicitly allowed internal data
+  (ERROR-187). Qualification itself remains strictly public-only.
+- Optional qualification hook could mint a native permit without current
+  goal/target/financial checks (ERROR-188); actual absent-hook denial now conserves
+  the original work, hold and absent intent.
+- Local preview turn survival is verified with the same process identities and
+  live HTTP checks. Original exit cause and production durability remain unknown.
+
+### Validation
+- 4,588 backend units pass in132.45s, no failures/skips;19 existing warnings.
+  Configured nonsilent strict typing and Ruff check/format pass on31 Python paths.
+  Source hashes remain stable across the integrated checks.
+- Real restricted-PG/actual-SDK-mock flow passes1test in10.53s: two providers share
+  one1USD/12-attempt Work, two known results settle, a third unknown keeps its
+  full0.478413USD hold, replay sends no extra request, and all leases release.
+  The fresh test database and private evidence are retained.
+- Combined auth/spend/goal/target/ownership file review passes. No paid requests,
+  model activation, owner browser acceptance or supervised release is claimed.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Track Nexus delivery outcomes and reduce parallel work
 
 ### Changed

@@ -13,8 +13,8 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | **In progress**; governed planning-result consumer has focused source checks, but no connected owner planner | Integrate registered planning work, protected candidate and formal proposal; model output cannot supply authority or bindings |
-| Genuine model operation | Endpoint/continuation guards source-checked; whole-input bounds and separate qualification service/client under integration | Actual database/SDK-mock proof, then approved live conformance and representative quality within the daily limit |
+| Management-generated planning | **In progress**; governed historical-candidate consumer integrated and source-checked, but no connected owner planner | Connect owner/runtime preparation and formal proposal presentation with current goal/head checks |
+| Genuine model operation | Whole-input bounds and separate qualification service/client integrated; actual restricted-PG/SDK-mock path passes | Owner/runtime wiring, concrete live conformance packet and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
@@ -38,8 +38,9 @@ GoalStore; stale or historical sources remain blocked.
 
 Focused frontend checks, TypeScript and production build pass. The backend's13
 focused preview/configuration tests and strict/lint/format checks pass. The latest
-integrated unit run passes all4,382 tests in86.89s with no failures or skips,
-including the new endpoint/continuation cases. It uses fresh private non-home
+integrated unit run passes all4,588 tests in132.45s with no failures or skips,
+including the model/planning/qualification cases. Strict typing and Ruff
+check/format pass for all31 changed Python paths. It uses fresh private non-home
 temporary paths. The earlier path-related failure/recheck remains preserved in
 ERROR-183; it is not retroactively relabeled. Source checks do not establish
 browser acceptance. The visible Nexus sign-in page remains handed to the owner for
@@ -68,12 +69,18 @@ permanent root cannot be silently replaced by the current zero-model native
 engineering root. The Nexus planning/native composition needs explicit
 implementation while preserving the goal's original allowance and counters.
 
-The current model package adds whole-input financial reservations, original
+The integrated model package adds whole-input financial reservations, original
 registry/model proof joins, a governed planning-result consumer and a separate
-owner-approved qualification path. Focused source checks pass for held portions;
-the combined source and real PostgreSQL delivery checks are in progress. Financial
-reservations do not prove prompt fit. Qualification does not enable a model or
-complete company work. The local preview still has an empty catalog.
+owner-approved qualification path. Real restricted-PG integration passes1test
+in10.53s with the actual pinned SDKs over mock HTTP: both providers share one
+permanent1USD/12-request Work; two known results settle and missing Google usage
+retains an unknown0.478413USD hold. Three requests produce three attempts, replay
+adds none, all leases release and the disabled/unknown models stay unqualified.
+The absent-check denial also preserves the original work/hold/intent state.
+
+Financial reservations do not prove prompt fit. Mock usage/costs are test-ledger
+observations, not vendor invoices. Qualification does not enable a model, evaluate
+company-task quality or complete work. The local preview still has an empty catalog.
 
 The first actual current-V9 parent case then fails after one tool attempt:
 `FaultSnapshot` validation rejects its observation record. The complete collector
@@ -101,7 +108,7 @@ that same goal through proposed plan, authorized work, verification and report.
 | Outcome | Remaining effort forecast | Current limit |
 | --- | --- | --- |
 | Knowledge/goal browser acceptance | Up to half a focused day after sign-in handoff | Owner has the sign-in page |
-| Governed model qualification and generated planning candidate | 2–4 focused days, conditional on provider qualification | Actual database integration in progress; live calls are unapproved |
+| Governed model qualification and generated planning candidate | 2–4 focused-day budget from the revised plan, conditional on provider qualification | Database/SDK-mock checkpoint passed; owner/runtime bridge and live quality remain open |
 | Same-goal plan/action/verification/report cycle | Re-estimate after representative builder qualification | Native builder gate unresolved |
 | Full supervised release | No defensible committed date yet | Complete cycle, operations/recovery and24-hour soak still required |
 
@@ -109,9 +116,10 @@ These are remaining engineering effort budgets, with external waits separate.
 The earlier6–20November range is historical. Do not restart the old1–2-day local
 preview target: the preview/API slice exists and its browser acceptance is pending.
 
-The immediate checkpoint is a real approval→hold→intent→SDK-mock→protected
-evidence→receipt path. Root coordinates three bounded lanes: implementation,
-actual database integration and one combined boundary review. No new framework,
+The approval→hold→intent→SDK-mock→protected evidence→receipt checkpoint passes.
+Next connect owner/runtime preparation and the planning candidate to a reviewable
+formal proposal. Root coordinates three bounded lanes: implementation,
+actual integration and one combined boundary review. No new framework,
 StockFlow feature or repeated builder wave is on that path. Focused checks run
 during implementation; the full relevant regression runs once on the integrated
 package. Next updates report a usable result or a concrete failing gate.
@@ -135,3 +143,9 @@ Actual stopped Source2 audit:
 `/mnt/data/nexus-implementation-evidence-2026-10-14/stockflow/n-v9-source2-parent-failure-actual-file-audit-1.json`,
 SHA6b8d9d9310518b5e625e8296d94ae76e858069c59ac40bf059dfb84df8618bb7.
 The historical evidence directory name does not define the current product scope.
+
+Current model-package evidence:
+`/var/tmp/nexus-model-package-integration-20261016-1/UNIT_RESULT.json` and
+`STATIC_RESULT.json`; actual PG receipt
+`/var/tmp/nexus-model-qualification-pg-checks-20261016-1/WORKER_MODEL_QUALIFICATION_PG_RECEIPT_1.json`,
+SHAa1a44d80c09a778ae7a0fb4c32083fb93ab6fb1155d0c5bba78f88285b95b728.

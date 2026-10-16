@@ -78,9 +78,11 @@ Concrete model/planner sequence after this audit:
 
 The endpoint resolver and Google single-request guard have source checks and
 independent review. Complete-input financial bounds, a governed planning-result
-consumer and a separate qualification preparation/client are being integrated.
-Their focused checks do not establish actual PostgreSQL delivery, live provider
-quality or a connected owner planner. The [provider readiness packet](MODEL_ACTIVATION_READINESS_2026-10-16.md)
+consumer and a separate qualification preparation/client now pass the combined
+backend regression and configured static checks. Actual restricted-PG delivery
+with pinned SDKs over mock HTTP passes shared-budget, no-duplicate and unknown-hold
+checks. Live provider quality and a connected owner planner remain open.
+The [provider readiness packet](MODEL_ACTIVATION_READINESS_2026-10-16.md)
 records the exact activation prerequisites and conditional cost arithmetic.
 
 ## Active work and completion criteria
@@ -142,11 +144,14 @@ failure rather than repeatedly shifting an unchanged target.
 | Same-goal Nexus plan/action/verification/report cycle | Estimate after the first representative builder qualification | Actual Nexus change and independent verification under unchanged lifetime caps |
 | Private supervised release | Estimate after that complete cycle | Owner UAT, notifications, ARM64/private access, independent restore/rollback and 24-hour soak |
 
-The next measurable engineering checkpoint is the integrated qualification
-approval→intent→SDK→protected evidence→receipt path, with actual database delivery
-and mock HTTP. It does not require a paid call or the owner's browser account.
-Publish its result or exact blocker in the next progress update. A full-release
-date is still not defensible while native qualification is unresolved.
+The qualification approval→intent→SDK→protected evidence→receipt checkpoint now
+passes actual restricted-PG delivery and mock HTTP, without paid calls or the
+owner's browser account. Both providers share one permanent1USD/12-request Work;
+two known results settle and a third unknown keeps its full hold. This does not
+enable either model or evaluate company-task quality. Next connect owner/runtime
+preparation and planning-candidate presentation with the same existing governance
+stores, then prepare the concrete live qualification packet. A full-release date
+is still not defensible while native builder qualification is unresolved.
 
 ## Release finish
 

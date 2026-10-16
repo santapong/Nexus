@@ -76,17 +76,22 @@ class PriceCard(ModelContract):
 
 
 class TokenBounds(ModelContract):
-    """Per-call provider-enforced bounds, including all billed output tokens.
+    """Per-call financial bounds and enforced total billed output cap.
 
     input_tokens is an upper bound including framing, tools/schema and history.
     max_output_tokens covers visible, hidden reasoning and formatting together.
-    Exact tokenization and cap enforcement belong to an evaluated adapter.
+    The default requires combined context fit. An explicit reviewed whole-input
+    ceiling reserves cost without promising prompt fit or exact tokenization.
+    Output cap enforcement belongs to an evaluated adapter.
     """
 
     input_tokens: Tokens
     max_output_tokens: Tokens
     unit: Literal["text_tokens"] = "text_tokens"
     output_cap_semantics: Literal["total_including_reasoning"] = "total_including_reasoning"
+    input_bound_kind: Literal["model_input_ceiling_v1"] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class TokenUsage(ModelContract):

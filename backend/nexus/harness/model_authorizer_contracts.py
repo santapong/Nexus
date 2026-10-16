@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Protocol
+from typing import Literal, Protocol, Self
 
-from pydantic import Field, JsonValue, field_validator
+from pydantic import Field, JsonValue, field_validator, model_validator
 
 from nexus.company.contracts.base import Name
+from nexus.company.management.canonical import canonical_sha256
 from nexus.core.llm.company_adapter_contracts import CompanyModelRequest, request_hash
 from nexus.core.llm.company_pricing import ModelContract, Score, Tokens
 from nexus.core.llm.company_registry import ModelRegistry, Profile
@@ -33,6 +34,17 @@ class ModelInputRecipe(ModelContract):
         return value
 
 
+class WholeRequestInputCeiling(ModelContract):
+    """Complete financial upper bound, without fabricated per-component tokenization."""
+
+    method: Literal["model_input_ceiling_v1"] = "model_input_ceiling_v1"
+    tokens: Tokens = Field(gt=0)
+    registry_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    model_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    recipe_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    conformance_reference: Name
+
+
 class InputEstimate(ModelContract):
     """Independent full SDK request upper bound, bound to the exact request and recipe."""
 
@@ -46,18 +58,31 @@ class InputEstimate(ModelContract):
     tool_schema_tokens: Tokens
     output_schema_tokens: Tokens
     sdk_overhead_tokens: Tokens
+    whole_request: WholeRequestInputCeiling | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
+    @model_validator(mode="after")
+    def require_one_accounting_method(self) -> Self:
+        """Whole-request reservations never pretend to count individual components."""
+        if self.whole_request is not None and any(self._components()):
+            raise ValueError("Whole input ceiling cannot include component token counts")
+        return self
+
+    def _components(self) -> tuple[int, ...]:
+        return (
+            self.input_text_tokens,
+            self.system_text_tokens,
+            self.tool_schema_tokens,
+            self.output_schema_tokens,
+            self.sdk_overhead_tokens,
+        )
 
     @property
     def total_tokens(self) -> int:
         """Include every declared source of input tokens, including SDK framing."""
-        return sum(
-            (
-                self.input_text_tokens,
-                self.system_text_tokens,
-                self.tool_schema_tokens,
-                self.output_schema_tokens,
-                self.sdk_overhead_tokens,
-            )
+        return (
+            self.whole_request.tokens if self.whole_request is not None else sum(self._components())
         )
 
 
@@ -96,25 +121,35 @@ def require_input_estimate(
     """Caller bounds are insufficient without independently bound complete estimation."""
     estimate = InputEstimate.model_validate(estimate.model_dump())
     if (
-        (
-            estimate.request_hash,
-            estimate.registry_id,
-            estimate.registry_revision,
-            estimate.recipe_id,
-            estimate.recipe_revision,
-        )
-        != (
-            request_hash(call),
-            call.registry_id,
-            call.registry_revision,
-            recipe.recipe_id,
-            recipe.revision,
-        )
+        estimate.request_hash,
+        estimate.registry_id,
+        estimate.registry_revision,
+        estimate.recipe_id,
+        estimate.recipe_revision,
+    ) != (
+        request_hash(call),
+        call.registry_id,
+        call.registry_revision,
+        recipe.recipe_id,
+        recipe.revision,
+    ) or estimate.total_tokens > call.bounds.input_tokens:
+        raise ValueError("Request has no complete independently bound input estimate")
+    whole = estimate.whole_request
+    if whole is not None:
+        if (
+            call.bounds.input_bound_kind != whole.method
+            or whole.tokens != call.bounds.input_tokens
+            or whole.recipe_sha256 != canonical_sha256(recipe)
+            or whole.conformance_reference != recipe.conformance_reference
+            or call.tools
+        ):
+            raise ValueError("Whole-input estimate differs from its exact request/recipe")
+    elif (
+        call.bounds.input_bound_kind is not None
         or estimate.input_text_tokens == 0
         or estimate.sdk_overhead_tokens == 0
         or (call.system_text and estimate.system_text_tokens == 0)
         or (call.tools and estimate.tool_schema_tokens == 0)
         or (call.output_schema and estimate.output_schema_tokens == 0)
-        or estimate.total_tokens > call.bounds.input_tokens
     ):
         raise ValueError("Request has no complete independently bound input estimate")

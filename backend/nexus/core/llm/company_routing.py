@@ -14,6 +14,7 @@ from nexus.company.management.model_observations import (
     effective_model_registration,
 )
 from nexus.core.llm.company_eligibility import validated_observations
+from nexus.core.llm.company_input_bounds import require_model_input_bounds
 from nexus.core.llm.company_pricing import (
     CostQuote,
     ModelContract,
@@ -123,10 +124,12 @@ def _eligible(model: ModelRegistration, policy: ModelPolicy, now: datetime) -> b
     ):
         return False
     bounds = policy.token_bounds
-    if (
-        bounds.input_tokens + bounds.max_output_tokens > model.context_window
-        or bounds.max_output_tokens > model.max_output_tokens
-        or (policy.profile == "embeddings" and bounds.max_output_tokens != 0)
+    try:
+        require_model_input_bounds(model, bounds)
+    except ValueError:
+        return False
+    if (policy.profile == "embeddings" and bounds.max_output_tokens != 0) or (
+        bounds.input_bound_kind is not None and "tools" in policy.required_capabilities
     ):
         return False
     health = model.health

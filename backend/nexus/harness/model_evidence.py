@@ -12,6 +12,7 @@ from uuid import UUID, uuid4, uuid5
 from pydantic import AwareDatetime, Field
 
 from nexus.company.contracts.knowledge import ArtifactRef
+from nexus.company.management.canonical import canonical_sha256
 from nexus.core.llm.company_adapter_contracts import (
     CompanyModelRequest,
     CompanyModelResult,
@@ -62,6 +63,9 @@ class ModelEvidence(ModelContract):
         ):
             raise ValueError("Saved model evidence binding is invalid")
         require_input_estimate(self.request, self.input_estimate, self.recipe)
+        whole = self.input_estimate.whole_request
+        if whole is not None and whole.model_sha256 != canonical_sha256(self.model):
+            raise ValueError("Saved whole-input model identity differs from original model")
         if self.eligibility_provenance is not None:
             self.eligibility_provenance.require_binding(
                 self.model, self.request.company_id, self.registry_revision
