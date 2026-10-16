@@ -74,6 +74,56 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
+## ERROR-179 — Fault-record rejection loses its original reason and candidate
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** actual current-V9 Source2 first parent case and independent retained-file audit
+**Affected files:** private FaultSnapshot validator/collector/failure diagnostics
+
+Source2 passes382 finite checks and real setup/audit, then the first native case
+fails1/45.975s after one tool attempt. A clean complete3,413-byte collector report
+records model-level FaultSnapshot ValidationError; exact reason and original
+candidate are absent. Actual private result validates as outcome_unknown with
+no commands/artifacts/logs/containment. No physical fault or observer ref exists.
+
+One read-only failure audit confirms477 rows, unknown intent and USD0.010000 hold,
+null actual billing, Work unknown/fence2/unleased and other four cases unchanged.
+The wave stops. Original parent timing, whole-tree retirement and unique failing
+predicate cannot be inferred or repaired with later observations. Metadata
+recovery is not run without its required witness and is unnecessary for the
+already released lease.
+
+Independent diagnosis enumerates ten same-type root raises plus nested/window
+validation. Capture closed per-predicate reasons and, when safely available under
+the original end, a separate complete bounded UNVALIDATED candidate. It must never
+be a FaultRef or accepted physical witness. No predicate/clock/limit relaxation
+or speculative retry. Actual audit SHA6b8d9d93… and diagnosis SHA5eaab6da… are
+linked from the current progress page; minimal source repair is in progress.
+
+---
+
+## ERROR-178 — Staging forward misses dynamically constructed operator suffixes
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed
+**Found by:** actual Source2 staging preflight
+**Affected files:** external staging command only
+
+Literal filename forwarding misses `entry+'_1.py'` and a preflight `-1.json`
+suffix. The first guard compares the old operator to the new expected hash and
+stops before any command/database/runtime-root creation. Preserve that control.
+A new control changes only its output root and these two suffix constants; AST
+comparison proves that scope, actual rendered hashes/absences pass, staging
+completes0/1.804s and direct setup completes0/48.378s. Source2 frozen code,
+configuration, actions and windows are unchanged by this staging correction.
+
+Validate rendered concatenated/f-string names as well as whole literal paths.
+
+---
+
 ## ERROR-177 — Namespace AST forward misses a formatted preflight suffix
 
 **Date:** 2026-10-16
@@ -100,7 +150,7 @@ all transformed input ASTs before target writes.
 
 **Date:** 2026-10-16
 **Severity:** medium
-**Status:** open
+**Status:** fixed (source scheduling; full native qualification remains open)
 **Found by:** Root passive timing and independent source inspection
 **Affected files:** private negative operator scheduling
 
@@ -115,7 +165,11 @@ clock/invocation, wait only remaining actual age and require the unchanged full
 bootstrap to match the same unit/invocation/start/deadline. Derive age36.250001s
 from the original strict timing inequality without relying on bootstrap cost.
 Keep45/60/1/10/25, original ends, quotas and all physical predicates unchanged.
-Preserve Source1; finite checks and a new independent qualification are pending.
+Preserve Source1. The correction passes74 focused checks and an independent
+two-counterexample forward review after an early target-feasibility guard is
+added. Coherent Source2 passes382 checks/strict-lint-format45 and reaches one
+actual native issuance; its later independent FaultSnapshot failure is tracked
+in ERROR-179. No parent-expiry qualification is claimed.
 
 ---
 
@@ -4979,7 +5033,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-178*
+*Next error ID: ERROR-180*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

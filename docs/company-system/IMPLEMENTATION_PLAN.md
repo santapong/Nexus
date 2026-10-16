@@ -1,5 +1,12 @@
 # Nexus company-system implementation plan
 
+**Effective scope, 2026-10-16:** [Nexus-focused delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
+and [current product progress](RELEASE_STATUS_2026-10-16.md) supersede the old
+StockFlow reference scenario and scheduling text. Nexus itself is the acceptance
+project. Existing M0–M6 functional/safety exits remain; no StockFlow product work
+or release is required. Historical documentation-only status below is not the
+current implementation state.
+
 **Date:** 2026-10-05. **Status:** documentation delivered; runtime milestones unimplemented.\
 Baseline: `6a8c8ef15e522aaa563d53776aef8dedc3209fcf`. Target: [SDD v0.2](../sdd/NEXUS_SDD_v0.2.md). Diagrams: [architecture](ARCHITECTURE.md).
 
@@ -13,7 +20,10 @@ Touched paths: this directory, `docs/sdd/NEXUS_SDD_v0.2.md`, `docs/DECISIONS.md`
 
 ## Delivery rules
 
-Work in small reviewable changes, each with acceptance evidence. Use the repository's branch/PR policy and plain Git; the checked remote has `main` as default and no `develop` branch. Do not assume another repository's integration model. Human merge and any remote publishing follow existing authority.
+Work in small reviewable changes, each with acceptance evidence. Use plain Git,
+`develop` for integration, `main` for releases and `feat/` or `fix/` branches under
+the repository's verified PR policy. The owner approved PRs for both protected
+branches and one review for main. Remote publishing follows existing authority.
 
 Freeze contracts, policy cases, evaluation inputs and criteria before implementation optimization. Do not change an evaluator to make a failing design pass. Maintain an evidence manifest per milestone: source commit, environment, configuration versions, commands, results, artifacts, limitations and remaining blockers. Mock/unit, real integration, ARM64, paid-provider and externally delivered outcomes are distinct evidence classes.
 
@@ -31,7 +41,8 @@ Deliverables:
 - Specify versioned JSON schemas, action canonicalization, revision conflicts, error taxonomy, and legacy-to-company mapping.
 - Create fake-model scenarios and failure injection seams for action, approval, budget and recovery. Freeze the 30-question Brain pack and StockFlow readiness checklist.
 - Inventory old endpoint consumers, DB schemas and migration heads; identify who owns each task during cutover.
-- Obtain a nominated committed StockFlow base. Do not copy the currently dirty product checkout by assumption.
+- Freeze a nominated committed Nexus source for the current acceptance task.
+  Preserve concurrent/untracked work; do not nominate a dirty checkout by assumption.
 
 Exit: an implementation branch has reproducible offline fixtures and frozen contracts/checklists. Saved prose alone is not that exit. No runtime authority promotion occurs in M0.
 
@@ -73,13 +84,23 @@ Exit: an internal research/report workflow completes with cited facts and ledger
 
 Deliver a restricted runner protocol, rootless Podman setup, approved revision workspaces, pinned tool images, staged registry access, path/symlink checks, resource/disk/time limits, command/artifact receipts and independent verification. Keep model/database secrets and production write mounts outside the sandbox.
 
-Exit: one approved StockFlow engineering task is reproduced on ARM64 with baseline/post-change evidence and one bounded worker. Escape/path, forbidden network, resource exhaustion, cancellation, stale lease and missing-tool cases terminate honestly. A patch is reviewable without a Git push or production release. If StockFlow's representative checks do not fit the Pi envelope, record the constraint and revise the hosting plan rather than weakening evidence.
+Exit: one approved Nexus engineering task is reproduced on ARM64 with
+baseline/post-change evidence and one bounded worker. Escape/path, forbidden
+network, resource exhaustion, cancellation, stale lease and missing-tool cases
+terminate honestly. A patch is reviewable without a Git push or production
+release. If the representative Nexus workload does not fit the Pi envelope,
+record the constraint and revise the hosting plan without weakening evidence.
+An isolated documentation check does not qualify the full Node/Python toolchain.
 
 ## M5 — Complete the first company operating cycle
 
 **Backlog:** BACKLOG-073. **ADRs:** 094, 099. **Depends on:** M2–M4 plus configured notification prerequisites.
 
-Deliver the [StockFlow readiness cycle](../sdd/NEXUS_SDD_v0.2.md#3-first-operating-cycle-stockflow-customer-readiness): strategy assessment, bounded plan, native change, independent verification, demo/presentation artifact, support draft, owner report, dashboard events and email ledger. Add Customers & Support, Decisions, Knowledge and Audit views.
+Deliver the [Nexus-owned operating cycle](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md):
+strategy/readiness assessment from Nexus evidence, bounded plan, native Nexus
+change, independent verification, presentation, internal support draft, owner
+report, dashboard events and notification ledger. Preserve Knowledge, Decisions,
+Support and Audit capabilities. The old StockFlow scenario remains optional.
 
 Exit: all artifacts link to one goal/plan lineage, receipts and actual acceptance results. Browser tests cover reconnect, role/resource authorization, readable source dates and stale approval conflicts. Offline email tests prove retry/deduplication; configured live tests separately prove provider acceptance and delivery/reconciliation. No customer message is sent by this pilot unless separately authorized.
 

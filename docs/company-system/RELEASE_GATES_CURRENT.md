@@ -1,5 +1,14 @@
 # Supervised release evidence index
 
+**Current scope, 2026-10-16:** [Nexus-only delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
+and [product progress](RELEASE_STATUS_2026-10-16.md) are the owner-facing plan.
+StockFlow evidence below is retained optional scenario history, not a release
+dependency. Source2/currentV9 passes382 source checks and all-five setup audit;
+actual first parent case fails after one attempt, with unknown outcome/hold and
+no usable fault witness. Wave stopped; current native qualification is open.
+The same complete functional/authority/budget/operations requirements apply to
+the new Nexus-owned cycle; no existing failed evaluator is relaxed or relabeled.
+
 Latest actual preparation: [V9 setup and parent-age scheduling](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
 passes independent file/SQL audit with all five actions unissued. The first
 packet producer times out after writing metadata; a separate published passive

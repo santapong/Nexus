@@ -1,6 +1,12 @@
 # NEXUS — Agentic AI Company as a Service
 ## CLAUDE.md — Master Project Document
 
+> **Current owner-directed delivery, 2026-10-16:** [Nexus-focused plan](docs/company-system/NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
+> and [current progress](docs/company-system/RELEASE_STATUS_2026-10-16.md) govern
+> active work. Nexus is the sole product target; StockFlow is optional later
+> testing. Preserve all functional/release safeguards while prioritizing the
+> real owner knowledge/goal/work/report journey and milestone-based delivery.
+
 > **Company-system target (2026-10-05):** Read [SDD v0.2](docs/sdd/NEXUS_SDD_v0.2.md), [implementation gates](docs/company-system/IMPLEMENTATION_PLAN.md), and proposed ADR-094–099 in [DECISIONS.md](docs/DECISIONS.md) before company-system work. They capture the owner's internal-company direction, native Pi builder, multiple providers, US$5/day cap and deferred self-improvement. This file otherwise describes legacy behavior and policies. New target authority and transport changes activate only through their tracked implementation/cutover gates; a plan is not execution proof or permission to deploy.
 
 > **This file is the single source of truth for this project.**

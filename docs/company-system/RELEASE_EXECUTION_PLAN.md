@@ -1,5 +1,17 @@
 # Nexus release execution plan
 
+**Current sequence, owner-directed 2026-10-16:** follow the [Nexus-focused
+delivery plan](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). The first product
+milestone is the real Knowledge→cited evidence→Nexus goal→owner views journey.
+Builder diagnostics/qualification and operations proceed in parallel; all remain
+release requirements. StockFlow is optional later integration testing. Routine
+checks and milestone reviews replace repeated fixture-preparation checkpoints.
+
+## Historical execution sequence
+
+The original sequence below is retained as history; StockFlow-specific activation
+instructions do not define the current critical path.
+
 Latest actual: [V9 all-five setup and parent-age finding](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
 records successful direct setup and independent file/SQL audit. All actions remain
 unissued. Finish the bounded actual-parent-age source correction and new coherent

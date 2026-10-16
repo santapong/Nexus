@@ -1,5 +1,13 @@
 # Nexus SDD v0.2 — DravenIQ Autonomous Company System
 
+**Owner scope amendment, 2026-10-16:** [Nexus-focused delivery](../company-system/NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
+is the current implementation sequence. Nexus is the sole product deliverable;
+its own repository/evidence supplies the first operating cycle. StockFlow-specific
+examples below are historical optional integration scenarios. All Brain,
+management, strategy, builder/verification, presentation/support, notification,
+budget, authority and operations requirements remain. Existing failed/frozen
+evaluations are preserved; changing the reference project does not qualify them.
+
 **Document date:** 2026-10-05 (Asia/Bangkok)\
 **Status:** proposed system design; product direction and operating constraints confirmed by the owner.\
 **Baseline:** GitHub `santapong/Nexus`, `main` at `6a8c8ef15e522aaa563d53776aef8dedc3209fcf` (2026-07-13).\

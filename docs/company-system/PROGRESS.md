@@ -1,5 +1,19 @@
 # Nexus implementation progress
 
+**Current owner view, 2026-10-16:** [Nexus product progress](RELEASE_STATUS_2026-10-16.md)
+and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexus is
+the sole delivery target; StockFlow is an optional later test. Knowledge/goal UI
+and isolated real local preview are now the product priority. Native activation
+remains blocked: Source2 passes382 source checks/setup audit, then its first
+actual case fails FaultSnapshot validation after one attempt; unknown hold and
+released lease are retained, four cases remain unissued. Exact original predicate
+is not recoverable, so minimal diagnostics precede another run. Full release open.
+
+## Historical implementation and qualification checkpoints
+
+The dated notes below retain their original scope and may contain superseded
+next steps or reference projects. Use the current owner view above for live work.
+
 Latest actual: [V9 all-five setup](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
 completes0/68.827s and passes independent74-table file/SQL audit. All five actions
 remain unissued, with original holds/windows and zero attempts/intents/leases.

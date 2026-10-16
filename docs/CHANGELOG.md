@@ -1,6 +1,30 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Focus delivery on Nexus and usable owner journeys
+
+### Changed
+- Apply the owner's explicit Nexus-only correction: remove StockFlow from the
+  critical path and preserve it as optional later test history. Keep the full
+  Brain/management/action/verification/presentation/support/notification and
+  operational release scope.
+- Replace the owner progress page with capability states and the next real
+  Knowledge→goal→owner views milestone. Add a focused workflow with bounded WIP,
+  timeboxed blocker work, focused checks and combined milestone reviews.
+- Amend SDD/implementation/roadmap pointers; preserve historical estimates and
+  evaluations. The earlier6–20November range is not a current committed finish.
+
+### Validation
+- Current V9 private Source2 passes382 source checks/strict-lint-format45 and
+  actual setup0/48.378s with independent audit. The first native case fails
+  FaultSnapshot validation after one attempt; exact predicate is unrecoverable.
+  Preserve unknown outcome/hold, released lease and four unissued cases.
+- Documentation links/whitespace checked. Real Knowledge/goal UI, isolated local
+  preview setup and minimal builder diagnostics are separate active work lanes.
+
+**Authored by:** Codex following the owner's scope/workflow correction
+**PR:** not published
+
 ## [2026-10-16] — Complete actual V9 setup and isolate parent scheduling risk
 
 ### Validation

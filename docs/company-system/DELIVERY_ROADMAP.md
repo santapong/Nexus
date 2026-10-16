@@ -1,5 +1,11 @@
 # Nexus feature delivery roadmap and estimate
 
+**Owner-directed reset, 2026-10-16:** [Nexus-focused delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
+is current. StockFlow is optional later testing. The next reviewable Nexus owner
+journey has a1–2 focused-working-day planning target; full release is re-estimated
+after product integration and representative builder evidence. Dates/effort below
+remain historical planning context, not current promises.
+
 **Current remaining-work forecast, checked 2026-10-16:** see the [owner progress
 and release schedule](RELEASE_STATUS_2026-10-16.md). The estimate below is the
 historical 13 October whole-program baseline with no parallel team; it is not
