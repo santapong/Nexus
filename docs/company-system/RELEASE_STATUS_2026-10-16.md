@@ -13,7 +13,7 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | Prior restricted-PG result → formal proposal/approval passes. New actual runtime reaches preparation/owner wait and exact input GET; generic action-review availability is blocked | Connect concrete prepared-source review, then prove dispatch/SDK/same-root revision and configure the owner journey |
+| Management-generated planning | Actual protected/generic review, exact owner decision, atomic dispatch/replay and DBOS launch pass; worker stops before SDK at a recipe-identity mismatch | Repair the history digest join, prove SDK/same-root revision and configure the owner application journey |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
@@ -22,15 +22,16 @@ The supervised release is incomplete; default native execution stays off.
 
 ## Latest actual result
 
-The follow-up runtime test found and repaired a first-request accounting lifecycle
-bug: quotation now reads absent totals as zero while preserving the approved
-allocation and all spending gates. Root4,902 units and strict/Ruff4 pass with
-stable source. Actual fresh V3 reaches owner wait and exact private input review,
-then stops at generic action-review availability. One pending action remains;
-independent restricted read-only audit confirms zero holds/attempts/intents/
-dispatch, no leases and no app connections left. No model request has been
-issued by this runtime test. The original three failures remain preserved; see
-the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md) and ERROR-195–197.
+The general planning action review now verifies the concrete protected input and
+complete current native/source binding. Independent review also closes a first
+static-source expiry gap. Root4,922 units/117.39s and strict/Ruff8 pass with stable
+source. Fresh V4 passes owner review/decision, atomic dispatch/replay and actual
+DBOS launch, then stops before SDK at a recipe-fingerprint mismatch in history.
+Separate restricted read-only audits confirm one authorized consumed action,
+one dispatch, a heldUSD0.400512 reservation, zero attempts/intents and no leases
+or app connections. That hold and all four failed databases remain preserved.
+No model request was issued by this runtime test; see the
+[planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md) and ERROR-195–199.
 
 The current planning source package adds the complete registered GoalDefinition
 and its cited evidence to context assembly, with the goal explicitly treated as
@@ -49,8 +50,8 @@ mechanical engineering recipe; it does not implement an autonomous LLM code
 author. Its report covers selected engineering work, not whole-cycle planning
 costs. The42-file component passes302 focused checks and configured strict/Ruff
 checks. Root's combined4,891-unit run and strict/Ruff85 pass with stable source;
-independent combined review closes two reproduced P2 findings. Actual new runtime
-integration is still being prepared. No new model, native builder or live delivery
+independent combined review closes two reproduced P2 findings. Subsequent actual
+runtime progress and its remaining worker blocker are recorded above. No new model, native builder or live delivery
 was activated. See the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
 
 Actual SDK-mock and blocked-file tests found cancellation could outlive its

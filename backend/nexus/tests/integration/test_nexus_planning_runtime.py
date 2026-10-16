@@ -117,7 +117,7 @@ from nexus.tests.integration.nexus_planning_runtime_fixture import (
 from nexus.tests.integration.test_company_directory import migrate
 from nexus.tests.unit.test_company_provider_conformance import KEY, response
 
-DATABASE = "nexus_company_test_nexus_planning_runtime_v3"
+DATABASE = "nexus_company_test_nexus_planning_runtime_v4"
 SOCKET = "/tmp/nexus-release-tests-2026-10-13/socket"
 
 
@@ -475,14 +475,6 @@ async def test_actual_owner_planner_and_same_root_revision_without_builder_issua
         source_freshness=ready.sources.freshness,
         planning_reader=source_reader,
     )
-    management = ManagementApiServices(
-        directory,
-        ready.controls,
-        ready.goals,
-        plans,
-        views=ManagementOwnerViews(database.factory, ready.sources),
-        action_reviews=OwnerActionReviewStore(database.factory, ready.catalog, ready.sources),
-    )
     recipe = input_recipe()
     authority = ManagementPlanningAuthority(
         ready.management,
@@ -510,6 +502,16 @@ async def test_actual_owner_planner_and_same_root_revision_without_builder_issua
         type(ready.blobs)(root / "prepared", storage_symbol="nexus.planning.runtime.prepared.v1"),
         ready.sources,
         recipe,
+    )
+    management = ManagementApiServices(
+        directory,
+        ready.controls,
+        ready.goals,
+        plans,
+        views=ManagementOwnerViews(database.factory, ready.sources),
+        action_reviews=OwnerActionReviewStore(
+            database.factory, ready.catalog, ready.sources, planning=prepared_store
+        ),
     )
     resolver = Resolver()
     services = PlanningServices(

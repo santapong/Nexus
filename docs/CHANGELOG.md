@@ -1,6 +1,34 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Review protected planning actions through the owner approval path
+
+### Fixed
+- General planning action review uses the concrete prepared-input store and exact
+  native/request/descriptor/registry/source closure. Fixed charter and target
+  resources retain real Brain provenance; legacy review stays compatible.
+- Protected loading runs outside the outer company transaction. First static,
+  prepared-source and genuine bearer cutoffs survive transaction exits and full
+  JSON serialization; later access refresh cannot extend the read (ERROR-197–198).
+
+### Validation
+- 54 focused cases, configured strict/Ruff6 and one independent combined review
+  pass after retaining the original expiry counterexample. Root4,922 units pass
+  in117.39s with19 existing warnings and no failures/skips; strict/Ruff8 pass and
+  all1,693 selected Python hashes remain stable. Current generated API type
+  shapes match; frontend source is unchanged.
+- Fresh actual V4 passes protected/generic review, exact owner decision, atomic
+  dispatch/replay and fixed DBOS launch. It fails before SDK at a separate recipe
+  fingerprint mismatch (ERROR-199). The original heldUSD0.400512 reservation,
+  dispatch and failed database remain unchanged; restricted read-only audits
+  confirm zero attempts/intents and no leases. Revision2 remains unproven here.
+
+No real provider, owner-preview account, native builder or release activation is
+included. The original V1–V4 failures are retained; see the planning checkpoint.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Quote fresh planning work before its first reservation
 
 ### Fixed

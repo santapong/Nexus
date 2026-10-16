@@ -73,7 +73,7 @@ DOCUMENT_COMMIT = "f4ed4db2fb7a9c19b6322eda69bc93689b938c05"
 
 
 def key(label: str) -> UUID:
-    return uuid5(COMPANY, "nexus-planning-runtime-v3:" + label)
+    return uuid5(COMPANY, "nexus-planning-runtime-v4:" + label)
 
 
 def owner_scope(admission: NexusCycleAdmission) -> CompanyControlScope:

@@ -72,11 +72,65 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-199 — Planning history compares different recipe fingerprint formats
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open (narrow producer/history repair in progress)
+**Found by:** actual restricted-PG planning runtime v4 and read-only predicate audit
+**Affected files:** execution/planning_history.py and model action recipe identity
+
+Fresh v4 passes protected and generic owner review, wrong-hash denial, the exact
+owner decision, atomic authorization/hold/dispatch and idempotent dispatch. The
+actual DBOS worker returns blocked/ValueError before a lease or SDK request. The
+original19.359886s test remains failed; it did not reach revision2 or later gates.
+
+The separate restricted repeatable-read READ ONLY/rollback audit retains one
+authorized consumed action, one dispatch and a heldUSD0.400512 reservation, with
+zero attempts/intents, no leases and no remaining app connections. Another
+read-only predicate audit confirms actual dispatch/workflow/native metadata, but
+the recipe hash comparison fails. The producer hashes sorted compact recipe JSON;
+history compares management-canonical-v1's domain-wrapped digest. These are
+different identities. The original caught exception message was not retained, so
+the later observation does not establish its exact first thrown source line.
+
+Reuse the existing model-action digest algorithm without rewriting issued actions
+or changing whole-input/management proof hashes. Add a producer-to-history
+regression and crossed-recipe denial. Preserve this failed database, original
+action, dispatch and held money; no reset, refund or retry of that work.
+Predicate audit SHAe160ba41ae451aa70e835670e26eb539a89b72ca3960eb23dafd8ad6f507fd05.
+
+
+## ERROR-198 — Planning action review discards the first static-source expiry
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (pinned source and finite real-router/file regression)
+**Found by:** independent combined action-review review
+**Affected files:** management/action_review_store.py and paired review units
+
+The first review transaction checked static charter/target resources but dropped
+their disclosure expiry before loading the protected input outside the company
+lock. A resource outside the prepared manifest could expire during that load and
+appear renewed at the final check, extending the original read window. The
+finite counterexample supplies source/SQL facts: first expiry80ms, actual private
+read150ms, later disclosure renewed5s. The original source fails DID NOT RAISE.
+
+Retain the first static disclosure and conservatively shorten the original
+monotonic end before the first transaction exits. All later source, loaded-input,
+JWT and complete-serialization checks can only shorten it. The repaired cohort
+passes54 focused cases/10.09s, configured strict/Ruff6 and independent pinned
+review. Root's combined4,922-unit regression and strict/Ruff8 also pass. This
+finite proof does not claim real SQL expiry/renewal or live provider acceptance.
+Original source, red log and final held copies remain retained; review receipt
+SHA9a327696e880bad6b499732261b9b2d9eb5a3037cc3a33de11018fac5518a9ab.
+
+
 ## ERROR-197 — General owner action review cannot disclose the prepared planning action
 
 **Date:** 2026-10-16
 **Severity:** medium
-**Status:** open (concrete planning-review composition under diagnosis)
+**Status:** fixed (source and actual owner-review/decision/dispatch prefix)
 **Found by:** actual restricted-PG planning runtime v3
 **Affected files:** owner action review and planning input composition
 
@@ -99,7 +153,16 @@ Use concrete current-owner prepared-input/source verification for planning revie
 Do not ignore unknown conditions, invent a Brain-artifact alias, weaken source
 checks or change the assertion to accept unavailable. Original bearer/source/native
 windows and actual goal/head/charter/hash checks must survive the complete read.
-Diagnosis/repair is pending; the original failed test remains failed.
+The repair accepts only the concrete same-factory/source prepared store. It
+loads outside the outer company transaction, then reconstructs the actual
+native/request/descriptor/registry binding and complete ACL/head/descriptor
+condition tuple. Static charter/target sources still use real Brain artifacts
+and the unchanged validate_plan_action gate. Unconfigured planning stays
+unavailable. Genuine bearer and source cutoffs survive full JSON serialization.
+Root4,922 units, strict/Ruff8 and independent combined review pass. Fresh v4
+passes available generic review, wrong-hash409, exact decision200 and atomic
+dispatch/replay before the separate ERROR-199 worker failure. The original v3
+test remains failed and unchanged; no full runtime acceptance follows.
 
 
 ## ERROR-196 — First planning preparation requires an accounting row too early

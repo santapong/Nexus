@@ -26,12 +26,13 @@ from nexus.company.management.plan_support import (
 from nexus.company.management.transactions import ManagementDeniedError
 
 
-async def review_artifacts(
+async def action_resource_symbols(
     session: AsyncSession,
     binding: CurrentPlanBinding,
     proposal: ActionProposal,
     catalog: PlanAdmissionCatalog,
-) -> tuple[tuple[ArtifactRevisionRef, ...], tuple[UUID, ...]]:
+) -> tuple[str, ...]:
+    """Preserve current exact charter/model/native validation before any source disclosure."""
     row = await session.get(
         ManagementCharterRevision, (binding.company_id, binding.child.charter.revision_id)
     )
@@ -46,13 +47,32 @@ async def review_artifacts(
         "model_requests" if proposal.tool == "model.request.v1" else "tool_attempts",
         await db_clock(session),
     )
-    symbols = (
-        set(charter.charter.resource_scopes)
-        | {proposal.resource}
-        | {value.resource for value in proposal.preconditions}
-    )
+    return tuple(sorted(set(charter.charter.resource_scopes) | {proposal.resource}))
+
+
+async def review_artifacts(
+    session: AsyncSession,
+    binding: CurrentPlanBinding,
+    proposal: ActionProposal,
+    catalog: PlanAdmissionCatalog,
+) -> tuple[tuple[ArtifactRevisionRef, ...], tuple[UUID, ...]]:
+    """Legacy effects require their complete original catalog-symbol resource set."""
+    symbols = set(await action_resource_symbols(session, binding, proposal, catalog)) | {
+        value.resource for value in proposal.preconditions
+    }
+    return await review_named_artifacts(session, binding, proposal, catalog, tuple(sorted(symbols)))
+
+
+async def review_named_artifacts(
+    session: AsyncSession,
+    binding: CurrentPlanBinding,
+    proposal: ActionProposal,
+    catalog: PlanAdmissionCatalog,
+    symbols: tuple[str, ...],
+) -> tuple[tuple[ArtifactRevisionRef, ...], tuple[UUID, ...]]:
+    """Resolve fixed names; dynamic planning conditions need their separate exact proof."""
     references = {value.symbol: value.resource for value in catalog.resources}
-    if not symbols or not symbols <= references.keys():
+    if not symbols or not set(symbols) <= references.keys():
         raise ManagementDeniedError("Action review resources are not configured")
     selected = []
     for symbol in sorted(symbols):

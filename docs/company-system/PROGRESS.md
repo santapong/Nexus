@@ -1,37 +1,28 @@
 # Nexus implementation progress
 
-**Current owner view, 2026-10-16:** [Nexus product progress](RELEASE_STATUS_2026-10-16.md)
+**Current owner view, checked2026-10-16:** [Nexus product progress](RELEASE_STATUS_2026-10-16.md)
 and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexus is
-the sole delivery target; StockFlow is an optional later test. Knowledge/goal UI
-and an isolated real local preview are now implemented and source-checked; the
-preview is running at loopback5188/9188 with three committed Nexus documents.
-The separate real API/database knowledge→citation→goal→fresh-company-view
-regression passes with a synthetic test account; owner password entry and
-signed-in browser acceptance remain pending. The management audit identifies
-missing live planner integration and provider setup; the complete-input estimator,
-governed planning consumer and separate qualification path are now integrated and
-pass4,686 backend units plus strict/lint/format37. Real restricted-PG/SDK-mock
-qualification passes: both providers share one permanent Work allowance, replay
-makes no extra request and missing usage retains an unknown hold. Owner/runtime
-planning wiring and actual provider quality remain open. The current integrated
-package adds owner Model Checks, fixed DBOS qualification dispatch/recovery and
-protected result reads. The actual HTTP/DBOS/SDK-mock path reaches two known
-results and one unknown hold; its final fixture assertion fails on an expected
-status, and a separate restricted read-only audit verifies conservation. A real
-PostgreSQL planning test passes generated result → formal proposal → owner
-approval/replay under the original goal root. The local preview still has no
-configured model catalog or connected planner producer. Formal plan stores or
-offline workers do not prove autonomous management.
-The restored preview's identical processes survive a later turn with HTTP200.
-The current plan records remaining effort budgets, three bounded worker lanes
-and one combined milestone review. No preview goals,
-work or completion were seeded. Native activation
-remains blocked: Source2 passes382 source checks/setup audit, then its first
-actual case fails FaultSnapshot validation after one attempt; unknown hold and
-released lease are retained, four cases remain unissued. Exact original predicate
-is not recoverable. The separate minimal diagnostics patch now passes143 source
-checks and independent review, within its timebox; it is held, with no new native
-run. Full release open.
+the sole delivery target; StockFlow is an optional later test.
+
+The latest owner planning repair passes4,922 backend units, strict/Ruff8 and
+independent source review. The actual restricted PostgreSQL/HTTP/DBOS run now
+passes protected and generic review, exact owner decision and atomic dispatch/
+replay. Its worker stops before SDK at a distinct recipe-fingerprint mismatch.
+One heldUSD0.400512 reservation and its dispatch remain conserved; all four failed
+databases are retained. No full planning runtime, live model quality or company
+cycle is claimed. See the [exact planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
+
+The isolated local Knowledge/citation/goal preview and its real API/database
+journey are implemented. Owner account initialization and signed-in browser
+acceptance remain pending; password entry stays with the owner. The preview has
+no configured model/provider/worker activation or seeded successful work.
+
+Next: correct the model-action recipe identity join, finish the governed SDK
+candidate/same-root revision, then connect the real owner application lifecycle.
+Autonomous code authoring, whole-cycle model accounting, Strategy/presentation/
+support, current bounded builder/ARM64, reporting/email, private deployment,
+independent restore/rollback and24-hour soak remain required. Native activation
+stays off; this is progress toward the supervised release, not release completion.
 
 ## Historical implementation and qualification checkpoints
 

@@ -100,10 +100,10 @@ records the exact activation prerequisites and conditional cost arithmetic.
 
 | Lane | Owner | Next concrete result |
 | --- | --- | --- |
-| Product coordination and integration | Root | Commit the validated planning source milestone; connect its actual owner application flow |
+| Product coordination and integration | Root | Publish the validated owner-review repair; connect the actual owner application flow |
 | Model operation | Implementation lane | Prepare genuine bounded provider conformance/quality without relaxing ordinary model eligibility |
-| Actual database integration | Integration worker | Freeze and run the new restricted PostgreSQL/DBOS planning runtime with actual SDKs over mock HTTP |
-| Combined boundary review | Complete for this source milestone | Two reproduced P2 defects fixed; stable4,891-unit and configured strict/Ruff checks pass |
+| Actual database integration | Integration worker | Correct the model-action recipe/history digest join, then complete SDK candidate and same-root revision assertions; preserve the failed V4 hold/dispatch |
+| Combined boundary review | Complete for owner-review repair | First-static-expiry defect fixed; stable4,922-unit and strict/Ruff8 checks pass; actual review/decision/dispatch prefix passes |
 
 Keep Root plus at most three workers. Work is disjoint; one worker owns each
 implementation package. Root integrates at concrete milestones.

@@ -3873,8 +3873,8 @@ SDKs, existing schema and stores; add no dependency or migration here.
 ## ADR-134 — Persist exact planning input and retain the original Nexus root
 
 **Date:** 2026-10-16
-**Status:** components implemented and focused checks passed; combined runtime
-integration and application activation remain pending
+**Status:** components and exact owner review/decision/dispatch integration proven;
+full worker/same-root runtime and application activation remain pending
 
 Persist the full prepared planning request before publishing its pending native
 action. Use protected immutable body/descriptor storage and a hash-bound resource
@@ -3914,3 +3914,11 @@ expired or unfinished operation remains unconfirmed for valid reconciliation.
 Never renew an original window or turn a late response into a positive result.
 No dependency, migration, paid call, model activation or authority promotion
 follows from this source milestone.
+
+General planning review uses the actual protected prepared store, outside the
+outer company transaction, followed by exact native/descriptor/registry and
+complete source-condition reconstruction. The first static charter/target
+disclosure cutoff remains binding even when a later read sees refreshed access.
+Fresh actual V4 passes review, decision and atomic dispatch but fails before SDK
+at the separate recipe-hash identity join. Its original held reservation and all
+failed databases remain retained; no full-runtime claim follows (ERROR-197–199).
