@@ -1,6 +1,24 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Complete actual V9 setup and isolate parent scheduling risk
+
+### Validation
+- Direct published setup completes0/68.827s after independent proof of the empty
+  prepared target. Independent74-table audit verifies five unissued actions,
+  original held amounts/windows,370 projections/15 protected joins and zero
+  attempts/intents/live leases. No V9 native case has run.
+- Preserve a packet-producer timeout and correct Root's initial inaccurate absence
+  statement; unchanged packet passes a separate published passive check.
+- Identify an additional36s sleep after startup as a parent-expiry scheduling risk.
+  Prepare an independent candidate using actual scope age and the original strict
+  timing inequality; all native fault deadlines/predicates remain required.
+- Keep the full release open. Parallel source work prepares the StockFlow cycle
+  composition and a concrete Pi setup/recovery plan without activating live effects.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Publish owner progress and remaining release forecast
 
 ### Changed

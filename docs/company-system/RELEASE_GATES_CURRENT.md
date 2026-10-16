@@ -1,5 +1,12 @@
 # Supervised release evidence index
 
+Latest actual preparation: [V9 setup and parent-age scheduling](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
+passes independent file/SQL audit with all five actions unissued. The first
+packet producer times out after writing metadata; a separate published passive
+check passes. Inside startup plus an additional36s sleep exposes a pre-issuance
+parent-age risk. A new candidate will measure actual scope age while preserving
+all original fault predicates. No V9 native fault case or release pass is claimed.
+
 Latest production source: [owned stop/current V9](NATIVE_OWNED_STOP_V9_SOURCE_CHECKPOINT_2026-10-16.md)
 passes 4,307 backend units plus configured strict typing and Ruff lint/format on 11 files.
 The original seal, one-shot control, first denial and actual resource ownership

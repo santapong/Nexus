@@ -74,11 +74,78 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 <!-- New entries go here, below this line, newest first -->
 
-## ERROR-174 — Diagnostic exec namespace cannot resolve setup model annotations
+## ERROR-177 — Namespace AST forward misses a formatted preflight suffix
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (unfrozen assembly; qualification pending)
+**Found by:** Root literal-only namespace comparison
+**Affected files:** external Source2 candidate assembler
+
+The first copy stops at an AST assertion after865 files: the text forward changes
+a quoted `-1.json`, while its Constant forward leaves that value unchanged. A
+second prewrite comparison catches the same suffix inside a formatted string.
+Preserve the first partial tree and failed second script. Both are unfrozen;
+neither creates a final manifest, published operator, database or authority.
+
+Inspect all three suffix occurrences, then apply the same literal transformation
+to ordinary and formatted strings. Corrected prewrite AST comparison/copy passes
+for1,664 backend files and seven outside files. Three backend namespace surfaces
+change; the parent-age overlay and actual qualification remain separate. Validate
+all transformed input ASTs before target writes.
+
+---
+
+## ERROR-176 — Parent fault scheduling adds age after startup
 
 **Date:** 2026-10-16
 **Severity:** medium
 **Status:** open
+**Found by:** Root passive timing and independent source inspection
+**Affected files:** private negative operator scheduling
+
+The inside entry repeats source/packet/import/pre-case work, then sleeps a full
+36s before bootstrap. A comparable actual passive10.627s plus36 exceeds the45s
+parent. This is credible pre-issuance infeasibility, not an observed native failure;
+no V9 case is launched. Controller start predates scope activation and cannot
+precisely substitute for actual parent age.
+
+A prospective helper must sample the fixed manager unit's actual active-enter
+clock/invocation, wait only remaining actual age and require the unchanged full
+bootstrap to match the same unit/invocation/start/deadline. Derive age36.250001s
+from the original strict timing inequality without relying on bootstrap cost.
+Keep45/60/1/10/25, original ends, quotas and all physical predicates unchanged.
+Preserve Source1; finite checks and a new independent qualification are pending.
+
+---
+
+## ERROR-175 — Packet producer ends without its final validation receipt
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** mitigated
+**Found by:** Root actual packet preparation
+**Affected files:** external parent packet control and Root observation
+
+Outer35s exits124 after writing the preflight and packet, without the producer's
+final round-trip/terminal receipt. The precise stopping phase is unknown. A later
+imports-only cold diagnostic takes18.663s, which does not uniquely attribute the
+original timeout. Preserve its control, original clock and partial result files.
+
+Root initially incorrectly reports both files absent; actual named-file inspection
+corrects that statement and preserves the incorrect JSON report with a correction.
+A separate published passive CLI in the exact declared scope environment validates
+the unchanged packet in10.627s, exit0/empty stderr. No native case/permit is issued.
+Inspect actual paths before reporting absence; distinguish startup and operation
+envelopes, and a later passive check from completion of the original producer.
+
+---
+
+## ERROR-174 — Diagnostic exec namespace cannot resolve setup model annotations
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual direct setup; native qualification pending)
 **Found by:** Root actual fresh V9 all-five setup
 **Affected files:** external `launch-setup-1.py` diagnostic wrapper
 
@@ -98,10 +165,12 @@ An independent definitions-only reproduction confirms the same error for the
 unregistered namespace and successful model validation with a registered module.
 Receipt SHA-256 is
 `5342cfab21af47784f4ccd732e463a9789a2c80f5d040c6e4b48272417d474c9`.
-Use a normal
-direct pinned CLI or a correctly registered module for a future separately frozen
-operation; preserve the failed control, source and database. No fix or successful
-setup rerun is claimed here. Test the exact launch mechanism before live setup.
+Use a normal direct pinned CLI or a correctly registered module. An independent
+read-only snapshot confirms the prepared target has no company objects or authority
+windows. A separately frozen direct CLI then completes all-five setup0/68.827s;
+independent file/SQL audit passes. Preserve the failed wrapper/control and original
+clock. No existing action/window is renewed, and no native qualification follows.
+Test the exact launch mechanism before live setup. See [actual evidence](company-system/CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md).
 
 ---
 
@@ -4910,7 +4979,7 @@ See ERROR-018 for the original incident.
 ---
 
 *Last updated: 2026-10-13 (company foundation validation)*
-*Next error ID: ERROR-175*
+*Next error ID: ERROR-178*
 *Pre-build warnings (ERROR-001 through ERROR-003): FIXED.*
 *Security audit findings (ERROR-019 through ERROR-025): ALL FIXED (2026-03-21).*
 

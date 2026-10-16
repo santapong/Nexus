@@ -1,5 +1,12 @@
 # Nexus implementation progress
 
+Latest actual: [V9 all-five setup](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
+completes0/68.827s and passes independent74-table file/SQL audit. All five actions
+remain unissued, with original holds/windows and zero attempts/intents/leases.
+The published first packet passes passive validation after its producer timeout.
+Actual-parent-age scheduling is being corrected before a new candidate/namespace;
+no V9 native fault case has run. This supersedes the setup-failure state below.
+
 **Owner status, checked 2026-10-16:** [current milestone table and remaining
 schedule](RELEASE_STATUS_2026-10-16.md). Planning target is 15–25 further working
 days for the supervised release, with low confidence until native StockFlow and

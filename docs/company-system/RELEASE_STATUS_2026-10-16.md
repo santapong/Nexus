@@ -34,16 +34,19 @@ source passes 4,307 unit tests, configured strict typing and lint/format checks.
 The private qualification composition separately passes 354 focused checks and
 strict/lint/format checks on 43 files. Those counts describe different scopes.
 
-Fresh public fixture preparation completes successfully in 1.07 seconds. The
-subsequent all-five setup stops with exit 1 in 3.72 seconds at manifest validation:
-Pydantic cannot resolve `Literal` in the diagnostic launcher's execution namespace.
-The empty target database already exists from preparation. The traceback is
-before company001–016 schema installation/public company setup or any native case.
-An independent definitions-only reproduction confirms this launcher namespace
-defect; a correctly registered module resolves the same annotations. Actual
-corrected setup remains unverified.
-No new V9 native fault case has run. Preserve the failed operation and its original
-clock; no used action or old failed wave is resumed.
+Fresh public fixture preparation completes in1.07s. The first diagnostic launcher
+fails before schema/public setup; its namespace defect is independently reproduced.
+After a read-only audit confirms the target is still empty, the corrected direct
+CLI completes all-five setup in68.827s. Independent file/SQL audit verifies all
+five authorized actions are unissued, with zero attempts/intents/leases.
+
+The first packet producer times out after writing metadata; a separate published
+passive check validates those preserved files. Startup plus an additional36s sleep
+poses a pre-issuance timing risk inside the45s parent. A new candidate will wait
+until actual scope age36.250001s, preserving the existing strict causal guard and
+all fault deadlines. No V9 native fault case has run. See the [actual preparation
+checkpoint](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md). Failed
+operations, original clocks/windows and all old failed waves remain preserved.
 
 Earlier parent-expiry and metadata recovery pass under V8. Earlier cancellation
 fails physical process retirement, which motivated V9. Pause, READ revocation and

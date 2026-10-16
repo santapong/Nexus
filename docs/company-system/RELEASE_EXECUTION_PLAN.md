@@ -1,5 +1,11 @@
 # Nexus release execution plan
 
+Latest actual: [V9 all-five setup and parent-age finding](CURRENT_V9_SETUP_AND_PARENT_AGE_CHECKPOINT_2026-10-16.md)
+records successful direct setup and independent file/SQL audit. All actions remain
+unissued. Finish the bounded actual-parent-age source correction and new coherent
+namespace qualification before native fault launch, then continue selected
+StockFlow. The preceding launcher-only failure is preserved and resolved.
+
 **Current owner view:** [16 October progress and remaining
 schedule](RELEASE_STATUS_2026-10-16.md). V9 private source composition/freeze is
 complete. Actual fixture preparation passes; all-five setup then stops at a
