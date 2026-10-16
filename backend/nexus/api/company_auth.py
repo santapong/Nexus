@@ -12,6 +12,7 @@ from litestar.exceptions import (
     PermissionDeniedException,
     ServiceUnavailableException,
 )
+from pydantic import SecretStr
 
 from nexus.company.access import (
     AccessDeniedError,
@@ -21,6 +22,11 @@ from nexus.company.access import (
     VerifiedIdentity,
     resolve_principal_access,
     resolve_work_scope,
+)
+from nexus.company.notifications.worker_identity import (
+    AuthenticatedWorkerIdentity,
+    NotificationWorkerIdentities,
+    WorkerIdentityDeniedError,
 )
 from nexus.harness.journal_contracts import LedgerScope
 from nexus.settings import settings
@@ -126,3 +132,27 @@ async def resolve_company_control(
         operation_id=operation_id,
         trace_id=trace_id,
     )
+
+
+async def require_company_credential(request: AuthorizationRequest) -> AuthenticatedWorkerIdentity:
+    """Verify the actual request bearer through the existing opaque witness producer.
+
+    No token is minted, returned, logged or accepted from a body. The witness is
+    only an original credential window; current owner/directory checks stay mandatory.
+    """
+    identity = require_company_identity(request)
+    token = request.headers.get("authorization", "").partition(" ")[2]
+
+    class RequestBearer:
+        async def credential(self) -> SecretStr:
+            return SecretStr(token)
+
+    try:
+        witness = await NotificationWorkerIdentities(
+            RequestBearer(), SecretStr(settings.jwt_secret_key), enabled=True
+        ).current()
+        if witness.identity != identity:
+            raise WorkerIdentityDeniedError("Company authentication is unavailable")
+        return witness
+    except WorkerIdentityDeniedError:
+        raise NotAuthorizedException(detail="Company authentication required") from None

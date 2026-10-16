@@ -28,6 +28,20 @@ async def require_native_ancestry(
     """Read actual parents under the company mutex; names cannot replace registered quota."""
     if native_execution_profile(catalog, child) is None:
         return
+    if catalog.nexus_cycle_admission is not None:
+        from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
+
+        if control is None or identity is None:
+            raise ExecutionDeniedError("Nexus ancestry requires its actual current actor")
+        await read_current_nexus_family_locked(
+            session,
+            control,
+            work,
+            identity,
+            admission=catalog.nexus_cycle_admission,
+            catalog=catalog,
+        )
+        return
     if catalog.cycle_admission is not None:
         from nexus.execution.cycle_partition_checks import require_cycle_native_partition
 
@@ -60,6 +74,20 @@ async def require_notification_ancestry(
         return
     if work.actor_id != control.owner_id:
         raise ExecutionDeniedError("Native notification sender differs from the actual owner")
+    if catalog.nexus_cycle_admission is not None:
+        from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
+
+        if control is None or identity is None:
+            raise ExecutionDeniedError("Nexus ancestry requires its actual current actor")
+        await read_current_nexus_family_locked(
+            session,
+            control,
+            work,
+            identity,
+            admission=catalog.nexus_cycle_admission,
+            catalog=catalog,
+        )
+        return
     if catalog.cycle_admission is not None:
         from nexus.execution.cycle_partition_checks import require_cycle_native_partition
 

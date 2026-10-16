@@ -12,12 +12,14 @@ from nexus.company.management.base import Name, Symbol, ValueContract
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.lifecycle import PlanRevision
+from nexus.company.management.nexus_cycle_admission import NexusCycleAdmission
 from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.company.management.planning_content import PlanningContent, TaskKey
 from nexus.company.management.planning_native_facts import read_end
 from nexus.company.management.planning_origin_contracts import PlanningOriginRef
 from nexus.company.management.planning_source_reader import PlanningSourceReader
 from nexus.company.management.plans import ChildAllocation, PlanPayload
+from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 
 
 class PlanningTaskSlot(ValueContract):
@@ -33,6 +35,10 @@ class PlanningProposalTemplate(ValueContract):
     base_plan: PlanRevision
     revision: Symbol
     slots: tuple[PlanningTaskSlot, ...] = Field(min_length=1, max_length=16)
+
+    nexus_admission: NexusCycleAdmission | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def fixed_model_slots(self) -> PlanningProposalTemplate:
@@ -50,6 +56,22 @@ class PlanningProposalTemplate(ValueContract):
         original = {item.task_id for item in base.plan.items}
         if len(keys) != len(self.slots) or len(tasks) != len(self.slots) or tasks & original:
             raise ValueError("Server planning slots require unique keys and new fixed identities")
+        if self.nexus_admission is not None:
+            admission = NexusCycleAdmission.model_validate(
+                self.nexus_admission.model_dump(warnings=False)
+            )
+            if (
+                base != admission.payload("planning")
+                or tuple(slot.key for slot in self.slots)
+                != (tuple(slot.role for slot in admission.slots[1:]))
+                or any(
+                    (slot.allocation, slot.department, slot.required_dependencies)
+                    != (expected.child, expected.work.department, expected.work.depends_on)
+                    for slot, expected in zip(self.slots, admission.slots[1:], strict=True)
+                )
+            ):
+                raise ValueError("Nexus mapping differs from its exact configured roles")
+            return self
         for slot in self.slots:
             child = slot.allocation
             if (
@@ -96,6 +118,33 @@ def map_content(
     slots = {slot.key: slot for slot in template.slots}
     if {task.key for task in content.tasks} != slots.keys():
         raise ValueError("Planning task keys do not match exact server slots")
+    if template.nexus_admission is not None:
+        admission = template.nexus_admission
+        keys = {slot.work.task_id: slot.role for slot in admission.slots[1:]}
+        content_by_key = {task.key: task for task in content.tasks}
+        for slot in admission.slots[1:]:
+            if not set(content_by_key[slot.role].depends_on) <= {
+                keys[task] for task in slot.work.depends_on
+            }:
+                raise ValueError("Model ordering cannot change Nexus acceptance/trigger gates")
+        expected = admission.payload("execution", origin=origin)
+        return expected.model_copy(
+            update={
+                "plan": expected.plan.model_copy(
+                    update={
+                        "items": (
+                            base.plan.items[0],
+                            *(
+                                slot.work.model_copy(
+                                    update={"title": content_by_key[slot.role].title}
+                                )
+                                for slot in admission.slots[1:]
+                            ),
+                        )
+                    }
+                )
+            }
+        )
     items = tuple(
         WorkItem(
             company_id=base.company_id,
@@ -157,6 +206,7 @@ class PlanningProposalBridge:
         expected_goal: GoalRevisionRef,
         expected_current_revision_id: UUID,
         end_us: int,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> PlanRevision:
         end_us = read_end(end_us)
         source = await self.reader.load(
@@ -174,4 +224,5 @@ class PlanningProposalBridge:
             payload,
             expected_current_revision_id=expected_current_revision_id,
             end_us=end_us,
+            credential=credential,
         )

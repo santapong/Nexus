@@ -38,9 +38,17 @@ def require_mixed_notification_intent_check(
     before_intent: BeforeIntentCheck | None,
 ) -> None:
     """Shape/binding only; the native awaited checks and final clock remain mandatory."""
-    if catalog is None or catalog.cycle_admission is None:
+    if catalog is None or (
+        catalog.cycle_admission is None and catalog.nexus_cycle_admission is None
+    ):
         return
-    admission = validate_cycle_catalog(catalog.cycle_admission, catalog)
+    from nexus.company.management.nexus_cycle_admission import validate_nexus_catalog
+
+    admission = (
+        validate_nexus_catalog(catalog.nexus_cycle_admission, catalog)
+        if catalog.nexus_cycle_admission is not None
+        else validate_cycle_catalog(catalog.cycle_admission, catalog)
+    )
     assert admission is not None
     slot = admission.slots[-1]
     if (
@@ -169,7 +177,13 @@ class MixedCredentialNotificationIntentCheck(CredentialNotificationIntentCheck):
     def _require_composition(self) -> None:
         replace(self.reads)  # Existing pure dependency checks; no token, SQL or file read.
         catalog = self.reads.facts.catalog
-        configured = validate_cycle_catalog(catalog.cycle_admission, catalog)
+        from nexus.company.management.nexus_cycle_admission import validate_nexus_catalog
+
+        configured = (
+            validate_nexus_catalog(catalog.nexus_cycle_admission, catalog)
+            if catalog.nexus_cycle_admission is not None
+            else validate_cycle_catalog(catalog.cycle_admission, catalog)
+        )
         if configured is None:
             raise NotificationUnavailableError("Mixed notification complete cycle is unavailable")
         registered = self.operation_guard.registration

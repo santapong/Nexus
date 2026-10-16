@@ -18,6 +18,7 @@ from nexus.company.management.owner_view_contracts import (
     WorkView,
 )
 from nexus.company.pilot_session import PilotLogin, PilotSessionToken, PilotSignup
+from nexus.execution.planning_owner_reads import PlanningInputReview
 from nexus.execution.qualification_read_contracts import (
     QualificationDispatchRecord,
     QualificationRecipeView,
@@ -49,6 +50,7 @@ def export(source: Path, destination: Path) -> None:
         QualificationResultView,
         QualificationStatus,
         PreparedQualification,
+        PlanningInputReview,
     ):
         # Optional model-check response definitions come from the concrete backend
         # models even when that service is unmounted. This adds no runtime route.

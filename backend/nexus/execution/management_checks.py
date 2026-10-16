@@ -18,6 +18,7 @@ from nexus.company.brain.base import BrainReadScope
 from nexus.company.brain.source_models import BrainArtifactRevision
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.contracts.actions import ActionProposal
+from nexus.company.directory_models import RegisteredWork
 from nexus.company.management.acceptance import WorkAcceptance
 from nexus.company.management.acceptance_models import (
     ManagementAcceptanceInvalidation,
@@ -333,9 +334,18 @@ async def require_management_execution(
             is not None
         ):
             raise ExecutionDeniedError("Management schema is incomplete")
+        if catalog is not None and catalog.nexus_cycle_admission is not None:
+            raise ExecutionDeniedError("Nexus requires the actual complete management schema")
         return
     management_kind = await ManagementPlanStore.managed_kind(session, work.company_id, work.task_id)
     if management_kind == "unmanaged":
+        if catalog is not None and catalog.nexus_cycle_admission is not None:
+            actual = await session.get(RegisteredWork, (work.company_id, work.task_id))
+            if (
+                actual is None
+                or actual.root_task_id == catalog.nexus_cycle_admission.procedure.binding.task_id
+            ):
+                raise ExecutionDeniedError("Unmanaged work cannot spend a Nexus procedure slice")
         return
     if management_kind == "procedure" or catalog is None:
         raise ExecutionDeniedError(
@@ -377,6 +387,17 @@ async def require_management_execution(
         trace_id=work.trace_id,
     )
     try:
+        if catalog.nexus_cycle_admission is not None:
+            from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
+
+            await read_current_nexus_family_locked(
+                session,
+                control,
+                work,
+                identity,
+                admission=catalog.nexus_cycle_admission,
+                catalog=catalog,
+            )
         await require_native_ancestry(
             session, work, catalog, binding.child, control=control, identity=identity
         )

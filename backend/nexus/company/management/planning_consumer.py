@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime
+from typing import cast
 from uuid import uuid5
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -13,12 +15,14 @@ from nexus.company.brain.context_store import PersistentContextAssembler
 from nexus.company.brain.model_context_check import BrainModelContextCheck
 from nexus.company.contracts.actions import ResourceRevision
 from nexus.company.management.model_observations import ModelEligibilityObservation
+from nexus.company.management.nexus_planning_intent import NexusPlanningIntentCheck
 from nexus.company.management.planning_content import (
     PlanningAttempt,
     PlanningCandidate,
     PlanningContent,
 )
 from nexus.company.management.planning_intent import PlanningIntentCheck, PreparedPlanningRequest
+from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.core.llm.company_adapter_contracts import EndpointResolver, request_hash
 from nexus.core.llm.company_pricing import reconcile_cost
 from nexus.core.llm.company_registry import DataClassification, ModelRegistry
@@ -63,6 +67,9 @@ class RegisteredPlanningConsumer:
         resources: tuple[ResourceRevision, ...],
         allowed_classification: DataClassification,
         model_observations: tuple[ModelEligibilityObservation, ...] = (),
+        authenticated_actor: AuthenticatedWorkerIdentity | None = None,
+        end_us: int | None = None,
+        sdk_end_us: int | None = None,
     ) -> None:
         if (
             not isinstance(contexts, PersistentContextAssembler)
@@ -86,6 +93,38 @@ class RegisteredPlanningConsumer:
         self._observations = tuple(model_observations)
         self._used = False
         self._reads: list[asyncio.Task[ModelEvidence]] = []
+        self._clients: list[GovernedModelClient] = []
+        self._credential, self._stopped = authenticated_actor, False
+        now = time.monotonic_ns() // 1000
+        if end_us is not None and (type(end_us) is not int or end_us <= now):
+            raise ValueError("Original planning read end is invalid or expired")
+        if sdk_end_us is not None and (
+            type(sdk_end_us) is not int or end_us is None or not now < sdk_end_us <= end_us
+        ):
+            raise ValueError("Original planning SDK end exceeds its operation")
+        self._end_us, self._sdk_end_us = end_us, sdk_end_us
+
+    def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
+        """Keep actual client, native and protected IO owners reachable after a failed call."""
+        return tuple(
+            dict.fromkeys(
+                (
+                    *self._evidence.pending_owners(),
+                    *(
+                        cast(asyncio.Task[object], task)
+                        for task in self._reads
+                        if not task.done() or task.cancelled()
+                    ),
+                    *(task for client in self._clients for task in client.pending_owners()),
+                )
+            )
+        )
+
+    def request_stop(self) -> None:
+        """Latch local admission denial and retain all actual issued client resources."""
+        self._stopped = True
+        for client in self._clients:
+            client.request_stop()
 
     @property
     def evidence(self) -> FileModelEvidenceStore:
@@ -121,6 +160,11 @@ class RegisteredPlanningConsumer:
             self._lease,
             allowed_classification=self._classification,
         )
+        intent = PlanningIntentCheck(context_check, prepared, registry=self._registry)
+        if self._management.catalog.nexus_cycle_admission is not None:
+            if self._credential is None:
+                raise ValueError("Nexus planning requires its authenticated actor witness")
+            intent = NexusPlanningIntentCheck(intent, self._credential)
         gate = PersistentModelCallAuthorizer(
             self._factory,
             self._lease,
@@ -131,7 +175,7 @@ class RegisteredPlanningConsumer:
             input_recipe=self._recipe,
             allowed_classification=self._classification,
             evidence_store=self._evidence,
-            additional_before_intent=PlanningIntentCheck(context_check, prepared),
+            additional_before_intent=intent,
             management=self._management,
             model_observations=self._observations,
         )
@@ -143,18 +187,21 @@ class RegisteredPlanningConsumer:
             self._lease,
             self._identity,
             model_observations=self._observations,
+            end_us=self._end_us,
+            sdk_end_us=self._sdk_end_us,
         )
 
     async def request_once(
         self, prepared: PreparedPlanningRequest, *, now: datetime
     ) -> PlanningAttempt:
-        if self._used:
+        if self._used or self._stopped:
             raise ValueError("A consumer permits only one planning request")
         self._used = True  # No await separates the one-shot check and consumption.
         prepared = PreparedPlanningRequest.model_validate_json(
             prepared.model_dump_json(by_alias=True)
         )
         client = self._client(prepared)
+        self._clients.append(client)
         governed = await client.request_once(prepared.request, now=now)
         if not _successful(governed):
             return PlanningAttempt(governed=governed, candidate=None, denial="model_outcome")
@@ -163,12 +210,18 @@ class RegisteredPlanningConsumer:
         read = asyncio.create_task(self._evidence.load(recorded.artifact))
         self._reads.append(read)
         try:
-            saved = await asyncio.shield(read)
+            if self._end_us is None:
+                saved = await asyncio.shield(read)
+            else:
+                async with asyncio.timeout(
+                    max(0, self._end_us - time.monotonic_ns() // 1000) / 1_000_000
+                ):
+                    saved = await asyncio.shield(read)
         except asyncio.CancelledError:
             # Keep the real thread-backed read owner; never cancel it or promote its late value.
             read.add_done_callback(_consume_read)
             raise PlanningReadCancelledError(governed, read) from None
-        except (ValueError, OSError):
+        except (ValueError, OSError, TimeoutError):
             return PlanningAttempt(governed=governed, candidate=None, denial="evidence_unavailable")
         try:
             matches = self._matches(prepared, governed, saved)
@@ -185,6 +238,8 @@ class RegisteredPlanningConsumer:
         except ValueError:
             return PlanningAttempt(governed=governed, candidate=None, denial="invalid_content")
         assert recorded.receipt_id is not None
+        if self._end_us is not None and time.monotonic_ns() // 1000 >= self._end_us:
+            return PlanningAttempt(governed=governed, candidate=None, denial="evidence_unavailable")
         return PlanningAttempt(
             governed=governed,
             candidate=PlanningCandidate(

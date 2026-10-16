@@ -340,6 +340,7 @@ def validate_plan_action(
                     "native_profiles": (),
                     "notification_profiles": (),
                     "cycle_admission": None,
+                    "nexus_cycle_admission": None,
                 }
             ),
             child,
@@ -356,6 +357,16 @@ def validate_plan_action(
             selected_slot.tool.resource,
         ):
             raise ManagementDeniedError("Cycle effect differs from its exact declared role tuple")
+    if catalog.nexus_cycle_admission is not None:
+        slot = next(
+            (slot for slot in catalog.nexus_cycle_admission.slots if slot.child == child), None
+        )
+        if slot is None or (proposal.tool, proposal.tool_version, proposal.resource) != (
+            slot.tool.tool,
+            slot.tool.tool_version,
+            slot.tool.resource,
+        ):
+            raise ManagementDeniedError("Nexus effect differs from its exact configured role")
     permission = next(
         (
             row

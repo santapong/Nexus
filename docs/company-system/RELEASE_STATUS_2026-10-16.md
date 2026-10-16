@@ -13,14 +13,41 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | Real restricted-PG result → formal proposal → owner approval/replay passes under the original goal/root; current source/goal/head checks are implemented | Persist and disclose the prepared input, connect the initial-plan producer/worker and owner presentation |
-| Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified | Opt-in application composition, real conformance and representative quality; models remain disabled |
+| Management-generated planning | Prior restricted-PG result → formal proposal → owner approval/replay passes. Protected input, owner review and fixed preparation/dispatch/worker components now pass combined source validation | Prove the new restricted-PG/DBOS runtime, then configure the actual owner journey |
+| Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
 ## Latest actual result
+
+The current planning source package adds the complete registered GoalDefinition
+and its cited evidence to context assembly, with the goal explicitly treated as
+untrusted data. Saved preparation binds the exact complete input estimate,
+original registry/model and response schema before approval. Current-owner reads
+check access before protected bytes; the interface displays the exact model,
+input, instructions, output cap and maximum reservation. A fresh matching native
+record and saved input are required before each explicit decision. Focused UI,
+session, qualification and knowledge API checks, TypeScript and the production
+build pass. This is source verification, not signed-in browser acceptance.
+
+An optional Nexus-specific admission now describes one permanent root: planning
+first, then the same planning child plus distinct engineering author/verifier,
+report author/verifier and owner notification work. The first slice uses a
+mechanical engineering recipe; it does not implement an autonomous LLM code
+author. Its report covers selected engineering work, not whole-cycle planning
+costs. The42-file component passes302 focused checks and configured strict/Ruff
+checks. Root's combined4,891-unit run and strict/Ruff85 pass with stable source;
+independent combined review closes two reproduced P2 findings. Actual new runtime
+integration is still being prepared. No new model, native builder or live delivery
+was activated. See the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md).
+
+Actual SDK-mock and blocked-file tests found cancellation could outlive its
+resource owner. The repair retains the actual SDK, close, native settlement and
+file tasks. Workers cannot release while those tasks remain pending; expired
+original leases remain unconfirmed for separate valid reconciliation. This is
+finite source evidence; process recovery remains a separate gate (ERROR-192).
 
 The local frontend is running at <http://127.0.0.1:5188/company/login> with the
 backend on loopback port9188. A fresh, isolated preview uses the normal company

@@ -4,6 +4,8 @@ import { useActionReview, useExactActionDecision } from '@/hooks/useCompany'
 import type { ActionReview, CompanyIdentity } from '@/types/company'
 import { CompanyQueryState, money, StateLabel } from '@/components/company/CompanyStatus'
 import { Button } from '@/components/ui/button'
+import { CompanyPlanningReview } from '@/components/company/CompanyPlanningReview'
+import { isPlanningAction } from '@/hooks/companyPlanningState'
 
 function ExactReview({ data }: { data: ActionReview }) {
   const [reviewed, setReviewed] = useState(false)
@@ -50,6 +52,8 @@ export function CompanyActionReviewPage() {
     error={query.error} refresh={() => { void query.refetch() }} />
   return <div className="space-y-5"><div className="flex flex-wrap justify-between gap-3">
     <h2 className="text-2xl font-semibold text-white">Action review</h2><StateLabel>{query.data.audit.state.replace(/_/g, ' ')}</StateLabel></div>
-    <ExactReview key={query.data.audit.proposal_sha256} data={query.data} />
+    {isPlanningAction(query.data)
+      ? <CompanyPlanningReview review={query.data} refreshing={query.isFetching} />
+      : <ExactReview key={query.data.audit.proposal_sha256} data={query.data} />}
   </div>
 }

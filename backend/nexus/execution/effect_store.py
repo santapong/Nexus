@@ -107,6 +107,11 @@ class EffectStore:
             qualification = bind_qualification_intent_check(
                 self._factory, self, work, lease, identity, action, kind, before_intent
             )
+            from nexus.execution.nexus_intent_gate import bind_nexus_intent_check
+
+            nexus = bind_nexus_intent_check(
+                self._factory, self, work, lease, identity, action, kind, before_intent, now=now
+            )
             from nexus.execution.selected_intent_gate import require_selected_intent_check
 
             require_selected_intent_check(
@@ -135,6 +140,7 @@ class EffectStore:
             if before_intent is not None:
                 await before_intent.validate(session, control, work, action, now)
             qualification.require_current(work, action, before_intent)
+            nexus.require_current(work, action, before_intent)
             active = await session.scalar(
                 select(EffectIntent.action_id).where(
                     EffectIntent.company_id == work.company_id,
@@ -162,6 +168,8 @@ class EffectStore:
                 session, control, work, action_id, now, resources, lease_scope(lease), identity
             )
             qualification.require_current(work, action, before_intent)
+            nexus.require_current(work, action, before_intent)
+            nexus.validate_time(now)
             try:
                 await hold_to_effect_day(session, control, lease_scope(lease), action_id, now)
             except ValueError as exc:
@@ -183,11 +191,14 @@ class EffectStore:
             )
             session.add(row)
             await session.flush()
-            if isinstance(before_intent, FinalIntentTimeCheck):
+            if isinstance(before_intent, FinalIntentTimeCheck) or nexus.children:
                 final = await db_now(session)
                 require_lease(work, lease, final, execute=True)
-                before_intent.validate_time(final)
+                if isinstance(before_intent, FinalIntentTimeCheck):
+                    before_intent.validate_time(final)
+                nexus.validate_time(final)
             qualification.require_current(work, action, before_intent)
+            nexus.require_current(work, action, before_intent)
             return EffectStart(record=effect_record(row), permit_external_call=True)
 
     async def revalidate_execution_locked(

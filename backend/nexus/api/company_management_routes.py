@@ -10,7 +10,11 @@ from litestar.response import Response
 from litestar.types import ExceptionHandlersMap
 from pydantic import ValidationError
 
-from nexus.api.company_auth import require_company_identity, resolve_company_control
+from nexus.api.company_auth import (
+    require_company_credential,
+    require_company_identity,
+    resolve_company_control,
+)
 from nexus.api.company_management_read_routes import CompanyManagementReadController
 from nexus.api.company_routes import ApiError, CompanyRequest, company_identity_guard
 from nexus.company.access import (
@@ -137,11 +141,17 @@ class CompanyManagementController(CompanyManagementReadController):
         management_services: NamedDependency[ManagementApiServices],
     ) -> PlanRevision:
         scope, identity = await _owner(request, management_services, company_id)
+        credential = (
+            await require_company_credential(request)
+            if management_services.plans.catalog.nexus_cycle_admission is not None
+            else None
+        )
         return await management_services.plans.propose(
             scope,
             identity,
             data.payload,
             expected_current_revision_id=data.expected_current_revision_id,
+            credential=credential,
         )
 
     @post("/plans/{plan_revision_id:uuid}/approve", status_code=200)
@@ -154,12 +164,18 @@ class CompanyManagementController(CompanyManagementReadController):
         management_services: NamedDependency[ManagementApiServices],
     ) -> PlanRevision:
         scope, identity = await _owner(request, management_services, company_id)
+        credential = (
+            await require_company_credential(request)
+            if management_services.plans.catalog.nexus_cycle_admission is not None
+            else None
+        )
         return await management_services.plans.approve_and_register(
             scope,
             identity,
             plan_revision_id,
             data.exact_hash,
             expected_current_revision_id=data.expected_current_revision_id,
+            credential=credential,
         )
 
     @post("/plans/{plan_revision_id:uuid}/revoke", status_code=200)

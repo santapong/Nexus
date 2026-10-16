@@ -8,11 +8,15 @@ from sqlalchemy import func, select
 from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.report_inputs import native_author
+from nexus.company.notifications.worker_identity import (
+    AuthenticatedWorkerIdentity,
+    NotificationWorkerIdentities,
+)
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_models import SegmentDispatch
 from nexus.execution.native_report_services import NativeReportServices
 from nexus.execution.runtime_contracts import ExecutionDeniedError, ExecutionLease
-from nexus.execution.runtime_models import ExecutionWork
+from nexus.execution.runtime_models import EffectIntent, ExecutionWork
 from nexus.harness.journal import CompanyJournal
 from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import CompanyControl
@@ -27,6 +31,9 @@ class NativeReportContext:
     action: ActionProposal
     identity: VerifiedIdentity
     lease: ExecutionLease
+    credential: AuthenticatedWorkerIdentity | None = None
+    credential_provider: NotificationWorkerIdentities | None = None
+    original_end_us: int | None = None
 
 
 async def prepare_context(
@@ -52,6 +59,10 @@ async def prepare_context(
             or dispatch.workflow_id != command.workflow_id
         ):
             raise ExecutionDeniedError("Native queued dispatch is unavailable")
+        if services.publisher.catalog.nexus_cycle_admission is not None and (
+            await session.get(EffectIntent, (command.company_id, command.action_id)) is not None
+        ):
+            raise ExecutionDeniedError("Issued Nexus report uses metadata history, not a new lease")
         binding, _ = native_author(row)
         if (binding.workflow_name, binding.workflow_version) != (
             services.registration.workflow_name,
@@ -69,6 +80,10 @@ async def prepare_context(
     )
     command.require_scope(scope)
     action = (await CompanyJournal(services.factory).get_action(scope, command.action_id)).proposal
+    if services.publisher.catalog.nexus_cycle_admission is not None:
+        from nexus.execution.nexus_report_auth import acquire_nexus_report
+
+        return await acquire_nexus_report(services, command, action, signed, binding, scope)
     lease = await recover_lease(services, scope, signed, command)
     return NativeReportContext(services, command, action, signed, lease)
 

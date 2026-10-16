@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, cast
 from uuid import uuid4
 
 from nexus.company.brain.sources import ArtifactRevisionRef
@@ -54,6 +55,21 @@ class ProtectedBlobStore:
         if not root.is_absolute() or root.resolve() != root or root.is_symlink():
             raise ValueError("Blob store requires a protected absolute nonsymlink root")
         self._root, self._symbol = root, storage_symbol
+        self._owners: list[asyncio.Task[object]] = []
+
+    def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
+        return tuple(task for task in self._owners if not task.done() or task.cancelled())
+
+    async def _owned[T](self, call: Callable[[], T]) -> T:
+        self._owners[:] = list(self.pending_owners())
+        task = asyncio.create_task(asyncio.to_thread(call))
+        self._owners.append(cast(asyncio.Task[object], task))
+        task.add_done_callback(lambda value: None if value.cancelled() else value.exception())
+        try:
+            return await asyncio.shield(task)
+        except BaseException as first:
+            first.__dict__["_nexus_blob_pending"] = self.pending_owners()
+            raise
 
     @property
     def storage_symbol(self) -> str:
@@ -97,7 +113,7 @@ class ProtectedBlobStore:
             finally:
                 os.close(descriptor)
 
-        await asyncio.to_thread(write)
+        await self._owned(write)
 
     @staticmethod
     def _read(path: Path) -> bytes:
@@ -106,6 +122,6 @@ class ProtectedBlobStore:
             return stream.read(2_097_153)
 
     async def read(self, artifact: ArtifactRevisionRef) -> bytes:
-        raw = await asyncio.to_thread(lambda: self._read(self._path(artifact)))
+        raw = await self._owned(lambda: self._read(self._path(artifact)))
         _require_bytes(artifact, raw)
         return raw

@@ -1,0 +1,103 @@
+# Exact planning input and the permanent Nexus workflow
+
+Checked 2026-10-16. This is a source milestone toward the Nexus-only supervised
+release. It adds no model activation, paid request, native builder launch,
+deployment or authority promotion. The owner preview remains unconfigured for
+planning and account initialization stays with the owner.
+
+## Resulting behavior
+
+The concrete planning authority reads the actual registered goal, current plan,
+mandate, charter and actor permissions. It includes the complete GoalDefinition
+as untrusted data and retrieves baseline citations through ordinary Brain source
+checks. Goal content cannot provide permissions, policy or completion.
+
+Trusted preparation claims the actor's real work, assembles current context,
+estimates complete financial input and saves an immutable protected body and
+descriptor. Its pending action contains exact model parameters and the verified
+descriptor resource marker. The original registry/model/recipe, response schema,
+source revisions, goal and plan-head comparison remain bound to the saved input.
+The worker releases into the existing owner-wait state without a model request.
+
+The optional owner endpoint discloses that exact saved input after current owner
+and source checks. The interface shows the provider/model, input, company
+instructions, output cap and maximum reservation. A fresh matching native review
+and protected input precede each explicit decision. Private responses use
+no-store; their original signed bearer window survives directory reads, protected
+I/O and full strict-alias JSON serialization. A model-request approval does not
+approve the generated formal plan.
+
+After owner decision, a genuine configured actor can perform a data-only read
+before the control-first transaction atomically authorizes the action, holds its
+cost and enqueues the fixed planning segment. The workflow ABI is
+`company.planning.v1`/`v1`, queue `nexus.planning`, application `nexus-planning`.
+The worker requires its real finite credential and original lease; the command's
+actor identifier is not authentication. Native issued history joins permanent
+dispatch and actual DBOS input metadata before any credential, private body,
+new lease or SDK call. Known replay cannot issue another request.
+
+An optional closed Nexus admission preserves one permanent root from its initial
+planning child to a subsequent owner-approved revision containing distinct
+engineering author/verifier, report author/verifier and owner notification work.
+Native intent checks require the concrete source, credential, containment and
+role compositions. Original lifetime money, attempts, revision and delegated
+slices remain conserved; absent configuration grants no Nexus effects.
+
+SDK, context-close, native settlement and protected filesystem tasks remain
+strongly owned through cancellation. A stop latch denies new issuance while
+actual work settles. Release requires settled owners and the original live lease
+and credential. Expired or unfinished operations remain unconfirmed for valid
+reconciliation. Cancellation preserves actual issued-outcome metadata, denies a
+candidate and continues to raise the original cancellation.
+
+## Validation
+
+Component checks cover actual SDKs over mock HTTP, real blocked file operations,
+supplied native state, current actor/owner/source joins and ordinary legacy paths.
+The independent combined review reproduces and closes two P2 findings:
+
+- A private input read originally returned200 after its JWT expired during a
+  2.2-second blocked read. The same real-router/file recipe now returns503 with
+  no input; pending protected owners settle separately on their server loop.
+- Cancellation originally projected an issued/unknown governed result as merely
+  blocked. The repaired pure projection retains unknown/known recorded facts,
+  leaves unconfirmed native state absent and grants no candidate or retry.
+
+The reviewed manifest pins 98 production, unit, UI and shared dependency files.
+Review SHA `b9a37396440809b908ab14d1bfc6b28f990f869d690eb2d77caa0bc1f92a4a62`;
+source manifest SHA `78d937f0763daeca4095dfd26c6a3bc236c7e4d31677e06a20a46f4aa2efb0ed`.
+No unaddressed material source finding was established. This is not runtime
+acceptance. Root's combined run passes all 4,891 backend units in116.33s with no
+failures/skips and19 existing warnings. Configured nonsilent strict typing and
+Ruff check/format pass85 changed Python paths. All1,688 selected Python source
+hashes remain stable; the four historical unrelated paths and two active
+integration drafts are explicitly excluded.
+
+Focused planning/session/qualification/knowledge API frontend checks, TypeScript
+and production build pass. The final generated definitions are byte-exact with
+the current concrete serialization schema. Signed-in browser acceptance remains
+open. Two new integration draft files are excluded from this source milestone;
+their collection/static preparation is not actual PostgreSQL/DBOS execution.
+
+## Remaining delivery gates
+
+- Configure the real application, model catalog/quality and current owner/actor
+  credentials; connect initial goal preparation and explicit dispatch in the
+  owner flow. Opt-in qualification application composition itself is source
+  checked, not a running provider qualification.
+- Run the frozen restricted PostgreSQL/DBOS/SDK-mock integration. Preserve actual
+  failures, unknown holds and original windows rather than resetting state.
+- Qualify initial preparation recovery. It is currently an explicit trusted
+  operation, with no accepted crash-recovery proof between pending publication
+  and owner-wait transition.
+- Add governed LLM code authoring and whole-cycle model evidence/accounting. The
+  first engineering slice is mechanical; its report covers selected engineering
+  work. Neither proves the complete autonomous Builder or company cycle. Reserve
+  the complete root before live admission; do not widen an already consumed root.
+- Complete Nexus-owned Strategy, presentation/support and the real owner
+  report/notification journey, genuine provider conformance/quality, bounded
+  builder/ARM64, email, private access, independent restore with RPO/RTO, rollback
+  and24-hour soak. Current V9 builder activation remains blocked.
+
+See the [current progress](RELEASE_STATUS_2026-10-16.md),
+[Nexus-focused plan](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md) and ADR-134.

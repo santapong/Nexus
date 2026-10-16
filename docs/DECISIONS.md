@@ -3869,3 +3869,48 @@ producer or launched qualification worker. Full prepared-input durability, owner
 planning disclosure, runtime composition, genuine provider conformance/quality and
 the explicit mixed planning/native profile remain delivery work. Reuse the pinned
 SDKs, existing schema and stores; add no dependency or migration here.
+
+## ADR-134 — Persist exact planning input and retain the original Nexus root
+
+**Date:** 2026-10-16
+**Status:** components implemented and focused checks passed; combined runtime
+integration and application activation remain pending
+
+Persist the full prepared planning request before publishing its pending native
+action. Use protected immutable body/descriptor storage and a hash-bound resource
+precondition; generic journal parameters keep their existing exact model fields.
+Include the actual registered GoalDefinition as untrusted context data and load
+its baseline evidence through the actor's current Brain permissions. A goal can
+describe desired work; it cannot supply policy, permissions or completion.
+
+Present the exact saved input, company instructions, model, output cap and maximum
+financial reservation to the current owner before an explicit action decision.
+Join the saved whole-input proof to the original registry/model/recipe as well as
+the request. Access checks precede private bytes, and original windows survive
+the final read/transaction boundary. Approval of a model request remains separate
+from approval of its generated formal plan.
+
+Keep actor preparation, owner decision, atomic authorization/dispatch and worker
+execution distinct. Before dispatch, data-only actor reads require genuine
+current actor/source authority but no manufactured execution lease. Authorization,
+hold and fixed DBOS enqueue share the native control-first transaction. Historical
+queue reads bind actual stored dispatch/workflow/input metadata and cannot issue
+another request. Fresh execution uses the actor's real finite credential and the
+original lease; a command's actor identifier alone is never authentication.
+
+An optional closed Nexus admission reserves one permanent root for the first
+planning child and later distinct engineering author/verifier, report
+author/verifier and owner notification children. The protected planning origin and
+owner-approved next revision preserve that root and all lifetime quotas. Require
+the concrete role-specific source/intent checks at the native permit boundary;
+legacy or absent configuration grants no new Nexus effects. The first mechanical
+engineering slice and selected-work report do not establish autonomous code
+authoring, whole-cycle accounting or the complete company operating cycle.
+
+Retain the actual SDK, context-close, native settlement and filesystem tasks
+through cancellation. A stop latch denies new issuance while existing resources
+settle. Release requires the original still-valid lease and credential; an
+expired or unfinished operation remains unconfirmed for valid reconciliation.
+Never renew an original window or turn a late response into a positive result.
+No dependency, migration, paid call, model activation or authority promotion
+follows from this source milestone.

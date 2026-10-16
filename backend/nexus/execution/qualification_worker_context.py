@@ -46,7 +46,13 @@ class QualificationOperation:
     """Caller-local owner of real tasks and any acquired lease, including failed preparation."""
 
     def __init__(self, services: QualificationWorkerServices) -> None:
+        services.require_accepting()
         self.services = services
+        driver = asyncio.current_task()
+        if driver is None:
+            raise ValueError("Qualification operation needs its actual orchestration task")
+        self.driver = driver
+        self._stop_sent = False
         self.started = clock_us()
         self.end = self.started + ENTRY_SECONDS * 1_000_000
         self.acquire_end = self.started + ACQUISITION_SECONDS * 1_000_000
@@ -58,6 +64,14 @@ class QualificationOperation:
         self.first: BaseException | None = None
         self.released = False
         self.running = True
+
+    def request_stop(self) -> None:
+        """Existing client cancellation owns its exchange; never cancel actual leaf handles."""
+        if not self._stop_sent and self.running and not self.driver.done():
+            self._stop_sent = True
+            self.driver.get_loop().call_soon_threadsafe(
+                self.driver.cancel, "Qualification worker stopping"
+            )
 
     def require_current(self) -> None:
         current(self.end)

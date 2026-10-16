@@ -22,6 +22,10 @@ from nexus.company.management.native_execution_profiles import (
     NativeExecutionProfile,
     validate_native_profiles,
 )
+from nexus.company.management.nexus_cycle_admission import (
+    NexusCycleAdmission,
+    validate_nexus_catalog,
+)
 from nexus.company.notifications.native_profile_checks import validate_notification_profiles
 from nexus.company.notifications.native_profile_contracts import NativeNotificationProfile
 from nexus.core.llm.company_registry import ModelRegistry, Profile
@@ -57,6 +61,10 @@ class PlanAdmissionCatalog(ManagementContract):
         default=None, exclude_if=lambda value: value is None
     )
 
+    nexus_cycle_admission: NexusCycleAdmission | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
     @model_validator(mode="after")
     def exact_catalog(self) -> Self:
         require_company(self.company_id, self.models, *(row.resource for row in self.resources))
@@ -68,4 +76,5 @@ class PlanAdmissionCatalog(ManagementContract):
         if len({row.symbol for row in self.resources}) != len(self.resources):
             raise ValueError("Admission resources must have unique exact symbols")
         validate_cycle_catalog(self.cycle_admission, self)
+        validate_nexus_catalog(self.nexus_cycle_admission, self)
         return self

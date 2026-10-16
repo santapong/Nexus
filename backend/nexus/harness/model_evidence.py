@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, cast
 from uuid import UUID, uuid4, uuid5
 
 from pydantic import AwareDatetime, Field
@@ -91,6 +92,22 @@ class FileModelEvidenceStore:
         if not root.is_absolute() or root.resolve() != root:
             raise ValueError("Evidence root must be absolute and contain no symlink")
         self._root = root
+        self._owners: list[asyncio.Task[object]] = []
+
+    def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
+        """Actual unfinished filesystem owners; their completion grants no result authority."""
+        return tuple(task for task in self._owners if not task.done() or task.cancelled())
+
+    async def _owned[T](self, call: Callable[[], T]) -> T:
+        self._owners[:] = self.pending_owners()
+        task = asyncio.create_task(asyncio.to_thread(call))
+        self._owners.append(cast(asyncio.Task[object], task))
+        task.add_done_callback(lambda done: None if done.cancelled() else done.exception())
+        try:
+            return await asyncio.shield(task)
+        except BaseException as first:
+            first.__dict__["_nexus_model_pending"] = self.pending_owners()
+            raise
 
     def _path(self, company: UUID, action: UUID, request: UUID) -> Path:
         path = self._root / str(company) / str(action) / f"{request}.json"
@@ -135,7 +152,7 @@ class FileModelEvidenceStore:
                 os.close(directory)
             return evidence
 
-        saved = await asyncio.to_thread(write)
+        saved = await self._owned(write)
         return await self._reference(path, saved)
 
     @staticmethod
@@ -150,7 +167,7 @@ class FileModelEvidenceStore:
         return evidence
 
     async def _reference(self, path: Path, evidence: ModelEvidence) -> ArtifactRef:
-        digest = await asyncio.to_thread(lambda: hashlib.sha256(path.read_bytes()).hexdigest())
+        digest = await self._owned(lambda: hashlib.sha256(path.read_bytes()).hexdigest())
         call = evidence.request
         return ArtifactRef(
             company_id=call.company_id,
@@ -168,7 +185,7 @@ class FileModelEvidenceStore:
             parent.is_symlink() for parent in (path, *path.parents)
         ):
             raise ValueError("Artifact is outside the protected model evidence store")
-        evidence = await asyncio.to_thread(self._read, path)
+        evidence = await self._owned(lambda: self._read(path))
         expected = self._path(
             evidence.request.company_id, evidence.request.action_id, evidence.request.request_id
         )

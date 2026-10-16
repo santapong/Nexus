@@ -118,6 +118,11 @@ def native_execution_profile(
 
 def require_native_plan(catalog: PlanAdmissionCatalog, payload: PlanPayload) -> None:
     """Initial native plans are one closed author/verifier pair with a zero-model root."""
+    if catalog.nexus_cycle_admission is not None:
+        from nexus.company.management.nexus_cycle_admission import select_nexus_plan
+
+        select_nexus_plan(catalog.nexus_cycle_admission, catalog, payload)
+        return
     if catalog.cycle_admission is not None:
         from nexus.company.management.cycle_admission import validate_stockflow_cycle
         from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog

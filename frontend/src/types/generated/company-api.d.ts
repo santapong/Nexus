@@ -1127,14 +1127,20 @@ export interface components {
         /** AssembledContext */
         AssembledContext: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
             manifest: components["schemas"]["ContextManifest"];
+            /** System Text */
             system_text: string;
+            /** Input Text */
             input_text: string;
         };
         /**
@@ -1339,21 +1345,34 @@ export interface components {
             allocation_usd: string;
             quota: components["schemas"]["AttemptQuota"];
         };
-        /** CitationHandle */
+        /**
+         * CitationHandle
+         * @description Opaque exact citation metadata; a handle never authorizes source text retrieval.
+         */
         CitationHandle: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Evidence Id
+             * Format: uuid
+             */
             evidence_id: string;
             record: components["schemas"]["EvidenceRecord"];
-            source_contributors: (components["schemas"]["SourceRevisionRef"] | unknown)[];
-            contributors: (components["schemas"]["ResourceGeneration"] | unknown)[];
-            source_heads: (components["schemas"]["SourceHead"] | unknown)[];
+            /** Source Contributors */
+            source_contributors: components["schemas"]["SourceRevisionRef"][];
+            /** Contributors */
+            contributors: components["schemas"]["ResourceGeneration"][];
+            /** Source Heads */
+            source_heads: components["schemas"]["SourceHead"][];
         };
         /** CommitmentContent */
         CommitmentContent: {
@@ -1644,107 +1663,228 @@ export interface components {
              */
             next_commitment_after_id: string | null;
         };
-        /** ContextAuthorityState */
+        /**
+         * ContextAuthorityState
+         * @description Output of a trusted current-state provider; source/model text cannot supply it.
+         */
         ContextAuthorityState: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
+            /** Mandate Version */
             mandate_version: string;
+            /** Policy Version */
             policy_version: string;
+            /** Budget Version */
             budget_version: string;
-            charter_version?: string | null;
+            /**
+             * Charter Version
+             * @default null
+             */
+            charter_version: string | null;
+            /** Role System Text */
             role_system_text: string;
-            /** @default [] */
-            acceptance: (string | unknown)[];
-            /** @default [] */
-            goal_ancestry: (string | unknown)[];
-            /** @default [] */
-            feedback: (components["schemas"]["EvidenceRef"] | unknown)[];
-            /** @enum {string} */
+            /**
+             * Acceptance
+             * @default []
+             */
+            acceptance: string[];
+            /**
+             * Goal Ancestry
+             * @default []
+             */
+            goal_ancestry: string[];
+            /**
+             * Feedback
+             * @default []
+             */
+            feedback: components["schemas"]["EvidenceRef"][];
+            /**
+             * Data Classification
+             * @enum {string}
+             */
             data_classification: "public" | "internal" | "confidential" | "restricted";
-            model_profile?: string | null;
-            model_recipe?: string | null;
-            model_recipe_revision?: string | null;
+            /**
+             * Model Profile
+             * @default null
+             */
+            model_profile: string | null;
+            /**
+             * Model Recipe
+             * @default null
+             */
+            model_recipe: string | null;
+            /**
+             * Model Recipe Revision
+             * @default null
+             */
+            model_recipe_revision: string | null;
         };
         /** ContextInclusion */
         ContextInclusion: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
             handle: components["schemas"]["CitationHandle"];
-            /** @enum {string} */
+            /**
+             * Data Classification
+             * @enum {string}
+             */
             data_classification: "public" | "internal" | "confidential" | "restricted";
-            /** @enum {string} */
+            /**
+             * Purpose
+             * @enum {string}
+             */
             purpose: "evidence" | "attachment" | "workspace" | "feedback";
-            /** @enum {string} */
+            /**
+             * Disposition
+             * @enum {string}
+             */
             disposition: "included" | "excerpted" | "summarized" | "stale";
+            /** Included Bytes */
             included_bytes: number;
         };
         /** ContextManifest */
         ContextManifest: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Context Id
+             * Format: uuid
+             */
             context_id: string;
-            /** Format: uuid */
+            /**
+             * Principal Id
+             * Format: uuid
+             */
             principal_id: string;
-            /** Format: uuid */
+            /**
+             * Operation Id
+             * Format: uuid
+             */
             operation_id: string;
-            /** Format: uuid */
+            /**
+             * Trace Id
+             * Format: uuid
+             */
             trace_id: string;
-            task_id?: string | null;
-            task_trace_id?: string | null;
-            actor_id?: string | null;
+            /**
+             * Task Id
+             * @default null
+             */
+            task_id: string | null;
+            /**
+             * Task Trace Id
+             * @default null
+             */
+            task_trace_id: string | null;
+            /**
+             * Actor Id
+             * @default null
+             */
+            actor_id: string | null;
             authority: components["schemas"]["ContextAuthorityState"];
+            /** Policy Version */
             policy_version: string;
+            /** Retrieval Recipe */
             retrieval_recipe: string;
+            /** Render Recipe */
             render_recipe: string;
-            /** @default [] */
-            inclusions: (components["schemas"]["ContextInclusion"] | unknown)[];
-            /** @default [] */
-            omissions: (components["schemas"]["ContextOmission"] | unknown)[];
-            /** @default [] */
-            contributors: (components["schemas"]["ResourceGeneration"] | unknown)[];
-            /** @default [] */
-            source_heads: (components["schemas"]["SourceHead"] | unknown)[];
-            /** @enum {string} */
+            /**
+             * Inclusions
+             * @default []
+             */
+            inclusions: components["schemas"]["ContextInclusion"][];
+            /**
+             * Omissions
+             * @default []
+             */
+            omissions: components["schemas"]["ContextOmission"][];
+            /**
+             * Contributors
+             * @default []
+             */
+            contributors: components["schemas"]["ResourceGeneration"][];
+            /**
+             * Source Heads
+             * @default []
+             */
+            source_heads: components["schemas"]["SourceHead"][];
+            /**
+             * Data Classification
+             * @enum {string}
+             */
             data_classification: "public" | "internal" | "confidential" | "restricted";
             /**
+             * Token Qualification
              * @default unavailable
              * @enum {string}
              */
             token_qualification: "unavailable" | "qualified";
-            qualified_input_tokens?: number | null;
+            /**
+             * Qualified Input Tokens
+             * @default null
+             */
+            qualified_input_tokens: number | null;
+            /** Materialized Bytes */
             materialized_bytes: number;
+            /** Prompt Bytes */
             prompt_bytes: number;
+            /** Prompt Sha256 */
             prompt_sha256: string;
         };
-        /** ContextOmission */
+        /**
+         * ContextOmission
+         * @description Only already-authorized references can be listed; no hidden source details.
+         */
         ContextOmission: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
             evidence: components["schemas"]["EvidenceRef"];
-            /** @enum {string} */
+            /**
+             * Reason
+             * @enum {string}
+             */
             reason: "byte_limit" | "span_limit" | "source_limit" | "section_selection" | "stale";
-            section?: string | null;
+            /**
+             * Section
+             * @default null
+             */
+            section: string | null;
         };
         /** ContextRead */
         ContextRead: {
@@ -1950,30 +2090,50 @@ export interface components {
             /** Format: uuid */
             evidence_id: string;
         };
-        /** EvidenceRecord */
+        /**
+         * EvidenceRecord
+         * @description Raw locator is mandatory; a changed parser must separately map its parsed span.
+         */
         EvidenceRecord: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Evidence Id
+             * Format: uuid
+             */
             evidence_id: string;
             source: components["schemas"]["SourceRevisionRef"];
             artifact: components["schemas"]["ArtifactRevisionRef"];
             raw_span: components["schemas"]["UTF8Span"];
+            /** Span Sha256 */
             span_sha256: string;
             source_event: components["schemas"]["SourceTime"];
             /**
+             * Ingested At
              * Format: date-time
-             * @description datetime with the constraint that the value must have timezone info
              */
             ingested_at: string;
-            parse_revision_id?: string | null;
-            parsed_span?: components["schemas"]["UTF8Span"] | null;
-            chunk_id?: string | null;
+            /**
+             * Parse Revision Id
+             * @default null
+             */
+            parse_revision_id: string | null;
+            /** @default null */
+            parsed_span: components["schemas"]["UTF8Span"] | null;
+            /**
+             * Chunk Id
+             * @default null
+             */
+            chunk_id: string | null;
         };
         /** EvidenceRef */
         EvidenceRef: {
@@ -3538,19 +3698,34 @@ export interface components {
             commitment_id: string;
             evidence_ids: (string | unknown)[];
         };
-        /** ResourceGeneration */
+        /**
+         * ResourceGeneration
+         * @description Resource-wide ACL generation plus effective current principal grant expiry.
+         */
         ResourceGeneration: {
             /**
+             * Schema Version
              * @default nexus.company.brain.v1
              * @constant
              */
             schema_version: "nexus.company.brain.v1";
-            /** Format: uuid */
+            /**
+             * Company Id
+             * Format: uuid
+             */
             company_id: string;
-            /** Format: uuid */
+            /**
+             * Resource Id
+             * Format: uuid
+             */
             resource_id: string;
+            /** Generation */
             generation: number;
-            expires_at?: string | null;
+            /**
+             * Expires At
+             * @default null
+             */
+            expires_at: string | null;
         };
         /** ResourceRef */
         ResourceRef: {
@@ -3887,11 +4062,25 @@ export interface components {
         };
         /** UTF8Span */
         UTF8Span: {
+            /** Start Byte */
             start_byte: number;
+            /** End Byte */
             end_byte: number;
-            section?: string | null;
-            path?: string | null;
-            page?: number | null;
+            /**
+             * Section
+             * @default null
+             */
+            section: string | null;
+            /**
+             * Path
+             * @default null
+             */
+            path: string | null;
+            /**
+             * Page
+             * @default null
+             */
+            page: number | null;
         };
         /** UnknownBaseline */
         UnknownBaseline: {
@@ -5040,6 +5229,228 @@ export interface components {
              * @constant
              */
             company_completed: false;
+        };
+        /**
+         * BrainReadScope
+         * @description Server-derived audit/work identifiers; current locked access remains mandatory.
+         */
+        BrainReadScope: {
+            /**
+             * Schema Version
+             * @default nexus.company.brain.v1
+             * @constant
+             */
+            schema_version: "nexus.company.brain.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            /**
+             * Principal Id
+             * Format: uuid
+             */
+            principal_id: string;
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Task Id
+             * @default null
+             */
+            task_id: string | null;
+            /**
+             * Task Trace Id
+             * @default null
+             */
+            task_trace_id: string | null;
+            /**
+             * Actor Id
+             * @default null
+             */
+            actor_id: string | null;
+        };
+        /**
+         * InputEstimate
+         * @description Independent full SDK request upper bound, bound to the exact request and recipe.
+         */
+        InputEstimate: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Request Hash */
+            request_hash: string;
+            /** Registry Id */
+            registry_id: string;
+            /** Registry Revision */
+            registry_revision: string;
+            /** Recipe Id */
+            recipe_id: string;
+            /** Recipe Revision */
+            recipe_revision: string;
+            /** Input Text Tokens */
+            input_text_tokens: number;
+            /** System Text Tokens */
+            system_text_tokens: number;
+            /** Tool Schema Tokens */
+            tool_schema_tokens: number;
+            /** Output Schema Tokens */
+            output_schema_tokens: number;
+            /** Sdk Overhead Tokens */
+            sdk_overhead_tokens: number;
+            /** @default null */
+            whole_request: components["schemas"]["WholeRequestInputCeiling"] | null;
+        };
+        /**
+         * ModelInputRecipe
+         * @description Explicit trusted estimator/profile recipe; no production estimator is supplied here.
+         */
+        ModelInputRecipe: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Recipe Id */
+            recipe_id: string;
+            /** Revision */
+            revision: string;
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "reasoning" | "engineering" | "routine" | "verification" | "embeddings";
+            /** Minimum Score */
+            minimum_score: string;
+            /** Evaluation Suite Version */
+            evaluation_suite_version: string;
+            /** Conformance Reference */
+            conformance_reference: string;
+        };
+        /**
+         * PlanningBinding
+         * @description Server-captured issuance inputs; later formal publication must perform fresh CAS.
+         */
+        PlanningBinding: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Plan Id
+             * Format: uuid
+             */
+            plan_id: string;
+            /** Expected Plan Revision Id */
+            expected_plan_revision_id: string | null;
+            /** Context Manifest Sha256 */
+            context_manifest_sha256: string;
+        };
+        /**
+         * PreparedPlanningRequest
+         * @description Descriptive server preparation; decoding this cannot authorize a provider call.
+         */
+        PreparedPlanningRequest: {
+            request: components["schemas"]["CompanyModelRequest"];
+            context: components["schemas"]["AssembledContext"];
+            binding: components["schemas"]["PlanningBinding"];
+            scope: components["schemas"]["BrainReadScope"];
+            input_recipe: components["schemas"]["ModelInputRecipe"];
+            /** Request Sha256 */
+            request_sha256: string;
+            /** @default null */
+            input_estimate: components["schemas"]["InputEstimate"] | null;
+        };
+        /**
+         * WholeRequestInputCeiling
+         * @description Complete financial upper bound, without fabricated per-component tokenization.
+         */
+        WholeRequestInputCeiling: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Method
+             * @default model_input_ceiling_v1
+             * @constant
+             */
+            method: "model_input_ceiling_v1";
+            /** Tokens */
+            tokens: number;
+            /** Registry Sha256 */
+            registry_sha256: string;
+            /** Model Sha256 */
+            model_sha256: string;
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /** Conformance Reference */
+            conformance_reference: string;
+        };
+        /**
+         * PlanningInputReview
+         * @description Owner-readable frozen input; none of these descriptive fields is a permit.
+         */
+        PlanningInputReview: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Descriptor Sha256 */
+            descriptor_sha256: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "google" | "openai_compatible" | "test";
+            /** Model Id */
+            model_id: string;
+            /** Maximum Reservation Usd */
+            maximum_reservation_usd: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            prepared: components["schemas"]["PreparedPlanningRequest"];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Execution Permitted
+             * @default false
+             * @constant
+             */
+            execution_permitted: false;
         };
     };
     responses: never;

@@ -63,6 +63,17 @@ native-pair root cannot replace a prior reasoning root. Implement an explicit
 Nexus planning/native composition before claiming that same-goal transition.
 Do not substitute a descriptive outline store for the required management loop.
 
+The first closed planning/native admission uses a mechanical engineering recipe.
+It proves a bounded transition only after actual execution; it does not satisfy
+autonomous code authoring. The release still needs a governed coding-model step
+that creates a concrete Nexus change, followed by independent execution of the
+declared checks. Reserve that complete lifetime work before its first live
+admission; do not widen an already consumed first-slice root. Likewise, the first
+selected-work report does not account for planner costs: join the real protected
+model envelope for whole-cycle reporting rather than relabeling it as Brain
+artifact evidence. Strategy, presentation and support remain in the operating
+cycle acceptance above.
+
 Concrete model/planner sequence after this audit:
 
 1. Finish the trusted complete-input estimator and genuine bounded qualification
@@ -89,10 +100,10 @@ records the exact activation prerequisites and conditional cost arithmetic.
 
 | Lane | Owner | Next concrete result |
 | --- | --- | --- |
-| Product coordination and integration | Root | Keep this sequence current; integrate the model package and expose its next usable owner operation |
-| Model request implementation | Implementation worker | Hold the bounded qualification/client contracts and preserve ordinary model eligibility |
-| Actual database integration | Integration worker | Real restricted PostgreSQL approval/hold/lease/receipt flow using actual SDKs over mock HTTP |
-| Combined boundary review | Review worker | One review of current auth, spend, goal binding and resource ownership; concrete defects only |
+| Product coordination and integration | Root | Commit the validated planning source milestone; connect its actual owner application flow |
+| Model operation | Implementation lane | Prepare genuine bounded provider conformance/quality without relaxing ordinary model eligibility |
+| Actual database integration | Integration worker | Freeze and run the new restricted PostgreSQL/DBOS planning runtime with actual SDKs over mock HTTP |
+| Combined boundary review | Complete for this source milestone | Two reproduced P2 defects fixed; stable4,891-unit and configured strict/Ruff checks pass |
 
 Keep Root plus at most three workers. Work is disjoint; one worker owns each
 implementation package. Root integrates at concrete milestones.

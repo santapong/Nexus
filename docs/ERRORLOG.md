@@ -72,6 +72,92 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-194 — Cancelled planning projection loses its issued model outcome
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (finite projection/ownership checks)
+**Found by:** independent combined planning milestone review
+**Affected files:** execution/planning_worker.py and paired unit tests
+
+The worker caught GovernedModelCancelledError but preserved only release_status,
+discarding its actual governed model outcome. With no effect in the earlier
+history read and no returned PlanningAttempt, diagnostic projection reported
+blocked/native_state=null for an issued unknown request. A finite pure-result
+counterexample uses the real cancellation class and projection with supplied
+governed metadata. It is not an actual SDK or PostgreSQL observation. The native
+hold remains conserved and cancellation still raises; no retry bypass was found.
+
+Retain the actual governed result as a denied/cancelled attempt so the projection
+preserves issued/known/unknown facts. Keep the original exception and cancellation
+semantics, deny a candidate and perform no new SQL read, credential acquisition,
+issuance or renewal. Two original projection failures now pass within23 focused
+worker/ownership checks, with configured strict/Ruff checks green. Independent
+projection confirms outcome_unknown while leaving unconfirmed native_state
+absent; the known recorded-failure fixture preserves receipt/artifact metadata.
+Original failures and both forwards remain in the private combined review and
+runtime source holds. This does not establish actual database or SDK cancellation.
+
+
+## ERROR-193 — Planning input read outlives the request's original bearer
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual-router finite forward checks)
+**Found by:** independent combined planning milestone review
+**Affected files:** company_planning_routes.py and paired owner-input tests
+
+The route retained only VerifiedIdentity and created a fresh30-second read end.
+Current owner/source checks could therefore pass after the original JWT expired.
+An actual Litestar router with a real protected blob read and synthetic signed
+owner token returned200 and complete input after a2.2-second blocked read crossed
+exp; total elapsed2.299368s. Native SQL/source state was supplied test data.
+No real database, provider or owner's browser session was used.
+
+Retain the original counterexample under the private planning milestone review
+directory. Capture the actual bearer through the existing genuine credential
+verifier before directory awaits, bind the same identity, shorten the whole read
+end to its original expiry and recheck after private reads/serialization. Never
+renew the credential, accept it in a DTO or manufacture a witness. The repaired
+actual-router case returns503 with no input after the same blocked read. Fifteen
+route/read checks and configured strict/Ruff checks pass. Explicit JSON bytes
+permit the final check after full alias serialization, while the exact response
+schema and no-store header remain unchanged. The original200 result is retained.
+
+
+## ERROR-192 — Cancellation loses the actual model and protected-file owners
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (finite source regressions; runtime recovery remains separate)
+**Found by:** Codex during actual pinned-SDK and blocked-filesystem regressions
+**Affected files:** model_evidence.py, model_client.py, model_authorizer.py,
+company_adapters.py, planning_consumer.py, brain/blob_store.py and report workers
+
+### What happened
+An actual SDK over MockTransport and a deliberately blocked os.fsync reproduced
+lease release while the evidence write still ran after its caller timed out.
+Interrupting SDK context close also lost the resource owner. Protected Brain
+save/read used an unshielded to_thread await, with the same cancellation gap.
+No paid vendor call or deployed worker was involved in these reproductions.
+
+### Fix applied
+Retain and shield the actual SDK, close, native settlement and filesystem tasks.
+Expose that ownership through the consumer/worker/service graph so cancellation
+does not mean the work stopped. A stop latch denies new issuance; it does not
+cancel an already owned file write or manufacture a successful result. Release
+requires settled resources and the original still-valid lease and credential.
+If those original windows expire, retain an unconfirmed release for separately
+authorized reconciliation; never renew, clear an expired row or claim release.
+
+### Prevention
+Preserve the original semantic failures and forward-check the real blocked leaf,
+single SDK POST, interruption during close and no-late-publication behavior.
+Native effect intent and the source/witness deadlines remain authoritative.
+Focused actual-file/SDK-mock checks pass; full process recovery and release soak
+remain separate gates.
+
+
 ## ERROR-191 — Runtime fixture confuses denied HTTP status and segment counters
 
 **Date:** 2026-10-16

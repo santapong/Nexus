@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID, uuid5
 
 from pydantic import Field
@@ -38,7 +40,7 @@ from nexus.execution.runtime_support import (
     runtime_transaction,
 )
 from nexus.harness.model_authorizer_contracts import InputEstimator, ModelInputRecipe
-from nexus.harness.model_evidence import ModelEvidence, ModelEvidenceStore
+from nexus.harness.model_evidence import FileModelEvidenceStore, ModelEvidence, ModelEvidenceStore
 from nexus.harness.model_intent import ModelIntentCheck
 from nexus.harness.model_managed_deadlines import require_managed_gateway_configuration
 from nexus.harness.model_pre_sdk import (
@@ -108,6 +110,33 @@ class PersistentModelCallAuthorizer:
             management,
         )
         self._claims: dict[UUID, ClaimedModelRequest] = {}
+        self._owners: list[asyncio.Task[object]] = []
+
+    def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
+        """Retain actual native calls and the concrete protected store's filesystem owners."""
+        return tuple(
+            dict.fromkeys(
+                (
+                    *(task for task in self._owners if not task.done() or task.cancelled()),
+                    *(
+                        self._evidence.pending_owners()
+                        if isinstance(self._evidence, FileModelEvidenceStore)
+                        else ()
+                    ),
+                )
+            )
+        )
+
+    async def _owned[T](self, call: Awaitable[T]) -> T:
+        self._owners[:] = [task for task in self._owners if not task.done() or task.cancelled()]
+        task = asyncio.ensure_future(call)
+        self._owners.append(cast(asyncio.Task[object], task))
+        task.add_done_callback(lambda done: None if done.cancelled() else done.exception())
+        try:
+            return await asyncio.shield(task)
+        except BaseException as first:
+            first.__dict__["_nexus_model_pending"] = self.pending_owners()
+            raise
 
     def require_eligibility_configuration(
         self, registry: ModelRegistry, observations: tuple[ModelEligibilityObservation, ...]
@@ -126,13 +155,15 @@ class PersistentModelCallAuthorizer:
         claimed = self._claims.get(request.request_id)
         if claimed is None:
             raise ValueError("Pre-SDK model request has no native claim from this gate")
-        return await revalidate_before_sdk(
-            self._pre_sdk,
-            claimed.check,
-            claimed.effect,
-            request,
-            quote,
-            eligibility_sha256,
+        return await self._owned(
+            revalidate_before_sdk(
+                self._pre_sdk,
+                claimed.check,
+                claimed.effect,
+                request,
+                quote,
+                eligibility_sha256,
+            )
         )
 
     async def claim(self, request: CompanyModelRequest, quote: CostQuote) -> AuthorizedModelAttempt:
@@ -149,19 +180,21 @@ class PersistentModelCallAuthorizer:
             self._classification,
             model_observations=self._observations,
         )
-        start = await self._effects.begin(
-            self._lease,
-            self._identity,
-            request.action_id,
-            resources=self._resources,
-            kind="model_requests",
-            # Reject stale context early and recheck after input/model validation,
-            # whose bounded work can cross an independently expiring read grant.
-            before_intent=CompositeBeforeIntentCheck(
-                (self._additional_check, check, self._additional_check)
+        start = await self._owned(
+            self._effects.begin(
+                self._lease,
+                self._identity,
+                request.action_id,
+                resources=self._resources,
+                kind="model_requests",
+                # Reject stale context early and recheck after input/model validation,
+                # whose bounded work can cross an independently expiring read grant.
+                before_intent=CompositeBeforeIntentCheck(
+                    (self._additional_check, check, self._additional_check)
+                )
+                if self._additional_check is not None
+                else check,
             )
-            if self._additional_check is not None
-            else check,
         )
         if not start.permit_external_call or check.hold is None:
             raise ValueError("Model intent already exists; invocation cannot be repeated")
@@ -197,15 +230,15 @@ class PersistentModelCallAuthorizer:
             or result.billing == "not_issued"
         ):
             raise ValueError("Result does not bind an issued request from this server gate")
-        evidence = await self._make_evidence(claimed, result)
+        evidence = await self._owned(self._make_evidence(claimed, result))
         artifact = await self._evidence.save(evidence)
         saved = await self._evidence.load(artifact)
         if saved.model_dump(exclude={"checked_at"}) != evidence.model_dump(exclude={"checked_at"}):
             raise ValueError("Protected store returned evidence from another result")
         if result.billing == "unknown":
-            await self._mark_unknown(claimed)
+            await self._owned(self._mark_unknown(claimed))
             return RecordedModelOutcome(artifact=artifact, billing="unknown", stop_required=True)
-        return await self._record_known(saved, artifact)
+        return await self._owned(self._record_known(saved, artifact))
 
     async def _make_evidence(
         self, claimed: ClaimedModelRequest, result: CompanyModelResult

@@ -1,6 +1,52 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Connect exact planning input to the permanent Nexus workflow
+
+### Added
+- Concrete planning authority assembles the registered goal and its cited Brain
+  evidence under the actual actor's current permissions. Goal text stays
+  untrusted data; original registry/model/recipe fingerprints bind saved input.
+- Protected immutable prepared-input storage, current-owner exact input endpoint
+  and review interface with fresh request/hash checks before an explicit decision.
+- Fixed planning preparation/atomic dispatch/DBOS worker components using genuine
+  finite actor credentials, native model holds and the original lifetime root.
+- Optional Nexus planning-to-engineering/report/notification admission with
+  distinct independent verifiers and required concrete native intent checks.
+- Opt-in qualification application/worker composition through existing Settings,
+  the real configured signer and fixed server recipes; default preview unchanged.
+
+### Fixed
+- Actual SDK, close, native settlement and protected-file work remain strongly
+  owned through timeout/cancellation. Expired original leases cannot be renewed
+  or represented as released (ERROR-192).
+- Planning input reads retain the actual request bearer window through directory
+  access, private reads and complete JSON serialization; the real blocked-read
+  expiry counterexample now denies without input (ERROR-193).
+- Cancelled planning status retains its actual governed issued/recorded outcome,
+  with no candidate, new SQL, renewed deadline or retry (ERROR-194).
+
+### Validation
+- 4,891 backend units pass in116.33s, with no failures/skips and19 existing
+  warnings. Configured nonsilent strict typing and Ruff check/format pass all85
+  changed Python paths; all1,688 selected Python hashes stay stable during the run.
+- Independent combined review closes both reproduced P2 findings and verifies98
+  exact source/dependency pins. No remaining material source issue is established.
+- Frontend planning/session/qualification/knowledge API checks, TypeScript and
+  production build pass; final generated API definitions match byte-for-byte.
+  Signed-in browser acceptance remains open.
+- Two new integration draft files are explicitly excluded from this stable source
+  milestone. No new PostgreSQL/DBOS runtime execution is inferred from these checks.
+
+The first Nexus engineering slice is mechanical and its report covers selected
+work. Autonomous code authoring, whole-cycle model accounting, owner application
+composition, genuine model conformance/quality and the full supervised operating
+release remain required. No paid call, model activation, native builder launch,
+deployment or authority promotion follows from these source components.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Connect governed model operations to owner review
 
 ### Added

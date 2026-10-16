@@ -68,12 +68,19 @@ async def publish_once(context: NativeReportContext) -> EffectRecord:
     """Resolve selectors before intent; fresh publication revalidates complete native inputs."""
     prepared = await compile_action(context)
     resources = await current_resources(context)
+    check = NativeReportIntent(context, prepared, resources)
+    if context.services.publisher.catalog.nexus_cycle_admission is not None:
+        from nexus.execution.nexus_report_intent import NexusReportIntent
+
+        if context.credential is None:
+            raise ExecutionDeniedError("Nexus report has no original actor credential")
+        check = NexusReportIntent(check, context.credential)
     begin = await context.services.effects.begin(
         context.lease,
         context.identity,
         context.command.action_id,
         resources=resources,
-        before_intent=NativeReportIntent(context, prepared, resources),
+        before_intent=check,
     )
     if not begin.permit_external_call:
         return begin.record

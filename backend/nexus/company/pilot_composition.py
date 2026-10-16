@@ -35,6 +35,7 @@ from nexus.company.pilot_session import PilotSessionService
 from nexus.company.pilot_sources import pilot_sources
 from nexus.company.services import CompanyServices
 from nexus.company_app import create_company_app
+from nexus.execution.qualification_dispatch import QualificationApiServices
 from nexus.harness.journal import CompanyJournal
 
 
@@ -92,12 +93,15 @@ def compose_pilot(factory: async_sessionmaker[AsyncSession], config: PilotConfig
     )
 
 
-def pilot_app(services: PilotServices) -> Litestar:
+def pilot_app(
+    services: PilotServices, *, qualification_services: QualificationApiServices | None = None
+) -> Litestar:
     return create_company_app(
         services.base,
         brain_services=services.brain,
         management_services=services.management,
         pilot_sessions=services.sessions,
+        qualification_services=qualification_services,
         cors_config=CORSConfig(
             allow_origins=["http://127.0.0.1:5188", "http://localhost:5188"],
             allow_methods=["GET", "POST"],

@@ -61,6 +61,24 @@ this packet nor the native preparation service approves or sends a paid call.
 
 ## Fresh no-model company: supported ordering and missing pieces
 
+Planning-schema follow-up,2026-10-16: the actual pinned SDKs over offline HTTP
+emit one POST each, preserve the exact v2 provenance annotation, and emit all
+object properties as required. OpenAI's actual format has `strict=true`. This
+checks emitted wire, with fake claims/usage, rather than assuming the canonical
+Pydantic schema is unchanged by the SDK. Evidence:
+`/var/tmp/nexus-planning-schema-wire-checks-20261016-1/RESULT_1.json`.
+It is not live API acceptance or billing evidence.
+
+OpenAI documents a JSON Schema subset and requires all output fields to be
+required. [Official structured-output guide](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses).
+Google also documents a subset; its legacy GenerateContent guide says unsupported
+properties are ignored and complex schemas may be rejected. [Guide](https://ai.google.dev/gemini-api/docs/generate-content/structured-output?hl=en),
+[exact GenerateContent reference](https://ai.google.dev/api/generate-content).
+Neither fetched guide establishes acceptance of Nexus's complete annotated schema.
+Keep an exact representative planning-schema case in genuine conformance; do not
+infer it from a small JSON smoke case, remove provenance by assumption, switch APIs
+or adopt a newer SDK/model from the current documentation examples.
+
 1. Keep current preview unactivated: `pilot_catalog(PREVIEW_PROFILE)` has zero models/profiles. Freeze a proposed complete candidate registry/PriceCards outside active work. Obtain genuine dated health, exact SDK/API conformance and profile evaluation receipts first; do not turn docs, TestModel score1 or an observation DTO into live eligibility.
 2. **Bootstrap integration:** normal adapter/routing require enabled/current healthy/evaluated models before a governed call. Empty/unknown rows cannot bootstrap themselves. A separate public-only qualification service/client now passes actual native PostgreSQL approval/hold/attempt/lease/evidence/receipt integration using pinned SDKs over mock HTTP. Its result never claims profile quality or enables a model. Owner/runtime wiring and approved live conformance are still required. Never write invented healthy/evaluation values.
 3. Freeze initial exact enabled registry, dated shared pricebook, admitted profiles and source/role catalog before immutable planning Work. Observations can only refresh health/evaluations for original row SHA and originally declared profiles; cannot add a model/profile, enable it, or change endpoint/prices. The preview empty registry cannot be activated with an observation alone.

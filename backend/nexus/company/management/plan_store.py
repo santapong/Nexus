@@ -74,6 +74,9 @@ class ManagementPlanStore:
         planning_reader: PlanningSourceReader | None = None,
     ) -> None:
         validate_cycle_catalog(catalog.cycle_admission, catalog)
+        from nexus.company.management.nexus_cycle_admission import validate_nexus_catalog
+
+        validate_nexus_catalog(catalog.nexus_cycle_admission, catalog)
         self.factory, self.catalog = (
             factory,
             PlanAdmissionCatalog.model_validate_json(catalog.model_dump_json()),
@@ -88,6 +91,7 @@ class ManagementPlanStore:
             if (
                 type(planning_reader) is not PlanningSourceReader
                 or planning_reader.factory is not factory
+                or planning_reader.template.nexus_admission != self.catalog.nexus_cycle_admission
             ):
                 raise ManagementDeniedError(
                     "Planning reader must share the exact PlanStore factory"
@@ -117,8 +121,15 @@ class ManagementPlanStore:
         """Save a fully validated immutable proposal without reserving any root or child."""
         from nexus.company.management.planning_native_facts import read_end
 
-        origin_end = read_end(end_us) if payload.planning_origin is not None else None
-        if origin_end is not None and (
+        origin_end = (
+            read_end(end_us)
+            if (
+                payload.planning_origin is not None
+                or self.catalog.nexus_cycle_admission is not None
+            )
+            else None
+        )
+        if payload.planning_origin is not None and (
             self.planning_reader is None or self.planning_reader.factory is not self.factory
         ):
             raise ManagementDeniedError("Planning origin requires its configured concrete reader")
@@ -131,8 +142,24 @@ class ManagementPlanStore:
             _,
         ):
             await require_plan_not_cancelled(session, scope.company_id, payload)
-            if origin_end is not None:
-                assert self.planning_reader is not None
+            from nexus.company.management.nexus_plan_admission import (
+                capture_nexus_owner_locked,
+                finish_nexus_owner_locked,
+                require_nexus_exit,
+            )
+
+            first_nexus = await capture_nexus_owner_locked(
+                self,
+                session,
+                control,
+                scope,
+                identity,
+                payload,
+                credential,
+                end_us=origin_end if origin_end is not None else read_end(end_us),
+            )
+            if payload.planning_origin is not None:
+                assert self.planning_reader is not None and origin_end is not None
                 await self.planning_reader.revalidate_locked(
                     session,
                     control,
@@ -162,8 +189,8 @@ class ManagementPlanStore:
             await validate_plan(
                 session, control, scope, identity, payload, self.catalog, self.source_freshness
             )
-            if origin_end is not None:
-                assert self.planning_reader is not None
+            if payload.planning_origin is not None:
+                assert self.planning_reader is not None and origin_end is not None
                 await self.planning_reader.revalidate_locked(
                     session,
                     control,
@@ -173,10 +200,14 @@ class ManagementPlanStore:
                     target_revision_id=record.plan_revision_id,
                     end_us=origin_end,
                 )
+            await finish_nexus_owner_locked(
+                self, session, control, scope, identity, payload, credential, first_nexus
+            )
         if origin_end is not None:
             from nexus.company.management.planning_native_facts import require_time
 
             require_time(origin_end)
+        require_nexus_exit(first_nexus)
         return record
 
     async def approve_and_register(
@@ -200,6 +231,22 @@ class ManagementPlanStore:
             _,
         ):
             record, head = await self._target(session, scope, plan_revision_id, exact_hash)
+            from nexus.company.management.nexus_plan_admission import (
+                capture_nexus_owner_locked,
+                finish_nexus_owner_locked,
+                require_nexus_exit,
+            )
+
+            first_nexus = await capture_nexus_owner_locked(
+                self,
+                session,
+                control,
+                scope,
+                identity,
+                record.payload,
+                credential,
+                end_us=origin_end,
+            )
             if record.payload.planning_origin is not None:
                 if self.planning_reader is None or self.planning_reader.factory is not self.factory:
                     raise ManagementDeniedError(
@@ -283,10 +330,14 @@ class ManagementPlanStore:
                     target_revision_id=record.plan_revision_id,
                     end_us=origin_end,
                 )
-        if record.payload.planning_origin is not None:
+            await finish_nexus_owner_locked(
+                self, session, control, scope, identity, record.payload, credential, first_nexus
+            )
+        if record.payload.planning_origin is not None or first_nexus is not None:
             from nexus.company.management.planning_native_facts import require_time
 
             require_time(origin_end)
+        require_nexus_exit(first_nexus)
         return record
 
     async def revoke(

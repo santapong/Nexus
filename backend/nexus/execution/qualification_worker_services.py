@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from threading import Event
 from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
 
@@ -51,6 +52,22 @@ class QualificationWorkerServices:
         default_factory=dict, init=False, repr=False
     )
     _bound: tuple[object, ...] = field(default=(), init=False, repr=False)
+    _stopping: Event = field(default_factory=Event, init=False, repr=False)
+    _startup_owners: list[asyncio.Task[object]] = field(
+        default_factory=list, init=False, repr=False
+    )
+
+    def require_accepting(self) -> None:
+        self.require_composition()
+        if self._stopping.is_set():
+            raise ValueError("Qualification worker admission is stopped")
+
+    def request_stop(self) -> None:
+        """Stop once through actual orchestration cancellation, never SDK/FS leaf cancellation."""
+        if not self._stopping.is_set():
+            self._stopping.set()
+            for operation in tuple(self._operations.values()):
+                operation.request_stop()
 
     def __post_init__(self) -> None:
         if (
@@ -115,7 +132,13 @@ class QualificationWorkerServices:
         return tuple(
             dict.fromkeys(
                 task
-                for operation in self._operations.values()
-                for task in operation.pending_owners()
+                for task in (
+                    *(task for task in self._startup_owners if not task.done() or task.cancelled()),
+                    *(
+                        task
+                        for operation in tuple(self._operations.values())
+                        for task in operation.pending_owners()
+                    ),
+                )
             )
         )

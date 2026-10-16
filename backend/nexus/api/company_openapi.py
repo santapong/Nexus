@@ -38,6 +38,7 @@ from nexus.company.notifications.inbox_contracts import (
     NotificationInboxPage,
 )
 from nexus.company.pilot_session import PilotSessionToken
+from nexus.execution.planning_owner_reads import PlanningInputReview
 from nexus.execution.qualification_read_contracts import (
     QualificationDispatchRecord,
     QualificationRecipeView,
@@ -75,6 +76,7 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     QualificationDispatchRecord,
     QualificationResultView,
     PreparedQualification,
+    PlanningInputReview,
 )
 
 

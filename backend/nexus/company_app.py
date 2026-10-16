@@ -18,6 +18,7 @@ from nexus.api.company_metric_routes import CompanyMetricController
 from nexus.api.company_native_report_routes import CompanyNativeReportController
 from nexus.api.company_notification_routes import CompanyNotificationInboxController
 from nexus.api.company_openapi import CompanyJsonRenderPlugin, CompanyYamlRenderPlugin
+from nexus.api.company_planning_routes import CompanyPlanningController
 from nexus.api.company_qualification_routes import CompanyQualificationController
 from nexus.api.company_routes import CompanyController, company_health, validation_error_handler
 from nexus.api.company_session_routes import CompanySessionController
@@ -26,6 +27,7 @@ from nexus.company.management.api_services import ManagementApiServices
 from nexus.company.notifications.api_services import NotificationApiServices
 from nexus.company.pilot_session import PilotSessionService
 from nexus.company.services import CompanyServices
+from nexus.execution.planning_owner_reads import PlanningApiServices
 from nexus.execution.qualification_dispatch import QualificationApiServices
 
 
@@ -37,6 +39,7 @@ def create_company_app(
     notification_services: NotificationApiServices | None = None,
     pilot_sessions: PilotSessionService | None = None,
     qualification_services: QualificationApiServices | None = None,
+    planning_services: PlanningApiServices | None = None,
     cors_config: CORSConfig | None = None,
 ) -> Litestar:
     """Fail closed on signer configuration before building an isolated company profile.
@@ -111,6 +114,17 @@ def create_company_app(
             provide_qualification_services, use_cache=True, sync_to_thread=False
         )
         route_handlers.append(CompanyQualificationController)
+
+    if planning_services is not None:
+        mounted_planning = planning_services
+
+        def provide_planning_services() -> PlanningApiServices:
+            return mounted_planning
+
+        dependencies["planning_services"] = Provide(
+            provide_planning_services, use_cache=True, sync_to_thread=False
+        )
+        route_handlers.append(CompanyPlanningController)
 
     return Litestar(
         route_handlers=route_handlers,
