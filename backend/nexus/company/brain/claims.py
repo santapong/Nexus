@@ -115,7 +115,15 @@ class DerivationRecord(BrainContract):
     derivation_id: UUID
     artifact: ArtifactRevisionRef
     recipe_version: Symbol
-    kind: Literal["summary", "chart", "presentation", "context", "embedding_derived_text"]
+    kind: Literal[
+        "summary",
+        "chart",
+        "presentation",
+        "context",
+        "embedding_derived_text",
+        "model_origin",
+        "code_patch",
+    ]
     contributors: tuple[SourceRevisionRef, ...] = Field(min_length=1, max_length=32)
     evidence: tuple[EvidenceRef, ...] = Field(default=(), max_length=32)
     model_recipe: Symbol | None = None

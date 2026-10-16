@@ -30,7 +30,8 @@ class BrainDerivation(CompanyRow, RecordedRow, BrainBase):
             initially="DEFERRED",
         ),
         CheckConstraint(
-            "kind IN ('summary','chart','presentation','context','embedding_derived_text')",
+            "kind IN ('summary','chart','presentation','context','embedding_derived_text',"
+            "'model_origin','code_patch')",
             name="ck_brain_derivation_kind",
         ),
         CheckConstraint(

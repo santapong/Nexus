@@ -95,7 +95,7 @@ class CompanyManagementReadController(Controller):
         if management_services.action_reviews is None:
             raise ServiceUnavailableException(detail="Action review is not configured")
         result = await management_services.action_reviews.read(
-            scope, credential.identity, action_id, end_us=end_us
+            scope, credential.identity, action_id, end_us=end_us, credential=credential
         )
         end_us = min(end_us, result.read_end_us)
         raw = result.value.model_dump_json(by_alias=True).encode()

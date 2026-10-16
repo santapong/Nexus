@@ -14,6 +14,7 @@ from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_support import current_charter, current_mandate, db_clock
 from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.lifecycle import PlanRevision
+from nexus.company.management.nexus_coding_admission import NexusCodingAdmission
 from nexus.company.management.owner_view_sources import owner_brain_scope, source_disclosure
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
@@ -267,7 +268,8 @@ async def approved_bundle(
     template = PlanningProposalTemplate(
         base_plan=base,
         revision=config.mapping_revision,
-        nexus_admission=admission,
+        nexus_admission=admission if not isinstance(admission, NexusCodingAdmission) else None,
+        nexus_coding_admission=admission if isinstance(admission, NexusCodingAdmission) else None,
         slots=tuple(
             PlanningTaskSlot(
                 key=slot.role,

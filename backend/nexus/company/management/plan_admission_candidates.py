@@ -4,8 +4,11 @@ from datetime import datetime
 
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.model_observations import effective_model_registration
-from nexus.company.management.model_profile_checks import validate_model_profile
 from nexus.company.management.native_execution_profiles import native_execution_profile
+from nexus.company.management.nexus_coding_catalog import (
+    coding_role_model,
+    validate_configured_role_profile,
+)
 from nexus.company.management.plan_admission_window import (
     PlanChildWindow,
     PlanModelCandidateWindow,
@@ -30,7 +33,8 @@ def capture_child_window(
     checked = PlanAdmissionCatalog.model_validate(catalog.model_dump(warnings=False))
     child = ChildAllocation.model_validate(child.model_dump(warnings=False))
     require_window(len(checked.models.models) <= 32)
-    validate_model_profile(checked, child, now)
+    validate_configured_role_profile(checked, child, now)
+    role_model = coding_role_model(checked, child)
     native = native_execution_profile(checked, child)
     sender = native_notification_profile(checked, child)
     if native is not None:
@@ -39,6 +43,8 @@ def capture_child_window(
         return PlanChildWindow(child.binding, child.quota, "sender", canonical_sha256(sender), ())
     candidates = []
     for original in checked.models.models:
+        if role_model is not None and original.registry_id != role_model.registry_id:
+            continue
         effective = effective_model_registration(
             checked.models, checked.model_observations, original
         )

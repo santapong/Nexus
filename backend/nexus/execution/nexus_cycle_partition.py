@@ -7,11 +7,12 @@ from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.brain.base import BrainReadScope
 from nexus.company.brain.scope_support import require_brain_scope
 from nexus.company.management.lifecycle import PlanRevision
-from nexus.company.management.nexus_cycle_admission import (
-    NexusCycleAdmission,
-    NexusStage,
-    select_nexus_plan,
+from nexus.company.management.nexus_coding_catalog import (
+    NexusAdmission,
+    configured_nexus_admission,
+    select_configured_nexus_plan,
 )
+from nexus.company.management.nexus_cycle_admission import NexusStage
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
@@ -31,7 +32,7 @@ from nexus.harness.journal_models import CompanyControl
 async def _current(
     session: AsyncSession,
     control: CompanyControl,
-    admission: NexusCycleAdmission,
+    admission: NexusAdmission,
     catalog: PlanAdmissionCatalog,
 ) -> tuple[PlanRevision, ManagementOwnerDecision, NexusStage]:
     head = await session.get(ManagementPlanHead, (control.company_id, admission.plan_id))
@@ -41,7 +42,8 @@ async def _current(
     _require(row is not None)
     assert row is not None
     record = plan_record(row)
-    stage = select_nexus_plan(admission, catalog, record.payload)
+    _require(configured_nexus_admission(catalog) == admission)
+    stage = select_configured_nexus_plan(catalog, record.payload)
     _require(stage is not None)
     assert stage is not None
     decision = await session.get(ManagementOwnerDecision, (control.company_id, head.decision_id))
@@ -63,7 +65,7 @@ async def read_current_nexus_family_locked(
     work: ExecutionWork,
     identity: VerifiedIdentity,
     *,
-    admission: NexusCycleAdmission,
+    admission: NexusAdmission,
     catalog: PlanAdmissionCatalog,
 ) -> PlanRevision:
     """Actual caller-owned role; no owner identity is substituted for engineering/verifier."""
@@ -112,7 +114,7 @@ async def require_nexus_owner_family_locked(
     scope: CompanyControlScope,
     identity: VerifiedIdentity,
     *,
-    admission: NexusCycleAdmission,
+    admission: NexusAdmission,
     catalog: PlanAdmissionCatalog,
 ) -> PlanRevision:
     """Owner transition READ only, kept separate from actor execution scope."""

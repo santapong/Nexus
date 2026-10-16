@@ -12,7 +12,9 @@ from nexus.company.management.base import Name, Symbol, ValueContract
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.goals import GoalRevisionRef
 from nexus.company.management.lifecycle import PlanRevision
-from nexus.company.management.nexus_cycle_admission import NexusCycleAdmission
+from nexus.company.management.nexus_coding_admission import NexusCodingAdmission, NexusCodingSlot
+from nexus.company.management.nexus_coding_catalog import NexusAdmission
+from nexus.company.management.nexus_cycle_admission import NexusCycleAdmission, NexusCycleSlot
 from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.company.management.planning_content import PlanningContent, TaskKey
 from nexus.company.management.planning_native_facts import read_end
@@ -39,6 +41,20 @@ class PlanningProposalTemplate(ValueContract):
     nexus_admission: NexusCycleAdmission | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    nexus_coding_admission: NexusCodingAdmission | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+
+    @property
+    def configured_admission(self) -> NexusAdmission | None:
+        """One immutable mapper profile, never a model-selected role policy."""
+        if self.nexus_admission is not None and self.nexus_coding_admission is not None:
+            raise ValueError("Planning mapper admission profiles are mutually exclusive")
+        return (
+            self.nexus_coding_admission
+            if self.nexus_coding_admission is not None
+            else self.nexus_admission
+        )
 
     @model_validator(mode="after")
     def fixed_model_slots(self) -> PlanningProposalTemplate:
@@ -56,10 +72,14 @@ class PlanningProposalTemplate(ValueContract):
         original = {item.task_id for item in base.plan.items}
         if len(keys) != len(self.slots) or len(tasks) != len(self.slots) or tasks & original:
             raise ValueError("Server planning slots require unique keys and new fixed identities")
-        if self.nexus_admission is not None:
-            admission = NexusCycleAdmission.model_validate(
-                self.nexus_admission.model_dump(warnings=False)
+        profile = self.configured_admission
+        if profile is not None:
+            admission: NexusAdmission = (
+                NexusCodingAdmission.model_validate(profile.model_dump(warnings=False))
+                if isinstance(profile, NexusCodingAdmission)
+                else NexusCycleAdmission.model_validate(profile.model_dump(warnings=False))
             )
+            expected_slots: tuple[NexusCodingSlot | NexusCycleSlot, ...] = admission.slots[1:]
             if (
                 base != admission.payload("planning")
                 or tuple(slot.key for slot in self.slots)
@@ -67,7 +87,7 @@ class PlanningProposalTemplate(ValueContract):
                 or any(
                     (slot.allocation, slot.department, slot.required_dependencies)
                     != (expected.child, expected.work.department, expected.work.depends_on)
-                    for slot, expected in zip(self.slots, admission.slots[1:], strict=True)
+                    for slot, expected in zip(self.slots, expected_slots, strict=True)
                 )
             ):
                 raise ValueError("Nexus mapping differs from its exact configured roles")
@@ -118,8 +138,8 @@ def map_content(
     slots = {slot.key: slot for slot in template.slots}
     if {task.key for task in content.tasks} != slots.keys():
         raise ValueError("Planning task keys do not match exact server slots")
-    if template.nexus_admission is not None:
-        admission = template.nexus_admission
+    if template.configured_admission is not None:
+        admission = template.configured_admission
         keys = {slot.work.task_id: slot.role for slot in admission.slots[1:]}
         content_by_key = {task.key: task for task in content.tasks}
         for slot in admission.slots[1:]:
@@ -177,6 +197,7 @@ def map_content(
         charters=tuple(charters.values()),
         verification=base.verification,
         planning_origin=origin,
+        coding_admission_sha256=base.coding_admission_sha256,
         plan=WorkPlan(
             company_id=base.company_id,
             plan_id=base.plan.plan_id,

@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.builder.coding_templates import CodingBuilderServices
 from nexus.builder.engineering_acceptance import EngineeringWorkAcceptanceStore
 from nexus.builder.engineering_acceptance_recovery import EngineeringAcceptanceRecovery
 from nexus.builder.engineering_runner import EngineeringNativeBuilderRunner
@@ -57,6 +58,12 @@ class EngineeringWorkerServices:
     lease_ttl_seconds: int = 60
     hook: EngineeringWorkerHook | None = None
     selected_builder: SelectedBuilderServices | None = None
+
+    coding_builder: CodingBuilderServices | None = None
+
+    def pending_owners(self) -> tuple[object, ...]:
+        """Actual B private-read owners remain reachable from the runtime services."""
+        return self.coding_builder.pending_owners() if self.coding_builder is not None else ()
 
     async def observe(self, phase: str, command: SegmentCommand) -> None:
         """Emit an optional trusted checkpoint observation without writing native authority."""

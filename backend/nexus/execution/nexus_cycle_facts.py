@@ -9,10 +9,8 @@ from nexus.company.contracts.results import ActionReceipt
 from nexus.company.contracts.work import WorkItem
 from nexus.company.directory_models import RegisteredWork
 from nexus.company.management.lifecycle import PlanRevision
-from nexus.company.management.nexus_cycle_admission import (
-    NexusCycleAdmission,
-    NexusStage,
-)
+from nexus.company.management.nexus_coding_catalog import NexusAdmission
+from nexus.company.management.nexus_cycle_admission import NexusStage
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
     ManagementPlanRevision,
@@ -62,7 +60,7 @@ def _execution(row: ExecutionWork, expected: ExecutionRegistration) -> None:
 
 
 async def _rows(
-    session: AsyncSession, admission: NexusCycleAdmission, stage: NexusStage
+    session: AsyncSession, admission: NexusAdmission, stage: NexusStage
 ) -> tuple[dict[UUID, RegisteredWork], dict[UUID, ExecutionWork]]:
     root = admission.procedure.binding.task_id
     slots = admission.slots[:1] if stage == "planning" else admission.slots
@@ -108,7 +106,7 @@ async def _rows(
 async def _family(
     session: AsyncSession,
     control: CompanyControl,
-    admission: NexusCycleAdmission,
+    admission: NexusAdmission,
     record: PlanRevision,
     stage: NexusStage,
 ) -> tuple[dict[UUID, RegisteredWork], dict[UUID, ExecutionWork]]:
@@ -232,7 +230,7 @@ async def _family(
 async def _transition(
     session: AsyncSession,
     control: CompanyControl,
-    admission: NexusCycleAdmission,
+    admission: NexusAdmission,
     record: PlanRevision,
     decision: ManagementOwnerDecision,
     stage: NexusStage,

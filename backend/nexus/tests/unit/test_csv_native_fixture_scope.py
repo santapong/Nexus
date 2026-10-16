@@ -129,6 +129,7 @@ def test_unscoped_process_cannot_assert_delegated_kernel_qualification() -> None
 
 
 def test_expected_database_revision_matches_actual_pinned_company_lineage() -> None:
+    """Historical CSV016 stays pinned while normal017 is its exact known successor."""
     from alembic.config import Config
     from alembic.script import ScriptDirectory
 
@@ -137,7 +138,13 @@ def test_expected_database_revision_matches_actual_pinned_company_lineage() -> N
     backend = Path(__file__).resolve().parents[3]
     config = Config(str(backend / "alembic_company.ini"))
     config.set_main_option("script_location", str(backend / "company_alembic"))
-    assert ScriptDirectory.from_config(config).get_current_head() == COMPANY_REVISION
+    scripts = ScriptDirectory.from_config(config)
+    assert COMPANY_REVISION == "company_016"
+    assert scripts.get_current_head() == "company_017"
+    head = scripts.get_revision("company_017")
+    assert head is not None and head.down_revision == COMPANY_REVISION
+    pinned = scripts.get_revision(COMPANY_REVISION)
+    assert pinned is not None and pinned.down_revision == "company_015"
 
 
 def test_current_job_scope_gate_cannot_use_unscoped_historical_capability() -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 from uuid import UUID, uuid5
 
 from pydantic import StrictBool
@@ -42,6 +42,10 @@ from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import CostHold, JournalAction
 
 if TYPE_CHECKING:
+    from nexus.execution.coding_preparation_recovery import (
+        PreparedCodingWaitRecovery,
+        RecoveredCodingWait,
+    )
     from nexus.execution.planning_preparation_recovery import (
         PreparedWaitRecovery,
         RecoveredPlanningWait,
@@ -129,13 +133,22 @@ class ExecutionStore:
         self._management_artifacts = management_artifacts
         self._management_freshness = management_freshness
 
-    async def recover_prepared_wait(self, check: PreparedWaitRecovery) -> RecoveredPlanningWait:
+    @overload
+    async def recover_prepared_wait(self, check: PreparedWaitRecovery) -> RecoveredPlanningWait: ...
+    @overload
+    async def recover_prepared_wait(
+        self, check: PreparedCodingWaitRecovery
+    ) -> RecoveredCodingWait: ...
+    async def recover_prepared_wait(
+        self, check: PreparedWaitRecovery | PreparedCodingWaitRecovery
+    ) -> RecoveredPlanningWait | RecoveredCodingWait:
         """Restore only a concrete proven unissued prepared planning prefix; never issue a lease."""
+        from nexus.execution.coding_preparation_recovery import PreparedCodingWaitRecovery
         from nexus.execution.planning_preparation_recovery import PreparedWaitRecovery
         from nexus.execution.runtime_approval_recovery import restore_wait_locked
 
         if (
-            type(check) is not PreparedWaitRecovery
+            type(check) not in {PreparedWaitRecovery, PreparedCodingWaitRecovery}
             or check.services.execution is not self
             or check.services.factory is not self._factory
             or check.services.management.catalog is not self._management_catalog

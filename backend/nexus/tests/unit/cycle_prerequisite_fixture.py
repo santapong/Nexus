@@ -35,6 +35,8 @@ if TYPE_CHECKING:
     from nexus.company.cycle_artifacts.engineering_prerequisite_reader import CycleEngineeringReader
 
 
+# Historical supplied native facts only. Fresh leases and signed witnesses use
+# their per-call actual clock, so test collection age cannot expire them early.
 NOW = datetime.now(UTC)
 
 
@@ -65,12 +67,14 @@ def deliverable_case(monkeypatch: pytest.MonkeyPatch, index: int = 4) -> Partiti
     return result
 
 
-def own_lease(case: Partition) -> ExecutionLease:
+def own_lease(case: Partition, *, now: datetime | None = None) -> ExecutionLease:
+    """Describe the same finite lease using this case's actual creation clock."""
+    now = datetime.now(UTC) if now is None else now
     work = case.work
     work.state, work.fence, work.segment_number = "running", 1, 1
     work.worker_id, work.segment_id = UUID(int=980), UUID(int=981)
     work.lease_principal_id, work.lease_mode = work.actor_id, "execute"
-    work.lease_until = NOW + timedelta(seconds=60)
+    work.lease_until = now + timedelta(seconds=60)
     return ExecutionLease(
         company_id=work.company_id,
         task_id=work.task_id,
@@ -87,15 +91,19 @@ def own_lease(case: Partition) -> ExecutionLease:
     )
 
 
-async def signed_identity(identity: VerifiedIdentity) -> AuthenticatedWorkerIdentity:
+async def signed_identity(
+    identity: VerifiedIdentity, *, now: datetime | None = None
+) -> AuthenticatedWorkerIdentity:
+    """Verify a genuine synthetic token at call time; its captured expiry never renews."""
+    now = datetime.now(UTC) if now is None else now
     key = SecretStr("cycle-prerequisite-unit-only-signing-key-2026")
     token = SecretStr(
         jwt.encode(
             {
                 "sub": str(identity.principal_id),
                 "workspace_id": str(identity.workspace_id),
-                "iat": int((NOW - timedelta(seconds=10)).timestamp()),
-                "exp": int((NOW + timedelta(seconds=120)).timestamp()),
+                "iat": int((now - timedelta(seconds=10)).timestamp()),
+                "exp": int((now + timedelta(seconds=120)).timestamp()),
             },
             key.get_secret_value(),
             algorithm="HS256",

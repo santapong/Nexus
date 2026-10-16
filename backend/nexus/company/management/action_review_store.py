@@ -14,6 +14,7 @@ from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.brain.access_support import require_resources
 from nexus.company.brain.sources import ArtifactRevisionRef
 from nexus.company.contracts.actions import ActionProposal
+from nexus.company.management.action_review_coding import CodingReviewSelection
 from nexus.company.management.action_review_contracts import ActionReview, ExactActionDetail
 from nexus.company.management.action_review_planning import (
     PlanningReviewInputs,
@@ -45,6 +46,8 @@ from nexus.company.management.transactions import (
     ManagementDeniedError,
     management_owner_transaction,
 )
+from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
+from nexus.execution.coding_owner_reads import CodingOwnerReader
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.harness.canonical import action_hash
 from nexus.harness.journal_models import CompanyControl, JournalAction
@@ -67,6 +70,7 @@ class OwnerActionReviewStore:
         reports: OperatingReportStore | None = None,
         *,
         planning: PlanningPreparedStore | None = None,
+        coding: CodingOwnerReader | None = None,
     ) -> None:
         self.factory, self.catalog, self.sources = factory, catalog, sources
         self.reports, self.planning = reports, planning
@@ -76,6 +80,8 @@ class OwnerActionReviewStore:
             else None
         )
         self._original_planning = self._planning_inputs
+        self.coding, self._original_coding = coding, coding
+        self._coding()
 
     def _planning(self) -> PlanningReviewInputs | None:
         value = self._planning_inputs
@@ -97,6 +103,37 @@ class OwnerActionReviewStore:
             value.require_composition()
         return value
 
+    def _coding(self) -> CodingOwnerReader | None:
+        value = self.coding
+        if value is not self._original_coding or (
+            value is not None
+            and (
+                type(value) is not CodingOwnerReader
+                or value.services.factory is not self.factory
+                or value.services.management.catalog is not self.catalog
+                or value.services.source_views.artifacts is not self.sources.artifacts
+                or value.services.source_views.freshness is not self.sources.freshness
+            )
+        ):
+            raise ManagementDeniedError("Original coding action review composition changed")
+        if value is not None:
+            value.require_composition()
+        return value
+
+    def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
+        """Actual C owner read leaves stay reachable through the configured review service."""
+        coding = self._coding()
+        planning = self._planning()
+        return tuple(
+            dict.fromkeys(
+                (
+                    *(coding.pending_owners() if coding else ()),
+                    *(planning.store.pending_owners() if planning else ()),
+                    *(planning.store.blobs.pending_owners() if planning else ()),
+                )
+            )
+        )
+
     async def review(
         self,
         scope: CompanyControlScope,
@@ -115,11 +152,12 @@ class OwnerActionReviewStore:
         action_id: UUID,
         *,
         end_us: int,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> ReviewedAction:
         """One original caller end includes all metadata, private I/O and transaction exits."""
         end_us = read_end(end_us)
         async with asyncio.timeout(max(0, end_us - clock_us()) / 1_000_000):
-            result = await self._read(scope, identity, action_id, end_us)
+            result = await self._read(scope, identity, action_id, end_us, credential)
         require_time(result.read_end_us)
         return result
 
@@ -129,10 +167,13 @@ class OwnerActionReviewStore:
         identity: VerifiedIdentity,
         action_id: UUID,
         end_us: int,
+        credential: AuthenticatedWorkerIdentity | None = None,
     ) -> ReviewedAction:
         # Cohesion exception: first metadata gate, out-of-lock protected read and
         # final native/source gate must remain visibly ordered under one cutoff.
         planning = self._planning()
+        coding = self._coding()
+        selected_coding: CodingReviewSelection | None = None
         record = await load_review_report(self.factory, self.reports, scope, identity, action_id)
         selected: PlanningReviewSelection | None = None
         first_static: SourceDisclosure | None = None
@@ -148,7 +189,27 @@ class OwnerActionReviewStore:
                     condition.resource.startswith("planning.prepared:")
                     for condition in proposal.preconditions
                 )
-                if is_planning:
+                is_coding = work.workflow_name == "company.coding.v1" or any(
+                    condition.resource.startswith("coding.prepared:")
+                    for condition in proposal.preconditions
+                )
+                if is_coding:
+                    # Reserved C data never falls back to generic catalog aliases.
+                    if coding is not None and credential is not None:
+                        if credential.identity != identity:
+                            raise ManagementDeniedError("Original coding owner identity changed")
+                        selected_coding = await coding.select_locked(
+                            session,
+                            control,
+                            scope,
+                            credential,
+                            proposal,
+                            work,
+                            binding,
+                            end_us=end_us,
+                        )
+                        end_us = min(end_us, selected_coding.read_end_us)
+                elif is_planning:
                     if planning is not None:
                         selected = planning.select(control, proposal, work, binding)
                         refs, ids = await _planning_artifacts(
@@ -188,6 +249,19 @@ class OwnerActionReviewStore:
                 )
             result = _result(scope, audit, admitted, now, anchor, end_us)
         require_time(end_us)
+        if selected_coding is not None and coding is not None and credential is not None:
+            try:
+                actual = await coding.review_selected(
+                    scope, credential, action_id, selected_coding, end_us=end_us
+                )
+            except TimeoutError:
+                raise
+            except (ValueError, OSError):
+                require_time(end_us)
+                return result
+            self._coding()
+            require_time(actual.read_end_us)
+            return ReviewedAction(actual.value, actual.read_end_us)
         if selected is None or planning is None:
             return result
         # load_owner takes its own CompanyControl mutex; never call it inside the TX above.

@@ -8,6 +8,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 from nexus.company.brain.base import exact_flag
 from nexus.company.contracts.work import WorkPlan
 from nexus.company.management.base import (
+    SHA256,
     ExactUSD,
     ManagementContract,
     Name,
@@ -82,6 +83,9 @@ class PlanPayload(ManagementContract):
     planning_origin: PlanningOriginRef | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    coding_admission_sha256: SHA256 | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @field_validator("plan", mode="before")
     @classmethod
@@ -92,6 +96,12 @@ class PlanPayload(ManagementContract):
 
     @model_validator(mode="after")
     def partition_and_graph(self) -> Self:
+        if (self.procedure.binding.workflow_name == "nexus.coding-cycle.v1") != (
+            self.coding_admission_sha256 is not None
+        ):
+            raise ValueError(
+                "Coding procedure metadata cannot be omitted or applied to ordinary plans"
+            )
         if self.planning_origin is not None and self.planning_origin.goal != self.goal:
             raise ValueError("Planning origin must retain this exact measured goal")
         require_company(

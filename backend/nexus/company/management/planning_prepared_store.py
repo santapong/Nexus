@@ -81,6 +81,11 @@ class PlanningPreparedStore:
             self.recipe.model_dump_json(),
         )
         self._owners: list[asyncio.Task[object]] = []
+        self._stopped = False
+
+    def request_stop(self) -> None:
+        """Stop subsequent private phases; already-admitted filesystem leaves stay owned."""
+        self._stopped = True
 
     def _composition(self) -> None:
         original = self._bound
@@ -105,6 +110,8 @@ class PlanningPreparedStore:
         try:
             require_time(end_us)
             self._composition()
+            if self._stopped:
+                raise ManagementDeniedError("Original prepared IO stopped admission")
             if len(self.pending_owners()) >= 32:
                 raise ManagementDeniedError("Planning pending resource bound exceeded")
         except BaseException:
@@ -120,6 +127,8 @@ class PlanningPreparedStore:
                 result = await asyncio.shield(task)
             require_time(end_us)
             self._composition()
+            if self._stopped:
+                raise ManagementDeniedError("Original prepared IO stopped admission")
             return result
         except BaseException as error:
             error.__dict__["_nexus_planning_prepared_pending"] = self.pending_owners()

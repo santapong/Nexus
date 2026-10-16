@@ -25,7 +25,7 @@ def test_named_artifact_constraint_describes_only_derived_html_extension() -> No
     assert "text/html;" not in ddl and "image/svg+xml" not in ddl
 
 
-def test_normal016_is_only_head_and_preserves_original008_bytes() -> None:
+def test_normal017_is_only_head_with016_ancestor_and_preserves_original008_bytes() -> None:
     import hashlib
     from pathlib import Path
 
@@ -36,7 +36,9 @@ def test_normal016_is_only_head_and_preserves_original008_bytes() -> None:
     config = Config(str(root / "alembic_company.ini"))
     config.set_main_option("script_location", str(root / "company_alembic"))
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_heads() == ["company_016"]
+    assert scripts.get_heads() == ["company_017"]
+    head = scripts.get_revision("company_017")
+    assert head is not None and head.down_revision == "company_016"
     current = scripts.get_revision("company_016")
     assert current is not None and current.down_revision == "company_015"
     original = root / "company_alembic/versions/company_008_brain.py"

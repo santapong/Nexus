@@ -82,9 +82,14 @@ async def drain_planning_application(
     destroy: Callable[[], Awaitable[None]] | None = None,
 ) -> None:
     """Stop admission, retain actual leaves and original clocks, then retire the runtime."""
+    # Retain the actual reader before yielding; later facade replacement cannot
+    # remove resources already owned by this application retirement.
+    costs = services.cycle_costs.reads if services.cycle_costs is not None else None
     services.lifecycle.request_stop()
-    while services.lifecycle.pending_owners() or any(
-        operation.running for operation in tuple(services.runtime._operations.values())
+    while (
+        services.lifecycle.pending_owners()
+        or any(operation.running for operation in tuple(services.runtime._operations.values()))
+        or (costs is not None and costs.pending_owners())
     ):
         # A cancelled wrapper remains pending: cancellation alone cannot establish
         # completion of the SDK/native/file resource hidden behind that wrapper.

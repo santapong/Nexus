@@ -161,10 +161,15 @@ class RegisteredPlanningConsumer:
             allowed_classification=self._classification,
         )
         intent = PlanningIntentCheck(context_check, prepared, registry=self._registry)
-        if self._management.catalog.nexus_cycle_admission is not None:
+        if (
+            self._management.catalog.nexus_cycle_admission is not None
+            or self._management.catalog.nexus_coding_admission is not None
+        ):
             if self._credential is None:
                 raise ValueError("Nexus planning requires its authenticated actor witness")
-            intent = NexusPlanningIntentCheck(intent, self._credential)
+            intent = NexusPlanningIntentCheck(
+                intent, self._credential, catalog=self._management.catalog
+            )
         gate = PersistentModelCallAuthorizer(
             self._factory,
             self._lease,

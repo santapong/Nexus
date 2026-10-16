@@ -15,6 +15,7 @@ from nexus.company.management.control_support import ManagementConflictError, db
 from nexus.company.management.cycle_admission_contracts import require_exact_cycle_quota
 from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
 from nexus.company.management.lifecycle import PlanRevision
+from nexus.company.management.nexus_coding_catalog import configured_nexus_admission
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
     ManagementPlanHead,
@@ -74,9 +75,7 @@ class ManagementPlanStore:
         planning_reader: PlanningSourceReader | None = None,
     ) -> None:
         validate_cycle_catalog(catalog.cycle_admission, catalog)
-        from nexus.company.management.nexus_cycle_admission import validate_nexus_catalog
-
-        validate_nexus_catalog(catalog.nexus_cycle_admission, catalog)
+        configured_nexus_admission(catalog)
         self.factory, self.catalog = (
             factory,
             PlanAdmissionCatalog.model_validate_json(catalog.model_dump_json()),
@@ -91,7 +90,8 @@ class ManagementPlanStore:
             if (
                 type(planning_reader) is not PlanningSourceReader
                 or planning_reader.factory is not factory
-                or planning_reader.template.nexus_admission != self.catalog.nexus_cycle_admission
+                or planning_reader.template.configured_admission
+                != configured_nexus_admission(self.catalog)
             ):
                 raise ManagementDeniedError(
                     "Planning reader must share the exact PlanStore factory"
@@ -125,7 +125,7 @@ class ManagementPlanStore:
             read_end(end_us)
             if (
                 payload.planning_origin is not None
-                or self.catalog.nexus_cycle_admission is not None
+                or configured_nexus_admission(self.catalog) is not None
             )
             else None
         )

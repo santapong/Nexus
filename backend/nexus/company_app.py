@@ -12,6 +12,8 @@ from litestar.openapi.plugins import SwaggerRenderPlugin
 
 from nexus.api.company_auth import validate_company_auth_configuration
 from nexus.api.company_brain_routes import CompanyBrainController
+from nexus.api.company_coding_routes import CompanyCodingController
+from nexus.api.company_cycle_cost_routes import CompanyCycleCostController, CycleCostApiServices
 from nexus.api.company_management_control_routes import CompanyManagementControlController
 from nexus.api.company_management_routes import CompanyManagementController
 from nexus.api.company_metric_routes import CompanyMetricController
@@ -27,6 +29,7 @@ from nexus.company.management.api_services import ManagementApiServices
 from nexus.company.notifications.api_services import NotificationApiServices
 from nexus.company.pilot_session import PilotSessionService
 from nexus.company.services import CompanyServices
+from nexus.execution.coding_api_services import CodingApiServices
 from nexus.execution.planning_owner_reads import PlanningApiServices
 from nexus.execution.qualification_dispatch import QualificationApiServices
 
@@ -40,6 +43,8 @@ def create_company_app(
     pilot_sessions: PilotSessionService | None = None,
     qualification_services: QualificationApiServices | None = None,
     planning_services: PlanningApiServices | None = None,
+    cycle_cost_services: CycleCostApiServices | None = None,
+    coding_services: CodingApiServices | None = None,
     cors_config: CORSConfig | None = None,
 ) -> Litestar:
     """Fail closed on signer configuration before building an isolated company profile.
@@ -125,6 +130,34 @@ def create_company_app(
             provide_planning_services, use_cache=True, sync_to_thread=False
         )
         route_handlers.append(CompanyPlanningController)
+
+    if cycle_cost_services is not None:
+        mounted_costs = cycle_cost_services
+        mounted_costs.require_composition()
+        if mounted_costs.directory is not services.directory:
+            raise ValueError("Company financial routes require the original company directory")
+
+        def provide_cycle_cost_services() -> CycleCostApiServices:
+            return mounted_costs
+
+        dependencies["cycle_cost_services"] = Provide(
+            provide_cycle_cost_services, use_cache=True, sync_to_thread=False
+        )
+        route_handlers.append(CompanyCycleCostController)
+
+    if coding_services is not None:
+        mounted_coding = coding_services
+        mounted_coding.require_composition()
+        if mounted_coding.directory is not services.directory:
+            raise ValueError("Coding routes require the actual company directory")
+
+        def provide_coding_services() -> CodingApiServices:
+            return mounted_coding
+
+        dependencies["coding_services"] = Provide(
+            provide_coding_services, use_cache=True, sync_to_thread=False
+        )
+        route_handlers.append(CompanyCodingController)
 
     return Litestar(
         route_handlers=route_handlers,

@@ -6,6 +6,8 @@ import { CompanyQueryState, money, StateLabel } from '@/components/company/Compa
 import { Button } from '@/components/ui/button'
 import { CompanyPlanningReview } from '@/components/company/CompanyPlanningReview'
 import { isPlanningAction } from '@/hooks/companyPlanningState'
+import { isCodingAction } from '@/hooks/companyCodingState'
+import { CompanyCodingReview } from '@/components/company/CompanyCodingReview'
 
 function ExactReview({ data }: { data: ActionReview }) {
   const [reviewed, setReviewed] = useState(false)
@@ -54,6 +56,7 @@ export function CompanyActionReviewPage() {
     <h2 className="text-2xl font-semibold text-white">Action review</h2><StateLabel>{query.data.audit.state.replace(/_/g, ' ')}</StateLabel></div>
     {isPlanningAction(query.data)
       ? <CompanyPlanningReview review={query.data} refreshing={query.isFetching} />
+      : isCodingAction(query.data) ? <CompanyCodingReview review={query.data} refreshing={query.isFetching} />
       : <ExactReview key={query.data.audit.proposal_sha256} data={query.data} />}
   </div>
 }

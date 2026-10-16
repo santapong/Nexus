@@ -22,6 +22,8 @@ from nexus.company.management.native_execution_profiles import (
     NativeExecutionProfile,
     validate_native_profiles,
 )
+from nexus.company.management.nexus_coding_admission import NexusCodingAdmission
+from nexus.company.management.nexus_coding_catalog import validate_nexus_coding_catalog
 from nexus.company.management.nexus_cycle_admission import (
     NexusCycleAdmission,
     validate_nexus_catalog,
@@ -64,6 +66,9 @@ class PlanAdmissionCatalog(ManagementContract):
     nexus_cycle_admission: NexusCycleAdmission | None = Field(
         default=None, exclude_if=lambda value: value is None
     )
+    nexus_coding_admission: NexusCodingAdmission | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
     @model_validator(mode="after")
     def exact_catalog(self) -> Self:
@@ -71,10 +76,18 @@ class PlanAdmissionCatalog(ManagementContract):
         validate_model_observations(self.models, self.model_observations)
         validate_native_profiles(self.models, self.native_profiles)
         validate_notification_profiles(self.models, self.notification_profiles)
-        if len({row.tool for row in self.tools}) != len(self.tools):
+        keys = tuple((row.tool, row.tool_version, row.resource) for row in self.tools)
+        if self.nexus_coding_admission is not None:
+            if len(set(keys)) != len(keys) or any(
+                len({row.tool_version for row in self.tools if row.tool == name}) != 1
+                for name in {row.tool for row in self.tools}
+            ):
+                raise ValueError("Coding tool tuples require exact unique targets and one version")
+        elif len({row.tool for row in self.tools}) != len(self.tools):
             raise ValueError("One exact configured tool version per admission symbol is required")
         if len({row.symbol for row in self.resources}) != len(self.resources):
             raise ValueError("Admission resources must have unique exact symbols")
         validate_cycle_catalog(self.cycle_admission, self)
         validate_nexus_catalog(self.nexus_cycle_admission, self)
+        validate_nexus_coding_catalog(self.nexus_coding_admission, self)
         return self

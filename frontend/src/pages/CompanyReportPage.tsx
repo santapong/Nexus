@@ -3,6 +3,7 @@ import { useSavedCompanyReport } from '@/hooks/useCompanyReports'
 import type { CompanyIdentity } from '@/types/company'
 import { CompanyQueryState, instant, money, StateLabel } from '@/components/company/CompanyStatus'
 import { ReportPreparationPanel } from '@/components/company/ReportPreparationPanel'
+import { CompanyCycleCosts } from '@/components/company/CompanyCycleCosts'
 
 export function CompanyReportPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -37,6 +38,7 @@ export function CompanyReportPage() {
         <ul className="list-disc pl-5 text-sm text-gray-400">{report.data.blockers.map(reason => <li key={reason}>{reason}</li>)}</ul></div>}
     </section>
     <ReportPreparationPanel key={report.report_id} report={report} />
+    <CompanyCycleCosts key={report.selection.author.task_id} company={identity.company_id} expectedTask={report.selection.author.task_id} />
     <details className="rounded-lg border border-gray-800 bg-gray-900 p-5"><summary className="cursor-pointer text-sm text-gray-300">Recorded report and evidence pins</summary>
       <pre className="mt-4 text-xs text-gray-400 whitespace-pre-wrap break-all">{JSON.stringify(report, null, 2)}</pre></details>
   </div>

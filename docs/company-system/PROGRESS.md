@@ -26,6 +26,39 @@ no configured model/provider/worker activation or seeded successful work.
 
 Next: autonomous governed Nexus code authoring and whole-cycle model accounting,
 while the signed-in owner journey and genuine provider setup remain pending.
+The [coding implementation checkpoint](GOVERNED_CODING_IMPLEMENTATION_CHECKPOINT_2026-10-16.md)
+now records held planner, coding-consumer, financial-reader and committed-source
+components. The owner financial HTTP/full10 application path passes 59 relevant
+checks and strict/Ruff7; a separate real Nexus source read passes with exact
+commit/tree/archive/file joins. Durable C input, concrete native gate, fixed
+runtime, owner input/review and derived Brain publication now have held component
+checks. C financial integration passes140 relevant checks/49.18s and strict/Ruff8;
+original saved model bytes survive a cross-process hash-seed change with unchanged
+native cost. C owner application/API/operator now holds33 files with323 relevant
+checks and strict/Ruff33. Owner coding review/dispatch/candidate and Plan/Report
+cycle finances hold19 files with request/state/escaped rendering, TypeScript/build
+and strict exporter checks. The combined independent source review is favorable
+after actual private-file cancellation repairs; its151-path overlay and Root's
+configured strict/Ruff133 pass. The published-patch E/EV reader/guard/templates
+now hold12 files with57 relevant checks. Actual E/EV execution remains unqualified.
+
+The first whole coding unit/coverage run failed:5,544 passed,53 failed and63.46%
+coverage against the unchanged80% requirement. Test-only clock/schema repairs
+pass254 affected cases, including actual coverage instrumentation; the two C
+timing fixtures pass their complete nine-case module with instrumentation.
+These focused results do not clear the whole coverage gate. After retaining the
+initial closure failure and adding three previously held files, the separate
+clean candidate passes5,585 units/315.94s with all2,251 source pins unchanged.
+Configured normal strict/Ruff/format147 also pass; the schema exporter's only
+forward sorts imports with unchanged bindings and non-import AST.
+
+The first actual L→C qualification attempt completes normal company001–017 and
+DBOS installation, then fails on a fixture's strict Python/JSON parsing boundary
+before any account, company, native/model request or worker. Separate restricted
+and operator RR READ ONLY/rollback audits confirm74 FORCERLS tables, zero company
+rows/workflows/app connections. Its owned cluster is stopped with data/claim/logs
+preserved. A strict JSON fixture repair and fresh v2 namespace are next; no actual
+C model/build cycle is claimed.
 Autonomous code authoring, whole-cycle model accounting, Strategy/presentation/
 support, current bounded builder/ARM64, reporting/email, private deployment,
 independent restore/rollback and24-hour soak remain required. Native activation

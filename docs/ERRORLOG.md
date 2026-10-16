@@ -72,6 +72,759 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-227 — Root metadata preflight queries the wrong SDK distribution name
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (metadata-only forward)
+**Found by:** Root before provisioning the first A6 database
+**Affected files:** private Root operator driver; project dependencies unchanged
+
+### What happened
+importlib.metadata.version('pydantic-ai') raises PackageNotFoundError before any
+database, release or execution claim. The first wrapper did not persist captured
+stderr; one intentional metadata-only reproduction retains the actual error.
+
+### Root cause
+The checked pyproject pins the pydantic-ai-slim distribution with extras, not
+pydantic-ai. Python import and installed distribution names differ.
+
+### Fix applied
+Read the exact pinned distribution name. Forward records Python3.12.9,
+pydantic-ai-slim2.54.0 and DBOS3.2.0, plus the exact frozen Nexus import origin.
+No install/dependency change or test retry occurred. The first actual A6 test
+was invoked only after this pre-provisioning forward.
+
+### Prevention
+Use actual lock/pyproject distribution names and persist diagnostic stderr before
+raising. Keep METADATA_PREFLIGHT_RED_1.json and the forward in the actual-checks1
+folder; no claim of successful application execution follows.
+
+---
+
+## ERROR-226 — Actual catalog fixture feeds JSON values into strict Python validation
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** open (bounded strict-JSON repair in progress)
+**Found by:** Root during the first actual A6 setup
+**Affected files:** integration/nexus_coding_application_fixture.py
+
+### What happened
+The first actual scenario fails1case/5.72s after normal001–017 and DBOS installation.
+prepare_case passes the actual template's JSON-mode namespace dictionary to
+PlanAdmissionCatalog.model_validate. Strict UUID/tuple/frozenset/Decimal fields
+produce25 errors before _authenticate, so no account/company/native/model/worker
+is reached. All2,257 runtime source pins remain unchanged.
+
+### Root cause
+Strict Python-object validation requires native Python types. The transformed
+dictionary contains JSON strings/lists and must cross the strict JSON API boundary.
+
+### Fix applied
+Not yet claimed. Preserve the v1 database/claim/source/logs; use the same exact
+template in a bounded pure red/forward, strict model_validate_json and malformed
+UUID denial. Do not use strict=False, casts or changed business guards. Nominate
+fresh v2 database/paths/port/company namespace before any subsequent actual run.
+
+### Prevention
+The separate failure-stage restricted NOSUPER/NOBYPASS and operator RR READ ONLY
+audit explicitly rolls back both snapshots: company017/74 FORCERLS tables, all
+company rows/DBOS workflows/app connections zero. Root stops only the owned v1
+cluster; all data and the one-shot claim stay preserved. The success-expecting
+two-model conservation audit is not run on this failed stage. Evidence: first
+TEST_TERMINAL_1.json and FAILED_SETUP_READONLY_AUDIT_1.json, SHA57e1a073, under
+/var/tmp/nexus-coding-application-actual-checks-20261016-1.
+
+---
+
+## ERROR-225 — Candidate snapshot omits three earlier held dependencies
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (separate complete functional candidate passes)
+**Found by:** Root and planning_application during clean-candidate regression
+**Affected files:** private candidate manifest/snapshot; no production source edits
+
+### What happened
+The first clean candidate stops during collection with59 errors in16.38s.
+coding_content is missing for58 cascades; one case imports test_cycle_model_facts.
+All2,248 copied file lengths/hashes are correct, so this is an omitted closure,
+not snapshot corruption or an established product import defect.
+
+### Root cause
+The151-path overlay did not include the earlier coding-content two-file hold or
+the original cycle-model-facts test. Its production module is already present
+through the newer N3 forward and must not be restored from the old hold.
+
+### Fix applied
+Create a separate2,251-file snapshot by adding only coding_content.py,
+test_coding_content.py and test_cycle_model_facts.py. All three match their
+original held copies and the earlier full working-tree cohort. A static AST
+audit finds no other checkout-local import omission. The original failed snapshot
+and log remain unchanged. The new candidate passes5,585 units/315.94s with all
+2,251 source pins unchanged; no global coverage pass follows.
+
+### Prevention
+Reconcile complete prior source cohorts and owned untracked files, with explicit
+forwards and exclusions, before running a prospective commit snapshot. Do not
+copy unrelated historical files or replace current production with older bytes.
+Private diagnosis78aacf2b and candidate-source3 a4c73ab5 retain exact identities.
+
+---
+
+## ERROR-224 — Acceptance worker waits can outlive an unstarted queue
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (source/static and bounded harmless-child checks; actual acceptance pending)
+**Found by:** coding_milestone_review during A6 source-readiness review
+**Affected files:** integration/test_nexus_coding_application.py, nexus_coding_application_fixture.py, nexus_coding_application_worker.py
+
+### What happened
+Source1 can wait indefinitely for queue result, stdin drain/close or shielded child
+capture/finally cleanup when a worker never starts. This was a source-readiness
+finding; the real A6 database/worker scenario had not been executed.
+
+### Root cause
+Retained subprocess tasks lacked a finite original observation boundary and an
+exact-child containment path. Scenario retirement also needed to remain visible
+to the database owner before engine disposal.
+
+### Fix applied
+Freeze the600-second case and per-role maximum375-second observation ends before
+dispatch, shortened by original witness/source ends. Retain one-shot public
+metadata tasks; get_result is terminal-only and bounded. Synchronous stop/READY
+precedes job delivery. Keep the actual creation, late returned Process, stdin,
+readers, wait/reap and scenario-retirement tasks. Stop admission before cleanup;
+use the original five-second resource tail plus two-second exact-child forced
+reap/pipe containment. Forced/unresolved outcomes fail qualification and cannot
+claim SDK/FS semantic settlement. The same retirement task blocks engine disposal.
+
+### Prevention
+Source2 six-file hold a6075877 and narrow independent review4179d82f are favorable;
+normal strict/Ruff6 pass. Six harmless helper observations each finish below15s,
+including original red, cooperative/natural completion, blocked900KB stdin and
+ignore-TERM forced/unconfirmed reap, delayed metadata and actual late spawn.
+All harmless children settle. Preserve original source1 and failed probes; this
+does not prove actual SQL/DBOS/SDK/native acceptance or authorize a namespace retry.
+
+---
+
+## ERROR-223 — Whole coding coverage remains below the release requirement
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open
+**Found by:** Root during the coherent coding unit/coverage gate
+**Affected files:** backend/nexus and the existing integration/helper qualification suites
+
+### What happened
+The frozen whole working-tree run exits1:5,544 passed,53 failed,19 warnings in
+626.62s. Coverage is63.462670%, below the unchanged80% requirement. Focused forwards
+after fixture repairs do not constitute a new whole passing run or coverage pass.
+
+### Root cause
+The actual unit-only run executes little of the required integration/helpers:
+production41,347/61,574 statements, integration656/19,727 and other helpers
+2,863/11,033. Fixture failures are separately recorded below; fixing them alone
+does not establish sufficient meaningful execution.
+
+### Fix applied
+None claimed for the global gate. Keep FAILED_GATE_1.json and the original log
+under /var/tmp/nexus-coding-coherent-gate-checks-20261016-1. The read-only coverage
+plan maps61 existing PostgreSQL rows/53 database names, requiring a fresh owned
+PG17.6 scope per logical destructive row. Genuine isolated integration execution
+is needed before the final coherent coverage check; it is not blocked by requiring
+that same integration coverage in advance.
+
+### Prevention
+Do not lower80, omit source/test files, pad tests or combine different-source data
+to manufacture a pass. Preserve explicit child-process coverage limits and the
+distinction between protocol success, actual measured execution and release.
+
+---
+
+## ERROR-222 — Import-time fixture clocks expire before instrumented tests run
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (affected fixture assertions; global gate still open)
+**Found by:** Root and planning_application during the whole coding regression
+**Affected files:** unit/cycle_prerequisite_fixture.py, two prerequisite tests, derived migration/CSV scope tests, test_coding_consumer.py
+
+### What happened
+The whole instrumented run fails48 prerequisite/publication cases on genuine
+JWT/lease expiry, two obsolete normal016-head assertions and two C timing cases
+before their intended boundary. One separate unowned strategy test also fails;
+its source is preserved unchanged and is outside this candidate.
+
+### Root cause
+Module-import NOW plus120 seconds is already past by the time a long run reaches
+the tests. Related supplied clocks used that stale anchor. Normal head is now017
+while historical CSV remains016. The C fixture's2-second SDK/setup observation
+could expire before the protected filesystem operation being tested.
+
+### Fix applied
+Use one actual per-case anchor for genuine JWT, supplied source/database and
+lease times; retain all relative negative windows and never renew the captured
+witness. Assert exact normal017 and known016 ancestry without changing CSV016.
+The C fixture uses10 seconds inside its original20-second window. Its read-timeout
+case advances only the test consumer clock at the actual protected-read boundary
+toward the unchanged first end; the real file thread stays owned until settled.
+Five fixture files pass254 affected cases/10.74s and36.21s with --cov=nexus;
+the C consumer's nine cases pass53.45s with instrumentation. Normal strict and
+Ruff checks pass for all six. No production auth, clocks or acceptance guard changed.
+
+### Prevention
+Keep the aged-fixture red, original full failed log, test-only source holds and
+instrumented forwards. Subset coverage13.37%/8% is explicitly not a global80 pass.
+Never widen real JWT/lease/source authority to compensate for suite duration.
+
+---
+
+## ERROR-221 — Published-origin UTF8 retry continues after caller cancellation
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual private-file author forward; scoped source review)
+**Found by:** sender_review during published coding-origin consumption
+**Affected files:** management/coding_publication_origin.py and its unit tests
+
+### What happened
+Cancelling an actual multi-page origin read admits three pages instead of only
+the first admitted page. Generated Thai text split at16,384 bytes also schedules
+another UTF8 attempt after caller stop. These are temporary-file/supplied-SQL
+counterexamples, not an observed production disclosure or native effect.
+
+### Root cause
+Retaining a shielded private pipeline owns its leaves but does not stop another
+page or retry. The stop must reach each actual read scheduling boundary.
+
+### Fix applied
+Check the original per-read ContextVar stop before and after every page, freshness
+and private phase, including each of the same four bounded strict-UTF8 attempts.
+Keep the original admitted filesystem leaf and first failure. Actual ordinary and
+Thai cancellation forwards plus later genuine reads on the same shared reader
+pass in the final57-case/45.56s hold; normal strict/Ruff12 and scoped review pass.
+
+### Prevention
+Preserve original red observations and the source/check holds d921be9f/0fb5759b
+under /var/tmp/nexus-coding-consumption-checks-20261016-1. Do not cancel a real
+leaf, renew its end or globally stop a shared reader to make cleanup appear green.
+
+---
+
+## ERROR-220 — Candidate cancellation shields the complete first input pipeline
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (independent actual private-file forward)
+**Found by:** coding_milestone_review during combined coding review
+**Affected files:** execution/coding_candidate_reader.py, unit/test_coding_cancellation.py
+
+### What happened
+Cancelling a candidate during its first actual prepared-blob read leaves the
+shielded owner input pipeline running; a second private blob read starts after
+the original caller stops. No model call, native permit or pending action is issued.
+
+### Root cause
+The concrete owner reader already shields actual leaves and stops its per-read
+store. Shielding that entire reader again prevents its cancellation path running.
+
+### Fix applied
+Await the actual owner reader directly and retain its actual pending leaves in
+the candidate owner graph. Cancellation stops only that per-read store; the shared
+reader remains usable. The same original independent probe passes with only one
+admitted phase, real pending ownership until settlement and no pending handles.
+Root151 relevant checks/67.35s and normal strict/Ruff6 pass; a fresh legitimate
+candidate read after cancellation also passes.
+
+### Prevention
+Keep the unchanged independent red and destination-only forward, plus
+test_cancelled_candidate_stops_input_pipeline_and_allows_next_owner_read.
+Sourceea3c7034/checksc1132554 and independent forwardad8d9533 under the dated
+coding-cancel-repair/milestone-review directories. This is supplied-SQL filesystem
+proof, not actual C runtime qualification or authority renewal.
+
+---
+
+## ERROR-219 — Stopping the outer coding store leaves nested IO admission open
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (independent actual private-file forward)
+**Found by:** coding_milestone_review during combined coding review
+**Affected files:** execution/coding_operation.py, management/coding_prepared_store.py, planning_prepared_store.py
+
+### What happened
+Cancelling operation.call during an actual blocked save starts three later blob
+phases and writes body/header files after caller stop. Stopping only H reduces
+this to one later readback phase: its reused PlanningPreparedStore IO child still
+admits subsequent work. No native/model/pending action is issued in either probe.
+
+### Root cause
+Strongly retaining a shielded multi-phase coroutine proves ownership, not that it
+has stopped admitting new phases. The outer stop did not reach the actual IO child.
+
+### Fix applied
+Stop the operation's existing H store without scheduling another driver cancel.
+H stops its original private IO child. The child checks a monotonic stop latch
+before and after each owned leaf; the already-admitted filesystem callable stays
+owned and may complete. The independent original probe now observes one admitted
+phase and one file from that admitted leaf, no later phase and no pending handles.
+Root151 relevant checks/normal strict/Ruff6 and independent2 forward cases pass.
+Default L behavior and original wire/allowance/lease/deadline identities remain.
+
+### Prevention
+Retain the original2-failure red, the insufficient outer-only forward and all
+actual-leaf controls. The older cleanup test now explicitly accepts only the
+documented stopped-pipeline denial for cancellation, or TimeoutError in its
+original timeout branch, while preserving no-adoption/settlement assertions.
+Do not weaken business acceptance or cancel real leaves to make cleanup green.
+
+---
+
+## ERROR-218 — Owner dispatch replay accepts incomplete fixed DBOS history
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (finite native/owner metadata replay)
+**Found by:** planning_application during M owner lifecycle
+**Affected files:** execution/coding_lifecycle_reads.py
+
+### What happened
+The owner lifecycle describes an existing permanent dispatch despite missing or
+crossed fixed DBOS metadata. The retained regression has2 failures/1 pass in5.93s;
+it is supplied SQL delivery, not a production workflow incident.
+
+### Root cause
+Permanent native dispatch identity alone does not prove the fixed workflow/name/
+version/queue/input binding still matches the issued command.
+
+### Fix applied
+Read the actual DBOS binding projection in the same owner control transaction and
+call unchanged coding_history.require_workflow_binding before returning existing.
+No fresh C credential, body, lease, key, SDK or enqueue is used. Final M scope323
+relevant/139.15s and normal strict/Ruff33 pass with stable pins.
+
+### Prevention
+Retain owner-dboshistory-red-1.log and exact metadata forwards under the M checks.
+Actual separate-process DBOS acceptance remains required; replay never creates
+another dispatch or renews a spent allowance.
+
+---
+
+## ERROR-217 — Successful candidate reads retain settled per-read stores
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual private H/model-file resource tests)
+**Found by:** planning_application during M candidate reader
+**Affected files:** execution/coding_candidate_reader.py
+
+### What happened
+A successful actual private candidate read leaves its settled prepared store
+reachable in both reader and services. The retained1-failure/4.46s test exposes
+accumulation across repeated owner reads, not an observed production outage.
+
+### Root cause
+Strong ownership needed for pending leaves lacked retirement after settlement.
+
+### Fix applied
+Remove only that read's own settled stores, keeping actual pending IO reachable
+and preserving stop/drain semantics and original cutoffs. Candidate/C-CAS16
+forwards pass15.15s; final M323 relevant checks/strictRuff33 pass. No forced task
+clearing, late candidate, renewed cleanup window or hold rewrite follows.
+
+### Prevention
+Retain candidate-retirement-red-1.log plus successful-repeat and real pending-file
+controls under /var/tmp/nexus-coding-application-checks-20261016-1. Expired execute
+authority and valid current-owner historical reads remain separate.
+
+---
+
+## ERROR-216 — Financial receipt validation occurred after protected output selection
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (finite private-file/native-history checks)
+**Found by:** Root during C financial integration
+**Affected files:** management/cycle_model_native.py, cycle_model_reader.py, cycle_coding_reader.py
+
+### What happened
+A supplied native receipt-ID splice reached a sentinel at the actual protected
+model load before the later billing join rejected it. This is a finite read-order
+counterexample, not an observed production disclosure or native permit.
+
+### Root cause
+The old late join was sufficient to return unconfirmed money, but did not bind
+the complete native receipt before selecting private output.
+
+### Fix applied
+One pure native anchor checks action, consumed approval chronology, work/counter,
+attempt, intent, hold/day/reservation, receipt and artifact-owner tuple before
+either L or C output read. Current owner/source checks remain mandatory. Root's
+final140 relevant checks/49.18s, configured strict8 and Ruff8 pass with stable
+pins. H's extracted predicate AST and other nine files are preserved.
+
+### Prevention
+Retain RECEIPT_RED_1.log and the early-load sentinel, final source revocation,
+failed-output cost, copied-proof and actual pending-file controls under
+/var/tmp/nexus-cycle-coding-reader-checks-20261016-1. Supplied SQL is not RLS proof.
+
+---
+
+## ERROR-215 — Reserialized evidence changes a saved-byte hash across processes
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual cross-process protected-file reproduction)
+**Found by:** sender_review during coding publication
+**Affected files:** harness/model_evidence.py, management/cycle_model_facts.py
+
+### What happened
+A seed0 file/ref passes its actual protected SHA check under seed1, but a fresh
+JSON serialization changes ModelRegistration.capabilities frozenset order. The
+fact join falsely returns unconfirmed while retaining native USD0.000110.
+
+### Root cause
+Semantic object equality does not guarantee byte-identical JSON serialization.
+The join hashed reconstructed bytes rather than the original saved envelope.
+
+### Fix applied
+The actual store returns internal ModelEvidenceRecord(evidence, wire), preserving
+existing load/save/evidence equality. Bounded owned reads validate original raw
+SHA, strict decode, semantic equality and final metadata. C2 joins original wire;
+L/C financial and J publication use the shared repair. Historical bytes and native
+spend stay unchanged. N3 passes46/8.91s and strict/Ruff3; J passes21/21.28s and
+strict/Ruff9, including the original seed0→seed1 publication forward.
+
+### Prevention
+Retain CROSS_PROCESS_WIRE_FINDING_1.json, original red and raw-byte forward under
+the dated coding-publication/model-evidence-wire checks. Keep raw wire internal,
+check its bound before parsing, and retain native/receipt/semantic joins. This
+does not prove database publication, workflow restart or vendor billing.
+
+---
+
+## ERROR-214 — Derived coding publication needs exact source and reader bindings
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (finite publication source; SQL migration unqualified)
+**Found by:** sender_review during J publication
+**Affected files:** management/coding_publication_store.py, coding_publication_rows.py
+
+### What happened
+Finite drafts exposed an incompatible SourceRevisionRecord subclass in contributor
+edges, a crossed receipt reaching private output, generated authority configured
+as owner.primary, and a separate blob root that the actual Brain reader could
+not read. None establishes a production database incident.
+
+### Root cause
+Publication must preserve exact base source references and the actual native,
+generated-source authority and protected-reader graph, not merely valid DTO shapes.
+
+### Fix applied
+Project genuine contributor fields to SourceRevisionRef, bind the native receipt
+before private output, require coding.generated.v1 and the same actual Brain
+ProtectedBlobStore. Publish paired model_origin/code_patch derived sources with
+real provenance/current recipient READ and final transaction checks. Source21
+checks/21.28s and strict/Ruff9 pass; normal company017 remains unapplied.
+
+### Prevention
+Keep schema/native-receipt/generated-authority/blob-reader reds and paired-row,
+replay/revocation/cancellation tests in the held J receipt. Actual migration,
+rollback/RLS, funded C admission and independent E/EV remain separate gates.
+
+---
+
+## ERROR-213 — Generic C review drops the original owner bearer witness
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (actual HTTP with supplied native/source facts)
+**Found by:** native_execution_plan during L owner-review integration
+**Affected files:** api/company_management_read_routes.py, management/action_review_store.py
+
+### What happened
+The route kept VerifiedIdentity but omitted the original authenticated credential
+when entering C protected review. The actual route regression exposed this lost
+bearer/deadline boundary; owner identity alone cannot replace its finite witness.
+
+### Root cause
+The generic legacy review interface did not forward the request's genuine bearer
+to the new per-read C owner store.
+
+### Fix applied
+Forward the exact credential, retain the real store/read/source cutoff and apply
+the minimum original JWT/static/header deadline through complete serialization.
+Missing/forged C configuration fails closed; legacy L remains covered. Six-file
+scope51 relevant checks/20.83s and configured strict/Ruff6 pass.
+
+### Prevention
+Keep the actual route red and owner-only/private-file/repeated-read cancellation
+controls under /var/tmp/nexus-coding-owner-review-checks-20261016-1. Retire only
+settled read-owned stores; no manufactured C credential or renewal follows.
+
+---
+
+## ERROR-212 — C native shape proof can finish after its original loaded cutoff
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (native shape checks; actual affordability remains denied)
+**Found by:** native_execution_plan during K mandatory native gate
+**Affected files:** management/nexus_coding_stored_shape.py, execution/nexus_coding_intent_gate.py
+
+### What happened
+An unchanged actual estimator finishes at the supplied original loaded deadline,
+and the first K draft returns without denying that expired proof. This finite
+counterexample uses supplied native leaves, not an issued production request.
+
+### Root cause
+Checking the store-issued proof before CPU work does not prove it is valid after
+that work completes.
+
+### Fix applied
+Recheck the same actual store-issued object, original witness/lease/graph and
+unchanged cutoff after estimation. Only the exact stored/model/same-stored C
+composite is installed; unconnected roles remain denied. K131 relevant/60.65s,
+final25/28.26s and strict/Ruff4 pass. The old USD1.049088 quote still exceeds its
+USD0.1 C allocation; a shape positive is not actual admission.
+
+### Prevention
+Retain original-cutoff-red-1.log and final proof/time controls in the K hold.
+Budget a fresh complete profile before first root use; never widen the old root.
+
+---
+
+## ERROR-211 — Fixed C runtime needs original authority and post-enqueue windows
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (finite runtime/SDK-mock source checks)
+**Found by:** planning_application during I runtime composition
+**Affected files:** execution/coding_services.py, coding_operation.py, coding_dispatch.py
+
+### What happened
+Finite drafts exposed replaceable authority aliases, foreign-task work reaching
+claim checks, a later database read after the post-enqueue deadline, and a replaced
+freshness policy callback. Original failure logs are preserved; these are not
+observed production transactions.
+
+### Root cause
+Runtime composition and time checks must bind original concrete collaborators
+and original windows across awaits, rather than rereading mutable aliases.
+
+### Fix applied
+Pin the exact authority/factory/catalog/source graph, check foreign work before
+claim, check the original post-enqueue end before later reads, and bind immutable
+policies. Recognize issued history before fresh C/body/SDK. Twelve-file scope118
+relevant checks/37.20s and configured strict/Ruff12 pass. One actual SDKMock POST
+uses supplied native/source leaves; actual C native funding is not proven.
+
+### Prevention
+Retain semantic reds and final source/dependency receipts under
+/var/tmp/nexus-coding-runtime-checks-20261016-1. Dedicated C queue/process shares
+the native ledger and does not manufacture a new dispatch or allowance on replay.
+
+---
+
+## ERROR-210 — Shutdown rereads a replaceable financial facade instead of its owner
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (actual asyncio resource/finite application tests)
+**Found by:** Root during financial application shutdown integration
+**Affected files:** execution/planning_application_runtime.py, unit/test_cycle_cost_application.py
+
+### What happened
+An actual blocked financial task keeps drain pending. A finite test then replaces
+the application's financial facade; the first implementation returns from drain
+while that original task is still running. This is a deliberate in-process
+substitution counterexample, not an observed production shutdown or data loss.
+
+### Root cause
+The loop repeatedly resolves the facade instead of retaining its original reader
+before yielding. A changed reference can hide resources already admitted.
+
+### Fix applied
+Capture the actual reader before stopping admission/awaiting. Observe its real
+pending leaves until settlement; a replacement cannot retire them. The original
+red remains, four focused forwards pass, and final relevant scope passes59/17.33s
+with strict/Ruff7 and stable pins. Exact byte reconstruction preserves every
+startup, queue, host-executor and teardown line outside the drain addition.
+
+### Prevention
+test_actual_financial_leaf_prevents_runtime_drain_until_settlement retains the
+real task across facade substitution. No window, lease or SDK call is renewed.
+Evidence: /var/tmp/nexus-cycle-cost-application-checks-20261016-1.
+
+---
+
+## ERROR-209 — Supplied financial fixtures omit protected directory prerequisites
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (HTTP finite fixture; no production guard change)
+**Found by:** Root during owner financial HTTP qualification
+**Affected files:** tests/unit/test_company_cycle_cost_routes.py
+
+### What happened
+The first supplied directory session omitted the real CompanyControl row and
+correctly denied access. After that correction, a positive read retained native
+spend but returned protected_record_unavailable. Actual model/prepared ancestor
+directories were0755 under the default umask. The private guard correctly denied
+confirmation; this was not unauthorized disclosure or a ledger change.
+
+### Root cause
+The fixture directly saves underlying blobs, bypassing the prepared store's
+private-directory creation. Path.mkdir(parents=True, mode=0700) applies that mode
+to its leaf; missing ancestors inherit ordinary creation permissions. Nominating
+only model directories still left prepared directories unsuitable.
+
+### Fix applied
+Supply the real control metadata and create both private roots/company ancestors
+before fixture writes. A normal-umask positive passes1test/4.04s. Final relevant
+scope passes38/12.37s and strict/Ruff4 with stable source. Earlier failures remain
+in /var/tmp/nexus-cycle-cost-api-checks-20261016-1; no private guard was relaxed.
+
+### Prevention
+Verify every protected ancestor, not just the outer task directory or leaf mode.
+Keep finite supplied fixtures distinct from actual SQL/source authority proof.
+
+---
+
+## ERROR-208 — Full committed archive is not a safe coding-source nomination
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** mitigated (actual source data prepared; execution still unqualified)
+**Found by:** Root during actual Nexus committed-source preparation
+**Affected files:** private source cache/export nomination; coding_repository.py tests
+
+### What happened
+The first primary Git archive hits the existing15s timeout before constructing
+the reader. A private local cache then produces an archive, but the existing
+source-path guard correctly rejects three committed deployment environment paths.
+No environment-file contents were inspected. Neither failure is a native run.
+
+### Root cause
+The primary archive latency cause is unknown. A complete committed tree can
+contain excluded credential-style paths even when the selected code is safe.
+
+### Fix applied
+Preserve both failures. A private local bare cache of the exact commit and an
+explicit three-path export-ignore policy produce a NEW nominated archive/hash.
+Actual commit/tree/archive/file verification passes0.229s/pending0. User branch
+history, native guards, time/byte/member bounds and selected code stay unchanged.
+
+### Prevention
+Inspect path names and tree size before nomination. Recompute the archive hash
+after an explicit export policy; do not relabel rejected bytes as the old input.
+Evidence: nexus-coding-repository-checks-20261016-1, actual cached probe2.
+
+---
+
+## ERROR-207 — Financial proof can be spliced, stale or returned after its cutoff
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (pure/native-supplied and protected-file finite checks)
+**Found by:** coding cost-fact and whole-family financial implementation
+**Affected files:** management/cycle_model_facts.py, cycle_model_reader.py, cycle_cost_snapshot.py
+
+### What happened
+Finite counterexamples expose unchecked nested-company/confirmation DTOs, a
+crossed native proposal reaching private IO, changed root allocation still
+reported complete and a changed hold day still confirming tool cost. A source
+revocation after a real private read can retain a private fact in the final
+snapshot. Broad OSError handling also catches TimeoutError and returns late data.
+These are supplied-native/source tests, not observed production SQL incidents.
+
+### Root cause
+Supplied values, intermediate native snapshots and exception categories do not
+establish final original native/source/financial identity or disclosure time.
+
+### Fix applied
+Revalidate canonical nested values and original charge attribution. Compare the
+complete root/child family, exact intent/attempt/receipt/hold chronology and
+current source proof again in the final company transaction. Drop unconfirmed
+private proof while retaining known ledger spending. Propagate TimeoutError and
+check cutoffs on ordinary partials. Pure facts26 and financial-reader20 focused
+checks/strict/Ruff pass; Root's later38-case HTTP scope includes the latter20.
+
+### Prevention
+Keep original unknown holds and issued Bangkok billing day, reject conflicting
+aliases, and never interpret unavailable proof or partial membership as zero or
+company completion. Meaningful reds and held copies remain in the cycle-model-
+facts and cycle-cost-reader check directories dated20261016-1.
+
+---
+
+## ERROR-206 — Coding source descriptions omit or overrun the actual model input
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (content/source/SDK-mock finite scope)
+**Found by:** strict coding-content and consumer implementation
+**Affected files:** management/coding_content.py, coding_sources.py and paired units
+
+### What happened
+Tests find an oversized original hashed before its length check, and code refs
+that can be omitted/duplicated or present only in schema metadata while the model
+does not receive the complete declared code. A valid source DTO is insufficient.
+
+### Root cause
+Metadata closure was checked before the actual complete input-byte/span closure.
+
+### Fix applied
+Check length before hashing; require exact current included raw spans/rendered
+code and source/artifact/Git joins. Revalidate nested models at public boundaries,
+apply strict patches against complete originals and preserve32KiB/64KiB bounds.
+Content59 and consumer/source47 focused checks plus strict/Ruff pass separately.
+
+### Prevention
+Use the complete workspace data in the actual SDK request. Schema annotations
+bind the input but cannot substitute for it. Supplied archive-byte helpers do not
+attest a commit/tree or confer source READ/execution authority.
+
+---
+
+## ERROR-205 — A complete coding profile can inherit ordinary effect authority
+
+**Date:** 2026-10-16
+**Severity:** high
+**Status:** fixed (planner/full-profile finite scope; non-planner gates still closed)
+**Found by:** full-profile planner integration
+**Affected files:** management/nexus_coding_catalog.py, plan admission, execution/nexus_coding_intent_gate.py
+
+### What happened
+Actual EffectStore finite cases expose ordinary fallback for the new profile.
+Other counterexamples cover a different role's healthy model window rescuing an
+expired planner and replacement planning authority inside the same assembler.
+Inspection also finds that a future child change needs the complete profile in
+the durable r1/r2 hash and model targets cannot be indexed by tool name alone.
+
+### Root cause
+The old six-role and ordinary model assumptions do not define a complete ten-role
+admission or its concrete original operational graph.
+
+### Fix applied
+Persist the full profile SHA, select exact tool/version/resource roles and route
+the new profile before any fallback. The planner requires its actual original
+authority/model/same-authority composite; every unconnected role stays denied.
+The held25-file package passes224 focused cases/17.29s and strict/Ruff25.
+
+### Prevention
+Install each concrete role gate explicitly after its real store/source path is
+ready. Catalog presence, generic callbacks and copied DTOs never grant issuance.
+No actual SQL/provider/native/worker qualification follows from these unit cases.
+
+---
+
 ## ERROR-204 — Application and fixed worker both select the one-shot DBOS queue
 
 **Date:** 2026-10-16

@@ -14,6 +14,8 @@ The supervised release is incomplete; default native execution stays off.
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
 | Management-generated planning | **Actual public owner application/recovery passes HTTP/PG/DBOS/SDK-mock**, candidate, same-root revision2 and no-call replay; separate conservation audit passes | Genuine compatible operating profile/model quality and owner browser acceptance |
+| Governed coding | Complete profile, input, C gate/runtime/review/publication and33-file owner application have held checks; owner coding interface source/build and combined scoped review pass; published-patch E/EV source connection held | Complete coherent regression, actual fresh funded L→C cycle and native E/EV |
+| Whole-cycle accounting | C historical-header integration140 relevant/strictRuff8 and Plan/Report family-finance interface source/build pass; original saved-wire join repaired | Actual SQL conservation and signed-in Report UI; missing proof stays unconfirmed |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
@@ -21,6 +23,36 @@ The supervised release is incomplete; default native execution stays off.
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
 ## Latest actual result
+
+The [coding implementation checkpoint](GOVERNED_CODING_IMPLEMENTATION_CHECKPOINT_2026-10-16.md)
+records the current source-only packages and a separate actual committed Nexus
+data read. C native/runtime/owner review/derived publication source components are
+held. Root's latest C financial scope passes140 relevant checks in49.18s with
+strict/Ruff8 and stable pins; the saved-byte repair passes an actual cross-process
+file join. C application/API/operator now holds33 files with323 relevant checks/
+strictRuff33. Owner coding/cycle-finance interface holds19 files with request/
+state/render/TypeScript/build checks and all prior API paths preserved. Combined
+independent source review is favorable after two reproduced cancellation repairs;
+the151-path overlay is stable and configured strict/Ruff133 pass. Concrete E/EV
+published-origin reader/guard/templates hold12 files and57 relevant checks.
+
+The first whole coding unit/coverage run is **failed**:5,544 passed,53 failed,
+63.46% coverage against the required80%. The retained failures led to six test-only
+clock/schema/timing repairs;254 affected cases and all nine C consumer cases pass
+with actual coverage instrumentation. Focused subset coverage is not a release
+pass. The clean candidate's initial collection failure is retained; its additive
+three-file closure repair now passes5,585 units/315.94s with all2,251 source pins
+unchanged. Configured normal strict/Ruff/format147 pass after an import-order-only
+exporter forward with unchanged bindings/non-import AST.
+
+The first actual L→C scenario installs normal001–017 and DBOS, then fails in the
+fixture's JSON-to-strict-Python catalog reconstruction before account/company or
+worker/model/native execution. A separate restricted plus operator RR READ ONLY
+audit/rollback confirms74 FORCERLS tables and zero company rows, DBOS workflows
+and app connections. The owned cluster is stopped; all failed data/claim/source
+and logs remain. Fix that fixture and use a fresh v2 namespace. No actual C
+request, native run or owner-preview activation has occurred. The last successful
+actual application/model runtime remains the planner scenario below.
 
 The actual public owner application/recovery scenario passes38.43s. It proposes
 and separately approves r1, interrupts after genuine pending publication, cold

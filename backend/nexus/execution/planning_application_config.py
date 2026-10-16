@@ -13,7 +13,7 @@ from nexus.company.brain.context import ContextSelection
 from nexus.company.brain.source_registry import SourcePolicy
 from nexus.company.management.base import Name, Symbol, ValueContract
 from nexus.company.management.goals import GoalRevisionRef
-from nexus.company.management.nexus_cycle_admission import NexusCycleAdmission
+from nexus.company.management.nexus_coding_catalog import NexusAdmission, configured_nexus_admission
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog
 from nexus.company.management.planning_authority import PlanningRolePolicy
 from nexus.harness.model_authorizer_contracts import ModelInputRecipe
@@ -86,8 +86,8 @@ class PlanningApplicationConfig(ValueContract):
     storage: PlanningStorage
 
     @property
-    def admission(self) -> NexusCycleAdmission:
-        value = self.catalog.nexus_cycle_admission
+    def admission(self) -> NexusAdmission:
+        value = configured_nexus_admission(self.catalog)
         if value is None:
             raise ValueError("Planning needs its configured Nexus admission")
         return value

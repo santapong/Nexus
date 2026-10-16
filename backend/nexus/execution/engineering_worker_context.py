@@ -2,11 +2,13 @@
 
 from dataclasses import dataclass
 
+from nexus.builder.coding_templates import CodingBuilderServices
 from nexus.builder.execution_contracts import BuilderExecutionSpec
 from nexus.builder.source_guard import BuilderSourceGuard
 from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.cycle_catalog_checks import validate_cycle_catalog
+from nexus.company.management.planning_native_facts import clock_us
 from nexus.company.management.plans import RunBinding
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.dbos_contracts import SegmentCommand
@@ -71,14 +73,33 @@ async def prepare_engineering_context(
         selected = services.selected_builder
         if selected.reader.reader.artifacts.factory is not services.factory:
             raise ValueError("Selected engineering reader uses another application factory")
+    coding = services.coding_builder
+    if services.catalog.nexus_coding_admission is not None:
+        if (
+            type(coding) is not CodingBuilderServices
+            or selected is not None
+            or coding.reader.factory is not services.factory
+            or coding.reader.catalog is not services.catalog
+            or coding.reader.artifacts is not services.acceptance.inputs.reader
+            or coding.reader.freshness is not services.acceptance.inputs.freshness
+        ):
+            raise ValueError("Configured published-origin E/EV services are unavailable")
+        coding.require_composition()
+    elif coding is not None:
+        raise ValueError("Coding builder services cannot replace another profile")
     lease = await recover_engineering_lease(services, scope, credential, command)
     try:
         original = services.sources.resolve(binding, spec, lease, signed)
-        guard = (
-            EngineeringCredentialSourceGuard(original, credential)
-            if selected is None
-            else selected.resolve_guard(original, credential)
-        )
+        if coding is not None:
+            guard: BuilderSourceGuard = await coding.prepare_guard(
+                original, credential, end_us=clock_us() + 30_000_000
+            )
+        else:
+            guard = (
+                EngineeringCredentialSourceGuard(original, credential)
+                if selected is None
+                else selected.resolve_guard(original, credential)
+            )
         services.runner.require_binding(lease, signed, spec, guard)
         return EngineeringContext(
             command, binding, phase, action, spec, signed, lease, guard, credential
@@ -86,5 +107,10 @@ async def prepare_engineering_context(
     except BaseException:
         # This acquisition is real even if a context object was never returned.
         # Current fencing still owns release; a failed release must propagate.
-        await services.runner.execution.release(lease, signed)
+        if coding is None or not coding.pending_owners():
+            await services.runner.execution.release(lease, signed)
+            if coding is not None:
+                coding.forget_settled_lease(lease)
+        # Otherwise the concrete services retain the actual leaf and acquired
+        # lease. No disposal/release or completion is inferred from cancellation.
         raise

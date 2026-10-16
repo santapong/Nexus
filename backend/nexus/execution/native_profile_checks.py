@@ -28,6 +28,22 @@ async def require_native_ancestry(
     """Read actual parents under the company mutex; names cannot replace registered quota."""
     if native_execution_profile(catalog, child) is None:
         return
+    if catalog.nexus_coding_admission is not None:
+        from nexus.company.management.nexus_coding_catalog import validate_nexus_coding_catalog
+        from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
+
+        coding_admission = validate_nexus_coding_catalog(catalog.nexus_coding_admission, catalog)
+        if (
+            coding_admission is None
+            or control is None
+            or identity is None
+            or child not in tuple(slot.child for slot in coding_admission.slots[5:7])
+        ):
+            raise ExecutionDeniedError("Coding native ancestry requires its actual E/EV family")
+        await read_current_nexus_family_locked(
+            session, control, work, identity, admission=coding_admission, catalog=catalog
+        )
+        return
     if catalog.nexus_cycle_admission is not None:
         from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
 

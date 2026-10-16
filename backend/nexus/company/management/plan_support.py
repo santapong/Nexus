@@ -43,6 +43,12 @@ from nexus.company.management.native_execution_profiles import (
     require_native_action,
     require_native_plan,
 )
+from nexus.company.management.nexus_coding_catalog import (
+    coding_role_model,
+    require_role_charter,
+    select_configured_nexus_plan,
+    validate_configured_role_profile,
+)
 from nexus.company.management.plan_catalog import NamedPlanResource as NamedPlanResource
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog as PlanAdmissionCatalog
 from nexus.company.management.plans import ChildAllocation, PlanPayload
@@ -92,6 +98,7 @@ async def _resource(
     now: datetime,
     read_scope: BrainReadScope,
     freshness: PlanSourceFreshness | None,
+    allowed_data: frozenset[str] | None = None,
 ) -> None:
     resource = await session.get(BrainResource, (company_id, reference.resource_id))
     if resource is None or not resource.active:
@@ -112,6 +119,10 @@ async def _resource(
         head = (
             await session.get(BrainSourceHead, (company_id, source.source_id)) if source else None
         )
+        if allowed_data is not None and (
+            source is None or source.data_classification not in allowed_data
+        ):
+            raise ManagementDeniedError("Coding role model cannot read this source classification")
         if (
             head is None
             or head.availability != "available"
@@ -152,7 +163,7 @@ def validate_plan_profile(
     catalog: PlanAdmissionCatalog, child: ChildAllocation, now: datetime
 ) -> None:
     """Pure current-clock registry/profile eligibility, never action or execution permission."""
-    validate_model_profile(catalog, child, now)
+    validate_configured_role_profile(catalog, child, now)
 
 
 async def _child(
@@ -170,19 +181,10 @@ async def _child(
     await _actor(session, control, charter.charter.verifier_id)
     if item.department != charter.charter.name:
         raise ManagementDeniedError("Work department differs from its exact current charter")
-    validate_model_profile(catalog, child, now)
-    tools = {row.tool: row for row in catalog.tools}
+    validate_configured_role_profile(catalog, child, now)
+    model = coding_role_model(catalog, child)
     resources = {row.symbol: row.resource for row in catalog.resources}
-    if (
-        not set(charter.charter.allowed_tools) <= tools.keys()
-        or not set(charter.charter.resource_scopes) <= resources.keys()
-    ):
-        raise ManagementDeniedError("Charter contains unknown tool or resource eligibility")
-    if any(
-        tools[name].resource not in charter.charter.resource_scopes
-        for name in charter.charter.allowed_tools
-    ):
-        raise ManagementDeniedError("Configured tool resource escapes the charter scope")
+    require_role_charter(catalog, child, charter)
     for name in charter.charter.resource_scopes:
         await _resource(
             session,
@@ -192,6 +194,7 @@ async def _child(
             now,
             read_scope,
             freshness,
+            model.allowed_data if model is not None else None,
         )
 
 
@@ -208,6 +211,7 @@ async def validate_plan(
     # This >50-line traversal keeps the complete approved DAG and final TTL check in one flow.
     if payload.company_id != scope.company_id or catalog.company_id != scope.company_id:
         raise ManagementDeniedError("Plan admission company is unavailable")
+    select_configured_nexus_plan(catalog, payload)
     require_native_plan(catalog, payload)
     require_notification_plan(catalog, payload)
     mandate = await current_mandate(session, scope, payload.mandate)
@@ -300,7 +304,7 @@ async def _final_expiry_check(
     if any(value is not None and value <= now for value in (grant_expiry, source_expiry)):
         raise ManagementDeniedError("Plan resource eligibility expired during admission")
     for child in payload.children:
-        validate_model_profile(catalog, child, now)
+        validate_configured_role_profile(catalog, child, now)
 
 
 def validate_plan_action(
@@ -314,6 +318,16 @@ def validate_plan_action(
     """Current charter/server tuples narrow actual effects alongside exact M1 approval."""
     # Keep the >50-line native/model/tool narrowing together so none skips the exact ABI.
     cycle = validate_cycle_catalog(catalog.cycle_admission, catalog)
+    coding = catalog.nexus_coding_admission
+    if coding is not None:
+        coding_slot = next((slot for slot in coding.slots if slot.child == child), None)
+        if coding_slot is None or (proposal.tool, proposal.tool_version, proposal.resource) != (
+            coding_slot.tool.tool,
+            coding_slot.tool.tool_version,
+            coding_slot.tool.resource,
+        ):
+            raise ManagementDeniedError("Coding effect differs from its exact configured role")
+        require_role_charter(catalog, child, charter)
     require_native_action(catalog, child, proposal, kind)
     require_notification_action(catalog, child, proposal, kind)
     if proposal.tool == "model.request.v1":
@@ -341,6 +355,7 @@ def validate_plan_action(
                     "notification_profiles": (),
                     "cycle_admission": None,
                     "nexus_cycle_admission": None,
+                    "nexus_coding_admission": None,
                 }
             ),
             child,

@@ -13,7 +13,10 @@ from nexus.company.access import CompanyControlScope, VerifiedIdentity
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_support import db_clock
-from nexus.company.management.nexus_cycle_admission import select_nexus_plan
+from nexus.company.management.nexus_coding_catalog import (
+    configured_nexus_admission,
+    select_configured_nexus_plan,
+)
 from nexus.company.management.plan_admission_capture import (
     CapturedPlanAdmission,
     _capture_plan_metadata_locked,
@@ -55,11 +58,11 @@ async def capture_nexus_owner_locked(
     *,
     end_us: int,
 ) -> NexusOwnerAdmission | None:
-    if store.catalog.nexus_cycle_admission is None:
+    admission = configured_nexus_admission(store.catalog)
+    if admission is None:
         return None
     require_time(end_us)
-    admission = store.catalog.nexus_cycle_admission
-    stage = select_nexus_plan(admission, store.catalog, payload)
+    stage = select_configured_nexus_plan(store.catalog, payload)
     if (
         not isinstance(credential, AuthenticatedWorkerIdentity)
         or credential.identity != identity
@@ -70,7 +73,8 @@ async def capture_nexus_owner_locked(
     ):
         raise ManagementDeniedError("Nexus admission requires its genuine current owner witness")
     if stage == "execution" and (
-        store.planning_reader is None or store.planning_reader.template.nexus_admission != admission
+        store.planning_reader is None
+        or store.planning_reader.template.configured_admission != admission
     ):
         raise ManagementDeniedError("Nexus transition needs its exact protected planning mapper")
     credential.require_time(await db_clock(session))
@@ -122,7 +126,7 @@ async def finish_nexus_owner_locked(
     first: NexusOwnerAdmission | None,
 ) -> None:
     if first is None:
-        if store.catalog.nexus_cycle_admission is not None:
+        if configured_nexus_admission(store.catalog) is not None:
             raise ManagementDeniedError("Nexus admission appeared after the original capture")
         return
     if any(a is not b for a, b in zip(first.objects, _objects(store, credential), strict=True)):

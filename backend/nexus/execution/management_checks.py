@@ -30,6 +30,10 @@ from nexus.company.management.acceptance_support import actual_receipt, receipt_
 from nexus.company.management.cancellation_support import require_not_cancelled
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_support import db_clock, require_member
+from nexus.company.management.nexus_coding_catalog import (
+    configured_nexus_admission,
+    select_configured_nexus_plan,
+)
 from nexus.company.management.plan_models import (
     ManagementPlanDependency,
     ManagementPlanRevision,
@@ -324,6 +328,7 @@ async def require_management_execution(
     receipt/unknown reconciliation does not call this new-execution gate.
     """
     await require_not_cancelled(session, work.company_id, work.task_id)
+    admission = configured_nexus_admission(catalog) if catalog is not None else None
     # Keep legacy discrimination, exact work and every prerequisite in this >50-line gate.
     if (
         await session.scalar(select(func.to_regclass("public.company_management_procedures")))
@@ -334,17 +339,14 @@ async def require_management_execution(
             is not None
         ):
             raise ExecutionDeniedError("Management schema is incomplete")
-        if catalog is not None and catalog.nexus_cycle_admission is not None:
+        if admission is not None:
             raise ExecutionDeniedError("Nexus requires the actual complete management schema")
         return
     management_kind = await ManagementPlanStore.managed_kind(session, work.company_id, work.task_id)
     if management_kind == "unmanaged":
-        if catalog is not None and catalog.nexus_cycle_admission is not None:
+        if admission is not None:
             actual = await session.get(RegisteredWork, (work.company_id, work.task_id))
-            if (
-                actual is None
-                or actual.root_task_id == catalog.nexus_cycle_admission.procedure.binding.task_id
-            ):
+            if actual is None or actual.root_task_id == admission.procedure.binding.task_id:
                 raise ExecutionDeniedError("Unmanaged work cannot spend a Nexus procedure slice")
         return
     if management_kind == "procedure" or catalog is None:
@@ -360,6 +362,7 @@ async def require_management_execution(
     if native is None:
         raise ExecutionDeniedError("Managed plan is unavailable")
     record = plan_record(native)
+    select_configured_nexus_plan(catalog, record.payload)
     expected = registration(binding.child.binding, binding.work, binding.child.quota)
     actual_binding = RunBinding(
         company_id=work.company_id,
@@ -387,7 +390,7 @@ async def require_management_execution(
         trace_id=work.trace_id,
     )
     try:
-        if catalog.nexus_cycle_admission is not None:
+        if admission is not None:
             from nexus.execution.nexus_cycle_partition import read_current_nexus_family_locked
 
             await read_current_nexus_family_locked(
@@ -395,7 +398,7 @@ async def require_management_execution(
                 control,
                 work,
                 identity,
-                admission=catalog.nexus_cycle_admission,
+                admission=admission,
                 catalog=catalog,
             )
         await require_native_ancestry(

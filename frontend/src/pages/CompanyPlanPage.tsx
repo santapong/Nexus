@@ -8,6 +8,8 @@ import { MetricObservationForm } from '@/components/company/MetricObservationFor
 import { MetricOutcomeLedger } from '@/components/company/MetricOutcomeLedger'
 import { ReportSnapshotForm } from '@/components/company/ReportSnapshotForm'
 import { CompanyGoalPlanning } from '@/components/company/CompanyGoalPlanning'
+import { CompanyGoalCoding } from '@/components/company/CompanyGoalCoding'
+import { CompanyCycleCosts } from '@/components/company/CompanyCycleCosts'
 
 export function CompanyPlanPage() {
   const identity = useOutletContext<CompanyIdentity>()
@@ -54,6 +56,8 @@ export function CompanyPlanPage() {
     <PlanDecisionPanel key={data.reference.sha256} plan={data} current={current.data} paused={company.data.paused} />
     {data.is_current_head && <CompanyGoalPlanning key={declaration.goal.revision_id}
       goal={declaration.goal} paused={company.data.paused} initiallyOpen />}
+    {data.is_current_head ? <CompanyGoalCoding key={data.reference.sha256} goal={declaration.goal} paused={company.data.paused} /> : null}
+    <CompanyCycleCosts key={declaration.procedure.binding.task_id} company={identity.company_id} expectedTask={declaration.procedure.binding.task_id} />
     {data.state === 'approved' && data.is_current_head && <CommitmentForm key={data.reference.sha256} plan={data} paused={company.data.paused} />}
     {data.state === 'approved' && data.is_current_head && data.declaration.verification.length > 0 &&
       <ReportSnapshotForm key={data.reference.sha256} plan={data} paused={company.data.paused} />}

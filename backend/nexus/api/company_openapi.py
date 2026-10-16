@@ -13,6 +13,7 @@ from nexus.company.access import PrincipalAccess
 from nexus.company.management.action_review_contracts import ActionReview
 from nexus.company.management.cancellation_contracts import OwnerCancellation
 from nexus.company.management.commitment_contracts import CommitmentRevision
+from nexus.company.management.cycle_cost_contracts import CycleCostSnapshot
 from nexus.company.management.goal_store import GoalRevisionRecord
 from nexus.company.management.governance import CharterRevision, MandateRevision
 from nexus.company.management.lifecycle import PlanRevision
@@ -38,6 +39,10 @@ from nexus.company.notifications.inbox_contracts import (
     NotificationInboxPage,
 )
 from nexus.company.pilot_session import PilotSessionToken
+from nexus.execution.coding_dispatch import CodingDispatchRecord
+from nexus.execution.coding_lifecycle_contracts import CodingCandidateReview, CodingLifecycleStatus
+from nexus.execution.coding_owner_reads import CodingInputReview
+from nexus.execution.coding_preparation import PreparedCodingAction
 from nexus.execution.planning_owner_reads import PlanningInputReview
 from nexus.execution.qualification_read_contracts import (
     QualificationDispatchRecord,
@@ -77,6 +82,12 @@ RESPONSE_MODELS: tuple[type[BaseModel], ...] = (
     QualificationResultView,
     PreparedQualification,
     PlanningInputReview,
+    CycleCostSnapshot,
+    CodingInputReview,
+    CodingLifecycleStatus,
+    CodingCandidateReview,
+    PreparedCodingAction,
+    CodingDispatchRecord,
 )
 
 

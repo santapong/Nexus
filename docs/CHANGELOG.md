@@ -1,6 +1,80 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Build the governed coding and whole-family financial path
+
+### Added
+- Separate full ten-role coding admission, durable complete-profile plan hash,
+  exact role model targets and mandatory denial for unconnected fresh roles.
+- Strict existing-file coding output, complete source/context checks, bounded
+  governed consumer and original native model-cost joins.
+- Actual committed repository reader and a pinned local Nexus data probe, keeping
+  source data separate from company/execution authority.
+- Whole-family financial snapshot, optional current-owner HTTP read and full10
+  application composition from the same native/private graph, retaining
+  known native spend when proof is missing and original read/JWT cutoffs through
+  complete serialization. No provider, worker or action starts from this read.
+
+### Validation
+- Held component checks are recorded separately in the governed coding checkpoint;
+  no summed full-suite total or coding-runtime completion is claimed.
+- Owner financial/API scope passes38 checks in12.37s, configured strict/Ruff4,
+  with four stable source pins. Actual JWT/private files use supplied SQL/source
+  delivery. A normal-umask explicit-private fixture positive passes4.04s.
+- The subsequent actual application-graph/HTTP/runtime finite scope passes59
+  checks in17.33s with strict/Ruff7 and stable seven-file pins. It includes those38.
+  Original financial resources remain owned through shutdown after facade change
+  (ERROR-210); startup/queue/host-executor bytes are preserved exactly.
+- Actual Nexus source reader verifies commit/tree/new archive/selected code in
+  0.229s with zero pending owners. Original timeout and path denials remain.
+
+### Subsequent component progress
+- Concrete native C gate, fixed C runtime, genuine owner input/review and paired
+  derived Brain publication have separate held author checks. Exact scopes and
+  overlapping counts are in the governed coding checkpoint.
+- C financial integration passes140 relevant checks/49.18s with strict/Ruff8 and
+  stable pins. Current source proof and original native receipt precede private
+  output; same-transaction final source checks retain known spending on denial.
+- Original protected model bytes now cross the file-store/fact-join boundary.
+  A seed0-to-seed1 regression preserves the saved artifact and native cost rather
+  than hashing a frozenset reserialization (ERROR-215).
+
+- Owner C application/API/operator holds33 files with323 relevant checks/139.15s,
+  including74 M cases, configured strict/Ruff33. Existing dispatch requires exact
+  fixed DBOS metadata; candidate readers retire settled owned stores (ERROR-217–218).
+- Owner coding preparation/full-input decision/separate dispatch/candidate and
+  current family finances in Plan/Report hold19 files. Request/state/escaped SSR,
+  legacy planning, TypeScript/build and strict exporter checks pass. Generated
+  types retain all53 prior routes and add7 actual coding/financial routes.
+
+- The reviewer reproduces two cancellation defects in actual private pipelines.
+  Root's six-file repair stops subsequent phases while retaining admitted leaves;
+  151 relevant checks/67.35s, strict/Ruff6 and the original independent2 probes
+  pass with stable pins. A fresh owner read remains usable (ERROR-219–220).
+- Published C-origin E/EV reader/guard/templates now hold12 files with57 relevant
+  checks/45.56s and strict/Ruff12. Actual page/UTF8 cancellation regressions pass;
+  original actual leaves remain owned and later shared-reader access still works.
+- Combined151-path source review is favorable; configured strict/Ruff133 pass.
+  The whole unit/coverage gate failed with5,544 passed/53 failed and63.46% against
+  the unchanged80% requirement. Six test-only fixture forwards pass254 affected
+  and nine C-consumer cases with instrumentation; this is not a global gate pass.
+  A clean candidate's missing-dependency collection failure is retained; adding
+  exactly three earlier held files passes5,585 units/315.94s with all2,251 pins
+  stable. Configured strict/Ruff/format147 pass after an import-order-only schema
+  exporter forward with unchanged bindings and non-import AST.
+
+Actual L→C acceptance, meaningful full coverage and native E/EV remain open.
+The first actual fixture installs normal company001–017/DBOS, then fails on strict
+JSON/Python reconstruction before accounts, company rows or native/model issuance.
+A separate restricted/operator RR READ ONLY/rollback audit confirms74 FORCERLS
+tables, zero company rows/workflows/connections. The owned cluster is stopped
+with data/claim/source/logs preserved; strict fixture repair and fresh v2 follow.
+No actual C request, native run, owner browser acceptance,
+preview reset, remote push, deployment or release activation follows.
+
+**Authored by:** Codex and three bounded implementation agents
+**PR:** not published
+
 ## [2026-10-16] — Compose the supervised owner planning application
 
 ### Added

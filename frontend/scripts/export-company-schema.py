@@ -6,11 +6,22 @@ import argparse
 import json
 from pathlib import Path
 
-from nexus.api.company_planning_routes import DispatchPlanningRequest, RecoverPlanningWaitRequest
+from nexus.api.company_coding_routes import (
+    DispatchCodingRequest,
+    RecoverCodingWaitRequest,
+)
+from nexus.api.company_planning_routes import (
+    DispatchPlanningRequest,
+    RecoverPlanningWaitRequest,
+)
 from nexus.company.access import PrincipalAccess
 from nexus.company.management.action_review_contracts import ActionReview
 from nexus.company.management.api_contracts import PlanDecision
-from nexus.company.management.commitment_contracts import CommitmentPublish, CommitmentRevision
+from nexus.company.management.commitment_contracts import (
+    CommitmentPublish,
+    CommitmentRevision,
+)
+from nexus.company.management.cycle_cost_contracts import CycleCostSnapshot
 from nexus.company.management.owner_view_contracts import (
     ApprovalPage,
     CompanyView,
@@ -19,6 +30,14 @@ from nexus.company.management.owner_view_contracts import (
     WorkView,
 )
 from nexus.company.pilot_session import PilotLogin, PilotSessionToken, PilotSignup
+from nexus.execution.coding_dispatch import CodingDispatchRecord
+from nexus.execution.coding_lifecycle_contracts import (
+    CodingCandidateReview,
+    CodingGoalSelection,
+    CodingLifecycleStatus,
+)
+from nexus.execution.coding_owner_reads import CodingInputReview
+from nexus.execution.coding_preparation import PreparedCodingAction
 from nexus.execution.planning_dispatch import PlanningDispatchRecord
 from nexus.execution.planning_lifecycle_contracts import (
     PlanningCandidateReview,
@@ -66,6 +85,15 @@ def export(source: Path, destination: Path) -> None:
         PlanningDispatchRecord,
         DispatchPlanningRequest,
         RecoverPlanningWaitRequest,
+        CodingInputReview,
+        CodingGoalSelection,
+        CodingLifecycleStatus,
+        CodingCandidateReview,
+        PreparedCodingAction,
+        CodingDispatchRecord,
+        DispatchCodingRequest,
+        RecoverCodingWaitRequest,
+        CycleCostSnapshot,
     ):
         # Optional model-check response definitions come from the concrete backend
         # models even when that service is unmounted. This adds no runtime route.

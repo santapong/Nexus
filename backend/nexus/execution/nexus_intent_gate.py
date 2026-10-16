@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from nexus.company.access import VerifiedIdentity
 from nexus.company.contracts.actions import ActionProposal
 from nexus.company.management.canonical import canonical_sha256
-from nexus.company.management.nexus_cycle_admission import validate_nexus_catalog
+from nexus.company.management.nexus_coding_catalog import configured_nexus_admission
 from nexus.company.management.plan_admission_candidates import capture_child_window
 from nexus.company.management.plan_admission_window import PlanChildWindow
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog
@@ -24,6 +24,7 @@ from nexus.harness.journal_models import JournalAction
 
 if TYPE_CHECKING:
     from nexus.execution.effect_store import EffectStore
+    from nexus.execution.nexus_coding_intent_gate import NexusCodingIntentGate
 
 DENIED = "Fresh Nexus intent requires its exact original native checks"
 
@@ -39,7 +40,7 @@ def _shape(
     kind: AttemptKind,
     check: BeforeIntentCheck | None,
 ) -> tuple[object, ...]:
-    admission = validate_nexus_catalog(catalog.nexus_cycle_admission, catalog)
+    admission = configured_nexus_admission(catalog)
     assert admission is not None
     slot = next((slot for slot in admission.slots if slot.work.task_id == work.task_id), None)
     if slot is None:
@@ -50,10 +51,17 @@ def _shape(
         }:
             raise ExecutionDeniedError(DENIED)
         return ()
+    if catalog.nexus_coding_admission is not None and slot.role not in {
+        "planner",
+        "coder",
+        "engineering",
+        "engineering_check",
+    }:
+        raise ExecutionDeniedError(DENIED)
     bound = slot.child.binding
     proposal = ActionProposal.model_validate_json(action.proposal_json)
     if (
-        kind != ("model_requests" if slot.role == "planner" else "tool_attempts")
+        kind != ("model_requests" if slot.role in {"planner", "coder"} else "tool_attempts")
         or effects._factory is not factory
         or (
             work.company_id,
@@ -87,6 +95,22 @@ def _shape(
             bound.actor_id,
             bound.workspace_id,
         )
+        or (
+            work.workflow_name,
+            work.workflow_version,
+            work.model_profile,
+            work.model_registry_version,
+        )
+        != (
+            bound.workflow_name,
+            bound.workflow_version,
+            bound.model_profile,
+            bound.model_registry_version,
+        )
+        or lease.workflow_version != bound.workflow_version
+        or lease.mode != "execute"
+        or (proposal.company_id, proposal.task_id, proposal.trace_id, proposal.actor_id)
+        != (bound.company_id, bound.task_id, bound.trace_id, bound.actor_id)
         or (identity.principal_id, identity.workspace_id) != (bound.actor_id, bound.workspace_id)
         or proposal.action_id != action.id
         or action.proposal_hash != action_hash(proposal)
@@ -95,59 +119,29 @@ def _shape(
     ):
         raise ExecutionDeniedError(DENIED)
     if slot.role == "planner":
-        from nexus.company.management.nexus_planning_intent import NexusPlanningIntentCheck
-        from nexus.harness.model_authorizer_contracts import model_action_parameters
-        from nexus.harness.model_input_estimator import FullContextInputEstimator
-        from nexus.harness.model_intent import ModelIntentCheck
+        from nexus.company.management.nexus_planning_intent import nexus_planning_intent_shape
 
-        if type(check) is not CompositeBeforeIntentCheck or len(check._checks) != 3:
-            raise ExecutionDeniedError(DENIED)
-        planning, model, repeated = check._checks
-        if (
-            type(planning) is not NexusPlanningIntentCheck
-            or type(model) is not ModelIntentCheck
-            or repeated is not planning
-        ):
-            raise ExecutionDeniedError(DENIED)
-        planning.require_composition()
-        if (
-            planning.factory is not factory
-            or planning._context_check._lease != lease
-            or planning.credential.identity != identity
-            or model.lease != lease
-            or type(model.estimator) is not FullContextInputEstimator
-            or planning.registry != model.registry
-            or model.estimator.estimate(model.call, model.registry, model.recipe)
-            != planning._prepared.input_estimate
-            or model.call != planning._prepared.request
-            or canonical_sha256(model.registry) != canonical_sha256(catalog.models)
-            or proposal.parameters != model_action_parameters(model.call, model.recipe)
-        ):
-            raise ExecutionDeniedError(DENIED)
-        return (
-            check,
-            planning,
-            model,
-            planning.credential,
-            planning._objects,
-            planning._pins,
-            model.call,
-            canonical_sha256(model.registry),
-            model.recipe,
-            model.estimator,
-            model.observations,
+        return nexus_planning_intent_shape(factory, catalog, lease, identity, proposal, check)
+    if catalog.nexus_coding_admission is not None and slot.role == "coder":
+        from nexus.company.management.nexus_coding_stored_shape import nexus_coding_stored_shape
+
+        return nexus_coding_stored_shape(
+            factory, effects, catalog, lease, identity, proposal, check
         )
     if slot.role in {"engineering", "engineering_check"}:
+        from nexus.builder.coding_guard import CodingBuilderSourceGuard
         from nexus.builder.contained_intent_check import ContainedParentIntentCheck
         from nexus.builder.nexus_source_guard import NexusBuilderSourceGuard
 
         if type(check) is not CompositeBeforeIntentCheck or len(check._checks) != 2:
             raise ExecutionDeniedError(DENIED)
         source, parent = check._checks
-        if (
-            type(source) is not NexusBuilderSourceGuard
-            or type(parent) is not ContainedParentIntentCheck
-        ):
+        required = (
+            CodingBuilderSourceGuard
+            if catalog.nexus_coding_admission is not None
+            else NexusBuilderSourceGuard
+        )
+        if type(source) is not required or type(parent) is not ContainedParentIntentCheck:
             raise ExecutionDeniedError(DENIED)
         source.require_composition()
         if (
@@ -276,7 +270,9 @@ class NexusIntentGate:
     ) -> None:
         current = self.effects._management_catalog
         if self.catalog_sha is None:
-            if current is not None and current.nexus_cycle_admission is not None:
+            if work.workflow_name == "company.coding.v1" or (
+                current is not None and configured_nexus_admission(current) is not None
+            ):
                 raise ExecutionDeniedError(DENIED)
             return
         try:
@@ -307,7 +303,7 @@ class NexusIntentGate:
             raise ExecutionDeniedError(DENIED) from error
 
 
-def bind_nexus_intent_check(
+def _bind_nexus_intent_check(
     factory: async_sessionmaker[AsyncSession],
     effects: EffectStore,
     work: ExecutionWork,
@@ -322,7 +318,7 @@ def bind_nexus_intent_check(
     catalog = effects._management_catalog
     digest = (
         canonical_sha256(catalog)
-        if catalog is not None and catalog.nexus_cycle_admission is not None
+        if catalog is not None and configured_nexus_admission(catalog) is not None
         else None
     )
     try:
@@ -332,8 +328,10 @@ def bind_nexus_intent_check(
             else ()
         )
         children: tuple[PlanChildWindow, ...] = ()
-        if shape and catalog is not None and catalog.nexus_cycle_admission is not None:
-            slots = catalog.nexus_cycle_admission.slots
+        if shape and catalog is not None:
+            admission = configured_nexus_admission(catalog)
+            assert admission is not None
+            slots = admission.slots
             selected = slots[:1] if slots[0].work.task_id == work.task_id else slots
             children = tuple(capture_child_window(catalog, slot.child, now) for slot in selected)
         gate = NexusIntentGate(
@@ -355,3 +353,32 @@ def bind_nexus_intent_check(
         return gate
     except (ValueError, AttributeError, TypeError) as error:
         raise ExecutionDeniedError(DENIED) from error
+
+
+def bind_nexus_intent_check(
+    factory: async_sessionmaker[AsyncSession],
+    effects: EffectStore,
+    work: ExecutionWork,
+    lease: ExecutionLease,
+    identity: VerifiedIdentity,
+    action: JournalAction,
+    kind: AttemptKind,
+    check: BeforeIntentCheck | None,
+    *,
+    now: datetime,
+) -> NexusIntentGate | NexusCodingIntentGate:
+    """New coding profiles are always routed before any ordinary/default effect branch."""
+    catalog = effects._management_catalog
+    if work.workflow_name == "company.coding.v1" and (
+        catalog is None or catalog.nexus_coding_admission is None
+    ):
+        raise ExecutionDeniedError(DENIED)
+    if catalog is not None and catalog.nexus_coding_admission is not None:
+        from nexus.execution.nexus_coding_intent_gate import bind_nexus_coding_intent_check
+
+        return bind_nexus_coding_intent_check(
+            factory, effects, work, lease, identity, action, kind, check, now=now
+        )
+    return _bind_nexus_intent_check(
+        factory, effects, work, lease, identity, action, kind, check, now=now
+    )

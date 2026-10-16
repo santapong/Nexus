@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from litestar import Litestar
@@ -10,6 +10,7 @@ from litestar.config.cors import CORSConfig
 from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from nexus.api.company_cycle_cost_routes import CycleCostApiServices
 from nexus.company.brain.api_services import BrainServices
 from nexus.company.brain.artifact_store import BoundedArtifactReader
 from nexus.company.brain.blob_store import ProtectedBlobStore
@@ -25,6 +26,8 @@ from nexus.company.management.api_services import ManagementApiServices
 from nexus.company.management.cancellation_store import WorkCancellationStore
 from nexus.company.management.commitment_store import CommitmentStore
 from nexus.company.management.control_store import ManagementControlStore
+from nexus.company.management.cycle_cost_snapshot import CycleCostSnapshotReader
+from nexus.company.management.cycle_model_reader import CycleModelReader
 from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.metric_queries import MetricQueries
 from nexus.company.management.metric_store import MetricStore
@@ -67,6 +70,11 @@ class PlanningApplication:
     management: ManagementApiServices
     planning: PlanningApiServices
     runtime: PlanningServices
+    cycle_costs: CycleCostApiServices | None = None
+    _cost_binding: CycleCostApiServices | None = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "_cost_binding", self.cycle_costs)
 
     @property
     def lifecycle(self) -> PlanningLifecycle:
@@ -92,6 +100,21 @@ class PlanningApplication:
         if self.planning.require_lifecycle() is not self.management.require_lifecycle():
             raise ValueError("Original planning lifecycle service hooks changed")
         self.lifecycle.require_composition()
+        if self.cycle_costs is not self._cost_binding or (
+            self.config.catalog.nexus_coding_admission is not None
+        ) != (self.cycle_costs is not None):
+            raise ValueError("Original planning financial graph changed")
+        if self.cycle_costs is not None:
+            self.cycle_costs.require_composition()
+            costs = self.cycle_costs.reads
+            if (
+                self.cycle_costs.directory is not self.base.directory
+                or costs.factory is not self.runtime.factory
+                or costs.catalog is not self.runtime.management.catalog
+                or costs.models.evidence is not self.runtime.evidence
+                or costs.models.planning is not self.runtime.prepared
+            ):
+                raise ValueError("Planning finances differ from original native/private stores")
 
 
 def planning_endpoint_bindings(
@@ -203,6 +226,18 @@ def compose_planning_application(
             PlanningInputReader(prepared, config.catalog.models), lifecycle=lifecycle
         ),
         runtime,
+        cycle_costs=(
+            CycleCostApiServices(
+                directory,
+                CycleCostSnapshotReader(
+                    factory,
+                    config.catalog,
+                    CycleModelReader(factory, config.catalog, runtime.evidence, prepared),
+                ),
+            )
+            if config.catalog.nexus_coding_admission is not None
+            else None
+        ),
     )
     value.require_composition()
     return value
@@ -232,6 +267,7 @@ def planning_app(services: PlanningApplication) -> Litestar:
         brain_services=services.brain,
         management_services=services.management,
         planning_services=services.planning,
+        cycle_cost_services=services.cycle_costs,
         cors_config=CORSConfig(
             allow_origins=["http://127.0.0.1:5188", "http://localhost:5188"],
             allow_methods=["GET", "POST"],

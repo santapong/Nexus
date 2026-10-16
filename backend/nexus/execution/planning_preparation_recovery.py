@@ -24,6 +24,7 @@ from nexus.company.management.action_review_resources import (
 )
 from nexus.company.management.action_review_store import review_disclosure
 from nexus.company.management.goals import GoalRevisionRef
+from nexus.company.management.nexus_coding_catalog import configured_nexus_admission
 from nexus.company.management.owner_view_sources import owner_brain_scope
 from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.company.management.plan_support import CurrentPlanBinding
@@ -55,7 +56,7 @@ class RecoveredPlanningWait:
 
 
 def _planner(services: PlanningServices, goal: GoalRevisionRef) -> RunBinding:
-    admission = services.management.catalog.nexus_cycle_admission
+    admission = configured_nexus_admission(services.management.catalog)
     if admission is None or admission.goal != goal:
         raise ValueError("Recovery requires the exact configured Nexus planning goal")
     return admission.slots[0].child.binding
@@ -87,7 +88,7 @@ async def _binding(
     assert scope.task_id is not None
     state = await state_locked(operation, session, control, scope)
     current = await ManagementPlanStore.current_binding(session, scope.company_id, scope.task_id)
-    admission = operation.services.management.catalog.nexus_cycle_admission
+    admission = configured_nexus_admission(operation.services.management.catalog)
     if (
         current is None
         or admission is None

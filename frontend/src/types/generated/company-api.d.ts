@@ -906,6 +906,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/companies/{company_id}/management/cycle-costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["ApiV2CompaniesCompanyIdManagementCycleCostsRead"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/actions/{action_id}/candidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidate */
+        get: operations["ApiV2CompaniesCompanyIdCodingActionsActionIdCandidateCandidate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/actions/{action_id}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispatch */
+        post: operations["ApiV2CompaniesCompanyIdCodingActionsActionIdDispatchDispatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/actions/{action_id}/input": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Input */
+        get: operations["ApiV2CompaniesCompanyIdCodingActionsActionIdInputInput"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/goals/{goal_id}/prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Prepare */
+        post: operations["ApiV2CompaniesCompanyIdCodingGoalsGoalIdPreparePrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/actions/{action_id}/recover-wait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RecoverWait */
+        post: operations["ApiV2CompaniesCompanyIdCodingActionsActionIdRecoverWaitRecoverWait"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/companies/{company_id}/coding/goals/{goal_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["ApiV2CompaniesCompanyIdCodingGoalsGoalIdStatusStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1496,6 +1615,15 @@ export interface components {
             label: string;
             budget_reference: string;
         };
+        /** BuilderArtifact */
+        BuilderArtifact: {
+            /** Path */
+            path: string;
+            /** Sha256 */
+            sha256: string;
+            /** Byte Length */
+            byte_length: number;
+        };
         /** CancellationCommand */
         CancellationCommand: {
             /**
@@ -1680,6 +1808,248 @@ export interface components {
             contributors: components["schemas"]["ResourceGeneration"][];
             /** Source Heads */
             source_heads: components["schemas"]["SourceHead"][];
+        };
+        /**
+         * CodeChangeContent
+         * @description Untrusted model data only; server originals and policy are separate inputs.
+         */
+        CodeChangeContent: {
+            /** Patch */
+            patch: string;
+            /** Explanation */
+            explanation: string;
+            /** Questions */
+            questions: string[];
+            /** Evidence Ids */
+            evidence_ids: string[];
+        };
+        /**
+         * CodingBinding
+         * @description Immutable server-captured refs; current source/authority checks remain mandatory.
+         */
+        CodingBinding: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            plan: components["schemas"]["PlanRevisionRef"];
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            source: components["schemas"]["RepositoryPin"];
+            /** Source Files */
+            source_files: components["schemas"]["BuilderArtifact"][];
+            /** Allowed Write Paths */
+            allowed_write_paths: string[];
+            /** Context Manifest Sha256 */
+            context_manifest_sha256: string;
+        };
+        /** CodingCandidateReview */
+        CodingCandidateReview: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            binding: components["schemas"]["CodingBinding"];
+            manifest: components["schemas"]["ContextManifest"];
+            content: components["schemas"]["CodeChangeContent"];
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /**
+             * Receipt Id
+             * Format: uuid
+             */
+            receipt_id: string;
+            /**
+             * Artifact Id
+             * Format: uuid
+             */
+            artifact_id: string;
+            /** Artifact Sha256 */
+            artifact_sha256: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /**
+             * Historical
+             * @default true
+             * @constant
+             */
+            historical: true;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** CodingDispatchRecord */
+        CodingDispatchRecord: {
+            command: components["schemas"]["SegmentCommand"];
+            /** Workflow Id */
+            workflow_id: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "existing" | "enqueued";
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** CodingGoalSelection */
+        CodingGoalSelection: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Expected Current Revision Id
+             * Format: uuid
+             */
+            expected_current_revision_id: string;
+        };
+        /**
+         * CodingInputReview
+         * @description Full authorized saved input and native digest domains; none is an effect permit.
+         */
+        CodingInputReview: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            proposal: components["schemas"]["ActionProposal"];
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Header Sha256 */
+            header_sha256: string;
+            reference: components["schemas"]["CodingPreparedRef"];
+            model: components["schemas"]["ModelRegistration"];
+            /** Maximum Reservation Usd */
+            maximum_reservation_usd: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            prepared: components["schemas"]["PreparedCodingRequest"];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+            /**
+             * Execution Permitted
+             * @default false
+             * @constant
+             */
+            execution_permitted: false;
+        };
+        /** CodingLifecycleStatus */
+        CodingLifecycleStatus: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            goal: components["schemas"]["GoalRevisionRef"];
+            current: components["schemas"]["PlanRevisionRef"] | null;
+            /** Approved R2 */
+            approved_r2: boolean;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Action Id */
+            action_id: string | null;
+            /** Proposal Sha256 */
+            proposal_sha256: string | null;
+            action_state: components["schemas"]["ActionState"] | null;
+            /** Work State */
+            work_state: ("eligible" | "running" | "awaiting_approval" | "outcome_unknown" | "verifying" | "blocked") | null;
+            /** Workflow Id */
+            workflow_id: string | null;
+            /** Native State */
+            native_state: ("intent" | "outcome_unknown" | "succeeded" | "failed") | null;
+            /** Resources Pending */
+            resources_pending: boolean;
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** CodingPreparedRef */
+        CodingPreparedRef: {
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            header: components["schemas"]["ArtifactRevisionRef"];
+        };
+        /**
+         * CodingSourceRef
+         * @description Server mapping of an actual registered Git source and its complete raw spans.
+         */
+        CodingSourceRef: {
+            file: components["schemas"]["BuilderArtifact"];
+            git: components["schemas"]["GitSnapshotSpec"];
+            source: components["schemas"]["SourceRevisionRef"];
+            artifact: components["schemas"]["ArtifactRevisionRef"];
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceRef"][];
         };
         /** CommitmentContent */
         CommitmentContent: {
@@ -2384,6 +2754,168 @@ export interface components {
             label: string;
             external_identity?: string | null;
         };
+        /** CycleCostSnapshot */
+        CycleCostSnapshot: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Basis
+             * @default registered_family_lifetime
+             * @constant
+             */
+            basis: "registered_family_lifetime";
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Root Task Id
+             * Format: uuid
+             */
+            root_task_id: string;
+            /**
+             * Procedure Id
+             * Format: uuid
+             */
+            procedure_id: string;
+            /** Admission Sha256 */
+            admission_sha256: string;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Profile Bound */
+            profile_bound: boolean;
+            /** Complete Membership */
+            complete_membership: boolean;
+            /** Expected Task Ids */
+            expected_task_ids: string[];
+            /** Observed Task Ids */
+            observed_task_ids: string[];
+            /** Missing Task Ids */
+            missing_task_ids: string[];
+            /** Extra Task Ids */
+            extra_task_ids: string[];
+            /** Mismatched Task Ids */
+            mismatched_task_ids: string[];
+            /** Unissued Task Ids */
+            unissued_task_ids: string[];
+            /** Charges */
+            charges: components["schemas"]["FamilyCharge"][];
+            totals: components["schemas"]["FamilyChargeTotals"];
+            /** Blockers */
+            blockers: string[];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /** CycleModelFact */
+        CycleModelFact: {
+            /**
+             * Schema Version
+             * @default nexus.company.management.v1
+             * @constant
+             */
+            schema_version: "nexus.company.management.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Root Task Id
+             * Format: uuid
+             */
+            root_task_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /**
+             * Trace Id
+             * Format: uuid
+             */
+            trace_id: string;
+            /**
+             * Run Id
+             * Format: uuid
+             */
+            run_id: string;
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Attempt Id
+             * Format: uuid
+             */
+            attempt_id: string;
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Recipe Sha256 */
+            recipe_sha256: string;
+            /** Registry Sha256 */
+            registry_sha256: string;
+            /** Model Sha256 */
+            model_sha256: string | null;
+            /** Artifact Sha256 */
+            artifact_sha256: string | null;
+            /** Artifact Reference Sha256 */
+            artifact_reference_sha256: string | null;
+            /** Receipt Id */
+            receipt_id: string | null;
+            /** Intent Fence */
+            intent_fence: number | null;
+            /** Intent At */
+            intent_at: string | null;
+            /** Billing At */
+            billing_at: string | null;
+            /** Day */
+            day: string | null;
+            /** Native State */
+            native_state: string | null;
+            /** Provider State */
+            provider_state: string | null;
+            /** Hold State */
+            hold_state: string | null;
+            /** Reserved Usd */
+            reserved_usd: string | null;
+            /** Ledger Actual Usd */
+            ledger_actual_usd: string | null;
+            /** Reported Usd */
+            reported_usd: string | null;
+            /**
+             * Billing
+             * @enum {string}
+             */
+            billing: "known" | "unconfirmed";
+            /** Blockers */
+            blockers: string[];
+        };
         /** DailyAllowance */
         DailyAllowance: {
             /**
@@ -2507,6 +3039,11 @@ export interface components {
             label: string;
             charter_version?: string | null;
         };
+        /** DispatchCodingRequest */
+        DispatchCodingRequest: {
+            /** Expected Hash */
+            expected_hash: string;
+        };
         /** DispatchPlanningRequest */
         DispatchPlanningRequest: {
             /** Expected Hash */
@@ -2566,6 +3103,41 @@ export interface components {
             origin: "operator" | "source" | "model";
             /** @enum {string} */
             status: "proposed" | "source_report";
+        };
+        /**
+         * EvaluationEvidence
+         * @description Versioned frozen evaluation and adapter conformance result for one profile.
+         */
+        EvaluationEvidence: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Profile
+             * @enum {string}
+             */
+            profile: "reasoning" | "engineering" | "routine" | "verification" | "embeddings";
+            /** Suite Version */
+            suite_version: string;
+            /** Artifact Reference */
+            artifact_reference: string;
+            /** Score */
+            score: string;
+            /** Conformance Passed */
+            conformance_passed: boolean;
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
         };
         /** EvidenceContent */
         EvidenceContent: {
@@ -2745,6 +3317,98 @@ export interface components {
             segment_id: string | null;
             /** Waiting Action Id */
             waiting_action_id: string | null;
+        };
+        /** FamilyCharge */
+        FamilyCharge: {
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Task Id
+             * Format: uuid
+             */
+            task_id: string;
+            /** Attempt Kind */
+            attempt_kind: string;
+            /** Native State */
+            native_state: string | null;
+            /** Hold State */
+            hold_state: string | null;
+            /** Reserved Usd */
+            reserved_usd: string | null;
+            /** Ledger Actual Usd */
+            ledger_actual_usd: string | null;
+            /** Receipt Id */
+            receipt_id: string | null;
+            /**
+             * Day
+             * @default null
+             */
+            day: string | null;
+            /**
+             * Confirmation
+             * @enum {string}
+             */
+            confirmation: "known" | "unconfirmed" | "unissued";
+            /**
+             * Blockers
+             * @default []
+             */
+            blockers: string[];
+            /** @default null */
+            model_fact: components["schemas"]["CycleModelFact"] | null;
+        };
+        /** FamilyChargeTotals */
+        FamilyChargeTotals: {
+            /** Action Count */
+            action_count: number;
+            /** Known Spent Usd */
+            known_spent_usd: string;
+            /** Held Usd */
+            held_usd: string | null;
+            /** Actual Total Usd */
+            actual_total_usd: string | null;
+            /** Unconfirmed Action Ids */
+            unconfirmed_action_ids: string[];
+        };
+        /**
+         * GitSnapshotSpec
+         * @description Trusted operator mapping; this model is never accepted by a public source request.
+         */
+        GitSnapshotSpec: {
+            /**
+             * Schema Version
+             * @default nexus.company.brain.v1
+             * @constant
+             */
+            schema_version: "nexus.company.brain.v1";
+            /**
+             * Company Id
+             * Format: uuid
+             */
+            company_id: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /** Source Symbol */
+            source_symbol: string;
+            /** External Key */
+            external_key: string;
+            /** Path */
+            path: string;
+            /** Commit */
+            commit: string;
+            /** Git Blob */
+            git_blob: string;
+            /** Sha256 */
+            sha256: string;
+            /** Byte Length */
+            byte_length: number;
+            source_event: components["schemas"]["SourceTime"];
         };
         /** GoalContent */
         GoalContent: {
@@ -3516,6 +4180,34 @@ export interface components {
             status: "accepted_report" | "not_accepted" | "unknown";
         };
         /**
+         * ModelHealth
+         * @description A short-lived health observation, not an infinite availability promise.
+         */
+        ModelHealth: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /**
+             * Status
+             * @default unknown
+             * @enum {string}
+             */
+            status: "healthy" | "unhealthy" | "unknown";
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /**
          * ModelInputRecipe
          * @description Explicit trusted estimator/profile recipe; no production estimator is supplied here.
          */
@@ -3541,6 +4233,65 @@ export interface components {
             evaluation_suite_version: string;
             /** Conformance Reference */
             conformance_reference: string;
+        };
+        /**
+         * ModelRegistration
+         * @description Exact endpoint/model/API/capabilities; disabled until explicitly configured.
+         */
+        ModelRegistration: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Registry Id */
+            registry_id: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "openai" | "google" | "openai_compatible" | "test";
+            /** Model Id */
+            model_id: string;
+            /** Endpoint Id */
+            endpoint_id: string;
+            /**
+             * Api Family
+             * @enum {string}
+             */
+            api_family: "openai_responses" | "openai_chat" | "google_generate_content" | "openai_embeddings" | "google_embeddings" | "test";
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /** Capabilities */
+            capabilities: ("text" | "structured_output" | "tools" | "code" | "reasoning" | "embeddings")[];
+            /** Allowed Data */
+            allowed_data: ("public" | "internal" | "confidential" | "restricted")[];
+            /** Context Window */
+            context_window: number;
+            /** Max Output Tokens */
+            max_output_tokens: number;
+            /**
+             * Embedding Dimension
+             * @default null
+             */
+            embedding_dimension: number | null;
+            /**
+             * Fallback Priority
+             * @default 0
+             */
+            fallback_priority: number;
+            health: components["schemas"]["ModelHealth"];
+            /**
+             * Evaluations
+             * @default []
+             */
+            evaluations: components["schemas"]["EvaluationEvidence"][];
+            /** @default null */
+            price: components["schemas"]["PriceCard"] | null;
         };
         /**
          * ModelTool
@@ -4259,6 +5010,11 @@ export interface components {
             strategy_selection: components["schemas"]["StrategySelectionRef"] | null;
             /** @default null */
             planning_origin: components["schemas"]["PlanningOriginRef"] | null;
+            /**
+             * Coding Admission Sha256
+             * @default null
+             */
+            coding_admission_sha256: string | null;
         };
         /** PlanPropose */
         PlanPropose: {
@@ -4659,6 +5415,42 @@ export interface components {
             reference: components["schemas"]["NativeReportProfileRef"];
         };
         /**
+         * PreparedCodingAction
+         * @description Committed descriptions; no prompt, approval, hold, permit or company completion.
+         */
+        PreparedCodingAction: {
+            action: components["schemas"]["ActionRecord"];
+            reference: components["schemas"]["CodingPreparedRef"];
+            work: components["schemas"]["ExecutionSnapshot"];
+            quote: components["schemas"]["CostQuote"];
+            /**
+             * Company Completed
+             * @default false
+             * @constant
+             */
+            company_completed: false;
+        };
+        /**
+         * PreparedCodingRequest
+         * @description Protected server input description; no archive/credential/approval permission DTO.
+         */
+        PreparedCodingRequest: {
+            request: components["schemas"]["CompanyModelRequest"];
+            context: components["schemas"]["AssembledContext"];
+            binding: components["schemas"]["CodingBinding"];
+            scope: components["schemas"]["BrainReadScope"];
+            /** Sources */
+            sources: components["schemas"]["CodingSourceRef"][];
+            input_recipe: components["schemas"]["ModelInputRecipe"];
+            input_estimate: components["schemas"]["InputEstimate"];
+            /** Admission Sha256 */
+            admission_sha256: string;
+            /** Request Sha256 */
+            request_sha256: string;
+            /** Model Parameters Sha256 */
+            model_parameters_sha256: string;
+        };
+        /**
          * PreparedPlanningAction
          * @description Committed descriptions; no prompt, approval, hold, permit or company completion.
          */
@@ -4712,6 +5504,74 @@ export interface components {
              * @constant
              */
             company_completed: false;
+        };
+        /**
+         * PriceCard
+         * @description Dated flat text rates; unsupported modes remain explicitly ineligible.
+         *
+         *     Cache reads and reasoning are inclusive subsets of their respective totals.
+         *     Cache writes/storage, tiered prices, audio/images and hosted tools need new
+         *     evaluated contracts. A price source is a reference, not a fetched authority.
+         */
+        PriceCard: {
+            /**
+             * Schema Version
+             * @default nexus.company.models.v1
+             * @constant
+             */
+            schema_version: "nexus.company.models.v1";
+            /** Version */
+            version: string;
+            /**
+             * Currency
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /**
+             * Valid From
+             * Format: date-time
+             */
+            valid_from: string;
+            /**
+             * Valid Until
+             * Format: date-time
+             */
+            valid_until: string;
+            /** Source Reference */
+            source_reference: string;
+            /**
+             * Billing Mode
+             * @default flat_text_tokens
+             * @enum {string}
+             */
+            billing_mode: "flat_text_tokens" | "unsupported";
+            /** Input Per Million */
+            input_per_million: string;
+            /** Output Per Million */
+            output_per_million: string;
+            /**
+             * Cached Input Per Million
+             * @default null
+             */
+            cached_input_per_million: string | null;
+            /**
+             * Cache Semantics
+             * @default none
+             * @enum {string}
+             */
+            cache_semantics: "none" | "included_in_input";
+            /**
+             * Reasoning Semantics
+             * @default none
+             * @enum {string}
+             */
+            reasoning_semantics: "none" | "included_in_output" | "unsupported";
         };
         /**
          * PrincipalAccess
@@ -5099,6 +5959,17 @@ export interface components {
              */
             billing: "unissued" | "known" | "unconfirmed";
         };
+        /** RecoverCodingWaitRequest */
+        RecoverCodingWaitRequest: {
+            goal: components["schemas"]["GoalRevisionRef"];
+            /**
+             * Expected Current Revision Id
+             * Format: uuid
+             */
+            expected_current_revision_id: string;
+            /** Expected Hash */
+            expected_hash: string;
+        };
         /** RecoverPlanningWaitRequest */
         RecoverPlanningWaitRequest: {
             goal: components["schemas"]["GoalRevisionRef"];
@@ -5241,6 +6112,17 @@ export interface components {
              * @default []
              */
             owner_decision_ids: string[];
+        };
+        /** RepositoryPin */
+        RepositoryPin: {
+            /** Repository Symbol */
+            repository_symbol: string;
+            /** Commit */
+            commit: string;
+            /** Tree */
+            tree: string;
+            /** Archive Sha256 */
+            archive_sha256: string;
         };
         /** ResolveReportProfile */
         ResolveReportProfile: {
@@ -8462,6 +9344,285 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanningLifecycleStatus"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdManagementCycleCostsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CycleCostSnapshot"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingActionsActionIdCandidateCandidate: {
+        parameters: {
+            query: {
+                expected_current_revision_id: string;
+            };
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingCandidateReview"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingActionsActionIdDispatchDispatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispatchCodingRequest"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingDispatchRecord"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingActionsActionIdInputInput: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingInputReview"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingGoalsGoalIdPreparePrepare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodingGoalSelection"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedCodingAction"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingActionsActionIdRecoverWaitRecoverWait: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverCodingWaitRequest"];
+            };
+        };
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreparedCodingAction"];
+                };
+            };
+            /** @description Bad request syntax or unsupported method */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status_code: number;
+                        detail: string;
+                        extra?: null | {
+                            [key: string]: unknown;
+                        } | unknown[];
+                    };
+                };
+            };
+        };
+    };
+    ApiV2CompaniesCompanyIdCodingGoalsGoalIdStatusStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+                goal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Additional response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodingLifecycleStatus"];
                 };
             };
             /** @description Bad request syntax or unsupported method */

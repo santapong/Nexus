@@ -1,6 +1,6 @@
 """Own reader scope and early stale-lease denials use actual methods, no accepted E stub."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
@@ -10,7 +10,6 @@ import pytest
 from nexus.company.cycle_artifacts.engineering_prerequisite_reader import CycleEngineeringReader
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.tests.unit.cycle_prerequisite_fixture import (
-    NOW,
     deliverable_case,
     own_lease,
     signed_identity,
@@ -44,10 +43,11 @@ async def test_actual_stale_own_lease_denies_before_partition_or_body(
     change: str,
 ) -> None:
     case = deliverable_case(monkeypatch)
-    lease = own_lease(case)
-    credential = await signed_identity(case.identity)
+    now = datetime.now(UTC)
+    lease = own_lease(case, now=now)
+    credential = await signed_identity(case.identity, now=now)
     if change == "expiry":
-        case.work.lease_until = NOW - timedelta(seconds=1)
+        case.work.lease_until = now - timedelta(seconds=1)
     elif change == "fence":
         case.work.fence += 1
     elif change == "principal":
@@ -55,13 +55,13 @@ async def test_actual_stale_own_lease_denies_before_partition_or_body(
     elif change == "reconcile":
         case.work.lease_mode = "reconcile"
     else:
-        lease = lease.model_copy(update={"expires_at": NOW - timedelta(seconds=1)})
+        lease = lease.model_copy(update={"expires_at": now - timedelta(seconds=1)})
 
     async def scalar(statement: object) -> object:
         if "pg_roles" in str(statement):
             return False
         if "clock_timestamp" in str(statement):
-            return NOW
+            return now
         assert statement.column_descriptions[0]["entity"] is ExecutionWork  # type: ignore[attr-defined]
         return case.work
 
@@ -78,8 +78,9 @@ async def test_actual_stale_own_lease_denies_before_partition_or_body(
 async def test_unissued_signed_identity_cannot_be_a_permission_boolean() -> None:
     from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 
+    now = datetime.now(UTC)
     with pytest.raises(ValueError):
-        AuthenticatedWorkerIdentity(True, NOW, NOW + timedelta(seconds=1))  # type: ignore[arg-type]
+        AuthenticatedWorkerIdentity(True, now, now + timedelta(seconds=1))  # type: ignore[arg-type]
 
 
 def test_complete_protected_digest_detects_a_spliced_private_result() -> None:
@@ -175,7 +176,8 @@ async def test_retained_revalidate_rereads_actual_original_sidecars(
     from nexus.tests.unit.engineering_body_fixture import described_body
 
     case = deliverable_case(monkeypatch)
-    lease, credential = own_lease(case), await signed_identity(case.identity)
+    now = datetime.now(UTC)
+    lease, credential = own_lease(case, now=now), await signed_identity(case.identity, now=now)
     reader = configured_reader(monkeypatch, tmp_path)
     author, store = await contained_result(tmp_path)
     verifier, _ = await contained_result(tmp_path)
@@ -228,7 +230,7 @@ async def test_retained_revalidate_rereads_actual_original_sidecars(
         AsyncMock(return_value=(case.work, None, reader.scope(lease, case.identity))),
     )
     monkeypatch.setattr(reader, "_observe", AsyncMock(return_value=(facts, protection, None)))
-    case.session.scalar = AsyncMock(return_value=NOW)
+    case.session.scalar = AsyncMock(return_value=now)
     references = AsyncMock(return_value=body.first.artifact)
     monkeypatch.setattr(module, "actual_result_reference", references)
     later = AsyncMock(side_effect=AssertionError("continued past unchecked private sidecar"))

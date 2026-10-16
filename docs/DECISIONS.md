@@ -20,6 +20,8 @@
 
 | ID | Title | Status | Date |
 |----|-------|--------|------|
+| ADR-137 | Join original saved evidence bytes and retain per-read historical owners | accepted; focused source evidence, actual C flow pending | 2026-10-16 |
+| ADR-136 | Reserve the full coding cycle and preserve separate output and money proof | accepted; partial source held, actual C qualification pending | 2026-10-16 |
 | ADR-135 | One explicit owner planning application and unissued-wait recovery | actual HTTP/PG/DBOS/SDK-mock scenario and separate conservation audit pass | 2026-10-16 |
 | ADR-134 | Persist exact planning input and retain the original Nexus root | isolated SDK-mock runtime proven; live quality and product activation pending | 2026-10-16 |
 | ADR-133 | Fixed owner qualification dispatch and protected planning provenance | implemented; runtime integration partial plus read-only audit | 2026-10-16 |
@@ -3983,3 +3985,93 @@ deliberately limited to the proved unissued gap; dispatched-worker/process recov
 live provider quality and the full company cycle need their own evidence. Original
 request/source/JWT ends survive final serialization. No new migration, dependency,
 paid call, preview reset, deployment or authority promotion follows from composition.
+
+## ADR-136 — Reserve the full coding cycle and preserve separate output and money proof
+
+**Date:** 2026-10-16
+**Status:** accepted; partial source implementation held, coding runtime qualification pending
+**Decided by:** Codex within the approved Nexus-focused supervised release
+**Relates to:** ADR-106, ADR-132–135 and the Nexus-focused delivery plan
+
+### Context
+The first six-role planning/mechanical profile cannot be widened after its root
+has been consumed. A governed code author also needs actual complete committed
+code, a real saved private input and legitimate Brain publication before an
+independent engineering actor can execute its patch. Known model spend remains
+real even when generated content or its provenance is unavailable.
+
+### Decision
+Use a separately versioned complete ten-role coding profile, with permanent
+root/child allowance and the full admission hash in both approved plan revisions.
+Resolve each role's exact tool/version/resource and model profile. The mandatory
+native router denies every unconnected role; enabling a catalog is insufficient.
+Keep existing profiles readable and preserve their issued wire identities.
+
+Freeze complete source/context/request/whole-input estimates before owner review.
+The actual committed repository reader is data proof; the genuine actor, current
+Brain permissions, approved Goal/head, sealed store-issued input and exact native
+checks confer the separate operational predicates. A copied header or supplied
+archive attestation cannot replace the actual read. Fixed C queue/history and
+atomic approval/hold/dispatch reuse the existing native ledger and DBOS engine.
+
+Publish real derived model-origin and code-patch sources, retaining original
+contributors, classification, recipient permissions and immutable input edges.
+Add truthful derivation kinds through a new normal company017 migration; do not
+relabel output as observed code or cast a protected model artifact to a Brain
+reference. The concrete owner publisher and independent E/EV provenance guard
+remain implementation/qualification work. Migration is explicit, never startup.
+
+Read whole-family lifetime costs separately from the native selected-work report.
+Retain original native known spend, held/unknown money and missing proof. Audit
+already-issued money without fresh provider credentials; require current owner,
+native/source/history permissions and original read ends through final bytes.
+An optional owner HTTP route exposes that same concrete financial graph and
+cannot grant execution or assert company completion.
+
+### Alternatives considered
+Widening an existing root resets or changes its reviewed lifetime scope. Using a
+mechanical patch as a model-authored result changes the product being proved.
+Treating model candidates as management-accepted C dependencies would block E
+before native/protected origin can be verified. Hiding known spend when output
+proof fails makes the financial report incorrect. Reuse existing stores and
+execution engine; add no new orchestration framework or dependency.
+
+### Consequences
+The complete profile, code consumer, source and financial components have focused
+checks; actual C, publication, E/EV, genuine model quality and full-cycle operation
+still need their respective evidence. No provider activation, schema application,
+new native run, preview reset, deployment or Board promotion follows. See the
+governed coding implementation checkpoint for exact held scopes and next gates.
+
+## ADR-137 — Join original saved evidence bytes and retain per-read historical owners
+
+**Date:** 2026-10-16
+**Status:** accepted; focused source evidence, actual C application pending
+**Decided by:** Codex within the approved Nexus supervised release
+**Relates to:** ADR-106, ADR-134–136 and ERROR-213–216
+
+### Context
+An original protected model file passed its saved artifact hash under another
+Python hash seed, but reserializing a frozenset changed JSON order and made the
+billing/publication join falsely unconfirmed. Historical financial reads also
+need current-owner/source proof without requiring a usable old C actor.
+
+### Decision
+Expose an internal `ModelEvidenceRecord(evidence, wire)` from the actual bounded
+file store. Validate original raw SHA, strict decoding, semantic equality and
+physical ownership; use those bytes for artifact joins. Keep existing load/save/
+evidence equality and issued artifacts unchanged. Raw wire stays internal and
+conveys no source or execution authority.
+
+For C financial reads, create a real historical prepared store per read from the
+same original C graph. Retain its tasks, genuine owner, issued proof and first
+source/read deadline. Revalidate source/native facts in the existing final
+company-control transaction. Exact native approval/attempt/intent/hold/receipt
+joins precede private output. Failed or unavailable output cannot erase known
+native spend. Fresh execution retains separate actor/Goal/model predicates.
+
+### Consequences
+The actual cross-process saved-file regression and140 relevant financial checks
+pass. These are supplied-SQL component proofs, not actual C admission, migration,
+provider quality or release acceptance. No dependency, provider, allowance,
+schema application or historical-byte rewrite follows.

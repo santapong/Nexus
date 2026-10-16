@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 from uuid import UUID, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nexus.company.brain.base import BrainReadScope
+from nexus.company.management.coding_prepared_contracts import (
+    prepared_reference as coding_prepared_reference,
+)
 from nexus.company.management.planning_prepared_contracts import prepared_reference
 from nexus.company.management.plans import RunBinding
 from nexus.execution.dispatch_models import SegmentDispatch
@@ -22,6 +25,10 @@ from nexus.harness.journal_models import CompanyControl, CostHold, JournalAction
 from nexus.harness.journal_submission import pending_action_record
 
 if TYPE_CHECKING:
+    from nexus.execution.coding_preparation_recovery import (
+        PreparedCodingWaitRecovery,
+        RecoveredCodingWait,
+    )
     from nexus.execution.planning_preparation_recovery import (
         PreparedWaitRecovery,
         RecoveredPlanningWait,
@@ -70,7 +77,8 @@ async def require_unissued_pending(
         not session.in_transaction()
         or control.company_id != work.company_id
         or control.paused
-        or (work.workflow_name, work.workflow_version) != ("company.planning.v1", "v1")
+        or (work.workflow_name, work.workflow_version)
+        not in {("company.planning.v1", "v1"), ("company.coding.v1", "v1")}
         or work.state not in {"running", "blocked", "awaiting_approval"}
         or value.fence < 1
         or value.segment_number < 1
@@ -128,7 +136,10 @@ async def require_unissued_pending(
         != (control.policy_version, control.price_version)
     ):
         raise ExecutionDeniedError("Original planning action or policy binding changed")
-    prepared_reference(proposal)
+    if work.workflow_name == "company.coding.v1":
+        coding_prepared_reference(proposal)
+    else:
+        prepared_reference(proposal)
     decision = record.approval
     if decision is not None and (
         (
@@ -163,17 +174,37 @@ async def require_unissued_pending(
     return record
 
 
+@overload
 async def restore_wait_locked(
     store: ExecutionStore,
     session: AsyncSession,
     control: CompanyControl,
     work: ExecutionWork,
     check: PreparedWaitRecovery,
-) -> RecoveredPlanningWait:
+) -> RecoveredPlanningWait: ...
+@overload
+async def restore_wait_locked(
+    store: ExecutionStore,
+    session: AsyncSession,
+    control: CompanyControl,
+    work: ExecutionWork,
+    check: PreparedCodingWaitRecovery,
+) -> RecoveredCodingWait: ...
+async def restore_wait_locked(
+    store: ExecutionStore,
+    session: AsyncSession,
+    control: CompanyControl,
+    work: ExecutionWork,
+    check: PreparedWaitRecovery | PreparedCodingWaitRecovery,
+) -> RecoveredPlanningWait | RecoveredCodingWait:
     """Only this concrete original source/identity check can restore this zero-issued prefix."""
+    from nexus.execution.coding_preparation_recovery import PreparedCodingWaitRecovery
     from nexus.execution.planning_preparation_recovery import PreparedWaitRecovery
 
-    if type(check) is not PreparedWaitRecovery or check.services.execution is not store:
+    if (
+        type(check) not in {PreparedWaitRecovery, PreparedCodingWaitRecovery}
+        or check.services.execution is not store
+    ):
         raise ExecutionDeniedError("Prepared wait recovery requires its original concrete check")
     check.require_current()
     original = snapshot(work)

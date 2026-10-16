@@ -114,7 +114,9 @@ async def preflight_planning_database(services: PlanningApplication, *, end_us: 
     current(end_us)
     services.require_composition()
     require_planning_http_signer(services)
-    await preflight_qualification_database(services.runtime.factory, end_us=end_us)
+    await preflight_qualification_database(
+        services.runtime.factory, end_us=end_us, schema_versions=("company_016", "company_017")
+    )
     services.require_composition()
     require_planning_http_signer(services)
     current(end_us)
@@ -141,7 +143,9 @@ async def preflight_planning_application(
             actor.workspace_id,
         ):
             raise ValueError("Planning credential differs from the configured actual actor")
-        await preflight_qualification_database(services.runtime.factory, end_us=end_us)
+        await preflight_qualification_database(
+            services.runtime.factory, end_us=end_us, schema_versions=("company_016", "company_017")
+        )
         await _native(services, witness, end_us)
         if require_provider_keys:
             row = next(

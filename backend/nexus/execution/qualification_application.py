@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import cast
+from typing import Literal, cast
 from uuid import uuid4, uuid5
 
 from dbos import DBOS
@@ -227,8 +227,17 @@ async def preflight_qualification_worker(
 
 
 async def preflight_qualification_database(
-    factory: async_sessionmaker[AsyncSession], *, end_us: int
+    factory: async_sessionmaker[AsyncSession],
+    *,
+    end_us: int,
+    schema_versions: tuple[Literal["company_016", "company_017"], ...] = ("company_016",),
 ) -> None:
+    if (
+        not schema_versions
+        or len(set(schema_versions)) != len(schema_versions)
+        or not set(schema_versions) <= {"company_016", "company_017"}
+    ):
+        raise ValueError("Explicit supported company schema is unavailable")
     current(end_us)
     async with asyncio.timeout(max(0, end_us - clock_us()) / 1_000_000), factory() as session:
         if (
@@ -241,9 +250,13 @@ async def preflight_qualification_database(
         current(end_us)
         if (
             await session.scalar(text("SELECT version_num FROM company_alembic_version"))
-            != "company_016"
+            not in schema_versions
         ):
-            raise ValueError("Qualification requires normal company016")
+            raise ValueError(
+                "Qualification requires normal company016"
+                if schema_versions == ("company_016",)
+                else "Qualification requires its explicit normal company schema"
+            )
         for name in ("fsync", "synchronous_commit", "full_page_writes"):
             current(end_us)
             if await session.scalar(text(f"SHOW {name}")) != "on":

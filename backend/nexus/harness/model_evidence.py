@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import os
+import stat
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, cast
 from uuid import UUID, uuid4, uuid5
@@ -83,6 +85,14 @@ class ModelEvidenceStore(Protocol):
     async def load(self, reference: ArtifactRef) -> ModelEvidence:
         """Resolve only this protected store's references and validate bytes/hash."""
         ...
+
+
+@dataclass(frozen=True, slots=True)
+class ModelEvidenceRecord:
+    """Actual retained wire and semantic data, never current reader/native permission."""
+
+    evidence: ModelEvidence
+    wire: bytes
 
 
 class FileModelEvidenceStore:
@@ -192,3 +202,86 @@ class FileModelEvidenceStore:
         if path != expected or reference != await self._reference(path, evidence):
             raise ValueError("Artifact reference does not match actual stored evidence")
         return evidence
+
+    async def load_record(self, reference: ArtifactRef) -> ModelEvidenceRecord:
+        """Keep original file bytes; the existing load remains the FIRST read/admission seam."""
+        original = self._root
+        evidence = await self.load(reference)
+        if self._root != original:
+            raise ValueError("Original model evidence root changed during load")
+        path = self._path(
+            evidence.request.company_id, evidence.request.action_id, evidence.request.request_id
+        )
+        if path != Path(reference.reference):
+            raise ValueError("Model record identity differs from actual loaded evidence")
+        record = await self._owned(lambda: self._wire_record(original, path, reference, evidence))
+        if self._root != original:
+            raise ValueError("Original model evidence root changed during wire read")
+        return record
+
+    @staticmethod
+    def _wire_record(
+        root: Path, path: Path, reference: ArtifactRef, evidence: ModelEvidence
+    ) -> ModelEvidenceRecord:
+        """Bounded descriptor read; final named/FD metadata follows hash and semantic checks.
+
+        Cohesion exception: the original raw hash and unchanged private file/root
+        observations must share this actual owned worker and held descriptor.
+        """
+        directories = (root, path.parent.parent, path.parent)
+
+        def directory_signature() -> tuple[tuple[int, ...], ...]:
+            values = []
+            for directory in directories:
+                row = directory.stat(follow_symlinks=False)
+                if (
+                    not stat.S_ISDIR(row.st_mode)
+                    or stat.S_IMODE(row.st_mode) != 0o700
+                    or row.st_uid != os.getuid()
+                    or directory.resolve() != directory
+                ):
+                    raise ValueError("Model evidence directories are not private/owned")
+                values.append((row.st_dev, row.st_ino, row.st_mode, row.st_uid))
+            return tuple(values)
+
+        def signature(row: os.stat_result) -> tuple[int, ...]:
+            if (
+                not stat.S_ISREG(row.st_mode)
+                or stat.S_IMODE(row.st_mode) != 0o400
+                or row.st_uid != os.getuid()
+                or row.st_nlink != 1
+                or not 0 < row.st_size <= 2_000_000
+            ):
+                raise ValueError("Model evidence wire file is not bounded/immutable/private")
+            return (
+                row.st_dev,
+                row.st_ino,
+                row.st_mode,
+                row.st_uid,
+                row.st_nlink,
+                row.st_size,
+                row.st_mtime_ns,
+                row.st_ctime_ns,
+            )
+
+        roots = directory_signature()
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, "rb") as stream:
+            initial = signature(os.fstat(stream.fileno()))
+            raw = stream.read(2_000_001)
+            # Bound BEFORE hashing/parsing, without regenerating Python frozenset arrays.
+            if not 0 < len(raw) <= 2_000_000 or len(raw) != initial[5]:
+                raise ValueError("Model evidence wire exceeds its exact byte bound")
+            if hashlib.sha256(raw).hexdigest() != reference.sha256:
+                raise ValueError("Original model evidence wire hash differs")
+            parsed = ModelEvidence.model_validate_json(raw)
+            parsed.require_binding()
+            if parsed != evidence:
+                raise ValueError("Loaded evidence differs semantically from original model wire")
+            if (
+                signature(os.fstat(stream.fileno())) != initial
+                or signature(path.stat(follow_symlinks=False)) != initial
+                or directory_signature() != roots
+            ):
+                raise ValueError("Model evidence file/root changed during wire read")
+            return ModelEvidenceRecord(evidence, raw)
