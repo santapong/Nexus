@@ -1,6 +1,36 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-16] — Quote fresh planning work before its first reservation
+
+### Fixed
+- Preapproval planning quotation reads absent lazy accounting totals as zero while
+  requiring the actual active registration and preserving allocation/delegation,
+  existing held/spent amounts, current work/day caps, quotas and model eligibility.
+  It creates no accounting rows; authorization still reserves normally (ERROR-196).
+- Private acceptance runner uses an empty regular0600 password file. Asyncpg
+  rejects the former /dev/null override under warnings-as-errors; original v1 is
+  retained as a failed environment setup, not a production failure (ERROR-195).
+
+### Added
+- Opt-in actual owner/Brain/goal/planning/DBOS/SDK-mock integration fixture with
+  exact fresh database guard, real restricted-role migration and retained failed
+  state. It does not use the owner's account or a real provider.
+
+### Validation
+- 104 focused quote/routing/preparation/dispatch cases and configured strict/Ruff2
+  pass. Independent two-file source review finds no material issue; native hold
+  foreign keys support the accounting lifecycle distinction.
+- Root4,902 units pass in140.78s, no failures/skips,19 existing warnings; strict
+  typing and Ruff check/format4 pass, all1,690 selected Python hashes stable.
+- Actual v2 proves the first-row lifecycle failure and zero native issuance by
+  separate read-only audit. Fresh v3 passes preparation/owner-wait and exact input
+  GET, then fails at generic review availability (ERROR-197). No all-green
+  runtime, dispatch, SDK, model quality or company-cycle acceptance is claimed.
+
+**Authored by:** Codex and bounded implementation/review agents
+**PR:** not published
+
 ## [2026-10-16] — Connect exact planning input to the permanent Nexus workflow
 
 ### Added

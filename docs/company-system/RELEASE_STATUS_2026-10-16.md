@@ -13,7 +13,7 @@ The supervised release is incomplete; default native execution stays off.
 | Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
-| Management-generated planning | Prior restricted-PG result → formal proposal → owner approval/replay passes. Protected input, owner review and fixed preparation/dispatch/worker components now pass combined source validation | Prove the new restricted-PG/DBOS runtime, then configure the actual owner journey |
+| Management-generated planning | Prior restricted-PG result → formal proposal/approval passes. New actual runtime reaches preparation/owner wait and exact input GET; generic action-review availability is blocked | Connect concrete prepared-source review, then prove dispatch/SDK/same-root revision and configure the owner journey |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
 | Bounded builder | **Blocked from activation**; diagnostics source patch checked and independently reviewed | Qualify current fault cases and a representative Nexus build with retained original-failure diagnostics |
@@ -21,6 +21,16 @@ The supervised release is incomplete; default native execution stays off.
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
 ## Latest actual result
+
+The follow-up runtime test found and repaired a first-request accounting lifecycle
+bug: quotation now reads absent totals as zero while preserving the approved
+allocation and all spending gates. Root4,902 units and strict/Ruff4 pass with
+stable source. Actual fresh V3 reaches owner wait and exact private input review,
+then stops at generic action-review availability. One pending action remains;
+independent restricted read-only audit confirms zero holds/attempts/intents/
+dispatch, no leases and no app connections left. No model request has been
+issued by this runtime test. The original three failures remain preserved; see
+the [planning checkpoint](PLANNING_RUNTIME_CHECKPOINT_2026-10-16.md) and ERROR-195–197.
 
 The current planning source package adds the complete registered GoalDefinition
 and its cited evidence to context assembly, with the goal explicitly treated as

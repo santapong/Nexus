@@ -79,14 +79,45 @@ the current concrete serialization schema. Signed-in browser acceptance remains
 open. Two new integration draft files are excluded from this source milestone;
 their collection/static preparation is not actual PostgreSQL/DBOS execution.
 
+## Actual runtime follow-through
+
+Three fresh databases retain their exact source and original outcomes. V1 stops
+before connection/migration because Root's /dev/null password-file override
+causes an asyncpg warning. The corrected empty regular0600 file passes a separate
+strict-warning, restricted READ ONLY connection and rollback; v1 remains empty.
+
+V2 reaches normal016/74 forced-RLS tables, public DBOS setup, three actual isolated
+sign-ins, Brain ingestion, cited goal/charters, owner initial-plan HTTP approval,
+actor claim, assembly and protected save. It fails before pending submission
+because quotation incorrectly requires a lazy WorkBudget row. Independent
+restricted read-only audits confirm actual active root/planner allocations,
+zero accounting/effect rows and released leases. No fixture budget was seeded.
+
+The narrow quote repair reads missing totals as Decimal zero without weakening
+any native allocation, cap, quota or eligibility gate. Root's follow-up4,902-unit
+run/140.78s, configured strict/Ruff4 and1,690 stable Python source hashes pass.
+An independent two-file money review finds no material issue. The two opt-in
+integration files are included in this later static cohort, rather than silently
+relabelled as part of the earlier excluded source milestone.
+
+Fresh V3 then reaches awaiting_approval with no worker/attempt/POST, and the exact
+current-owner input GET passes. It fails at the next generic action-review
+availability assertion. Root's separate restricted repeatable-read READ ONLY
+audit and rollback find two registrations/two native Work, one pending action,
+zero budgets/holds/attempts/intents/dispatch/revision events, no leases and no app
+connections left. Decision/dispatch/SDK/revision2/builder assertions remain
+unreached. All three original test failures remain failures (ERROR-195–197).
+
 ## Remaining delivery gates
 
 - Configure the real application, model catalog/quality and current owner/actor
   credentials; connect initial goal preparation and explicit dispatch in the
   owner flow. Opt-in qualification application composition itself is source
   checked, not a running provider qualification.
-- Run the frozen restricted PostgreSQL/DBOS/SDK-mock integration. Preserve actual
-  failures, unknown holds and original windows rather than resetting state.
+- Connect general owner planning review to concrete protected input/source
+  verification, then complete restricted PostgreSQL/DBOS/SDK-mock integration.
+  Preserve actual failures, unknown holds and original windows rather than
+  resetting state or accepting unavailable review.
 - Qualify initial preparation recovery. It is currently an explicit trusted
   operation, with no accepted crash-recovery proof between pending publication
   and owner-wait transition.

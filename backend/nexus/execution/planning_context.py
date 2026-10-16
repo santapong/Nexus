@@ -208,9 +208,10 @@ async def quote_locked(
     registered = await session.get(RegisteredWork, (work.company_id, work.task_id))
     budget = await session.get(WorkBudget, (work.company_id, work.task_id))
     day = await session.get(DailyBudget, (work.company_id, billing_day(now)))
-    if registered is None or not registered.active or budget is None:
+    if registered is None or not registered.active:
         raise ValueError("Planning actual own allowance is unavailable")
-    charged = budget.held_usd + budget.spent_usd
+    # Authorization creates accounting totals lazily; quoting must not create them.
+    charged = budget.held_usd + budget.spent_usd if budget else Decimal(0)
     available = min(
         registered.allocation_usd - registered.delegated_usd - charged,
         control.work_cap_usd - charged,

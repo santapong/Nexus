@@ -72,6 +72,89 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-197 — General owner action review cannot disclose the prepared planning action
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** open (concrete planning-review composition under diagnosis)
+**Found by:** actual restricted-PG planning runtime v3
+**Affected files:** owner action review and planning input composition
+
+With the quote repair, actual preparation reaches awaiting_approval with no worker,
+model attempt or POST. The current-owner private input endpoint returns200 with
+the exact saved whole-input proof, request and quote. The next actual generic
+action review returns200 but availability=unavailable, so its expected available
+assertion fails. No owner decision, dispatch, SDK, revision2 or builder assertion
+was reached. Preserve the failed18.443219s process, source and database.
+
+Root's independent restricted RR READ ONLY/rollback audit finds two registered
+and native Work rows, one pending action, zero holds/budgets/attempts/intents/
+dispatches/revision events, no leases and no remaining app connections. Source
+inspection identifies a missing composition: generic review maps every symbol
+through static catalog Brain artifacts, while planning uses dynamic Brain
+conditions and a protected descriptor marker. The original caught ValueError was
+not retained, so do not claim its exact first rejection before a focused probe.
+
+Use concrete current-owner prepared-input/source verification for planning review.
+Do not ignore unknown conditions, invent a Brain-artifact alias, weaken source
+checks or change the assertion to accept unavailable. Original bearer/source/native
+windows and actual goal/head/charter/hash checks must survive the complete read.
+Diagnosis/repair is pending; the original failed test remains failed.
+
+
+## ERROR-196 — First planning preparation requires an accounting row too early
+
+**Date:** 2026-10-16
+**Severity:** medium
+**Status:** fixed (source and actual preparation prefix; full runtime remains open)
+**Found by:** actual restricted-PG planning runtime v2
+**Affected files:** execution/planning_context.py and paired unit tests
+
+The actual runtime reached normal016/DBOS setup, three real isolated logins,
+Brain ingestion, a cited goal/charters, owner HTTP initial-plan approval, actor
+claim, context assembly and protected preparation save. It then failed before
+pending-action submission because quote_locked required WorkBudget to exist.
+Native budget_rows intentionally creates those totals at authorization.
+
+Root's separate restricted repeatable-read READ ONLY audit with explicit rollback
+finds two active registrations: root1USD/delegated0.5 and planner0.5/delegated0.
+There are two native Work rows, zero accounting totals, actions, holds, attempts,
+intents or dispatches, and no leases or remaining app connections. The original
+failed20.510355s process and its database/source/artifacts remain retained.
+
+Repair the data-only preapproval quote to read missing totals as zero while
+retaining actual registered allocation/delegation, existing charges, current
+work/daily caps, quotas and ordinary model eligibility. Do not seed the fixture,
+insert accounting rows during quote, widen caps or reset the failed work.
+The three-line production repair and paired regressions pass104 focused checks,
+configured strict/Ruff checks and independent narrow money review. Root's new
+combined run passes4,902 units/140.78s and strict/Ruff4 with all1,690 selected Python
+hashes stable. Fresh actual v3 then reaches owner wait and exact private input
+GET before the distinct ERROR-197 review gap. No accounting row was seeded and
+no SDK request was issued; full runtime acceptance remains open.
+
+
+## ERROR-195 — Asyncpg rejects the password-file override used by the test runner
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (driver/environment scope; original runtime attempt remains failed)
+**Found by:** first actual planning runtime setup
+**Affected files:** private runtime runner/environment; no production code change
+
+Root set PGPASSFILE=/dev/null to avoid implicit credential-file reads. Libpq
+preflight accepted it, but asyncpg emits UserWarning for that nonregular file.
+The configured warnings-as-errors policy stopped pytest before its first database
+connection or migration. The original v1 process failed5.393636s and is preserved.
+
+Use a newly created empty regular0600 file under the private owned directory and
+unset PGPASSWORD. Do not suppress warnings or inspect saved credentials. A real
+asyncpg connection under python -Werror now passes a restricted repeatable-read
+READ ONLY transaction and explicit rollback, confirming v1 still has no company
+tables or DBOS schema. Fresh v2 then passes connection/migration and reaches the
+separate production failure in ERROR-196. No reset/reuse of the original DB.
+
+
 ## ERROR-194 — Cancelled planning projection loses its issued model outcome
 
 **Date:** 2026-10-16
