@@ -37,18 +37,9 @@ environment that produced them.
 The following is the intended first-release journey. An arrow describes a required
 handoff, not a guarantee that the complete path has already passed acceptance.
 
-```mermaid
-flowchart LR
-    Goal[Owner sets Nexus goal] --> Evidence[Find dated evidence and citations]
-    Evidence --> Plan[Management proposes a bounded plan]
-    Plan --> Approval[Owner reviews and approves]
-    Approval --> Action[Harness authorizes a specific change]
-    Action --> Build[Isolated builder produces candidate]
-    Build --> Verify[Independent verifier checks candidate]
-    Verify --> Outputs[Strategy, presentation and support drafts]
-    Outputs --> Report[Owner report and governed notification]
-    Report --> Goal
-```
+![C4 system context for Nexus](diagrams/c4-system-context.svg)
+
+The intended cycle is **owner goal → evidence and citations → proposed plan → owner decision → authorized change → independent verification → departmental outputs → owner report and notification**.
 
 A saved goal is not an approved plan; an approved plan is not an executed action;
 a candidate is not an independently verified result. Failures, blocked work and
@@ -56,49 +47,16 @@ unknown effects stay visible in the report.
 
 ## System boundaries
 
-```mermaid
-flowchart TB
-    Owner[Owner]
-    UI[Company dashboard]
-    API[Authenticated company API]
-    Manage[Management and departmental charters]
-    Brain[Company Brain: entities, evidence, decisions]
-    Harness[Action Harness: context, authority, limits, budget]
-    Durable[DBOS execution segments]
-    Models[Model gateway: registered providers]
-    Tools[Governed tools and optional MCP adapters]
-    Builder[Native isolated builder]
-    Verify[Independent verification]
-    Ledger[PostgreSQL: work, actions, approvals, receipts]
-    Artifacts[Artifacts: hashes and permission-checked references]
-    Report[Operating reports and notification ledger]
-    Email[Owner email when configured and qualified]
-    Sources[Repositories, documents and approved company sources]
+![C4 container view of the Nexus company system](diagrams/c4-containers.svg)
 
-    Owner --> UI --> API
-    API --> Manage
-    Sources --> Brain
-    Manage <--> Brain
-    Manage --> Harness
-    Brain --> Harness
-    Harness --> Durable
-    Durable --> Models
-    Durable --> Tools
-    Durable --> Builder
-    Tools --> Verify
-    Builder --> Verify
-    Verify --> Ledger
-    Harness <--> Ledger
-    Durable <--> Ledger
-    Brain <--> Ledger
-    Builder --> Artifacts
-    Tools --> Artifacts
-    Artifacts --> Verify
-    Ledger --> Report
-    Report --> UI
-    Report --> Email
-    Ledger --> Brain
-```
+The container view separates the owner interface, opt-in company API, separately
+configured workers and data stores. Dashed or annotated relationships show
+planned or unqualified capabilities, not proof that they are deployed.
+
+![C4 component view of the Nexus company API and action boundaries](diagrams/c4-components.svg)
+
+The [detailed architecture](ARCHITECTURE_C4_DETAIL.md) maps each layer to source
+and explains the communication, tools, authority checks and outstanding evidence.
 
 The intended boundary sends consequential effects through the harness rather than
 letting a departmental role or knowledge object authorize itself. PostgreSQL owns
@@ -124,66 +82,27 @@ same goal. The focused plan specifies the first integrated demonstration.
 
 ## Action lifecycle
 
-```mermaid
-stateDiagram-v2
-    [*] --> Proposed
-    Proposed --> Validated: schema and policy checks
-    Validated --> AwaitingApproval: explicit decision required
-    Validated --> Authorized: standing authority
-    AwaitingApproval --> Authorized: committed exact decision and recheck
-    AwaitingApproval --> Rejected: owner rejects
-    AwaitingApproval --> Expired: decision expires
-    Authorized --> Executing: budget reserved and ownership fenced
-    Executing --> Verifying: effect receipt recorded
-    Executing --> OutcomeUnknown: effect cannot be confirmed
-    Executing --> Failed: confirmed failure
-    OutcomeUnknown --> Verifying: reconciliation confirms effect
-    OutcomeUnknown --> Failed: reconciliation confirms failure
-    Verifying --> Completed: acceptance passed
-    Verifying --> Failed: acceptance rejected
-    Verifying --> Verifying: inconclusive result recorded
-    Proposed --> Cancelled: cancellation before execution
-    Validated --> Cancelled: cancellation before execution
-    AwaitingApproval --> Cancelled: cancellation before execution
-    Authorized --> Cancelled: cancellation before effect
-    Rejected --> [*]
-    Expired --> [*]
-    Failed --> [*]
-    Completed --> [*]
-    Cancelled --> [*]
-```
+![Governed action lifecycle and uncertainty reconciliation](diagrams/action-lifecycle.svg)
+
+| Stage | Meaning and possible next step |
+| --- | --- |
+| Proposed / validated | Bind a proposal and check schema and policy; a decision or standing authority may be required. |
+| Awaiting approval | Record the exact owner decision, rejection or expiry; waiting does not occupy a worker. |
+| Authorized / executing | Recheck authority and current resources; reserve the bounded effect and record intent before issuance. |
+| Outcome unknown | Preserve the uncertainty and reconcile it without blind replay. |
+| Verifying | Evaluate the recorded effect independently; inconclusive results remain open. |
+| Completed / failed / cancelled | Record the actual terminal result. Cancellation cannot undo an already-issued external effect. |
 
 `inconclusive` is a verification result: the action remains `verifying` until evidence resolves it or it is explicitly closed as failed with an inconclusive result. An unknown external effect is reconciled without blind retry. Already-issued effects cannot be undone by changing a task to cancelled.
 
 ## Approval without occupying a worker
 
-```mermaid
-sequenceDiagram
-    actor Owner
-    participant API as Company API
-    participant DB as PostgreSQL ledger
-    participant Scheduler as Authorized scheduler
-    participant Queue as DBOS queue
-    participant Worker as Execution worker
-    participant Tool as Governed tool
-
-    Worker->>DB: Commit exact proposal, hash and pending approval
-    Worker-->>Queue: End segment and release worker slot
-    Owner->>API: Approve action revision and hash
-    API->>DB: Check owner, revision, expiry and policy
-    API->>DB: Commit exact decision
-    API-->>Owner: Decision recorded; work not yet scheduled
-    Scheduler->>DB: Recheck and atomically consume authority, bind source, hold cost and enqueue
-    DB-->>Queue: Continuation becomes eligible
-    Queue->>Worker: Resume same logical work item in new segment
-    Worker->>DB: Recheck resource, authority, budget and ownership
-    Worker->>DB: Persist effect intent and issue one-time permit
-    Worker->>Tool: Exact authorized payload with action identity
-    Tool-->>Worker: Result or uncertain outcome
-    Worker->>DB: Record receipt, verification status and cost reconciliation
-    DB-->>API: Durable event available
-    API-->>Owner: Outcome with evidence or reconciliation needed
-```
+1. The worker records a specific proposal and pending approval, then releases its slot.
+2. The owner submits a decision. The API validates the current owner, proposal revision and expiry, then records the decision; this does not itself prove a dispatch.
+3. An authorized scheduling operation rechecks the binding and atomically consumes authority, binds the source, holds cost and enqueues the continuation.
+4. A separately configured DBOS worker resumes the work and rechecks authority, budget, ownership and resources at the effect boundary.
+5. The worker persists the intent before issuing the permitted request, then records a receipt or an unknown outcome and reconciles cost.
+6. The owner sees the recorded state and evidence; a candidate does not become verified solely because a worker returned it.
 
 This is the target protocol; implementations may separate approval and dispatch
 requests while keeping the dispatch's authority consumption, source binding,
@@ -198,33 +117,12 @@ and live day-boundary behavior remain to be qualified.
 
 ## Pi deployment profile
 
-```mermaid
-flowchart LR
-    Owner[Owner browser]
-    Tailnet[Private authenticated route]
-    Providers[Allowed model and email providers]
-    Backup[Independent encrypted backup destination]
-
-    subgraph Pi[Pi 5 ARM64: proposed Nexus profile]
-        API[API and UI]
-        Worker[Management and DBOS worker]
-        PG[Dedicated PostgreSQL and pgvector]
-        Files[Artifacts and source snapshots]
-        Runner[Restricted build runner]
-        Sandbox[One rootless Podman sandbox]
-        API --> PG
-        Worker --> PG
-        API --> Files
-        Worker --> Runner
-        Runner --> Sandbox
-        Sandbox --> Files
-    end
-
-    Owner --> Tailnet --> API
-    Worker --> Providers
-    PG --> Backup
-    Files --> Backup
-```
+The proposed private profile places the company API, owner interface, separately
+configured DBOS workers, dedicated PostgreSQL and protected artifact storage on
+an ARM64 host behind an authenticated private route. A restricted builder would
+run one isolated sandbox; provider and email calls would leave through their
+respective governed adapters. An independent encrypted destination is needed for
+backup. These are design intentions, not a verified deployment.
 
 This is a proposed private deployment, not a claim that Nexus is deployed or
 that the sandbox limits are enforced. Model credentials are intended to stay

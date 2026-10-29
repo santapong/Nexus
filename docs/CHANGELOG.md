@@ -1,6 +1,27 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-29] — Strengthen company authorization coverage
+
+- Replaced the current README and company-architecture Mermaid views with
+  repository-native C4 architecture images and a detailed layer and
+  communication guide. Distinguishes actual company API and separately
+  configured workers from proposed deployment and unqualified integrations.
+- Added 36 unit cases covering Brain ACL generation and audit events, owner
+  budget projections, protected-result parsing, and generated-report recipient
+  and freshness checks. Mocked database responses do not establish transactional
+  isolation or real PostgreSQL behavior.
+- The 36 cases and 15 previous action-pin cases passed on the frozen candidate.
+  Candidate-wide Ruff, format and migration-baseline checks passed, as did
+  strict mypy over 1,808 files. The prior full-suite coverage combined with
+  these focused tests gives a source-verified incremental estimate of 64.15%,
+  below the unchanged 80% gate; it is not a fresh full-suite coverage result.
+- A full candidate regression collected 5,879 cases and passed its first 456;
+  the next slice stopped on host swap activity with memory stalls. After fresh
+  host admission, that slice was rerun in a new scope and the verified full
+  cohort completed with 5,879 passes and no failures or skips. The interruption
+  is retained; this uninstrumented run does not establish the coverage gate.
+
 ## [2026-10-29] — Clarify supervised Nexus and action bindings
 
 - The fresh unit coverage retry completed on backend commit `511bd5a`: 5,828

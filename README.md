@@ -15,17 +15,9 @@ not an automatic change of authority.
 
 The first release target is a complete **Nexus-owned** cycle:
 
-```mermaid
-flowchart LR
-    Goal[Owner goal] --> Evidence[Company evidence and citations]
-    Evidence --> Plan[Bounded plan]
-    Plan --> Approval[Owner decision]
-    Approval --> Action[Authorized change]
-    Action --> Verify[Independent verification]
-    Verify --> Outputs[Strategy, presentation and support outputs]
-    Outputs --> Report[Owner report and notification]
-    Report -. decisions and evidence .-> Evidence
-```
+![C4 system context: Nexus, the owner, company sources and configured services](docs/company-system/diagrams/c4-system-context.svg)
+
+The target cycle is **goal → evidence → approved plan → authorized change → independent verification → departmental outputs → owner report**.
 
 This diagram describes the intended end-to-end outcome. Individual steps have
 implementation and test evidence, but the complete cycle has not yet passed
@@ -49,6 +41,10 @@ approval is a decision about a specific proposal; it does not by itself prove
 that a worker ran or an external effect succeeded. Unknown outcomes remain
 visible for reconciliation rather than being treated as successful retries.
 
+The [C4 architecture guide](docs/company-system/ARCHITECTURE_C4_DETAIL.md)
+explains the system context, containers, components, technologies and their
+communication paths, with links to the corresponding source code.
+
 ## Current status
 
 As of the 29 October 2026 development checkpoint:
@@ -58,8 +54,10 @@ As of the 29 October 2026 development checkpoint:
   evidence of live-provider quality or a complete owner-to-report cycle.
 - On backend commit `511bd5a`, all 5,828 unit cases passed under coverage, but
   unit coverage was 64.0%, below the unchanged 80% gate. Fifteen later action-pin
-  tests passed separately and are not included in that coverage result. The
-  [task board](TASKS.md) records the current source and validation status.
+  tests and 36 additional safety tests passed separately. A source-verified
+  incremental estimate combining those focused tests with the earlier unit run
+  is 64.15%; it is not a fresh full-suite coverage result. The [task board](TASKS.md)
+  records the current source and validation status.
 - Signed-in owner acceptance, a representative independently verified Nexus
   build, real provider qualification and whole-cycle reporting remain open.
 - Private ARM64 operation, independent restore, rollback and a 24-hour soak remain
@@ -76,6 +74,7 @@ improvement is deferred.
 | [Task board](TASKS.md) | Canonical delivery tasks, dependencies, evidence and blockers. |
 | [Focused delivery plan](docs/company-system/NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md) | Nexus-only operating cycle and acceptance direction. |
 | [Company architecture](docs/company-system/ARCHITECTURE.md) | System boundaries, lifecycle and deployment target. |
+| [C4 architecture guide](docs/company-system/ARCHITECTURE_C4_DETAIL.md) | Detailed layers, tools, protocols, source references and qualification status. |
 | [Product progress](docs/company-system/PROGRESS.md) | Dated implementation and validation history. |
 | [Release evidence](docs/company-system/RELEASE_GATES_CURRENT.md) | Historical evidence index; reconcile current status with the task board. |
 | [SDD v0.2](docs/sdd/NEXUS_SDD_v0.2.md) | Original company-system design; later Nexus-focused decisions supersede its first scenario. |

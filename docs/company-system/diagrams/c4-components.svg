@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="940" viewBox="0 0 1600 940" role="img" aria-labelledby="title description">
+<title id="title">03  Components</title><desc id="description">Identity scopes company access, Brain supplies permission-checked evidence, Management proposes work, and the Action Harness independently enforces action authority, cost, durable intent and recovery.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#80d8c7"/></marker></defs>
+<style>
+.bg{fill:#0b1422} .frame{fill:#122235;stroke:#496476;stroke-width:1.6;stroke-dasharray:7 7}
+.person{fill:#173b46;stroke:#60e2ca;stroke-width:2} .system{fill:#17382f;stroke:#60e2ca;stroke-width:2}
+.external{fill:#243044;stroke:#8093a6;stroke-width:2} .container{fill:#193344;stroke:#61cbbd;stroke-width:2}
+.component{fill:#1c3442;stroke:#61cbbd;stroke-width:2} .data{fill:#263548;stroke:#8aa2b5;stroke-width:2}
+.edge{fill:none;stroke:#80d8c7;stroke-width:2.3;stroke-linejoin:round} text{font-family:Inter,Arial,sans-serif;fill:#e9f4f3}
+.heading{font-size:37px;font-weight:700} .subtitle{font-size:19px;fill:#b5cbc9} .tag{font-size:13px;font-weight:700;letter-spacing:1.5px;fill:#79d9c6}
+.box-title{font-size:22px;font-weight:700} .body{font-size:16px;fill:#c1d4d3} .edge-label{font-size:15px;fill:#d6e8e4;paint-order:stroke;stroke:#0b1422;stroke-width:6px;stroke-linejoin:round}
+.frame-label{font-size:16px;font-weight:700;fill:#a9c5c2;letter-spacing:.5px} .foot{font-size:15px;fill:#a9c0be} .eyebrow{font-size:15px;fill:#76d5c3;font-weight:700;letter-spacing:2px}
+</style><rect class="bg" width="1600" height="940" rx="18"/>
+<text x="60" y="56" class="eyebrow" fill="#76d5c3" text-anchor="start">NEXUS  /  C4 ARCHITECTURE</text>
+<text x="60" y="105" class="heading" fill="#e9f4f3" text-anchor="start">03  Components</text>
+<text x="60" y="138" class="subtitle" fill="#b5cbc9" text-anchor="start">Responsibility boundaries in the company code; knowledge and model output do not grant authority.</text>
+<rect x="55" y="205" width="1490" height="530" rx="20" class="frame" fill="#122235" stroke="#496476" stroke-width="1.6" stroke-dasharray="7 7"/>
+<text x="75" y="235" class="frame-label" fill="#a9c5c2" text-anchor="start">COMPANY API  ·  selected components; effect checks also run in workers</text>
+<polyline points="305,335 390,335" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="390,335 381,330 381,340" fill="#80d8c7"/>
+<text x="329" y="320" class="edge-label" fill="#d6e8e4" text-anchor="start">scope</text>
+<polyline points="655,335 735,335" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="735,335 726,330 726,340" fill="#80d8c7"/>
+<text x="667" y="320" class="edge-label" fill="#d6e8e4" text-anchor="start">evidence</text>
+<polyline points="1005,335 1090,335" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="1090,335 1081,330 1081,340" fill="#80d8c7"/>
+<text x="1020" y="320" class="edge-label" fill="#d6e8e4" text-anchor="start">propose</text>
+<polyline points="520,405 520,540" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="520,540 515,531 525,531" fill="#80d8c7"/>
+<text x="530" y="480" class="edge-label" fill="#d6e8e4" text-anchor="start">ACL · provenance</text>
+<polyline points="865,405 865,540" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="865,540 860,531 870,531" fill="#80d8c7"/>
+<text x="875" y="480" class="edge-label" fill="#d6e8e4" text-anchor="start">goals · plans</text>
+<polyline points="1230,405 1230,540" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="1230,540 1225,531 1235,531" fill="#80d8c7"/>
+<text x="1240" y="480" class="edge-label" fill="#d6e8e4" text-anchor="start">recheck · persist</text>
+<rect x="75" y="270" width="230" height="135" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="93" y="297" class="tag" fill="#79d9c6" text-anchor="start">COMPONENT</text>
+<text x="93" y="327" class="box-title" fill="#e9f4f3" text-anchor="start">Identity &amp; scope</text>
+<text x="93" y="354" class="body" fill="#c1d4d3" text-anchor="start">Signed identity and current</text>
+<text x="93" y="376" class="body" fill="#c1d4d3" text-anchor="start">directory membership</text>
+<rect x="390" y="270" width="265" height="135" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="408" y="297" class="tag" fill="#79d9c6" text-anchor="start">COMPONENT</text>
+<text x="408" y="327" class="box-title" fill="#e9f4f3" text-anchor="start">Company Brain</text>
+<text x="408" y="354" class="body" fill="#c1d4d3" text-anchor="start">Sources · citations · ontology</text>
+<text x="408" y="376" class="body" fill="#c1d4d3" text-anchor="start">Access checked before bytes</text>
+<rect x="735" y="270" width="270" height="135" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="753" y="297" class="tag" fill="#79d9c6" text-anchor="start">COMPONENT</text>
+<text x="753" y="327" class="box-title" fill="#e9f4f3" text-anchor="start">Management</text>
+<text x="753" y="354" class="body" fill="#c1d4d3" text-anchor="start">Goals · charters · plans</text>
+<text x="753" y="376" class="body" fill="#c1d4d3" text-anchor="start">Owner decisions</text>
+<rect x="1090" y="270" width="300" height="135" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="1108" y="297" class="tag" fill="#79d9c6" text-anchor="start">COMPONENT</text>
+<text x="1108" y="327" class="box-title" fill="#e9f4f3" text-anchor="start">Action Harness</text>
+<text x="1108" y="354" class="body" fill="#c1d4d3" text-anchor="start">Authority · limits · intent</text>
+<text x="1108" y="376" class="body" fill="#c1d4d3" text-anchor="start">Unknown effects reconcile</text>
+<rect x="390" y="540" width="265" height="125" rx="15" class="data" fill="#263548" stroke="#8aa2b5" stroke-width="2"/>
+<text x="408" y="567" class="tag" fill="#79d9c6" text-anchor="start">DATA</text>
+<text x="408" y="597" class="box-title" fill="#e9f4f3" text-anchor="start">Protected sources</text>
+<text x="408" y="624" class="body" fill="#c1d4d3" text-anchor="start">Revision and evidence</text>
+<text x="408" y="646" class="body" fill="#c1d4d3" text-anchor="start">references</text>
+<rect x="735" y="540" width="270" height="125" rx="15" class="data" fill="#263548" stroke="#8aa2b5" stroke-width="2"/>
+<text x="753" y="567" class="tag" fill="#79d9c6" text-anchor="start">DATA</text>
+<text x="753" y="597" class="box-title" fill="#e9f4f3" text-anchor="start">Management records</text>
+<text x="753" y="624" class="body" fill="#c1d4d3" text-anchor="start">Company state</text>
+<text x="753" y="646" class="body" fill="#c1d4d3" text-anchor="start">and decisions</text>
+<rect x="1090" y="540" width="300" height="125" rx="15" class="data" fill="#263548" stroke="#8aa2b5" stroke-width="2"/>
+<text x="1108" y="567" class="tag" fill="#79d9c6" text-anchor="start">DATA</text>
+<text x="1108" y="597" class="box-title" fill="#e9f4f3" text-anchor="start">Journal &amp; execution</text>
+<text x="1108" y="624" class="body" fill="#c1d4d3" text-anchor="start">Costs · receipts · fences</text>
+<text x="1108" y="646" class="body" fill="#c1d4d3" text-anchor="start">DBOS dispatch identity</text>
+<path d="M60 842H1540" stroke="#405a65" stroke-width="1"/>
+<text x="60" y="874" class="foot" fill="#a9c0be" text-anchor="start">TARGET VIEW  ·  Lines describe intended boundaries, not release acceptance.</text>
+<text x="60" y="900" class="foot" fill="#a9c0be" text-anchor="start">Evidence: docs/company-system/ARCHITECTURE.md and the Nexus task board.</text>
+<text x="1540" y="900" class="foot" fill="#a9c0be" text-anchor="end">DRAVENIQ  /  NEXUS</text>
+</svg>

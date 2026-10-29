@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="940" viewBox="0 0 1600 940" role="img" aria-labelledby="title description">
+<title id="title">04  Action lifecycle</title><desc id="description">A proposed action receives an owner decision; authorized work reserves its cost and executes. Unknown effects are reconciled, while independent evidence is required before completion.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#80d8c7"/></marker></defs>
+<style>
+.bg{fill:#0b1422} .frame{fill:#122235;stroke:#496476;stroke-width:1.6;stroke-dasharray:7 7}
+.person{fill:#173b46;stroke:#60e2ca;stroke-width:2} .system{fill:#17382f;stroke:#60e2ca;stroke-width:2}
+.external{fill:#243044;stroke:#8093a6;stroke-width:2} .container{fill:#193344;stroke:#61cbbd;stroke-width:2}
+.component{fill:#1c3442;stroke:#61cbbd;stroke-width:2} .data{fill:#263548;stroke:#8aa2b5;stroke-width:2}
+.edge{fill:none;stroke:#80d8c7;stroke-width:2.3;stroke-linejoin:round} text{font-family:Inter,Arial,sans-serif;fill:#e9f4f3}
+.heading{font-size:37px;font-weight:700} .subtitle{font-size:19px;fill:#b5cbc9} .tag{font-size:13px;font-weight:700;letter-spacing:1.5px;fill:#79d9c6}
+.box-title{font-size:22px;font-weight:700} .body{font-size:16px;fill:#c1d4d3} .edge-label{font-size:15px;fill:#d6e8e4;paint-order:stroke;stroke:#0b1422;stroke-width:6px;stroke-linejoin:round}
+.frame-label{font-size:16px;font-weight:700;fill:#a9c5c2;letter-spacing:.5px} .foot{font-size:15px;fill:#a9c0be} .eyebrow{font-size:15px;fill:#76d5c3;font-weight:700;letter-spacing:2px}
+</style><rect class="bg" width="1600" height="940" rx="18"/>
+<text x="60" y="56" class="eyebrow" fill="#76d5c3" text-anchor="start">NEXUS  /  SUPPORTING DYNAMIC VIEW</text>
+<text x="60" y="105" class="heading" fill="#e9f4f3" text-anchor="start">04  Action lifecycle</text>
+<text x="60" y="138" class="subtitle" fill="#b5cbc9" text-anchor="start">Approval, dispatch and reconciliation are distinct; shown as intended behavior.</text>
+<polyline points="300,350 365,350" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="365,350 356,345 356,355" fill="#80d8c7"/>
+<text x="307" y="335" class="edge-label" fill="#d6e8e4" text-anchor="start">review</text>
+<polyline points="610,350 675,350" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="675,350 666,345 666,355" fill="#80d8c7"/>
+<text x="615" y="335" class="edge-label" fill="#d6e8e4" text-anchor="start">approve</text>
+<polyline points="920,350 985,350" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="985,350 976,345 976,355" fill="#80d8c7"/>
+<text x="935" y="335" class="edge-label" fill="#d6e8e4" text-anchor="start">queue</text>
+<polyline points="1110,405 1110,555" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="1110,555 1105,546 1115,546" fill="#80d8c7"/>
+<text x="1122" y="487" class="edge-label" fill="#d6e8e4" text-anchor="start">receipt</text>
+<polyline points="985,365 950,365 950,520 800,520 800,555" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="800,555 795,546 805,546" fill="#80d8c7"/>
+<text x="805" y="503" class="edge-label" fill="#d6e8e4" text-anchor="start">uncertain outcome</text>
+<polyline points="925,620 985,620" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="985,620 976,615 976,625" fill="#80d8c7"/>
+<text x="895" y="540" class="edge-label" fill="#d6e8e4" text-anchor="start">reconciled</text>
+<polyline points="1235,620 1290,620" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="1290,620 1281,615 1281,625" fill="#80d8c7"/>
+<text x="1240" y="603" class="edge-label" fill="#d6e8e4" text-anchor="start">passes</text>
+<rect x="55" y="275" width="245" height="130" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="73" y="302" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="73" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Proposed</text>
+<text x="73" y="359" class="body" fill="#c1d4d3" text-anchor="start">Exact action and</text>
+<text x="73" y="381" class="body" fill="#c1d4d3" text-anchor="start">evidence recorded</text>
+<rect x="365" y="275" width="245" height="130" rx="15" class="person" fill="#173b46" stroke="#60e2ca" stroke-width="2"/>
+<text x="383" y="302" class="tag" fill="#79d9c6" text-anchor="start">DECISION</text>
+<text x="383" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Owner decision</text>
+<text x="383" y="359" class="body" fill="#c1d4d3" text-anchor="start">Approve exact proposal</text>
+<text x="383" y="381" class="body" fill="#c1d4d3" text-anchor="start">or reject / let expire</text>
+<rect x="675" y="275" width="245" height="130" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="693" y="302" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="693" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Authorized</text>
+<text x="693" y="359" class="body" fill="#c1d4d3" text-anchor="start">Recheck policy and scope</text>
+<text x="693" y="381" class="body" fill="#c1d4d3" text-anchor="start">Reserve cost; enqueue</text>
+<rect x="985" y="275" width="250" height="130" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="1003" y="302" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="1003" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Executing</text>
+<text x="1003" y="359" class="body" fill="#c1d4d3" text-anchor="start">Persist intent before</text>
+<text x="1003" y="381" class="body" fill="#c1d4d3" text-anchor="start">a one-time effect</text>
+<rect x="675" y="555" width="250" height="130" rx="15" class="external" fill="#243044" stroke="#8093a6" stroke-width="2"/>
+<text x="693" y="582" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="693" y="612" class="box-title" fill="#e9f4f3" text-anchor="start">Outcome unknown</text>
+<text x="693" y="639" class="body" fill="#c1d4d3" text-anchor="start">Keep hold; reconcile</text>
+<text x="693" y="661" class="body" fill="#c1d4d3" text-anchor="start">No blind retry</text>
+<rect x="985" y="555" width="250" height="130" rx="15" class="component" fill="#1c3442" stroke="#61cbbd" stroke-width="2"/>
+<text x="1003" y="582" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="1003" y="612" class="box-title" fill="#e9f4f3" text-anchor="start">Verifying</text>
+<text x="1003" y="639" class="body" fill="#c1d4d3" text-anchor="start">Independent check</text>
+<text x="1003" y="661" class="body" fill="#c1d4d3" text-anchor="start">Inconclusive remains open</text>
+<rect x="1290" y="555" width="245" height="130" rx="15" class="system" fill="#17382f" stroke="#60e2ca" stroke-width="2"/>
+<text x="1308" y="582" class="tag" fill="#79d9c6" text-anchor="start">STATE</text>
+<text x="1308" y="612" class="box-title" fill="#e9f4f3" text-anchor="start">Completed</text>
+<text x="1308" y="639" class="body" fill="#c1d4d3" text-anchor="start">Evidence-backed</text>
+<text x="1308" y="661" class="body" fill="#c1d4d3" text-anchor="start">acceptance recorded</text>
+<path d="M60 842H1540" stroke="#405a65" stroke-width="1"/>
+<text x="60" y="874" class="foot" fill="#a9c0be" text-anchor="start">TARGET VIEW  ·  Lines describe intended boundaries, not release acceptance.</text>
+<text x="60" y="900" class="foot" fill="#a9c0be" text-anchor="start">Evidence: docs/company-system/ARCHITECTURE.md and the Nexus task board.</text>
+<text x="1540" y="900" class="foot" fill="#a9c0be" text-anchor="end">DRAVENIQ  /  NEXUS</text>
+</svg>

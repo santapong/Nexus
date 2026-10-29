@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="940" viewBox="0 0 1600 940" role="img" aria-labelledby="title description">
+<title id="title">02  Containers</title><desc id="description">Dashboard calls the opt-in company API. Separately configured DBOS workers use PostgreSQL, protected artifacts and guarded models. Builder isolation and owner email are unqualified target paths.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#80d8c7"/></marker></defs>
+<style>
+.bg{fill:#0b1422} .frame{fill:#122235;stroke:#496476;stroke-width:1.6;stroke-dasharray:7 7}
+.person{fill:#173b46;stroke:#60e2ca;stroke-width:2} .system{fill:#17382f;stroke:#60e2ca;stroke-width:2}
+.external{fill:#243044;stroke:#8093a6;stroke-width:2} .container{fill:#193344;stroke:#61cbbd;stroke-width:2}
+.component{fill:#1c3442;stroke:#61cbbd;stroke-width:2} .data{fill:#263548;stroke:#8aa2b5;stroke-width:2}
+.edge{fill:none;stroke:#80d8c7;stroke-width:2.3;stroke-linejoin:round} text{font-family:Inter,Arial,sans-serif;fill:#e9f4f3}
+.heading{font-size:37px;font-weight:700} .subtitle{font-size:19px;fill:#b5cbc9} .tag{font-size:13px;font-weight:700;letter-spacing:1.5px;fill:#79d9c6}
+.box-title{font-size:22px;font-weight:700} .body{font-size:16px;fill:#c1d4d3} .edge-label{font-size:15px;fill:#d6e8e4;paint-order:stroke;stroke:#0b1422;stroke-width:6px;stroke-linejoin:round}
+.frame-label{font-size:16px;font-weight:700;fill:#a9c5c2;letter-spacing:.5px} .foot{font-size:15px;fill:#a9c0be} .eyebrow{font-size:15px;fill:#76d5c3;font-weight:700;letter-spacing:2px}
+</style><rect class="bg" width="1600" height="940" rx="18"/>
+<text x="60" y="56" class="eyebrow" fill="#76d5c3" text-anchor="start">NEXUS  /  C4 ARCHITECTURE</text>
+<text x="60" y="105" class="heading" fill="#e9f4f3" text-anchor="start">02  Containers</text>
+<text x="60" y="138" class="subtitle" fill="#b5cbc9" text-anchor="start">Runtime boundaries for the supervised target; dashed boxes and paths still need qualification.</text>
+<rect x="55" y="205" width="1110" height="550" rx="20" class="frame" fill="#122235" stroke="#496476" stroke-width="1.6" stroke-dasharray="7 7"/>
+<text x="75" y="235" class="frame-label" fill="#a9c5c2" text-anchor="start">NEXUS SYSTEM  ·  runtime and storage boundaries</text>
+<polyline points="310,340 400,340" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="400,340 391,335 391,345" fill="#80d8c7"/>
+<text x="333" y="325" class="edge-label" fill="#d6e8e4" text-anchor="start">HTTP</text>
+<polyline points="645,340 790,340" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="790,340 781,335 781,345" fill="#80d8c7"/>
+<text x="667" y="325" class="edge-label" fill="#d6e8e4" text-anchor="start">DBOS queue</text>
+<polyline points="525,400 525,495 365,495 365,570" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="365,570 360,561 370,561" fill="#80d8c7"/>
+<text x="370" y="480" class="edge-label" fill="#d6e8e4" text-anchor="start">read · commit</text>
+<polyline points="915,400 915,480 675,480 675,570" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="675,570 670,561 680,561" fill="#80d8c7"/>
+<text x="696" y="463" class="edge-label" fill="#d6e8e4" text-anchor="start">persist references</text>
+<polyline points="810,400 810,720 365,720 365,695" fill="none" stroke="#80d8c7" stroke-width="2.3"/><polygon points="365,695 360,704 370,704" fill="#80d8c7"/>
+<text x="490" y="742" class="edge-label" fill="#d6e8e4" text-anchor="start">checkpoints · ledger</text>
+<polyline points="1040,320 1220,320" fill="none" stroke="#80d8c7" stroke-width="2.3" stroke-dasharray="7 6"/><polygon points="1220,320 1211,315 1211,325" fill="#80d8c7"/>
+<text x="1050" y="304" class="edge-label" fill="#d6e8e4" text-anchor="start">guarded SDK calls</text>
+<polyline points="1040,365 1115,365 1115,570" fill="none" stroke="#80d8c7" stroke-width="2.3" stroke-dasharray="7 6"/><polygon points="1115,570 1110,561 1120,561" fill="#80d8c7"/>
+<text x="1052" y="500" class="edge-label" fill="#d6e8e4" text-anchor="start">bounded build</text>
+<polyline points="1040,385 1185,385 1185,640 1220,640" fill="none" stroke="#80d8c7" stroke-width="2.3" stroke-dasharray="7 6"/><polygon points="1220,640 1211,635 1211,645" fill="#80d8c7"/>
+<text x="1220" y="550" class="edge-label" fill="#d6e8e4" text-anchor="start">delivery</text>
+<rect x="75" y="275" width="235" height="125" rx="15" class="container" fill="#193344" stroke="#61cbbd" stroke-width="2"/>
+<text x="93" y="302" class="tag" fill="#79d9c6" text-anchor="start">CONTAINER</text>
+<text x="93" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Dashboard</text>
+<text x="93" y="359" class="body" fill="#c1d4d3" text-anchor="start">React + Vite</text>
+<text x="93" y="381" class="body" fill="#c1d4d3" text-anchor="start">Owner interface</text>
+<rect x="400" y="275" width="245" height="125" rx="15" class="container" fill="#193344" stroke="#61cbbd" stroke-width="2"/>
+<text x="418" y="302" class="tag" fill="#79d9c6" text-anchor="start">CONTAINER</text>
+<text x="418" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Company API</text>
+<text x="418" y="359" class="body" fill="#c1d4d3" text-anchor="start">Litestar; opt-in</text>
+<text x="418" y="381" class="body" fill="#c1d4d3" text-anchor="start">No worker at startup</text>
+<rect x="790" y="275" width="250" height="125" rx="15" class="container" fill="#193344" stroke="#61cbbd" stroke-width="2"/>
+<text x="808" y="302" class="tag" fill="#79d9c6" text-anchor="start">CONTAINER</text>
+<text x="808" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">DBOS workers</text>
+<text x="808" y="359" class="body" fill="#c1d4d3" text-anchor="start">Explicitly configured</text>
+<text x="808" y="381" class="body" fill="#c1d4d3" text-anchor="start">Durable segments</text>
+<rect x="240" y="570" width="250" height="125" rx="15" class="data" fill="#263548" stroke="#8aa2b5" stroke-width="2"/>
+<text x="258" y="597" class="tag" fill="#79d9c6" text-anchor="start">DATA</text>
+<text x="258" y="627" class="box-title" fill="#e9f4f3" text-anchor="start">PostgreSQL</text>
+<text x="258" y="654" class="body" fill="#c1d4d3" text-anchor="start">Work · approvals · ledger</text>
+<text x="258" y="676" class="body" fill="#c1d4d3" text-anchor="start">Transaction + enqueue</text>
+<rect x="550" y="570" width="250" height="125" rx="15" class="data" fill="#263548" stroke="#8aa2b5" stroke-width="2"/>
+<text x="568" y="597" class="tag" fill="#79d9c6" text-anchor="start">DATA</text>
+<text x="568" y="627" class="box-title" fill="#e9f4f3" text-anchor="start">Artifact storage</text>
+<text x="568" y="654" class="body" fill="#c1d4d3" text-anchor="start">Bounded bytes and</text>
+<text x="568" y="676" class="body" fill="#c1d4d3" text-anchor="start">protected references</text>
+<rect x="865" y="570" width="250" height="125" rx="15" class="container" fill="#193344" stroke="#61cbbd" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="883" y="597" class="tag" fill="#79d9c6" text-anchor="start">CONTAINER</text>
+<text x="883" y="627" class="box-title" fill="#e9f4f3" text-anchor="start">Build + verify</text>
+<text x="883" y="654" class="body" fill="#c1d4d3" text-anchor="start">Separate bounded jobs</text>
+<text x="883" y="676" class="body" fill="#c1d4d3" text-anchor="start">ARM64 unqualified</text>
+<rect x="1220" y="275" width="310" height="125" rx="15" class="external" fill="#243044" stroke="#8093a6" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="1238" y="302" class="tag" fill="#79d9c6" text-anchor="start">EXTERNAL</text>
+<text x="1238" y="332" class="box-title" fill="#e9f4f3" text-anchor="start">Model providers</text>
+<text x="1238" y="359" class="body" fill="#c1d4d3" text-anchor="start">OpenAI / Google adapters</text>
+<text x="1238" y="381" class="body" fill="#c1d4d3" text-anchor="start">Live calls unqualified</text>
+<rect x="1220" y="575" width="310" height="125" rx="15" class="external" fill="#243044" stroke="#8093a6" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="1238" y="602" class="tag" fill="#79d9c6" text-anchor="start">EXTERNAL</text>
+<text x="1238" y="632" class="box-title" fill="#e9f4f3" text-anchor="start">Owner email</text>
+<text x="1238" y="659" class="body" fill="#c1d4d3" text-anchor="start">Optional delivery target</text>
+<text x="1238" y="681" class="body" fill="#c1d4d3" text-anchor="start">External delivery unqualified</text>
+<path d="M60 842H1540" stroke="#405a65" stroke-width="1"/>
+<text x="60" y="874" class="foot" fill="#a9c0be" text-anchor="start">TARGET VIEW  ·  Lines describe intended boundaries, not release acceptance.</text>
+<text x="60" y="900" class="foot" fill="#a9c0be" text-anchor="start">Evidence: docs/company-system/ARCHITECTURE.md and the Nexus task board.</text>
+<text x="1540" y="900" class="foot" fill="#a9c0be" text-anchor="end">DRAVENIQ  /  NEXUS</text>
+</svg>

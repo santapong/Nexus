@@ -32,7 +32,7 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 | N1 | Trial Waypoint's project/task readback, dependencies, accepted evidence, stale conflicts and uncertain-create recovery in isolated fixtures; separately verify owner view. | Coordinator pending specialist | — | Ready | 28 October: ten isolated ASGI/PostgreSQL 17 checks and two additional real-ASGI/PG lost-response cases passed. Waypoint browser reached Google sign-in and was handed to the owner; owner view and Nexus migration remain unverified. |
 | N2 | Verify owner setup and signed-in Knowledge → citation → saved goal journey. | Owner experience specialist | N0; owner password entry | Backlog | 28 October metadata-only inspection: invitation expired and unused, password absent. Local API and frontend ports did not respond. Restore/reissue only at the actual owner handoff; password entry belongs to the owner. |
 | N3 | Validate current planner/coder version identity and complete a fresh integrated Nexus workflow with truthful accounting. | Coordinator | N0 | Done | Fresh v13 on the changed production source passed planning→coding→publication with two SDK mock requests. A separate restricted read-only rollback audit confirmed both reconciled synthetic costs totaling USD0.000004 and no live leases. V12's earlier 503 remains unexplained and preserved; live providers and native execution remain N5/N6. |
-| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | Fresh unit coverage on backend commit `511bd5a` passed 5,828 cases and measured 85,624 / 133,807 statements (63.990673%, displayed 64%); the unchanged 80% gate failed. Fifteen later action-pin tests passed separately and are not included. Pursue meaningful unit and integration coverage on coherent source; keep their gate results distinct. |
+| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | The frozen candidate passed 5,879 unit cases. The prior full unit coverage on `511bd5a` was 63.990673%; a source-verified incremental union with 51 later focused tests is 64.145796%, still below 80% and not a fresh full-suite coverage gate. Pursue meaningful unit and integration coverage and keep their gate results distinct. |
 | N5 | Qualify multiple providers, actual usage and persistent Bangkok-day budget control. | Coordinator with model-gateway specialist | N0; applicable live-provider authorization | Active | Fresh v4b private-PG tests passed for two mock providers with over-budget denial and for a separately issued unknown result with replay denied; restricted read-only audits confirmed retained accounting. Live provider quality, actual billing and real midnight crossover remain unproven. |
 | N6 | Qualify isolated Nexus Python/Node build, independent verification, cancellation/recovery and ARM64. | Coordinator with release-gap specialist | N0, accepted job contract | Active | The committed source and five build wheels are verified; 13 candidate test wheels passed metadata review, an offline hash-enforced install and the fixed 12-case backend test. Node/image inputs, a new action, native execution and ARM64 remain unqualified. |
 | N7 | Connect an accepted Nexus goal to cited strategy and a bounded management plan. | Strategy specialist | N2, N3 | Backlog | Preserve mandate, current evidence, approvals and lifetime caps. |
@@ -43,6 +43,38 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 
 ## Current coordination evidence
 
+- The current README and company architecture now use non-Mermaid, editable
+  SVG views for C4 system context, containers and components, plus a supporting
+  action lifecycle. The [detailed guide](docs/company-system/ARCHITECTURE_C4_DETAIL.md)
+  maps technologies and communication to source and distinguishes unqualified
+  targets. SVG/XML/link checks and local raster inspection passed; GitHub
+  rendering has not been verified. Historical diagrams remain labeled history.
+- Added 36 focused cases for Brain ACL changes, budget projections, protected
+  result decoding, and generated-report recipient/freshness protection. With 15
+  earlier action-pin cases, 51 tests passed under coverage on a frozen candidate;
+  a separate 60-case checker/plugin compatibility run passed. The four new
+  files passed strict mypy; full candidate strict mypy passed on 1,808 source
+  files, and broad Ruff, format and the legacy migration guard passed. Mocked
+  sessions are not PostgreSQL concurrency or transaction evidence.
+- A verified path/line-set union of the prior 5,828-case unit coverage and the
+  51 later cases measured 86,058 / 134,160 statements (64.145796%, displayed
+  64%). This incremental estimate is below 80%, includes test files in the
+  denominator, and is not a fresh whole-suite coverage result or PR-gate pass.
+  Baseline source bytes and original coverage data were preserved. Merge receipt:
+  `/var/tmp/nexus-coverage-incremental-20261029-1/merge-receipt.json`.
+- A fresh uninstrumented full candidate run collected 5,879 cases. The first two
+  slices passed 456 cases; the third was stopped during host swap activity with
+  memory stalls. Its 123 progress dots are not a completed case count. The scope
+  exited `-15`, with no OOM or remaining owned processes. The full regression is
+  initially incomplete; preserve `/var/tmp/nexus-incremental-full-unit-20261029-1/slice-003.json`.
+  After 60 seconds without coincident swap and memory stalls, the full third
+  slice was rerun in a separate scope and the verified run completed: 5,879
+  passed, zero failures or skips, in 26 slices. The retry coordinator exited
+  while slice 3 was running; that owned scope completed and was independently
+  checked before dispatch resumed. All exact owned scope trees are empty.
+  Source and structural test identities were verified; runtime dependencies
+  and UUID parameter values were not individually byte-pinned. This run did
+  not collect coverage. Evidence: `/var/tmp/nexus-incremental-unit-retry-20261029-1/`.
 - The fresh unit-only coverage retry completed on backend commit `511bd5a`:
   5,828 passed, no failures or skips, across 26 serial scopes. The verified
   coverage report measured 85,624 / 133,807 statements (63.990673%, displayed
