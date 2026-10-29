@@ -1,5 +1,7 @@
 # NEXUS + KeepSave Integration Guide
 
+> **Historical integration guide: the design and setup below are unqualified for the current Nexus release.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
+
 ![KeepSave](https://img.shields.io/badge/keepsave-secrets%20vault-7c3aed?logo=keybase&logoColor=fff)
 ![SOPS](https://img.shields.io/badge/SOPS-AGE%20encryption-0891b2)
 ![OAuth2](https://img.shields.io/badge/oauth-2.0-3c873a?logo=openid&logoColor=fff)

@@ -50,6 +50,11 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
   coverage report or 80% pass resulted. The stopped receipt is
   `/var/tmp/nexus-v8-unitcov-20261029-1/slice-001.json`; a fresh retry packet
   starts from empty data at `/var/tmp/nexus-v8-unitcov-20261029-2/REVIEW.md`.
+- The independently reviewed retry recollected 5,828 cases and passed its first
+  slice (211 cases, no failures or skips); its next admission paused for CPU
+  headroom. The accepted coverage chain is retained in that retry packet. This
+  is partial unit coverage for `511bd5a`, not a whole-suite coverage result or
+  evidence for the 15 later tests.
 - Added 15 unit cases for exact native author/verifier action pins and rejection
   of changed identities, report selectors and author references. Focused tests,
   Ruff, formatting and strict mypy passed; these cases were not in the frozen

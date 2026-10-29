@@ -1,4 +1,6 @@
 # ASSISTANT.md
+
+> **Historical proposal: the personal assistant direction is preserved for reference and does not describe the current Nexus delivery target.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
 ## NEXUS → "Co" — Personal Assistant Blueprint
 
 > **Status: PROPOSED blueprint — design only, no source code changed.**

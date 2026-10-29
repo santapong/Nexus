@@ -1,4 +1,6 @@
 # REDESIGN.md
+
+> **Historical proposal: this blueprint predates the current Company Brain architecture and is not the current implementation status.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
 ## NEXUS — Modernization Blueprint (Transport · Harness · Loop · New-Tech Scan)
 
 > **Status: PROPOSED blueprint — design only, no source code changed.**

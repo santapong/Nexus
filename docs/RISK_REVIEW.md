@@ -1,5 +1,7 @@
 # RISK_REVIEW.md — Phase 5 In Progress Risk Assessment (2026-03-19)
 
+> **Historical risk assessment: this review is not current release security evidence or approval.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
+
 > Review of §23 Prevention Rules against actual implementation status.
 > Phase 5 IN PROGRESS — Track A (Production SaaS) complete, Track B (Platform Intelligence) complete,
 > Track C (Federation & Ecosystem) in progress.

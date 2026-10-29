@@ -1,5 +1,11 @@
-# NEXUS — Agentic AI Company as a Service
+# Nexus — Company Brain and Action Harness
 ## CLAUDE.md — Master Project Document
+
+> **Direction and status, 2026-10-29:** Nexus is DravenIQ's internal supervised
+> company system. The [task board](TASKS.md) records current delivery and
+> evidence. The historical Company-as-a-Service vision and architecture below
+> are retained for context; their phase labels and feature claims are not current
+> release status. Coding and operational policies remain applicable.
 
 > **Current owner-directed delivery, 2026-10-16:** [Nexus-focused plan](docs/company-system/NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
 > and [current progress](docs/company-system/RELEASE_STATUS_2026-10-16.md) govern
@@ -51,6 +57,9 @@
 
 ## 1. Project Vision
 
+**Historical vision:** the Company-as-a-Service description in this section is
+superseded for the current Nexus-only release by the owner-directed plan above.
+
 **NEXUS** is an Agentic AI Company-as-a-Service platform.
 
 The core concept: a digital company where every department is staffed by an AI agent.
@@ -84,6 +93,8 @@ These three protocols never compete. Confusing their roles is the #1 integration
 ---
 
 ## 2. Current Status & Phase
+
+**Historical phase snapshot:** see [TASKS.md](TASKS.md) for current status.
 
 | Item | Status |
 |------|--------|

@@ -3,6 +3,10 @@
 
 ## [2026-10-29] — Clarify supervised Nexus and action bindings
 
+- Reviewed the tracked documentation inventory and marked legacy SaaS plans,
+  diagrams, integration guides and old risk assessments as historical or
+  unqualified, retaining their original content. The current Nexus task board
+  remains the source for delivery status; old StockFlow examples are optional.
 - Replaced the outdated company-as-a-service entry point with the Nexus-only
   supervised cycle, current evidence and release boundaries. Updated the
   company architecture and decision/scheduling diagram; labeled legacy
@@ -13,6 +17,8 @@
 - A fresh committed-backend coverage run collected 5,828 cases but stopped its
   first slice on host swap activity with memory stalls. The process and scope
   were cleaned up; the 80% gate remains open and no new coverage total is claimed.
+- A separately prepared retry passed 211 cases in its first slice before the
+  next slice paused on CPU admission. The retained coverage is partial.
 
 ## [2026-10-29] — Preserve qualification budget boundaries
 

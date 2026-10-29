@@ -1,6 +1,11 @@
 # BACKLOG.md
 ## NEXUS — Scope Creep Capture
 
+> **Current coordination:** [TASKS.md](../TASKS.md) is the canonical Nexus
+> delivery board. The dated program entries below preserve historical scope and
+> are not live completion states. StockFlow is an optional later integration
+> test; the first accepted cycle uses Nexus itself.
+
 > **Every idea that is NOT in the current phase goes here.**
 > Do not build it. Do not design it further. Just capture it.
 > Review this list at the start of each new phase.
@@ -86,6 +91,7 @@ presentation output, React-Flow Co canvas, frontend modernization). New totals: 
 ---
 
 ### BACKLOG-073 — M5 StockFlow customer-readiness operating cycle
+**Historical scenario:** superseded by the Nexus-owned operating cycle; see the current task board.
 **Suggested phase:** M5
 **Added by:** Codex
 **Date:** 2026-10-05
@@ -96,6 +102,7 @@ presentation output, React-Flow Co canvas, frontend modernization). New totals: 
 ---
 
 ### BACKLOG-072 — M4 one native bounded Pi builder
+**Historical scenario:** qualify a representative Nexus build; StockFlow checks are optional later.
 **Suggested phase:** M4
 **Added by:** Codex
 **Date:** 2026-10-05

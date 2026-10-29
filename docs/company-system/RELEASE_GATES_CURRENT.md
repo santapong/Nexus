@@ -58,7 +58,11 @@ passes source ingestion and plan/action authorization, then stops at a fixture
 runtime-recipe mismatch. Its unissued hold is preserved; actual fault qualification
 remains open.
 
-| Requirement | Strongest saved evidence | Remaining proof for release |
+The following table records the historical 16 October scenario and its then-known
+gaps; StockFlow-specific rows are optional scenario history, not current release
+requirements. See the task board for the current Nexus-only work.
+
+| Historical requirement | Saved evidence at the time | Then-identified gap |
 | --- | --- | --- |
 | Governed durable runtime and US$5/day | [M1 offline acceptance](M1_OFFLINE_ACCEPTANCE_2026-10-14.md), real PG/DBOS governance/recovery, permanent quotas/unknown holds | Actual configured provider/billing/operating policy and current integrated release profile |
 | Evidence-backed Company Brain | [M2 offline acceptance](M2_OFFLINE_ACCEPTANCE_2026-10-14.md), source/context/privacy/API pack;29/30/allcritical; [actual strategy source qualification](STRATEGY_SOURCE_INPUTS_CHECKPOINT_2026-10-15.md): valid protected READ, spliced-byte and final grant-expiry denials | Genuine model answer quality and full current company inputs; failed B06 remains visible; native strategy/goal proof remains separate |
@@ -73,7 +77,7 @@ remains open.
 | Full StockFlow cycle | [Nominated source manifest](STOCKFLOW_SOURCE_MANIFEST_v1.json), native mechanical pieces, [closed cycle foundation](CYCLE_ADMISSION_CHECKPOINT_2026-10-15.md), [StrategyBrief pure checks/action ABI](STRATEGY_BRIEF_CHECKPOINT_2026-10-15.md), [actual native Strategy publication/proof](STRATEGY_NATIVE_PUBLICATION_PG_CHECKPOINT_2026-10-15.md), [actual current-owner proof](STRATEGY_OWNER_CURRENT_PROOF_PG_CHECKPOINT_2026-10-15.md): repeated read and current READ/blocked/final credential denials; pure P/C drafts integrated | Exact owner choice/full revision2, then native patch→independent checks→native presentation/support→owner report/email in one actual full-goal lineage, genuine model quality |
 | Oversight modes | Native exact approval/pause/cancellation and immutable history | Explicit owner promotion only after reviewed stable operation; Supervised first |
 
-## Current next work
+## Historical next work (16 October)
 
 Source5's parent expiry/recovery pass, while cancellation fails the original
 retirement bound despite a working native guard. Preserve every used namespace,

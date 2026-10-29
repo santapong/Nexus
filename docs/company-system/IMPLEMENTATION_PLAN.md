@@ -7,6 +7,10 @@ project. Existing M0–M6 functional/safety exits remain; no StockFlow product w
 or release is required. Historical documentation-only status below is not the
 current implementation state.
 
+**Status note, 2026-10-29:** Milestone descriptions and functional exits remain
+useful, but the dated status labels and StockFlow scenario below are historical.
+Use [TASKS.md](../../TASKS.md) for current Nexus work and evidence.
+
 **Date:** 2026-10-05. **Status:** documentation delivered; runtime milestones unimplemented.\
 Baseline: `6a8c8ef15e522aaa563d53776aef8dedc3209fcf`. Target: [SDD v0.2](../sdd/NEXUS_SDD_v0.2.md). Diagrams: [architecture](ARCHITECTURE.md).
 

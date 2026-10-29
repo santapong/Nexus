@@ -1,4 +1,6 @@
 # CREATIVE_ROADMAP.md
+
+> **Historical ideas: this post-GA roadmap is not the current Nexus delivery plan or evidence of released features.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
 ## NEXUS — Post-GA Horizon (v1.1+)
 
 > **Purpose.** Document the ambitious, novel, and slightly weird features that

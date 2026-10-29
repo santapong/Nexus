@@ -1,4 +1,6 @@
 # PROJECT_COMPLETION_PLAN.md
+
+> **Historical roadmap: this phase and GA plan predates the Company Brain direction and is not the current delivery plan.** See the [current company architecture](company-system/ARCHITECTURE.md) and [Nexus task board](../TASKS.md) for the current direction and tracked evidence.
 ## NEXUS — Path From Phase 8 to General Availability
 
 > **Purpose.** Consolidate every remaining work item from `BACKLOG.md`, `IDEAS.md`,
