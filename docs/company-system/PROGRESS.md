@@ -1,8 +1,9 @@
 # Nexus implementation progress
 
 **Current checkpoint, 2026-10-29:** The [task board](../../TASKS.md) records the
-pushed feature checkpoint and current work. On the committed backend, 5,828 unit
-cases passed without coverage; the 80% coverage requirement remains open. An
+pushed feature checkpoint and current work. On backend commit `511bd5a`, all
+5,828 unit cases passed under coverage, but coverage was 64.0%, below the 80%
+requirement. Fifteen later focused tests passed separately. An
 isolated planner-to-coder-to-publication workflow passed with mock SDK requests;
 signed-in owner acceptance, real providers, a representative independent build
 and the complete Nexus operating cycle remain unverified. Earlier dated results

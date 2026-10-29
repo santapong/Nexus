@@ -56,9 +56,10 @@ As of the 29 October 2026 development checkpoint:
 - A planner-to-coder-to-publication workflow passed on isolated PostgreSQL/DBOS
   using two mock SDK requests; the separate accounting audit passed. This is not
   evidence of live-provider quality or a complete owner-to-report cycle.
-- The committed backend passed 5,828 unit cases without coverage. The previous
-  source cohort's combined coverage was 64.54%, below the unchanged 80% gate.
-  The [task board](TASKS.md) records the current source and validation status.
+- On backend commit `511bd5a`, all 5,828 unit cases passed under coverage, but
+  unit coverage was 64.0%, below the unchanged 80% gate. Fifteen later action-pin
+  tests passed separately and are not included in that coverage result. The
+  [task board](TASKS.md) records the current source and validation status.
 - Signed-in owner acceptance, a representative independently verified Nexus
   build, real provider qualification and whole-cycle reporting remain open.
 - Private ARM64 operation, independent restore, rollback and a 24-hour soak remain

@@ -3,6 +3,10 @@
 
 ## [2026-10-29] — Clarify supervised Nexus and action bindings
 
+- The fresh unit coverage retry completed on backend commit `511bd5a`: 5,828
+  passed with no failures or skips, but 85,624 / 133,807 statements (64.0%)
+  were covered, below the unchanged 80% requirement. Fifteen later action-pin
+  cases passed separately and are not included in that coverage result.
 - Reviewed the tracked documentation inventory and marked legacy SaaS plans,
   diagrams, integration guides and old risk assessments as historical or
   unqualified, retaining their original content. The current Nexus task board

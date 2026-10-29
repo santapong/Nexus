@@ -32,7 +32,7 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 | N1 | Trial Waypoint's project/task readback, dependencies, accepted evidence, stale conflicts and uncertain-create recovery in isolated fixtures; separately verify owner view. | Coordinator pending specialist | — | Ready | 28 October: ten isolated ASGI/PostgreSQL 17 checks and two additional real-ASGI/PG lost-response cases passed. Waypoint browser reached Google sign-in and was handed to the owner; owner view and Nexus migration remain unverified. |
 | N2 | Verify owner setup and signed-in Knowledge → citation → saved goal journey. | Owner experience specialist | N0; owner password entry | Backlog | 28 October metadata-only inspection: invitation expired and unused, password absent. Local API and frontend ports did not respond. Restore/reissue only at the actual owner handoff; password entry belongs to the owner. |
 | N3 | Validate current planner/coder version identity and complete a fresh integrated Nexus workflow with truthful accounting. | Coordinator | N0 | Done | Fresh v13 on the changed production source passed planning→coding→publication with two SDK mock requests. A separate restricted read-only rollback audit confirmed both reconciled synthetic costs totaling USD0.000004 and no live leases. V12's earlier 503 remains unexplained and preserved; live providers and native execution remain N5/N6. |
-| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | Fresh exact-`511bd5a` coverage collected 5,828 cases, but slice 1 stopped on simultaneous host swap activity and memory stalls; its scope was cleaned up and the gate remains unmeasured on this source. A separate 15-case native action-pin unit test passes, with focused Ruff and strict mypy. Retry the full coverage chain on an independently admitted host; the old 64.539840% combined figure belongs to a different source. |
+| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | Fresh unit coverage on backend commit `511bd5a` passed 5,828 cases and measured 85,624 / 133,807 statements (63.990673%, displayed 64%); the unchanged 80% gate failed. Fifteen later action-pin tests passed separately and are not included. Pursue meaningful unit and integration coverage on coherent source; keep their gate results distinct. |
 | N5 | Qualify multiple providers, actual usage and persistent Bangkok-day budget control. | Coordinator with model-gateway specialist | N0; applicable live-provider authorization | Active | Fresh v4b private-PG tests passed for two mock providers with over-budget denial and for a separately issued unknown result with replay denied; restricted read-only audits confirmed retained accounting. Live provider quality, actual billing and real midnight crossover remain unproven. |
 | N6 | Qualify isolated Nexus Python/Node build, independent verification, cancellation/recovery and ARM64. | Coordinator with release-gap specialist | N0, accepted job contract | Active | The committed source and five build wheels are verified; 13 candidate test wheels passed metadata review, an offline hash-enforced install and the fixed 12-case backend test. Node/image inputs, a new action, native execution and ARM64 remain unqualified. |
 | N7 | Connect an accepted Nexus goal to cited strategy and a bounded management plan. | Strategy specialist | N2, N3 | Backlog | Preserve mandate, current evidence, approvals and lifetime caps. |
@@ -43,6 +43,14 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 
 ## Current coordination evidence
 
+- The fresh unit-only coverage retry completed on backend commit `511bd5a`:
+  5,828 passed, no failures or skips, across 26 serial scopes. The verified
+  coverage report measured 85,624 / 133,807 statements (63.990673%, displayed
+  as 64%) and exited below the unchanged 80% threshold. Reaching 80% at that
+  denominator requires 21,422 additional unique covered statements. The report
+  scope was confirmed empty, with no OOM. Local dependency bytes are not fully
+  pinned to CI. The 15 later action-pin tests are not in this coverage cohort.
+  Receipt: `/var/tmp/nexus-v8-unitcov-20261029-2/coverage-gate.json`.
 - On 29 October the fresh coverage run on commit `511bd5a` collected 5,828
   cases across 437 modules. Its first slice stopped during host swap activity
   with memory stalls; 83 progress dots are not a completed test count. The
