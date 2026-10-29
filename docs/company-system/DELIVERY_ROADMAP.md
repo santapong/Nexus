@@ -1,5 +1,11 @@
 # Nexus feature delivery roadmap and estimate
 
+**Current planning status, 2026-10-29:** No release date is committed. The
+[task board](../../TASKS.md) is the current source of task states and evidence.
+The estimates and target dates below are historical planning assumptions, not
+an updated forecast; re-estimate after the Nexus-owned integrated cycle and a
+representative ARM64 build have current evidence.
+
 **Owner-directed reset, 2026-10-16:** [Nexus-focused delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
 is current. StockFlow is optional later testing. The next reviewable Nexus owner
 journey has a1–2 focused-working-day planning target; full release is re-estimated

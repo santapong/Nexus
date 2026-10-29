@@ -1,5 +1,13 @@
 # Nexus implementation progress
 
+**Current checkpoint, 2026-10-29:** The [task board](../../TASKS.md) records the
+pushed feature checkpoint and current work. On the committed backend, 5,828 unit
+cases passed without coverage; the 80% coverage requirement remains open. An
+isolated planner-to-coder-to-publication workflow passed with mock SDK requests;
+signed-in owner acceptance, real providers, a representative independent build
+and the complete Nexus operating cycle remain unverified. Earlier dated results
+below remain historical evidence, not current release acceptance.
+
 **Resumed at the owner's request on 2026-10-28.** The supervised release remains
 incomplete. The canonical current work board is [Nexus tasks](../../TASKS.md).
 The 17 October pause and checkpoint below are historical. On 28 October a fresh

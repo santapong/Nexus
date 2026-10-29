@@ -32,7 +32,7 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 | N1 | Trial Waypoint's project/task readback, dependencies, accepted evidence, stale conflicts and uncertain-create recovery in isolated fixtures; separately verify owner view. | Coordinator pending specialist | — | Ready | 28 October: ten isolated ASGI/PostgreSQL 17 checks and two additional real-ASGI/PG lost-response cases passed. Waypoint browser reached Google sign-in and was handed to the owner; owner view and Nexus migration remain unverified. |
 | N2 | Verify owner setup and signed-in Knowledge → citation → saved goal journey. | Owner experience specialist | N0; owner password entry | Backlog | 28 October metadata-only inspection: invitation expired and unused, password absent. Local API and frontend ports did not respond. Restore/reissue only at the actual owner handoff; password entry belongs to the owner. |
 | N3 | Validate current planner/coder version identity and complete a fresh integrated Nexus workflow with truthful accounting. | Coordinator | N0 | Done | Fresh v13 on the changed production source passed planning→coding→publication with two SDK mock requests. A separate restricted read-only rollback audit confirmed both reconciled synthetic costs totaling USD0.000004 and no live leases. V12's earlier 503 remains unexplained and preserved; live providers and native execution remain N5/N6. |
-| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | Repaired reconciled candidate passed 5,822 unit tests and two synthetic N5 PG integrations; exploratory combined coverage is 64.539840%, below 80%. Unit-run dependency bytes were not fully pinned. Add meaningful integrations and preserve earlier cohorts separately. |
+| N4 | Run combined source regression and meaningful same-cohort coverage at the unchanged 80% threshold; resolve demonstrated failures. | Coordinator with specialists | N0, N3 | Active | Fresh exact-`511bd5a` coverage collected 5,828 cases, but slice 1 stopped on simultaneous host swap activity and memory stalls; its scope was cleaned up and the gate remains unmeasured on this source. A separate 15-case native action-pin unit test passes, with focused Ruff and strict mypy. Retry the full coverage chain on an independently admitted host; the old 64.539840% combined figure belongs to a different source. |
 | N5 | Qualify multiple providers, actual usage and persistent Bangkok-day budget control. | Coordinator with model-gateway specialist | N0; applicable live-provider authorization | Active | Fresh v4b private-PG tests passed for two mock providers with over-budget denial and for a separately issued unknown result with replay denied; restricted read-only audits confirmed retained accounting. Live provider quality, actual billing and real midnight crossover remain unproven. |
 | N6 | Qualify isolated Nexus Python/Node build, independent verification, cancellation/recovery and ARM64. | Coordinator with release-gap specialist | N0, accepted job contract | Active | The committed source and five build wheels are verified; 13 candidate test wheels passed metadata review, an offline hash-enforced install and the fixed 12-case backend test. Node/image inputs, a new action, native execution and ARM64 remain unqualified. |
 | N7 | Connect an accepted Nexus goal to cited strategy and a bounded management plan. | Strategy specialist | N2, N3 | Backlog | Preserve mandate, current evidence, approvals and lifetime caps. |
@@ -43,6 +43,21 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 
 ## Current coordination evidence
 
+- On 29 October the fresh coverage run on commit `511bd5a` collected 5,828
+  cases across 437 modules. Its first slice stopped during host swap activity
+  with memory stalls; 83 progress dots are not a completed test count. The
+  process exited `-15`, no OOM occurred and the owned scope was empty. No new
+  coverage report or 80% pass resulted. The stopped receipt is
+  `/var/tmp/nexus-v8-unitcov-20261029-1/slice-001.json`; a fresh retry packet
+  starts from empty data at `/var/tmp/nexus-v8-unitcov-20261029-2/REVIEW.md`.
+- Added 15 unit cases for exact native author/verifier action pins and rejection
+  of changed identities, report selectors and author references. Focused tests,
+  Ruff, formatting and strict mypy passed; these cases were not in the frozen
+  `511bd5a` coverage attempt. No production code changed.
+- The README, current company architecture diagrams and status pointers now
+  describe the Nexus-only supervised target, distinguish decisions from later
+  scheduling, and label legacy plans as historical. A repository-native SVG
+  banner was added. Diagrams were source-checked but not rendered in GitHub.
 - Feature checkpoint `361c562` was committed and pushed to
   `origin/feat/company-foundation`; the remote ref was read back at the same
   commit. This is a development checkpoint, not a PR or release. Its 80%

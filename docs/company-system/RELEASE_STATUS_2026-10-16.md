@@ -1,5 +1,9 @@
 # Nexus — current product progress
 
+> **Status note, 2026-10-29:** This is a dated product checkpoint. Use the
+> [task board](../../TASKS.md) for current work and evidence; no release date or
+> completed supervised release is established by this document.
+
 **Resumed at the owner's request on 2026-10-28; no release completion.**
 Current task states and 28 October checks are in the [local Nexus task board](../../TASKS.md).
 The detailed 17 October results below are historical, except where identified as

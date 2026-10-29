@@ -1,7 +1,13 @@
-# ARCHITECTURE.md — NEXUS System Architecture & Design Fundamentals
+# ARCHITECTURE.md — Historical NEXUS Architecture & Design Fundamentals
+
+> **Historical architecture:** this document describes the earlier Kafka-based
+> Company-as-a-Service direction. It is retained as design and implementation
+> history, not a claim of current deployment or supervised-release readiness.
+> For the current Nexus-only direction, see the [company architecture](company-system/ARCHITECTURE.md)
+> and [task board](../TASKS.md).
 
 > This document explains how NEXUS works at a systems level.
-> For coding rules, see [AGENTS.md](AGENTS.md). For the full spec, see [CLAUDE.md](CLAUDE.md).
+> For coding rules, see [AGENTS.md](../AGENTS.md). For the earlier project spec, see [CLAUDE.md](../CLAUDE.md).
 > For decision rationale, see [DECISIONS.md](DECISIONS.md).
 
 ---

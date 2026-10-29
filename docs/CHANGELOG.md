@@ -1,6 +1,19 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-29] — Clarify supervised Nexus and action bindings
+
+- Replaced the outdated company-as-a-service entry point with the Nexus-only
+  supervised cycle, current evidence and release boundaries. Updated the
+  company architecture and decision/scheduling diagram; labeled legacy
+  architecture and old estimates as historical. Added the Nexus SVG banner.
+- Added 15 focused tests for exact native author/verifier action pins, changed
+  identities and evidence, and the separation between matching pins and an owner
+  decision. Focused tests, Ruff and strict mypy passed; no production code changed.
+- A fresh committed-backend coverage run collected 5,828 cases but stopped its
+  first slice on host swap activity with memory stalls. The process and scope
+  were cleaned up; the 80% gate remains open and no new coverage total is claimed.
+
 ## [2026-10-29] — Preserve qualification budget boundaries
 
 - Pushed development checkpoint `361c562` to `feat/company-foundation`; the

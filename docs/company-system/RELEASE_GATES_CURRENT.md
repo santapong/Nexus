@@ -1,5 +1,9 @@
 # Supervised release evidence index
 
+> **Status note, 2026-10-29:** The evidence below is dated history. The
+> [task board](../../TASKS.md) is the current coordination record. A saved
+> source check or older experiment does not establish current release readiness.
+
 **Current scope, 2026-10-16:** [Nexus-only delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md)
 and [product progress](RELEASE_STATUS_2026-10-16.md) are the owner-facing plan.
 StockFlow evidence below is retained optional scenario history, not a release
