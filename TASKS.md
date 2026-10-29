@@ -43,6 +43,11 @@ attempt plus one diagnosis-driven revision; document any additional attempt.
 
 ## Current coordination evidence
 
+- Feature checkpoint `361c562` was committed and pushed to
+  `origin/feat/company-foundation`; the remote ref was read back at the same
+  commit. This is a development checkpoint, not a PR or release. Its 80%
+  coverage gate, owner acceptance, native builder and other release gates remain
+  open. The four designated unowned files stayed outside the commit.
 - On 29 October, a narrow legacy Alembic Ruff baseline was added without
   changing published migrations. Its guard verifies the 16 revision hashes and
   exact unsuppressed historical diagnostics, including source spans; CI runs

@@ -3,6 +3,8 @@
 
 ## [2026-10-29] — Preserve qualification budget boundaries
 
+- Pushed development checkpoint `361c562` to `feat/company-foundation`; the
+  coverage, owner acceptance and release gates remain open.
 - Preserved the published legacy Alembic revisions while recording their
   existing Ruff findings as an exact-file baseline. CI now runs broad Ruff and
   a companion guard that verifies revision hashes and rejects changed baseline
