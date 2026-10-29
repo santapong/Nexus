@@ -198,6 +198,63 @@ async def owner_case(root: Path, monkeypatch: pytest.MonkeyPatch) -> OwnerCase:
     )
 
 
+@pytest.mark.parametrize("fault", [None, "native_title", "budget", "quota"])
+async def test_static_review_joins_actual_admitted_title_to_exact_native_registration(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fault: str | None
+) -> None:
+    from nexus.execution.runtime_support import registration_digest, snapshot
+
+    f = await owner_case(tmp_path, monkeypatch)
+    bound = f.delivery.native().current.current
+    actual = bound.work.model_copy(update={"title": "Model proposed coder"})
+    if fault == "budget":
+        actual = actual.model_copy(update={"budget_usd": Decimal(".2")})
+    registered = snapshot(f.native).registration.model_copy(update={"work": actual})
+    bound = bound.model_copy(
+        update={"work": actual, "work_sha256": registration_digest(registered)}
+    )
+    if fault == "native_title":
+        registered = registered.model_copy(
+            update={"work": actual.model_copy(update={"title": "Other native title"})}
+        )
+    elif fault == "quota":
+        registered = registered.model_copy(
+            update={"quota": registered.quota.model_copy(update={"model_requests": 2})}
+        )
+    f.native.registration_json, f.native.registration_hash = (
+        registered.model_dump_json(),
+        registration_digest(registered),
+    )
+    assert f.delivery.action is not None
+    if fault is None:
+        selected = await static.select_coding_review(
+            f.services,
+            f.session,
+            f.delivery.control,
+            f.scope,
+            f.owner,
+            f.delivery.action,
+            f.native,
+            bound,
+            end_us=clock_us() + 10_000_000,
+        )
+        assert selected.registration_sha256 == registration_digest(registered)
+        assert actual.title == "Model proposed coder"
+    else:
+        with pytest.raises(ValueError):
+            await static.select_coding_review(
+                f.services,
+                f.session,
+                f.delivery.control,
+                f.scope,
+                f.owner,
+                f.delivery.action,
+                f.native,
+                bound,
+                end_us=clock_us() + 10_000_000,
+            )
+
+
 async def test_complete_saved_c_input_uses_real_owner_without_actor_or_repository(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

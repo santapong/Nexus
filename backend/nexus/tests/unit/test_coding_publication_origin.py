@@ -24,6 +24,41 @@ from nexus.harness.journal_models import CompanyControl
 from nexus.tests.unit.coding_publication_fixture import graph
 
 
+async def test_native_publication_template_accepts_admitted_title_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from nexus.company.management.coding_publication_origin_native import require_c_native
+    from nexus.tests.unit.coding_publication_fixture import native_files
+
+    value = await native_files(tmp_path, monkeypatch)
+    reader = CodingPublicationOriginReader(
+        value.private.factory,
+        value.catalog,
+        value.private.sources.artifacts,
+        value.private.sources.freshness,
+        rules=value.rules,
+        recipe=value.prepared.input_recipe,
+    )
+    native = value.native.directory.work
+    assert native is not None
+    actual = native.registration.work.model_copy(update={"title": "Model proposed coder"})
+    selected = value.native.model_copy(
+        update={
+            "directory": value.native.directory.model_copy(
+                update={
+                    "work": native.model_copy(
+                        update={
+                            "registration": native.registration.model_copy(update={"work": actual})
+                        }
+                    )
+                }
+            )
+        }
+    )
+    require_c_native(reader, selected, value.owner.identity.principal_id)
+    assert selected.directory.work.registration.work == actual
+
+
 async def test_origin_requires_exact_shared_concrete_source_graph(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -220,7 +255,11 @@ async def origin_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Simple
     monkeypatch.setattr(
         ManagementPlanStore,
         "current_binding",
-        AsyncMock(return_value=SimpleNamespace(plan=value.loaded.header.plan)),
+        AsyncMock(
+            return_value=SimpleNamespace(
+                plan=value.loaded.header.plan, work=value.native.directory.work.registration.work
+            )
+        ),
     )
     monkeypatch.setattr(reader_module, "execution_row", AsyncMock(return_value=work))
 
@@ -323,6 +362,72 @@ async def origin_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Simple
         value.published,
     ) = (reader, spec, policy, lease, credential, work, action, published)
     return value
+
+
+@pytest.mark.parametrize("different_native_title", [False, True])
+async def test_current_origin_requires_exact_approved_title_before_private_pair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, different_native_title: bool
+) -> None:
+    from unittest.mock import AsyncMock
+
+    from nexus.company.management import coding_publication_origin_native as native_module
+    from nexus.company.management.plan_store import ManagementPlanStore
+    from nexus.company.management.planning_native_facts import clock_us
+
+    value = await origin_case(tmp_path, monkeypatch)
+    current = value.native.directory.work
+    assert current is not None
+    approved = current.registration.work.model_copy(update={"title": "Model proposed coder"})
+    actual = (
+        approved.model_copy(update={"title": "Different native title"})
+        if different_native_title
+        else approved
+    )
+    value.native = value.native.model_copy(
+        update={
+            "directory": value.native.directory.model_copy(
+                update={
+                    "work": current.model_copy(
+                        update={
+                            "registration": current.registration.model_copy(update={"work": actual})
+                        }
+                    )
+                }
+            )
+        }
+    )
+    monkeypatch.setattr(
+        ManagementPlanStore,
+        "current_binding",
+        AsyncMock(return_value=SimpleNamespace(plan=value.loaded.header.plan, work=approved)),
+    )
+
+    class BeforePrivatePairError(RuntimeError):
+        pass
+
+    private = AsyncMock(
+        side_effect=BeforePrivatePairError("native metadata joined before private pair")
+    )
+    monkeypatch.setattr(native_module, "origin_references", private)
+    if different_native_title:
+        with pytest.raises(ValueError, match="native work differs"):
+            await value.origin_reader.load(
+                value.builder_lease,
+                value.builder_credential,
+                value.builder_spec,
+                end_us=clock_us() + 20_000_000,
+            )
+        private.assert_not_awaited()
+    else:
+        with pytest.raises(BeforePrivatePairError):
+            await value.origin_reader.load(
+                value.builder_lease,
+                value.builder_credential,
+                value.builder_spec,
+                end_us=clock_us() + 20_000_000,
+            )
+        private.assert_awaited_once()
+    assert not value.origin_reader.pending_owners()
 
 
 async def test_actual_published_pair_read_has_current_actor_and_issued_identity(
@@ -432,10 +537,11 @@ async def test_cancelled_actual_blob_leaf_stays_owned_and_never_issues_proof(
     value = await origin_case(tmp_path, monkeypatch)
     blobs = value.private.sources.artifacts.blobs
     original = blobs._read
-    started, finish = Event(), Event()
+    started, finish = asyncio.Event(), Event()
+    loop = asyncio.get_running_loop()
 
     def read(path: Path) -> bytes:
-        started.set()
+        loop.call_soon_threadsafe(started.set)
         if not finish.wait(3):
             raise TimeoutError("finite fixture worker")
         raw = original(path)
@@ -443,24 +549,34 @@ async def test_cancelled_actual_blob_leaf_stays_owned_and_never_issues_proof(
         return raw
 
     monkeypatch.setattr(blobs, "_read", read)
+    end_us = clock_us() + 10_000_000
     task = asyncio.create_task(
         value.origin_reader.load(
             value.builder_lease,
             value.builder_credential,
             value.builder_spec,
-            end_us=clock_us() + 10_000_000,
+            end_us=end_us,
         )
     )
-    assert await asyncio.to_thread(started.wait, 2)
-    task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await task
-    assert value.origin_reader.pending_owners()
-    assert not value.origin_reader._issued
-    finish.set()
-    while value.origin_reader.pending_owners():
-        await asyncio.sleep(0.01)
-    assert not value.origin_reader._issued
+    try:
+        await asyncio.wait_for(started.wait(), max(0, end_us - clock_us()) / 1_000_000)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert value.origin_reader.pending_owners()
+        assert not value.origin_reader._issued
+        finish.set()
+        while value.origin_reader.pending_owners():
+            await asyncio.sleep(0.01)
+        assert not value.origin_reader._issued
+    finally:
+        finish.set()
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        pending = value.origin_reader.pending_owners()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
 
 
 async def test_first_source_expiry_cannot_be_renewed_during_body_read(
@@ -574,10 +690,11 @@ async def test_cancelled_first_page_settles_leaf_without_starting_later_page(
     reader = value.origin_reader
     blobs = reader.artifacts.blobs
     original = blobs._read
-    started, finish = Event(), Event()
+    started, finish = asyncio.Event(), Event()
+    loop = asyncio.get_running_loop()
 
     def read(path: Path) -> bytes:
-        started.set()
+        loop.call_soon_threadsafe(started.set)
         if not finish.wait(3):
             raise TimeoutError("finite fixture worker")
         raw = original(path)
@@ -587,25 +704,35 @@ async def test_cancelled_first_page_settles_leaf_without_starting_later_page(
     monkeypatch.setattr(blobs, "_read", read)
     pages = AsyncMock(side_effect=reader.artifacts.bounded_artifact)
     monkeypatch.setattr(reader.artifacts, "bounded_artifact", pages)
+    end_us = clock_us() + 10_000_000
     task = asyncio.create_task(
         reader.load(
             value.builder_lease,
             value.builder_credential,
             value.builder_spec,
-            end_us=clock_us() + 10_000_000,
+            end_us=end_us,
         )
     )
-    assert await asyncio.to_thread(started.wait, 2)
-    task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await task
-    assert reader.pending_owners()
-    finish.set()
-    while reader.pending_owners():
-        await asyncio.sleep(0.01)
-    assert pages.await_count == 1
-    assert not reader._issued
-    # Per-read stop cannot poison a subsequent genuine read with the same store.
+    try:
+        await asyncio.wait_for(started.wait(), max(0, end_us - clock_us()) / 1_000_000)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert reader.pending_owners()
+        finish.set()
+        while reader.pending_owners():
+            await asyncio.sleep(0.01)
+        assert pages.await_count == 1
+        assert not reader._issued
+        # Per-read stop cannot poison a subsequent genuine read with the same store.
+    finally:
+        finish.set()
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        pending = reader.pending_owners()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
     second = await reader.load(
         value.builder_lease,
         value.builder_credential,
@@ -651,10 +778,11 @@ async def test_cancelled_real_unicode_boundary_cannot_start_private_retry(
     assert value is not None, "three literal UTF8 alignments must include an actual split"
     reader = value.origin_reader
     original = reader.blobs._read
-    started, finish = Event(), Event()
+    started, finish = asyncio.Event(), Event()
+    loop = asyncio.get_running_loop()
 
     def read(path: Path) -> bytes:
-        started.set()
+        loop.call_soon_threadsafe(started.set)
         if not finish.wait(3):
             raise TimeoutError("finite fixture worker")
         raw = original(path)
@@ -664,24 +792,34 @@ async def test_cancelled_real_unicode_boundary_cannot_start_private_retry(
     monkeypatch.setattr(reader.blobs, "_read", read)
     pages = AsyncMock(side_effect=reader.artifacts.bounded_artifact)
     monkeypatch.setattr(reader.artifacts, "bounded_artifact", pages)
+    end_us = clock_us() + 10_000_000
     task = asyncio.create_task(
         reader.load(
             value.builder_lease,
             value.builder_credential,
             value.builder_spec,
-            end_us=clock_us() + 10_000_000,
+            end_us=end_us,
         )
     )
-    assert await asyncio.to_thread(started.wait, 2)
-    task.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await task
-    assert reader.pending_owners()
-    finish.set()
-    while reader.pending_owners():
-        await asyncio.sleep(0.01)
-    assert pages.await_count == 1
-    assert not reader._issued
+    try:
+        await asyncio.wait_for(started.wait(), max(0, end_us - clock_us()) / 1_000_000)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert reader.pending_owners()
+        finish.set()
+        while reader.pending_owners():
+            await asyncio.sleep(0.01)
+        assert pages.await_count == 1
+        assert not reader._issued
+    finally:
+        finish.set()
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        pending = reader.pending_owners()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
     second = await reader.load(
         value.builder_lease,
         value.builder_credential,

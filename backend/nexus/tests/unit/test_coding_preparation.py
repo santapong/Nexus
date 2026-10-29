@@ -269,7 +269,9 @@ async def test_real_c_producer_orders_actual_actor_claim_saved_input_pending_the
             }
         )
 
-    monkeypatch.setattr(module, "clock_now", AsyncMock(return_value=datetime.now(UTC)))
+    monkeypatch.setattr(
+        module, "clock_now", AsyncMock(side_effect=lambda _services: datetime.now(UTC))
+    )
     monkeypatch.setattr(value.execution, "claim", claim)
     monkeypatch.setattr(module, "_initial", initial)
     monkeypatch.setattr(value.contexts, "assemble", assemble)

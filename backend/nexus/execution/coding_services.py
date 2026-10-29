@@ -34,6 +34,7 @@ from nexus.company.notifications.worker_identity import (
 )
 from nexus.core.llm.company_adapter_contracts import EndpointResolver
 from nexus.execution.management_services import ManagementExecutionServices
+from nexus.execution.model_workflow_identity import application_version
 from nexus.execution.planning_application_config import PlanningSourcePolicies
 from nexus.execution.runtime_store import ExecutionStore
 from nexus.harness.journal_contracts import LedgerScope
@@ -50,6 +51,7 @@ ENTRY_SECONDS, LEASE_SECONDS, CLIENT_SECONDS = 375, 60, 55
 REGISTRATION = WorkflowRegistration(
     workflow_name=WORKFLOW, workflow_version=VERSION, queue_name=QUEUE, application_name=APPLICATION
 )
+APPLICATION_VERSION = application_version(REGISTRATION)
 
 
 @dataclass(frozen=True, kw_only=True)

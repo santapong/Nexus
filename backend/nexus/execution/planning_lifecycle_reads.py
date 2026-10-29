@@ -1,12 +1,18 @@
-"""Current owner metadata and protected candidate/replay reads; no SDK, lease or new allowance."""
+"""Current owner metadata and protected candidate/replay reads; no SDK or new allowance.
+
+Cohesion exception: owner, permanent dispatch, current/issued queue metadata and
+final original-owner cutoff stay in the same locked read; splitting this file's
+read boundary would obscure which native facts authorize descriptive replay.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from nexus.company.access import CompanyControlScope
 from nexus.company.management.control_support import db_clock
@@ -18,6 +24,7 @@ from nexus.company.management.planning_native_facts import clock_us, require_tim
 from nexus.company.management.planning_proposal_bridge import map_content
 from nexus.company.management.planning_source_reader import PlanningSource
 from nexus.company.management.revision_store import plan_record, plan_reference
+from nexus.company.management.scheduling_queue import BINDING
 from nexus.company.management.transactions import (
     ManagementDeniedError,
     management_owner_transaction,
@@ -25,6 +32,11 @@ from nexus.company.management.transactions import (
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_models import SegmentDispatch
+from nexus.execution.effect_support import effect_record
+from nexus.execution.model_workflow_identity import (
+    require_current_model_binding,
+    require_issued_model_binding,
+)
 from nexus.execution.planning_dispatch import PlanningDispatchRecord
 from nexus.execution.planning_lifecycle_bindings import PlanningBundle, owner_locked, stored_plans
 from nexus.execution.planning_lifecycle_contracts import (
@@ -32,9 +44,12 @@ from nexus.execution.planning_lifecycle_contracts import (
     PlanningLifecycleRead,
     PlanningLifecycleStatus,
 )
+from nexus.execution.planning_services import REGISTRATION
 from nexus.execution.runtime_contracts import EffectState
 from nexus.execution.runtime_models import EffectIntent, ExecutionWork
+from nexus.execution.runtime_recovery import dispatched_binding
 from nexus.execution.runtime_support import snapshot
+from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import JournalAction
 
 if TYPE_CHECKING:
@@ -105,6 +120,43 @@ async def existing_dispatch(
         if audit.proposal_sha256 != expected_hash:
             raise ManagementDeniedError("Planning native action hash changed")
         result = _dispatch(row, action, lifecycle) if row is not None else None
+        if result is not None:
+            command = result.command
+            work = await session.get(ExecutionWork, (scope.company_id, command.task_id))
+            native = LedgerScope(
+                company_id=scope.company_id,
+                principal_id=command.actor_id,
+                task_id=command.task_id,
+                trace_id=command.trace_id,
+            )
+            if (
+                work is None
+                or (await dispatched_binding(session, work, native, command.segment_id)) != command
+            ):
+                raise ManagementDeniedError("Planning permanent native dispatch differs")
+            queue = (
+                (
+                    await session.execute(
+                        text(BINDING.text.replace("FOR UPDATE OF ws", "")),
+                        {"workflow_id": command.workflow_id},
+                    )
+                )
+                .mappings()
+                .one_or_none()
+            )
+            projected = cast(Mapping[str, object] | None, queue)
+            effect = await session.get(EffectIntent, (scope.company_id, action_id))
+            if effect is None:
+                require_current_model_binding(command, projected, REGISTRATION)
+            else:
+                if effect.intent_fence > work.fence or snapshot(work).counters.model_requests < 1:
+                    raise ManagementDeniedError("Planning issued replay lacks its original attempt")
+                require_issued_model_binding(
+                    command, projected, REGISTRATION, effect_record(effect), audit.proposal_sha256
+                )
+        end_us = await owner_locked(
+            lifecycle.services, lifecycle.config, session, control, scope, owner, end_us
+        )
     require_time(end_us)
     return result, end_us
 

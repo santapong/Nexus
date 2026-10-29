@@ -72,6 +72,651 @@ If status is 'open': describe what fix is needed and who should do it.}
 
 ## Error Log
 
+## ERROR-246 — Recording-timeout test expired before its mock model response
+
+**Date:** 2026-10-29
+**Severity:** medium
+**Status:** mitigated
+**Found by:** regression specialist during v7 coverage
+**Affected files:** `backend/nexus/tests/unit/test_model_evidence_ownership.py`
+
+### What happened
+The recording-ownership case reached its file stall after the one-second mock
+SDK window had already returned an unknown outcome; no mock POST had been
+observed. The test stopped before the intended no-release and ownership checks.
+
+### Fix applied and prevention
+Only this recording-stall test now uses a bounded 30-second mock SDK window and
+asserts its one POST occurred before recording starts. Its existing five-second
+cleanup, nine-second file stall, and ownership/no-release assertions are intact.
+A fresh coherent cohort passed 125 focused ownership/provider checks with
+coverage instrumentation; this does not establish full-suite coverage. The
+original v7 failure remains retained.
+
+---
+
+## ERROR-245 — Response conformance fixture expired before its first mock POST
+
+**Date:** 2026-10-28
+**Severity:** medium
+**Status:** mitigated
+**Found by:** coordinator and regression specialist during v6 coverage
+**Affected files:** `backend/nexus/tests/unit/test_company_provider_conformance.py`, `backend/nexus/tests/unit/test_company_google_single_request.py`
+
+### What happened
+The continuation test saw zero mock POSTs and did not exercise its response.
+A fresh instrumented diagnostic showed its first handoff reaching the guarded
+transport after the fixture's one-second SDK deadline; the earlier failure did
+not capture equivalent timing. The production guard correctly denied that late
+handoff.
+
+### Fix applied and prevention
+Response-focused mock tests opt into a bounded ten-second endpoint while the
+helper's default remains one second for short-deadline and ownership cases.
+Exact one-POST, continuation, usage and no-retry assertions were retained. On a
+fresh source cohort, 92 focused checks passed with coverage instrumentation;
+this is not full-suite coverage. Original failure and diagnostic receipts remain
+in the `unit-regression-v6` and `v6-guard-diagnostic-1` learning directories.
+
+---
+
+## ERROR-244 — Input estimator rejected the newly guarded adapter source
+
+**Date:** 2026-10-28
+**Severity:** high
+**Status:** mitigated
+**Found by:** coordinator during the same-source unit/coverage run
+**Affected files:** `backend/nexus/harness/model_input_estimator.py`, `backend/nexus/tests/unit/test_company_input_estimator.py`
+
+### What happened
+After the transport fix, v5 coverage stopped because the estimator correctly
+rejected the adapter bytes: its reviewed source pin still described the previous
+adapter. No issued action or provider call was involved in this failure.
+
+### Fix applied and prevention
+An AST comparison found the request framing, input schema, token bounds, output
+mapping and Google continuation hook unchanged; the client construction now
+uses the guarded transport. The reviewed v2 recipe pins both adapter and guard,
+and produces a new conformance reference. Historical v1 records remain readable,
+but neither a legacy recipe nor its proof authorizes a fresh v2 estimator.
+The input-ceiling wire method remains v1. A fresh cohort passed 204 focused
+mock-only tests with source pins unchanged; integrated workflow and complete
+coverage remain open. Source comparison and test evidence are under
+`/home/santapong/.codex/learning/nexus-waypoint-20261028-1/input-estimator-pin-review-1/`.
+
+---
+
+## ERROR-243 — Rehearsal assumed pidfd wrappers absent from pinned Python
+
+**Date:** 2026-10-28
+**Severity:** medium
+**Status:** open
+**Found by:** coordinator during the isolated v12 process-scope rehearsal
+**Affected files:** private v12 rehearsal and supervisor drafts
+
+### What happened
+The harmless rehearsal failed before either scope case with `AttributeError`.
+The pinned Nexus Python 3.12 exposes neither `os.pidfd_open` nor
+`signal.pidfd_send_signal`, although the host's system Python has them. Its
+driver scope was initially reported active, then independently observed
+inactive/dead with no control group; neither sibling scope nor PostgreSQL started.
+The failed result and watchdog receipt remain retained.
+
+### Next action
+Qualify a runtime-compatible, identity-checked pidfd mechanism with owned
+synthetic processes before revising and running the supervisor. Do not substitute
+an unchecked PID signal or treat a missing pidfile as proof of database shutdown.
+
+---
+
+## ERROR-242 — SDK could hand a request to transport after timeout
+
+**Date:** 2026-10-28
+**Severity:** high
+**Status:** mitigated
+**Found by:** coordinator and independent specialists during SDK-mock regression
+**Affected files:** `backend/nexus/core/llm/company_transport.py`, `backend/nexus/core/llm/company_adapter_sdk.py`, `backend/nexus/core/llm/company_adapters.py`, `backend/nexus/core/llm/qualification_contracts.py`, `backend/nexus/harness/qualification_client.py`
+
+### What happened
+A fresh mock diagnostic returned an unknown SDK outcome and observed a POST
+shortly afterward; that trace did not identify transport entry. A separate
+deterministic SDK-side pause demonstrated new transport delegation after the
+timeout for both pinned provider SDKs. Already-delegated calls and pre-SDK stop
+controls behaved as expected. No live provider call or actual charge occurred.
+
+### Fix applied and prevention
+The candidate guards each selected HTTPX transport with the original monotonic
+end, stop latch and one handoff commitment. It retains the selected HTTPX proxy
+and lifecycle behavior and covers both normal and qualification model paths.
+Once the lock commits a handoff, the delegate may still advance after a stop;
+it remains potentially issued and unknown until reconciled. Qualification pins
+cover the new boundary and selected pinned SDK/transport sources; exact legacy
+pins remain readable but do not authorize a fresh call under the new source.
+Focused checks passed 130/130, including both providers and qualification
+boundaries. Fresh integrated PostgreSQL/DBOS and full coverage checks remain
+open. Evidence is in `provider-transport-boundary-review-1` under
+`/home/santapong/.codex/learning/nexus-waypoint-20261028-1/`.
+
+---
+
+## ERROR-241 — Planning fixture reported known billing for an unknown result
+
+**Date:** 2026-10-28
+**Severity:** medium
+**Status:** mitigated
+**Found by:** coordinator and model-gateway specialist during same-source regression
+**Affected files:** `backend/nexus/tests/unit/test_company_planning_consumer.py`
+
+### What happened
+Coverage slice 9 stopped after one mock POST when the endpoint returned an
+unknown `sdk_resources_unresolved` result, but the synthetic recorder claimed
+known billing. The production result contract rejected that contradiction.
+The exact slow operation in the original run is not established.
+
+### Fix applied and prevention
+The test recorder preserves the actual result's billing and sets unknown amounts
+and receipt to null. Only the normal success-path fixture opts into a 30-second
+endpoint; the default and delayed cases retain one second. Separate delayed mock
+cases for both providers confirm the unknown outcome cannot create a candidate,
+receipt or second request. A fresh red reproduced the mismatch and the full
+planning-consumer module passed 20 checks with Ruff and formatting. Original
+synthetic evidence remains retained; the full coverage gate is still open.
+Logs are under `planning-consumer-red-1` and `planning-consumer-green-1` in
+`/home/santapong/.codex/learning/nexus-waypoint-20261028-1/`.
+
+---
+
+## ERROR-240 — Coding success fixture used a one-second synthetic endpoint
+
+**Date:** 2026-10-28
+**Severity:** medium
+**Status:** mitigated
+**Found by:** coordinator and coding-failure specialist during same-source regression
+**Affected files:** `backend/nexus/tests/unit/coding_runtime_fixture.py`, `backend/nexus/tests/unit/test_coding_worker.py`
+
+### What happened
+The third coverage slice stopped when a coding success test returned an unknown
+SDK outcome after one mock POST. The retained failure records a timeout, but
+does not identify which original deadline expired. A fresh timing diagnostic
+showed the fixture's one-second endpoint was the active minimum in that run.
+A separate intentionally delayed 1.2-second mock response reproduced an unknown
+outcome under the old fixture; it does not prove the original failure's cause.
+
+### Fix applied and prevention
+Only the success test opts into a ten-second endpoint, while the shared helper
+keeps its one-second default and the original operation and SDK limits remain
+unchanged. Immediate and delayed mock-response cases and the existing
+short-SDK-deadline/no-late-POST test passed on the new cohort. The original
+unknown result is preserved; full same-cohort regression remains pending. Red
+and green receipts are in `coding-timeout-red-1` and `coding-timeout-green-1`
+under `/home/santapong/.codex/learning/nexus-waypoint-20261028-1/`.
+
+---
+
+## ERROR-239 — Success audit runner counted a pytest directory symlink twice
+
+**Date:** 2026-10-28 (Asia/Bangkok)
+**Severity:** low
+**Status:** fixed for the retained v11 audit; future drivers must use the same physical-path rule
+**Found by:** Coordinator during the v11 Nexus application check
+**Affected files:** private v11 acceptance/audit operator
+
+### What happened
+The v11 application test passed, but its outer operator asserted that its config
+glob returned exactly one path. Pytest had created one real test directory and
+one `current` symlink to the same directory, so the glob returned two names.
+The operator recorded the test pass and stopped its owned PostgreSQL cluster;
+the success audit did not run in that first attempt.
+
+### Root cause
+The operator compared path names without resolving their physical identity.
+This was an operator handoff error, not a failure of the passing application test.
+
+### Fix applied
+The separate audit used the exact real, non-symlink config path and its SHA256.
+It reopened only the same synthetic PostgreSQL cluster, ran the restricted
+repeatable-read read-only audit with explicit rollback, and stopped PostgreSQL.
+It verified two attempts/intents/dispatches and two publication sources, no
+remaining lease or app connection, and USD0.000004 known synthetic spend.
+The original operator result is retained alongside the separate audit receipt.
+
+### Prevention
+Resolve and de-duplicate physical paths before selecting a pytest-produced
+artifact; reject genuinely distinct candidates. Never rerun the company action
+to repair a missing read-only audit, and never claim the first wrapper passed.
+
+---
+
+## ERROR-238 — Offline coding fixture overrides the configured endpoint timeout
+
+**Date:** 2026-10-28 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed for the offline fixture; live provider quality remains separate
+**Found by:** Coordinator during the fresh Nexus coding application check
+**Affected files:** `nexus_coding_application_transport.py`; fixture regression
+
+### What happened
+The v9 SDK-mock run stopped with a planner outcome unknown. V10 advanced through
+the planner and reached the coder, then also stopped with an unknown outcome.
+Timing-only markers show the coder's actual pre-SDK authority check took about
+3.77 seconds while the fixture forced a two-second endpoint timeout. No coder
+mock HTTP POST was observed. Both failure records and synthetic unknown holds
+remain preserved; the scoped v10 restricted-role SELECT-only snapshot recorded
+rollback and matching work/day ledger amounts, with no remaining lease or app
+connection. Server-enforced read-only and isolation modes were not checked.
+
+### Root cause
+The offline transport replacement set `timeout_seconds=2` after resolving the
+server endpoint, overwriting its configured value. The normal endpoint binding
+defaults to 30 seconds. The v9 exact slow stage was not recorded; v10 directly
+observed the coder's pre-SDK duration.
+
+### Fix applied
+The transport fixture now replaces only the mock transport and retains the
+resolved endpoint timeout. A test-first regression reproduced the 30→2 mismatch;
+the configured two- and 30-second cases and the existing short-end/no-late-POST
+test now pass. No production authorization, timeout, budget or effect policy was
+changed. The fresh v11 integrated test passed with the resolved endpoint timeout;
+its separate read-only conservation audit passed after ERROR-239's operator fix.
+
+### Prevention
+Keep explicit endpoint settings intact in mock transports and verify both short
+and normal configured values. Report the real elapsed protected checks separately
+from the provider response; never retry an issued unknown action or release its
+hold merely because no mock POST was observed.
+
+---
+
+## ERROR-237 — Frozen owner-preview API has an undeclared Git checkout dependency
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** mitigated (local API restored in Git layout; frozen portability unqualified)
+**Found by:** Root during the guarded owner-invitation API rollout
+**Affected files:** company/pilot_preview.py `_git_document`; local preview operator composition
+
+### What happened
+The first API start from a frozen source snapshot exits because document loading
+runs Git against a snapshot without `.git`. The invitation renewal had already
+committed safely; the failed API start did not undo or regenerate it.
+
+### Root cause
+`_git_document` infers a Git checkout from `__file__` and reads committed documents
+with `git show`. Copying Python source alone is insufficient for this preview.
+
+### Fix applied
+Restore using the existing actual Git checkout layout after checking the reviewed
+auth bytes, without adding a `.git` link to the snapshot or reissuing the token.
+The final metadata-only readiness check confirms API health200, frontend login200
+and genuine protected identity401. A guessed nonexistent work URL returned404 in
+an intermediate smoke check; correcting the read-only probe required no service
+restart or account change. Original failed logs remain retained.
+
+### Prevention
+Compose and preflight the exact API layout before quiescing its existing writer.
+Frozen acceptance and Git-bound owner preview are distinct runtime claims. The
+local restoration proves neither frozen portability nor private release deployment.
+
+---
+
+## ERROR-236 — First-account setup invitation expired before owner signup
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (expired-unused renewal and local readiness; owner signup unverified)
+**Found by:** owner report of no password yet and Root metadata-only inspection
+**Affected files:** pilot_session_store.py, pilot_session.py, new pilot_invitation.py and operator CLI, paired unit tests
+
+### What happened
+The owner cannot initialize a first password. The stored invitation is expired,
+unused and has no password. A loaded login page and healthy API did not establish
+invitation validity; the original invitation expired2026-10-16T11:08:19Z.
+
+### Root cause
+Task invitations have an absolute8-hour lifetime. The previous handoff reused
+expired setup material. Standalone renewal without a shared signup writer lock
+could also overwrite a concurrently completed password.
+
+### Fix applied
+The exact configured owner gets metadata-only inspection and expired-unused-only
+renewal; existing passwords, unexpired or foreign records deny. Signup and renewal
+share a nonblocking cross-process final-writer lock, recheck original identity/
+expiry and retain actual threads through cancellation. Fresh exclusive0600 output
+is read back before its digest is adopted. Siblings/directory/roles stay intact.
+71 focused checks/strictRuff5 and independent review8bdc668d support the source.
+Root quiesces the exact older API writer, renews once and restores the API. Final
+readiness19:18:14UTC confirms health/login200 and protected identity401. The new
+expiry is2026-10-17T03:13:30Z (10:13 Bangkok). Secret contents were not inspected;
+no password reset, user signup/login or provider/native activation is claimed.
+
+### Prevention
+Inspect only state/expiry metadata before another first-setup handoff. Never read
+or print private invitation/account credentials. Password entry remains with the
+owner, and an initialized account cannot be renewed by this CLI. ADR-140 defines
+the boundary; actual signup and signed-in browser acceptance remain open.
+
+---
+
+## ERROR-235 — Independent DBOS applications share the globally owned version v1
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** high
+**Status:** mitigated (source repair checked; fresh DBOS/application acceptance unproven)
+**Found by:** Root actual A6 v7 and retained worker/DBOS metadata diagnosis
+**Affected files:** model_workflow_identity.py; exact L/C worker, enqueue and current/historical metadata joins
+
+### What happened
+V7 crosses protected C preparation, saved-wait recovery, review and atomic
+no-duplicate dispatch. The coder child exits1 in DBOS3.2 startup before listening:
+application_version `v1` is already owned by `nexus-planning`. Pytest fails99.72s,
+terminal101.991s, with2,267 stable pins. No C model attempt or issued intent occurs.
+
+### Root cause
+DBOS application-version names are globally owned within a system database.
+Logical workflow ABI `v1` was incorrectly reused as the deployment identity of
+both independently named planning and coding applications.
+
+### Fix applied
+The16-file held repair3ea211b2 uses exact deployment versions
+`nexus-planning-v1` and `nexus-coding-v1` across worker configuration, SQL enqueue
+and current metadata validation. Logical ABI/workflow/app/queue contracts remain.
+Legacy `v1` metadata is accepted only after the original issued-native effect,
+action, dispatch, hold and receipt joins; an unissued old queue cannot activate.
+Five semantic reds lead to148 focused checks/25.89s and strict/Ruff23. ADR-139
+records the design. The compatibility microprobe and combined freeze/unit/static are NOT STARTED;
+A6 v8 is unexecuted.
+
+### Prevention
+Use one closed deployment identity mapping at producer and worker boundaries.
+The separate restricted/operator READ ONLY rollback audit26d01c21 preserves
+Lmodel1/known USD0.000002 and Cmodel0/unissued USD0.010507 HELD with actual null.
+Both ledgers conserve; all tools0/root own model0/tool0/plan-revision1, no lease.
+DBOS retains SUCCESS1/ENQUEUED1. Stop only the owned failed v7 cluster, retaining
+its data. Never rename/re-own/requeue, reset or refund the consumed namespace.
+
+---
+
+## ERROR-234 — C tool requirement contradicts the whole-input bound
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (scoped C request policy and quote; actual v7 crosses preparation)
+**Found by:** Root actual A6 v6 and bounded frozen-source routing diagnosis
+**Affected files:** execution/coding_context.py and coding upfront policy/preflight; generic routing guard remains correct
+
+### What happened
+Fresh v6 crosses the title check, L candidate, same-root r2 and separate approval,
+then claims C. C prepare returns422 with RoutingDeniedError before protected
+pending publication or a C model call. Pytest fails62.17s/terminal63.985s with
+all2,266 source pins unchanged. The original exception class/status is retained;
+its unretained detailed message is not reconstructed.
+
+### Root cause
+`coding_context.route_prepared` explicitly requires code/tools/structured_output.
+The same C request has a whole-input ceiling; PreparedCodingRequest and the full
+input estimator forbid actual tools. Generic routing correctly rejects a whole-
+input bound plus explicit tools. Frozen-source diagnosis7b20a16c evaluates that
+exact guard: actual pending policy denies, while saved pre-r1 quotes omit explicit
+required capabilities and pass. This is a sufficient deterministic source cause,
+not a reconstruction of the missing original exception text. The recorded maximum
+C quote USD0.010507 fits its predeclared USD0.1 allocation; underfunding is not
+this failure. The older USD1.049088/0.1 synthetic denial remains valid separately.
+
+### Fix applied
+Hold3fba5a62 shares the exact code/structured_output capability constant between
+the no-tool prepared C request and its upfront quote.134 focused checks/23.02s
+and strict/Ruff9 pass, including actual producer/router policy and tool-bearing
+whole-input denials. Model capability, price, allowance and source/authority
+windows remain unchanged. Fresh v7 crosses C pending/recovery/input/review/
+decision and atomic dispatch before the separate DBOS version error235. Old v6
+is neither retried nor widened; the full C/J cycle remains unproven.
+
+### Prevention
+Restricted/operator repeatable-read READ ONLY audits02d55e9f both roll back with
+matching74-table counts: Lverifying/model1, one succeeded intent/attempt and DBOS
+SUCCESS, USD0.000002 reconciled/held0; Cblocked/model0 with no lease. Root owns
+model0/tool0/plan-revision1 and every tool count is0. The owned v6 cluster is
+stopped (exit0/status3), data retained; all six failed namespaces remain preserved.
+Require pre-r1 and pending policy to share the concrete capability requirements
+and retain a whole-bound/actual-tools denial. No actual C/native/release follows.
+
+---
+
+## ERROR-233 — C preparation requires the template's descriptive title
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (scoped title joins; actual v6 crosses the boundary)
+**Found by:** Root during actual A6 v5 C preparation and read-only binding diagnosis
+**Affected files:** nine production title/current-approved binding paths and six focused unit files; TITLE_SOURCE_1.json
+
+### What happened
+Fresh v5 passes the decoder, protected L candidate200, same-root r2 proposal200
+and separate approval200. C prepare returns403 before controlled pending
+publication or a C call. Pytest54.90s/terminal56.81s fails with2,258 stable pins.
+
+### Root cause
+The coding plan selector permits model-authored descriptive titles, while template
+comparison required the literal admission title. Read-only diagnosisfc0f6719 finds
+only title differs; current owner/Goal/mandate/charter/head/approval/child/run and
+canonical joins agree. Title is content, not role, budget or permission.
+
+### Fix applied
+Only the copied template comparison normalizes descriptive title. Native Work
+still exactly equals actual approved Work; current registration/hash, non-title
+fields, source and authority checks remain mandatory. The fifteen-file hold
+f5b22de2 passes175 focused checks/127.04s and normal strict/Ruff22. Independent
+review5f8e4870 is favorable. Actual v6 crosses this check and claims C, then
+stops at the separate routing-policy error234 before C pending/model. This fixes
+the title boundary without claiming completion of the coding cycle.
+
+### Prevention
+Generated-title positives retain exact-native-title and non-title/hash/budget/
+criteria negatives in current input, J publication and historical family joins.
+V5's own restricted/operator rollback audit5fb919aa conserves its original known
+USD0.000002/held0 and zero C effects. Its failed state remains stopped/retained;
+v6 has its own audit and retained namespace. No permission or quota is widened.
+
+---
+
+## ERROR-232 — Read-induced atime changes reject unchanged recipe metadata
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (both actual first-read regressions; image/native qualification remains open)
+**Found by:** bounded mixed-toolchain source review and real private-file regression
+**Affected files:** scripts/nexus_toolchain_inputs.py, recipe assets and paired units
+
+### What happened
+The first ordinary metadata read fails its identity check although bytes, inode
+and mtime stay unchanged: reading advances atime. Source1's exact CLI specimen
+reproduces the false denial in5.49s. A sibling reader embedded in the generated
+recipe independently reproduces the same false denial in42.65s on an actual
+copied scratch file, with unchanged body hash/inode/mtime/ctime.
+
+### Root cause
+Comparing whole os.stat_result values treats access-time updates as replacement
+or mutation. Warm pre-reads can hide the defect and are not a valid fix.
+
+### Fix applied
+Source2 replaces only the CLI check with a closed nine-field signature: device,
+inode, mode, UID/GID, links, size, mtime_ns and ctime_ns. It checks the open FD and
+named target before/after the complete read. The same positive accepts actual
+atime advance; tamper, replacement, symlink, hardlink, oversize and1ns mtime
+controls deny.36 relevant checks/13.49s and strict/Ruff2 pass; the original six
+other recipe files and source1 copies remain unchanged. Full eight-file overlay
+hold is b9d93f97. Additive source3 76e2b2d5 applies the same stable signature to
+the embedded reader:43 relevant checks/44.06s and strict/Ruff2 pass, including
+actual first-read and replacement/tamper/link/size/1ns-mtime controls. Only that
+asset and its unit change; the other six source2 files remain byte-identical.
+
+### Prevention
+Keep first-read actual filesystem observations with no byte pre-read and check
+both reader implementations. Source3 and authored-disclosed closure fcef2940
+are retained; no offline image, container, native E/EV or ARM64 pass is adopted.
+Separate host wheel/npm builds are packaging evidence, not that qualification.
+
+---
+
+## ERROR-231 — Parent worker-result decoder uses strict Python on JSON UUIDs
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (pure/static contracts and actual v5 planner boundary; cycle still failed)
+**Found by:** Root during actual A6 v4 after the planner worker returned
+**Affected files:** integration/nexus_coding_application_worker.py and one new pure unit
+
+### What happened
+V4 crosses public bootstrap/r1 approval, prepare, input/review/decision and atomic
+L dispatch. Exactly one planner SDK MockTransport request succeeds, then parent
+adoption fails on receipt_id/artifact_id UUID strings. The scenario fails51.46s
+(wrapper53.249s); all2,257 frozen source pins remain unchanged. It was issued and
+billable, despite the parent's failed result adoption.
+
+### Root cause
+The parent feeds json.loads output to the actual result model's strict Python
+model_validate API. JSON UUID strings require that model's strict JSON boundary.
+
+### Fix applied
+A closed planner/coder helper calls the matching actual model_validate_json on
+bounded JSON bytes. It preserves IDs, saved wire and all existing strict models;
+no strictFalse, cast or field coercion is introduced. The worker's control AST is
+unchanged apart from the helper and one result assignment. Test-source6 ec0e6793
+holds28 pure checks/30.84s and normal strict/Ruff7, with a fresh v5/55455 namespace.
+Actual v5 passes the planner decoder, candidate200, same-root r2 proposal200 and
+separate r2 approval200, then fails independently at C prepare403. C remains
+unissued; its decoder path is still contract-only proof.
+
+### Prevention
+Use the real two result contracts and exact JSON-shaped receipt/artifact IDs;
+retain malformed UUID, extra-field, string-boolean, completion, nonobject,
+malformed JSON and unknown-role denials. The failure-specific v4 RR READ ONLY
+restricted/operator audit76791f20 explicitly rolls back and retains Lmodel1,
+tool0/root own counters0, one succeeded intent/attempt, reconciled USD0.000002,
+held0 and no leases/other app connections. V5's separate audit5fb919aa preserves
+its own11-work/r2 state. Neither failed namespace is retried, refunded or reset;
+DBOS SUCCESS is not parent-test or company completion.
+
+---
+
+## ERROR-230 — Native event capability omits the normal017 schema
+
+**Date:** 2026-10-17 (Asia/Bangkok)
+**Severity:** medium
+**Status:** fixed (finite compatibility and fresh nine-case PostgreSQL proof)
+**Found by:** native_execution_plan during actual native-event PostgreSQL regression
+**Affected files:** brain/native_event_capability.py and its existing unit test
+
+### What happened
+After a normal001–017 upgrade, the first of nine native-event schema cases fails
+with Native event profile version is not qualified; eight remain unrun under -x.
+A separate fresh downgrade module passes: its attempted014 savepoint preserves
+017 and the native snapshot. The original app-query value was not serialized;
+that limit is retained with the original failure52c759c4 and finding701c518a.
+
+### Root cause
+The closed capability set accepts only015/016 after checking all physical native
+fields. Migration017 only changes the derivation-kind CHECK; the event ABI is
+unchanged, but its verified compatible version was omitted.
+
+### Fix applied
+Add exact017 and update the docstring. An AST comparison proves that no other
+production guard changes.015/016 positives, missing/partial fields, absent marker,
+boolean/unknown018 and malformed-version controls remain.54 relevant units and
+normal strict/Ruff2 pass. A new SOURCE6-plus-only-these-two frozen snapshot passes
+all nine schema cases/35.16s on fresh PG17.6/55454. Prospective admin READ ONLY
+metadata captures017 with74 company tables/74 FORCERLS before fixture teardown.
+All2,257 source pins and21 migration/env/template files stay byte-identical.
+
+### Prevention
+Hold4f631a4b, actual SQL085b3300 and admin observation301281e6 retain exact scope.
+Only the new owned cluster is stopped after zero clients, with data/logs retained.
+Fixture teardown normally downgrades to base, leaving an empty version table;
+that post-test state is not the pre-teardown installation. No migration, event
+field, native permit, emitter/transport, containment/image or ARM64 qualification
+is changed. Future018 still fails closed.
+
+---
+
+## ERROR-229 — Planning reads future publication targets before they exist
+
+**Date:** 2026-10-17 (Asia/Bangkok; original v3 attempt was2026-10-16)
+**Severity:** medium
+**Status:** fixed (stage-local catalog; actual v4 bootstrap/review/dispatch forward)
+**Found by:** Root and coding_milestone_review during actual v3 bootstrap
+**Affected files:** integration/nexus_coding_application_fixture.py and nexus_coding_application_sources.py
+
+### What happened
+Fresh v3 completes five public synthetic-account signup/login pairs, source
+intake, ten charters and a saved goal. Bootstrap returns403/BrainDeniedError;
+the case fails15.81s with all2,257 runtime pins unchanged, before model/worker
+issuance. Future J output resources were declared as current planning inputs.
+
+### Root cause
+owner_locked requires READ on every runtime input catalog resource before
+plans.propose. Restricted/operator RR READ ONLY audits confirm exactly the two
+future resource/grant pairs absent while current code/document access exists.
+J separately needs its output targets in its own sealed catalog.
+
+### Fix applied
+Test-source5 032edc30 keeps the runtime catalog limited to existing inputs. After
+real output registration, a fresh immutable J-only view adds exactly the two
+fixed refs. Admission, registry, roles/tools/charters/budget, r1/r2 and original
+C input/header projections stay unchanged. Current/history H and pure view
+checks plus strict/Ruff6 pass. Actual v4 crosses bootstrap, owner review and
+atomic dispatch; actual v5 reaches protected L candidate and r2 approval. Actual
+C/J publication remains pending because v5 stops at the separate C prepare gate.
+No placeholder Brain resource, head or grant is created.
+
+### Prevention
+Keep input/J catalog lifecycles separate and verify original C projections across
+them. Auditcda654df and diagnosis1a07a8c7 retain the failed v3 zero-native state.
+V4's one issued planner and v5's full registered family belong to their separate
+later audits; never reuse the old zero-state claim. Failed data/claims/source/logs
+remain preserved; no credential recovery, same-namespace retry or guard widening.
+
+---
+
+## ERROR-228 — Full-profile fixture exceeds the bounded invitation file
+
+**Date:** 2026-10-16
+**Severity:** low
+**Status:** fixed (pure/static and actual v3 public authentication)
+**Found by:** Root during the first fresh v2 A6 setup
+**Affected files:** integration/nexus_coding_application_fixture.py
+
+### What happened
+The strict catalog repair passes in the fresh v2 scenario. After normal017/DBOS
+and company/directory bootstrap, PilotCredentialFile rejects ten accounts against
+its existing maximum of eight. The scenario fails1case/5.84s with all2,257 pins
+stable, before public signup, tokens, native/model issuance or worker launch.
+
+### Root cause
+The fixture equated all registered full-profile principals with accounts that
+must authenticate in this scenario. The account-file bound is real and remains.
+
+### Fix applied
+Authenticate only owner, L, C and the two E/EV source-read recipients needed by
+existing assertions: five distinct genuine identities.
+Keep all ten registered role principals in the source-reader closure using the
+actual admission, including inactive roles with no credentials or fresh permit.
+Preserve all assertions, native slices and the eight-account production bound.
+Source4 passes12 pure checks/4.74s and normal strict/Ruff6. Actual fresh v3
+completes all five public signup/login pairs, source ingestion and goal creation
+before the separate catalog-stage failure above. The four other source files,
+existing assertions, workerb83b and production eight-account cap remain intact.
+
+### Prevention
+The separate failure-stage restricted NOSUPER/NOBYPASS and operator RR READ ONLY
+audit rolls back both snapshots and confirms matching counts: controls1,
+directory1, memberships10; registered/native Work, attempts, intents, dispatches,
+holds, budgets, DBOS workflows and other app connections zero. The owned v2
+cluster is stopped with data/claim/source/logs retained. Audit SHA6fba24bc under
+/var/tmp/nexus-coding-application-actual-checks-20261016-2. No success-querygroup,
+account reset, bound increase, refund or same-namespace retry follows.
+
+---
+
 ## ERROR-227 — Root metadata preflight queries the wrong SDK distribution name
 
 **Date:** 2026-10-16
@@ -106,7 +751,7 @@ folder; no claim of successful application execution follows.
 
 **Date:** 2026-10-16
 **Severity:** low
-**Status:** open (bounded strict-JSON repair in progress)
+**Status:** fixed (pure/static forward and actual v2 catalog setup)
 **Found by:** Root during the first actual A6 setup
 **Affected files:** integration/nexus_coding_application_fixture.py
 
@@ -122,10 +767,15 @@ Strict Python-object validation requires native Python types. The transformed
 dictionary contains JSON strings/lists and must cross the strict JSON API boundary.
 
 ### Fix applied
-Not yet claimed. Preserve the v1 database/claim/source/logs; use the same exact
-template in a bounded pure red/forward, strict model_validate_json and malformed
-UUID denial. Do not use strict=False, casts or changed business guards. Nominate
-fresh v2 database/paths/port/company namespace before any subsequent actual run.
+Use strict model_validate_json at the actual JSON boundary. The JSON-only forward
+then exposes a distinct stale registry pin after company namespacing; derive the
+actual namespaced ModelRegistry canonical hash and update only the three checked
+native/notification/admission description groups before full final validation.
+Original pins are checked first. Both v1/v2 typed-value positives, malformed UUID,
+copied-old-hash, unexpected original pin and old-release denials pass; strict/Ruff6
+pass. Source3 f12fcb12 changes only fixture/selectors, preserving workerb83b and
+all existing assertions. Actual fresh v2 gets past catalog validation, then stops
+at the separate account-cap issue above. Original v1 data/claim/logs stay retained.
 
 ### Prevention
 The separate failure-stage restricted NOSUPER/NOBYPASS and operator RR READ ONLY
@@ -220,9 +870,11 @@ does not prove actual SQL/DBOS/SDK/native acceptance or authorize a namespace re
 **Affected files:** backend/nexus and the existing integration/helper qualification suites
 
 ### What happened
-The frozen whole working-tree run exits1:5,544 passed,53 failed,19 warnings in
-626.62s. Coverage is63.462670%, below the unchanged80% requirement. Focused forwards
-after fixture repairs do not constitute a new whole passing run or coverage pass.
+The first frozen whole run exits1:5,544 passed,53 failed in626.62s, coverage
+63.462670%. A later complete2,266-pin run also exits1:5,686 passed,17 failed,
+zero skipped in790.34s with actual coverage63.644004%. All pins remain unchanged;
+configured strict/Ruff158 pass on that same later cohort. Both are below the
+unchanged80% requirement. Focused repairs are not a new whole coverage pass.
 
 ### Root cause
 The actual unit-only run executes little of the required integration/helpers:
@@ -275,6 +927,20 @@ toward the unchanged first end; the real file thread stays owned until settled.
 Five fixture files pass254 affected cases/10.74s and36.21s with --cov=nexus;
 the C consumer's nine cases pass53.45s with instrumentation. Normal strict and
 Ruff checks pass for all six. No production auth, clocks or acceptance guard changed.
+
+### Later recurrence and scoped repair — 2026-10-17
+The complete2,266-pin/790.34s run exposes17 further fixture failures:12 genuine
+600-second JWT anchors captured at module import, one UTC-versus-Bangkok hold day,
+three cancellation cases that do not reach their intended filesystem leaf under
+coverage, and one financial setup deadline before its intended read fault.
+The eight-file test/helper hold f6ae3058 captures an actual per-case anchor before
+construction, keeps the genuine600-second TTL and all relative negatives, uses
+shared Bangkok billing_day and awaits actual leaf barriers within original finite
+ends. The financial fixture has a fixed5-second setup/read end.127 cases pass
+118.04s with actual coverage; subset15.093471% still exits1 against80%. Strict/
+Ruff8 pass. An interim82-pass/45-fail UTC expectation counterexample is retained.
+Production auth/clocks, captured witness lifetime and pending/drain/no-issued
+assertions remain unchanged. A full repaired-union run is not established.
 
 ### Prevention
 Keep the aged-fixture red, original full failed log, test-only source holds and

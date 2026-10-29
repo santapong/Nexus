@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from nexus.company.contracts.work import WorkItem
 from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.check_contracts import REPORT_CHECK_RECIPE
 from nexus.company.management.governance import CharterRevision
@@ -33,6 +34,11 @@ _CAPABILITIES = {
     "engineering": frozenset({"code", "tools", "structured_output"}),
     "routine": frozenset({"text"}),
 }
+
+
+def coding_work_matches_template(actual: WorkItem, expected: WorkItem) -> bool:
+    """Compare fixed admission fields; r2 may retain its already-admitted model title."""
+    return actual.model_copy(update={"title": expected.title}) == expected
 
 
 def _exclusive(catalog: PlanAdmissionCatalog) -> None:

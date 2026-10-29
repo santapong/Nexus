@@ -28,9 +28,9 @@ async def test_continuation_response_never_sends_second_post() -> None:
             candidates[0].update(finishReason="CONTINUATION", continuationToken="Y29udGludWU=")
         return httpx2.Response(200, json=body)
 
-    result = await adapter("google", httpx2.MockTransport(handle), authority).request_once(
-        request(), now=NOW
-    )
+    result = await adapter(
+        "google", httpx2.MockTransport(handle), authority, timeout_seconds=10
+    ).request_once(request(), now=NOW)
     assert len(captured) == 1, "One native claim sent a hidden second provider POST"
     assert authority.claims == 1 and result.status == "failed"
     assert result.billing in {"known", "unknown"}
@@ -66,9 +66,9 @@ async def test_continuation_variants_are_failed_before_sdk_adoption(
             candidates[0][token_key] = token
         return httpx2.Response(200, json=body)
 
-    result = await adapter("google", httpx2.MockTransport(handle), authority).request_once(
-        request(), now=NOW
-    )
+    result = await adapter(
+        "google", httpx2.MockTransport(handle), authority, timeout_seconds=10
+    ).request_once(request(), now=NOW)
     assert len(captured) == authority.claims == 1
     assert result.status == "failed" and result.billing == "known"
     assert result.usage is not None and result.usage.output_tokens == 20
@@ -96,7 +96,9 @@ async def test_unavailable_response_cannot_trigger_another_post(broken: str) -> 
             body["candidates"] = {"continuationToken": "Y29udGludWU="}
         return httpx2.Response(200, json=body)
 
-    result = await adapter("google", httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter("google", httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert posts == 1 and result.status == "failed" and result.billing == "unknown"
     assert result.usage is None and result.text is None
 
@@ -109,7 +111,9 @@ async def test_normal_response_remains_single_request_known_usage(provider: str)
         captured.append(wire)
         return httpx2.Response(200, json=response(provider))
 
-    result = await adapter(provider, httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter(provider, httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert len(captured) == 1 and result.status == "response" and result.billing == "known"
     assert result.usage is not None and result.usage.output_tokens == 20
 
@@ -122,5 +126,7 @@ async def test_google_retry_remains_disabled() -> None:
         posts += 1
         return httpx2.Response(503, json={"error": {"code": 503, "message": "offline busy"}})
 
-    result = await adapter("google", httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter("google", httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert posts == 1 and result.status == "failed" and result.billing == "unknown"

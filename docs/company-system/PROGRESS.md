@@ -1,8 +1,80 @@
 # Nexus implementation progress
 
-**Current owner view, checked2026-10-16:** [Nexus product progress](RELEASE_STATUS_2026-10-16.md)
+**Resumed at the owner's request on 2026-10-28.** The supervised release remains
+incomplete. The canonical current work board is [Nexus tasks](../../TASKS.md).
+The 17 October pause and checkpoint below are historical. On 28 October a fresh
+isolated PG17/DBOS3.2 metadata probe passed the separate planner/coder version
+and enqueue boundary; the complete company workflow remains unverified.
+
+**Historical owner view, checked2026-10-17:** [Nexus product progress](RELEASE_STATUS_2026-10-16.md)
 and [focused delivery/workflow](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md). Nexus is
 the sole delivery target; StockFlow is an optional later test.
+
+## Historical actual/source checkpoint — 2026-10-17
+
+Actual A6 v7 advances through one planner SDK MockTransport request, protected L
+candidate, same-root r2 and separate owner approval. C preparation creates its
+protected pending request; cold recomposition, saved-wait recovery, input/review,
+exact decision, atomic dispatch and duplicate-dispatch protection are exercised.
+The coder worker then exits before listening to its queue: DBOS3.2 already owns
+deployment version `v1` under `nexus-planning`, so `nexus-coding` cannot claim it.
+Pytest fails99.72s; terminal101.991s rechecks all2,267 runtime pins unchanged.
+There is no C model attempt or issued intent, and the complete C/J cycle is unproven.
+
+The separate restricted NOSUPER/NOBYPASS and operator repeatable-read READ ONLY
+audits explicitly roll back with matching74-table counts. L is verifying/model1,
+C is awaiting_approval/model0, every tool count is0, and root owns model0/tool0/
+plan-revision1. L's USD0.004164 hold reconciles to known USD0.000002. C's unissued
+USD0.010507 reservation remains HELD with actual cost null; daily and Work ledgers
+conserve held USD0.010507 plus spent USD0.000002. DBOS retains one SUCCESS and one
+ENQUEUED command, with no worker lease or other application connection. Only the
+owned v7 cluster is stopped (exit0/status3), with failed data and queue retained.
+No reset, refund, re-owning, requeue or consumed-binding retry occurred.
+
+ERROR-234 is fixed at the C routing boundary: its no-tool typed patch and upfront
+quote now share code/structured_output requirements. Actual v7 crosses preparation;
+the focused repair passes134 checks/23.02s and configured strict/Ruff9. Generic
+whole-input/actual-tool denials and model capability, budget and price guards stay
+intact. The distinct ERROR-235 deployment-version repair holds16 files with148
+focused checks/25.89s and configured strict/Ruff23. It maps only exact current L/C
+registrations to `nexus-planning-v1` and `nexus-coding-v1`, retaining logical ABI
+`v1`. Legacy metadata is readable only after original issued-native proof; an old
+unissued command cannot activate. ADR-139 records this source design. The fresh DBOS
+compatibility microprobe and final combined freeze/unit/static run are NOT STARTED.
+A6 v8 is unexecuted; source checks do not establish either result.
+
+The full2,266-pin unit run is terminal FAILED:5,686 passed,17 failed, zero skipped
+in790.34s; actual coverage63.644004% is below the unchanged80% gate. Configured
+normal strict/Ruff/format158 pass on that same earlier cohort. The subsequent
+8-file test/helper repair uses a genuine per-case600-second witness anchor,
+Bangkok billing-day alignment and actual filesystem-leaf barriers, preserving
+production guards and original finite ends. Its127 functional cases pass118.04s
+under actual coverage; subset15.093471% still exits1 against80%. The combined freeze/unit/static
+run on the repaired version/auth/fixture union is NOT STARTED. The pushed `1dcf415`
+5,585-unit result remains historical, separate evidence; no PR gate is waived.
+
+The owner's original invitation was expired and unused. Reviewed auth source
+passes71 focused checks and strict/Ruff5, and the actual scoped renewal preserves
+password/account, sibling, directory and role state. Readiness at19:18:14UTC on
+2026-10-16 confirms API health200, login200 and genuine protected identity401.
+The new invitation expires2026-10-17T03:13:30Z (10:13 Bangkok); no password signup
+or signed-in browser acceptance is verified. Secret contents were not inspected.
+The first frozen-source API start failed because `pilot_preview._git_document`
+requires a Git checkout. Restoration uses the actual Git layout, with no model,
+provider, queue or native activation. This is a local-preview limitation, not
+frozen-runtime or deployment qualification (ERROR-236/237, ADR-140).
+
+Host offline Python wheel and exact-lock Node/npm builds,14 prepared public test
+wheels and mixed-recipe43 focused checks remain packaging/source evidence. They
+do not qualify a portable image, installed test closure, cold-cache build or ARM64.
+A complete Nexus-owned operating cycle, genuine multiple-provider quality and
+US$5/day operation, native independent E/EV, Strategy/presentation/support,
+owner browser UAT, reporting/email, private deployment, independent restore/
+rollback and24-hour soak remain required. Board promotion stays explicitly gated;
+automatic Meta Harness remains deferred. The owner has requested stopping this
+build; these are outstanding resume gates, not a release claim or a new schedule.
+
+## Earlier 2026-10-16 application and coding detail (historical)
 
 The actual owner application/recovery test passes38.43s: public bootstrap and
 separate approvals, persisted pending-request interruption, cold recomposition,
@@ -57,8 +129,17 @@ DBOS installation, then fails on a fixture's strict Python/JSON parsing boundary
 before any account, company, native/model request or worker. Separate restricted
 and operator RR READ ONLY/rollback audits confirm74 FORCERLS tables, zero company
 rows/workflows/app connections. Its owned cluster is stopped with data/claim/logs
-preserved. A strict JSON fixture repair and fresh v2 namespace are next; no actual
-C model/build cycle is claimed.
+preserved. The strict JSON and namespace-derived registry-pin repair passes pure
+positive/negative and strict/Ruff6 checks. A fresh v2 run gets through the catalog,
+then stops at the fixture's ten accounts versus the existing eight-account cap.
+Its separate read-only audit confirms controls1/directory1/memberships10 and zero
+registered/native Work, attempts, intents, dispatches, holds or workflows. That
+owned cluster is also stopped and preserved. A five-active-identity fixture and
+fresh v3 namespace are next; no actual C model/build cycle is claimed.
+
+The tested coding source milestone is committed and pushed as `1dcf415` on
+`feat/company-foundation`; develop/main remain unchanged. The integration fixture
+and two exact normal017 test-head forwards are separate pending test work.
 Autonomous code authoring, whole-cycle model accounting, Strategy/presentation/
 support, current bounded builder/ARM64, reporting/email, private deployment,
 independent restore/rollback and24-hour soak remain required. Native activation

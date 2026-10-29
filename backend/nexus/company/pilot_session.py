@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import hmac
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -23,9 +24,27 @@ from nexus.company.access import (
 from nexus.company.pilot_session_store import (
     PilotCredential,
     PilotCredentialFile,
+    commit_signup,
     load_credentials,
-    save_credentials,
 )
+
+
+async def _owned_thread[T, **P](function: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+    """Keep the actual private I/O/hash owner through repeated caller cancellation."""
+    operation = asyncio.create_task(asyncio.to_thread(function, *args, **kwargs))
+    try:
+        return await asyncio.shield(operation)
+    except asyncio.CancelledError:
+        while not operation.done():
+            try:
+                await asyncio.shield(operation)
+            except asyncio.CancelledError:
+                continue
+            except Exception:
+                break
+        if not operation.cancelled():
+            operation.exception()
+        raise
 
 
 class PilotLogin(BaseModel):
@@ -61,11 +80,13 @@ class PilotSessionService:
 
     async def login(self, data: PilotLogin) -> PilotSessionToken:
         async with self._lock:
-            account = self._account(load_credentials(self.account_file), data.email)
+            account = self._account(
+                await _owned_thread(load_credentials, self.account_file), data.email
+            )
             valid = bool(
                 account
                 and account.password_hash
-                and await asyncio.to_thread(verify_password, data.password, account.password_hash)
+                and await _owned_thread(verify_password, data.password, account.password_hash)
             )
             if not valid or account is None:
                 raise NotAuthorizedException(detail="Task session credentials are unavailable")
@@ -74,7 +95,7 @@ class PilotSessionService:
 
     async def signup(self, data: PilotSignup) -> PilotSessionToken:
         async with self._lock:
-            stored = load_credentials(self.account_file)
+            stored = await _owned_thread(load_credentials, self.account_file)
             account = self._account(stored, data.email)
             digest = hashlib.sha256(data.invitation.encode()).hexdigest()
             if (
@@ -86,27 +107,16 @@ class PilotSessionService:
                 or not hmac.compare_digest(digest, account.signup_sha256)
             ):
                 raise NotAuthorizedException(detail="Task session invitation is unavailable")
-            password = await asyncio.to_thread(hash_password, data.password)
+            password = await _owned_thread(hash_password, data.password)
             await self._current(account)
-            if (
-                account.signup_expires_at <= datetime.now(UTC)
-                or load_credentials(self.account_file) != stored
-            ):
-                raise NotAuthorizedException(detail="Task session invitation changed or expired")
-            current = account.model_copy(
-                update={"password_hash": password, "signup_sha256": None, "signup_expires_at": None}
-            )
-            save_credentials(
-                self.account_file,
-                stored.model_copy(
-                    update={
-                        "accounts": tuple(
-                            current if row.principal_id == account.principal_id else row
-                            for row in stored.accounts
-                        )
-                    }
-                ),
-            )
+            try:
+                current = await _owned_thread(
+                    commit_signup, self.account_file, stored, account, password
+                )
+            except (ValueError, OSError) as exc:
+                raise NotAuthorizedException(
+                    detail="Task session invitation changed or expired"
+                ) from exc
             return self._token(current)
 
     async def _current(self, account: PilotCredential) -> None:

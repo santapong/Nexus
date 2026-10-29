@@ -1,6 +1,141 @@
 # CHANGELOG.md
 ## NEXUS — Project Change History
 
+## [2026-10-29] — Preserve qualification budget boundaries
+
+- Preserved the published legacy Alembic revisions while recording their
+  existing Ruff findings as an exact-file baseline. CI now runs broad Ruff and
+  a companion guard that verifies revision hashes and rejects changed baseline
+  diagnostics; the historical findings remain documented exceptions.
+- Replaced CI's global missing-import suppression with named exceptions for
+  absent optional legacy SDKs. Strict mypy still treats those absent SDK APIs as
+  unqualified; unrelated missing imports remain errors.
+- The feature candidate passed 5,828 unit tests, broad Ruff with the legacy
+  guard, CI-targeted format checking, and strict mypy with those named
+  exceptions. The separate 80% coverage and release gates remain open.
+- Added separate disposable-PostgreSQL integration tests for a company budget
+  cap and an issued model request with an unknown billing outcome. The tests
+  verify denial before an extra mock request and retention of the unknown hold
+  without replay. Each has its own explicit database configuration and CI row.
+- Both tests passed on PostgreSQL 17 with SDK MockTransport and independent
+  restricted read-only audits. Their PostgreSQL 16 CI jobs have not yet run.
+- A reconciled snapshot passed 5,822 unit tests with coverage and the two budget
+  integrations. Its exploratory combined coverage was 64.539840%, below the
+  unchanged 80% threshold; the unit runtime dependencies were not fully pinned.
+  A later type-only helper adjustment is not part of that snapshot.
+
+## [2026-10-28] — Resume Nexus and qualify the governed coding application
+
+### Changed
+
+- Added a local canonical task board for the phased team and Waypoint trial.
+- The offline coding transport retains the resolved endpoint timeout instead of
+  forcing two seconds. A regression covers explicit short and normal timeouts;
+  production timeout and authorization code are unchanged (ERROR-238).
+- The coding worker success fixture now opts into a bounded ten-second endpoint;
+  a delayed synthetic response exercises that path, and the helper's default
+  and original SDK deadline remain intact (ERROR-240).
+- The planning-consumer fake recorder now preserves unknown billing; delayed
+  responses for both mock providers exercise the failure boundary (ERROR-241).
+- Model transport handoff is now guarded by the original deadline, stop latch
+  and one-per-attempt commitment. Qualification pins include the new boundary
+  while retaining legacy records for historical reads (ERROR-242).
+- The reviewed input-estimator recipe advances to v2 and pins both adapter and
+  transport source; legacy data remains readable but is not fresh authority
+  (ERROR-244).
+- Mock response-conformance tests opt into a bounded setup window while the
+  shared short-deadline fixture remains available (ERROR-245).
+- The fresh application fixture uses a new synthetic namespace and a newly
+  verified receipt for the same committed source/archive. Earlier v9/v10
+  unknown synthetic holds and failures remain retained.
+
+### Validation
+
+- A real isolated PostgreSQL17/DBOS3.2 metadata probe exercised the production
+  enqueue boundary and two distinct planner/coder no-op workers. Both completed;
+  the old unissued version stayed unclaimed and a fresh old-identity enqueue
+  was denied and rolled back.
+- The v11 public owner planning→coding→publication test passed with two SDK
+  MockTransport requests (`1 passed in 123.48s`). Its first wrapper had a
+  duplicate-path handoff error; a separate restricted read-only audit against
+  the same retained synthetic database passed and PostgreSQL stopped (ERROR-239).
+  The audit confirms two attempts, intents, dispatches and publication sources,
+  no leases/connections and USD0.000004 known synthetic spend.
+- Two synthetic Waypoint uncertain-create cases and ten isolated Waypoint
+  ASGI/PostgreSQL17 management cases passed. Owner-view acceptance and live
+  migration remain open. The refreshed Nexus cohort collected 5,798 cases; the
+  full unit/coverage gate remains in progress.
+- The changed transport boundary and related provider/qualification checks
+  passed 130 focused SDK-mock tests on the frozen candidate. Integrated
+  PostgreSQL/DBOS and full same-source coverage remain pending.
+- A later estimator/transport cohort passed 204 focused tests, including
+  rejection of a legacy input proof against the new recipe. These checks overlap
+  the earlier focused suite and do not establish combined coverage.
+- The response-conformance and ownership suites passed 92 focused checks with
+  coverage instrumentation on a fresh source; this is not a full coverage pass.
+- A fresh v13 owner planning→coding→publication test passed with two SDK mock
+  requests after the transport and estimator changes. Its restricted read-only
+  rollback audit confirmed both synthetic costs reconciled; an earlier v12
+  coding-preparation 503 remains unexplained and its evidence is preserved.
+- All 5,822 unit tests passed on a fresh source cohort. The unchanged 80%
+  coverage gate failed at 64.148269%; additional meaningful coverage is open.
+
+### Release limits
+
+No live model quality, native builder/ARM64, owner browser, configured email,
+80% coverage, private deployment, restore/rollback or 24-hour soak is claimed.
+
+## [2026-10-17] — Preserve the actual coding-worker failure and owner setup repair
+
+### Actual validation
+
+- A6 v7 exercises one planner SDK MockTransport request, candidate, same-root r2,
+  separate approval and protected C preparation/recomposition/recovery/input/
+  review/decision/dispatch/no-duplicate dispatch. C worker startup fails on DBOS3.2
+  deployment version `v1` already owned by planning, before a C call or effect.
+  Pytest99.72s/terminal101.991s fails with2,267 source pins unchanged.
+- Failure-specific restricted/operator READ ONLY rollback audits agree on all74
+  table counts. L cost USD0.000002 remains reconciled; C USD0.010507 remains HELD,
+  actual null, with model0/tool0 and no lease. Daily/Work conservation holds.
+  Only owned v7 PostgreSQL stops, with data/queue retained; no reset or refund.
+- The earlier2,266-pin full unit run ends5,686 passed/17 failed/zero skipped,
+  790.34s, actual coverage63.644004% below80%. Static158 pass on that same cohort.
+  Its full failure remains preserved rather than being described as RUNNING.
+
+### Fixed boundaries and held source
+
+- ERROR-234's C policy and upfront quote now share no-tool code/structured_output
+  requirements:134 focused checks/23.02s, strict/Ruff9. Actual v7 crosses the
+  formerly failing preparation boundary. Generic actual-tool denials stay intact.
+- ERROR-235 has a16-file deployment-version repair with148 focused checks/25.89s
+  and strict/Ruff23: exact L/C deployments use `nexus-planning-v1` and
+  `nexus-coding-v1`, with logical ABI `v1` unchanged. Only genuinely issued original
+  native proof permits historical legacy metadata. The compatibility microprobe and
+  final combined freeze/unit/static are NOT STARTED; A6 v8 is unexecuted (ADR-139).
+- Eight test/helper files repair late import-time600-second witnesses, Bangkok
+  billing-day expectations and filesystem-leaf timing barriers.127 functional
+  checks pass118.04s with actual coverage; subset15.093471% still fails80%.
+  No production time/authorization guard changes or repaired-union full pass follows.
+- ERROR-236: the actual owner's expired-unused invitation is renewed after writer
+  quiescence, without password reset or sibling/directory/role changes. Auth source
+  passes71 focused checks/strictRuff5 and favorable independent review. Readiness
+  proves health/login200 and protected identity401; owner signup stays unverified.
+- ERROR-237: frozen-preview start fails because Git document loading needs `.git`.
+  The API is restored using the actual Git checkout layout. This mitigates local
+  availability and does not prove portable frozen-preview deployment (ADR-140).
+
+### Release limits
+
+- Earlier title/017/strict-JSON/atime repairs, host wheel/npm builds and14 prepared
+  public test wheels retain their recorded component scope. They do not qualify
+  complete C/J, live models, image/native E/EV or ARM64.
+- No current combined-source80% gate, signed-in owner UAT, full Nexus operating
+  cycle, private deployment, restore/rollback or24-hour soak is complete.
+  The owner requested stopping the build; unresolved work is preserved for handoff.
+
+**Authored by:** Codex and a small multi-agent team
+**PR:** not published
+
 ## [2026-10-16] — Build the governed coding and whole-family financial path
 
 ### Added
@@ -63,14 +198,23 @@
   stable. Configured strict/Ruff/format147 pass after an import-order-only schema
   exporter forward with unchanged bindings and non-import AST.
 
-Actual L→C acceptance, meaningful full coverage and native E/EV remain open.
+Historical sequence, superseded by the2026-10-17 entry above: actual L→C
+acceptance, meaningful full coverage and native E/EV remain open.
 The first actual fixture installs normal company001–017/DBOS, then fails on strict
 JSON/Python reconstruction before accounts, company rows or native/model issuance.
 A separate restricted/operator RR READ ONLY/rollback audit confirms74 FORCERLS
 tables, zero company rows/workflows/connections. The owned cluster is stopped
 with data/claim/source/logs preserved; strict fixture repair and fresh v2 follow.
+The strict JSON/derived-registry-pin forward passes pure/static checks; fresh v2
+gets past the catalog, then stops at the eight-account file bound. Its read-only
+audit retains only directory bootstrap and zero native/model state. A minimal
+five-active-identity fixture/fresh v3 is next; the bound and all ten roles remain.
 No actual C request, native run, owner browser acceptance,
-preview reset, remote push, deployment or release activation follows.
+preview reset, deployment or release activation follows.
+
+The165-file tested coding source milestone is pushed as `1dcf415` on
+`feat/company-foundation`; long-lived branches are unchanged. Qualification test
+work remains separate. Coverage and the supervised release stay open.
 
 **Authored by:** Codex and three bounded implementation agents
 **PR:** not published

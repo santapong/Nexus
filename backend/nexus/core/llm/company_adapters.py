@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import math
 import time
+from _thread import LockType
 from datetime import UTC, datetime
-from threading import Event
+from threading import Event, Lock
 from typing import cast
 
 import httpx2
@@ -33,6 +34,7 @@ from nexus.core.llm.company_eligibility import (
 from nexus.core.llm.company_input_bounds import require_model_input_bounds
 from nexus.core.llm.company_pricing import CostQuote, quote_cost, reconcile_cost
 from nexus.core.llm.company_registry import ModelRegistration, ModelRegistry
+from nexus.core.llm.company_transport import transport_guard
 from nexus.core.llm.company_wire_usage import WireObserver
 
 logger = structlog.get_logger()
@@ -112,11 +114,13 @@ class CompanyModelAdapters:
             raise ValueError("Original model operation needs a finite current end")
         self._operation_end_us = operation_end_us
         self._stopped = Event()
+        self._stop_lock = Lock()
         self._owners: list[asyncio.Task[object]] = []
 
     def request_stop(self) -> None:
         """Deny future issuance; already-issued SDK/context cleanup remains owned."""
-        self._stopped.set()
+        with self._stop_lock:
+            self._stopped.set()
 
     def pending_owners(self) -> tuple[asyncio.Task[object], ...]:
         """Actual SDK/context-close tasks; finished late values confer no authority."""
@@ -186,6 +190,7 @@ class CompanyModelAdapters:
                 error_code="original_model_operation_expired",
             )
         end = anchor + max(0, remaining)
+        end_us = time.monotonic_ns() // 1000 + int(max(0, end - loop.time()) * 1_000_000)
         task = asyncio.create_task(
             _invoke(
                 request,
@@ -196,6 +201,8 @@ class CompanyModelAdapters:
                 before_sdk=self._before_sdk,
                 eligibility_sha256=provenance.sha256 if provenance else None,
                 stopped=self._stopped,
+                stop_lock=self._stop_lock,
+                end_us=end_us,
             )
         )
         self._owners.append(cast(asyncio.Task[object], task))
@@ -265,19 +272,22 @@ async def _invoke(
     before_sdk: BeforeModelSdk | None = None,
     eligibility_sha256: str | None = None,
     stopped: Event,
+    stop_lock: LockType,
+    end_us: int,
 ) -> CompanyModelResult:
     observer = WireObserver(row)
     try:
         if stopped.is_set():
             return _cancelled(request)
-        async with sdk_model(row, endpoint, observer) as model:
-            if stopped.is_set():
-                raise asyncio.CancelledError("Model stopped before current SDK check")
-            if before_sdk is not None:
-                now = await before_sdk(request, quote, eligibility_sha256)
-            if stopped.is_set():
-                raise asyncio.CancelledError("Model stopped before SDK issuance")
-            response = await request_model(model, request)
+        with transport_guard(stopped.is_set, end_us, stop_lock):
+            async with sdk_model(row, endpoint, observer) as model:
+                if stopped.is_set():
+                    raise asyncio.CancelledError("Model stopped before current SDK check")
+                if before_sdk is not None:
+                    now = await before_sdk(request, quote, eligibility_sha256)
+                if stopped.is_set():
+                    raise asyncio.CancelledError("Model stopped before SDK issuance")
+                response = await request_model(model, request)
         if stopped.is_set():
             return _cancelled(request, observer)
         if observer.usage is None:

@@ -29,6 +29,7 @@ from nexus.company.brain.retrieval_records import heads, revision_ref
 from nexus.company.brain.source_models import BrainSourceRevision
 from nexus.company.contracts.actions import ResourceRevision
 from nexus.company.contracts.knowledge import ArtifactRef
+from nexus.company.contracts.work import WorkItem
 from nexus.company.directory_models import RegisteredWork
 from nexus.company.management.acceptance_freshness import RegisteredSourceFreshness
 from nexus.company.management.canonical import canonical_sha256
@@ -143,7 +144,9 @@ async def native_cost_selection(
     )
 
 
-async def stored_coding_profile(session: AsyncSession, admission: NexusCodingAdmission) -> bool:
+async def stored_coding_profile(
+    session: AsyncSession, admission: NexusCodingAdmission, *, works: tuple[WorkItem, ...] = ()
+) -> bool:
     """Historical immutable approved payload, not current Goal/head/eligibility authority."""
     rows = tuple(
         (
@@ -185,7 +188,20 @@ async def stored_coding_profile(session: AsyncSession, admission: NexusCodingAdm
             ).all()
         )
         select_nexus_coding_plan(admission, value.payload)
-        bound = bound or bool(approvals)
+        approved = (
+            bool(approvals)
+            if not works
+            else any(
+                approval.owner_id == admission.procedure.binding.actor_id for approval in approvals
+            )
+        )
+        bound = bound or (
+            approved
+            and (
+                not works
+                or (value.revision == 2 and all(work in value.payload.plan.items for work in works))
+            )
+        )
     return bound
 
 

@@ -28,6 +28,7 @@ from nexus.execution.runtime_contracts import ExecutionLease
 from nexus.execution.runtime_models import EffectIntent, ExecutionAttempt, ExecutionWork
 from nexus.execution.runtime_support import registration_digest
 from nexus.harness.canonical import action_hash
+from nexus.harness.journal_budget import billing_day
 from nexus.harness.journal_models import CompanyControl, CostHold, JournalAction
 from nexus.tests.unit.cycle_catalog_fixture import cycle_catalog
 
@@ -136,7 +137,7 @@ class IntentBoundary:
         assert self.added == []
         assert self.hold.state == ("unknown" if issued else "held")
         assert self.hold.amount_usd == Decimal("0.01") and self.hold.actual_usd is None
-        assert self.hold.day == self.now.date()
+        assert self.hold.day == billing_day(self.now)
         assert self.action.state == "authorized"
         assert self.action.consumed_at == self.now - timedelta(seconds=1)
         self.hold_move.assert_not_awaited()
@@ -233,7 +234,7 @@ def _intent_boundary(role: Literal["engineering", "verifier", "sender"]) -> Inte
         action_id=proposal.action_id,
         company_id=proposal.company_id,
         task_id=proposal.task_id,
-        day=now.date(),
+        day=billing_day(now),
         amount_usd=Decimal("0.01"),
         actual_usd=None,
         state="held",

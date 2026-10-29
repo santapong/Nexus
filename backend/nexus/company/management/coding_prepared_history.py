@@ -27,6 +27,7 @@ from nexus.company.management.coding_prepared_contracts import (
     prepared_reference,
 )
 from nexus.company.management.lifecycle import PlanRevisionRef
+from nexus.company.management.nexus_coding_catalog import coding_work_matches_template
 from nexus.company.management.owner_view_sources import owner_brain_scope
 from nexus.company.management.plan_models import ManagementPlanRevision
 from nexus.company.management.plan_registration import registration
@@ -80,12 +81,17 @@ async def validate_history_locked(
         scope.principal_id != credential.identity.principal_id
         or control.owner_id != scope.principal_id
         or selected.directory.work is None
+        or not coding_work_matches_template(selected.directory.work.registration.work, slot.work)
         or selected.directory.work.registration
-        != registration(slot.child.binding, slot.work, slot.child.quota)
+        != registration(
+            slot.child.binding, selected.directory.work.registration.work, slot.child.quota
+        )
         or action_hash(action) != selected.action.proposal_hash
         or selected.directory.root_task_id != admission.procedure.binding.task_id
         or selected.directory.parent_task_id != admission.procedure.binding.task_id
-        or not await stored_coding_profile(session, admission)
+        or not await stored_coding_profile(
+            session, admission, works=(selected.directory.work.registration.work,)
+        )
     ):
         raise ManagementDeniedError("Coding historical native/root/owner profile differs")
     root_hash = await root_registration(session, admission, historical=True)

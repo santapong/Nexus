@@ -11,7 +11,14 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from nexus.builder.contained_query import clock_us
 from nexus.execution.coding_history import require_workflow_binding
 from nexus.execution.coding_operation import CodingOperation
-from nexus.execution.coding_services import APPLICATION, QUEUE, REGISTRATION, VERSION, WORKFLOW
+from nexus.execution.coding_services import (
+    APPLICATION,
+    APPLICATION_VERSION,
+    QUEUE,
+    REGISTRATION,
+    VERSION,
+    WORKFLOW,
+)
 from nexus.tests.unit.coding_runtime_fixture import command, runtime_case
 
 
@@ -134,7 +141,7 @@ def test_only_fixed_actual_dbos_portable_input_can_be_native_history(
     row = {
         "name": WORKFLOW,
         "queue_name": QUEUE,
-        "application_version": VERSION,
+        "application_version": APPLICATION_VERSION,
         "application_name": APPLICATION,
         "serialization": "portable_json",
         "inputs": json.dumps({"positionalArgs": [selected.model_dump_json()], "namedArgs": {}}),

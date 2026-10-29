@@ -29,6 +29,7 @@ from nexus.company.management.revision_store import plan_record, plan_reference
 from nexus.core.llm.company_adapter_contracts import CompanyModelRequest
 from nexus.core.llm.company_input_bounds import model_input_ceiling
 from nexus.core.llm.company_pricing import TokenBounds
+from nexus.core.llm.company_registry import Capability
 from nexus.core.llm.company_routing import ModelPolicy, RoutedModel, route_models
 from nexus.execution.coding_operation import CodingOperation
 from nexus.execution.coding_services import (
@@ -47,6 +48,10 @@ from nexus.execution.runtime_support import (
 from nexus.harness.journal_budget import billing_day
 from nexus.harness.journal_contracts import LedgerScope
 from nexus.harness.journal_models import CompanyControl, DailyBudget, WorkBudget
+
+CODING_REQUEST_CAPABILITIES: frozenset[Capability] = frozenset({"code", "structured_output"})
+# C produces a typed patch without SDK tool calls. The engineering profile still
+# requires model tool capability; explicit request tools retain their separate denial.
 
 
 @dataclass(frozen=True)
@@ -200,7 +205,7 @@ def route_prepared(
         allowed_providers=frozenset({row.provider}),
         allowed_api_families=frozenset({row.api_family}),
         data_classification=call.data_classification,
-        required_capabilities=frozenset({"code", "tools", "structured_output"}),
+        required_capabilities=CODING_REQUEST_CAPABILITIES,
         minimum_score=services.recipe.minimum_score,
         evaluation_suite_version=services.recipe.evaluation_suite_version,
         available_usd=max(Decimal(0), available),

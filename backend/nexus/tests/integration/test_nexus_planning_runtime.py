@@ -77,6 +77,7 @@ from nexus.execution.planning_owner_reads import (
 from nexus.execution.planning_preparation import prepare_work
 from nexus.execution.planning_services import (
     APPLICATION,
+    APPLICATION_VERSION,
     QUEUE,
     VERSION,
     WORKFLOW,
@@ -260,7 +261,13 @@ async def queue_row(database: Database, command: SegmentCommand) -> None:
                 {"id": command.workflow_id},
             )
         ).one()
-        assert tuple(row[:5]) == (WORKFLOW, QUEUE, VERSION, APPLICATION, "portable_json")
+        assert tuple(row[:5]) == (
+            WORKFLOW,
+            QUEUE,
+            APPLICATION_VERSION,
+            APPLICATION,
+            "portable_json",
+        )
         assert json.loads(row[5]) == {
             "positionalArgs": [command.model_dump_json()],
             "namedArgs": {},

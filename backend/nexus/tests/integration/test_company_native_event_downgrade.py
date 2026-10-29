@@ -43,7 +43,7 @@ async def test_native_event_downgrade_failure_preserves_version_row_and_columns(
                         await connection.run_sync(downgrade014)
                 assert (
                     await connection.scalar(text("SELECT version_num FROM company_alembic_version"))
-                    == "company_016"
+                    == "company_017"
                 )
                 assert (
                     await connection.scalar(

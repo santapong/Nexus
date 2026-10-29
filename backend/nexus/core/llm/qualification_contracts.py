@@ -35,7 +35,7 @@ QUEUE = "nexus.model-qualification"
 APPLICATION = "nexus-model-qualification"
 PROFILE = "qualification-only.v1"
 TOOL = "model.qualify.v1"
-SDK_MODULES = (
+LEGACY_SDK_MODULES = (
     "nexus.core.llm.company_adapter_sdk",
     "nexus.core.llm.company_wire_usage",
     "nexus.core.llm.company_input_bounds",
@@ -47,7 +47,20 @@ SDK_MODULES = (
     "google.genai._extra_utils",
     "openai._base_client",
 )
-SDK_DISTRIBUTIONS = ("pydantic-ai-slim", "google-genai", "openai")
+LEGACY_SDK_DISTRIBUTIONS = ("pydantic-ai-slim", "google-genai", "openai")
+SDK_MODULES = (
+    *LEGACY_SDK_MODULES,
+    "nexus.core.llm.company_transport",
+    "nexus.core.llm.company_adapters",
+    "nexus.harness.qualification_client",
+    "httpx2._client",
+    "httpx2._transports.base",
+    "httpx2._transports.default",
+    "httpcore2._async.connection_pool",
+    "httpcore2._async.http_proxy",
+    "httpcore2._async.socks_proxy",
+)
+SDK_DISTRIBUTIONS = (*LEGACY_SDK_DISTRIBUTIONS, "httpx2", "httpcore2")
 
 
 class SdkVersion(ModelContract):
@@ -67,10 +80,12 @@ class SdkPins(ModelContract):
 
     @model_validator(mode="after")
     def complete(self) -> Self:
-        if (
-            tuple(v.distribution for v in self.versions) != SDK_DISTRIBUTIONS
-            or tuple(v.module for v in self.files) != SDK_MODULES
-        ):
+        version_names = tuple(v.distribution for v in self.versions)
+        module_names = tuple(v.module for v in self.files)
+        if (version_names, module_names) not in {
+            (SDK_DISTRIBUTIONS, SDK_MODULES),
+            (LEGACY_SDK_DISTRIBUTIONS, LEGACY_SDK_MODULES),
+        }:
             raise ValueError("Qualification needs the exact complete SDK source/version set")
         return self
 

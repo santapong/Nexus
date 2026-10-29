@@ -20,6 +20,7 @@ from nexus.company.management.coding_sources import CodingSourceRef, require_cod
 from nexus.company.management.governance_models import ManagementGoalHead, ManagementGoalRevision
 from nexus.company.management.nexus_coding_admission import NexusCodingAdmission
 from nexus.company.management.nexus_coding_catalog import (
+    coding_work_matches_template,
     configured_nexus_admission,
     select_configured_nexus_plan,
 )
@@ -383,10 +384,12 @@ class CodingIntentCheck:
         catalog = contexts._authority.management.catalog
         admission = configured_nexus_admission(catalog)
         assert isinstance(admission, NexusCodingAdmission)
-        if select_configured_nexus_plan(catalog, record.payload) != "execution" or (
-            bound.child,
-            bound.work,
-            bound.procedure_id,
-        ) != (admission.slots[1].child, admission.slots[1].work, admission.procedure.procedure_id):
+        if (
+            select_configured_nexus_plan(catalog, record.payload) != "execution"
+            or bound.child != admission.slots[1].child
+            or not coding_work_matches_template(bound.work, admission.slots[1].work)
+            or bound.work not in record.payload.plan.items
+            or bound.procedure_id != admission.procedure.procedure_id
+        ):
             raise ValueError("Coding actual native work differs from its complete approved family")
         self.require_composition()

@@ -40,6 +40,7 @@ from nexus.company.management.coding_publication_contracts import (
 from nexus.company.management.cycle_cost_contracts import NativeCostSelection
 from nexus.company.management.cycle_model_reader import native_cost_selection
 from nexus.company.management.lifecycle import PlanRevisionRef
+from nexus.company.management.nexus_coding_catalog import coding_work_matches_template
 from nexus.company.management.plan_store import ManagementPlanStore
 from nexus.company.management.planning_native_facts import clock_us
 from nexus.company.notifications.worker_identity import AuthenticatedWorkerIdentity
@@ -178,7 +179,7 @@ def require_c_native(
             "model-result-envelope-v1",
             (bound.actor_id, owner),
         )
-        or work.registration.work != slot.work
+        or not coding_work_matches_template(work.registration.work, slot.work)
         or work.registration.quota != slot.child.quota
         or (
             work.registration.run_id,
@@ -353,7 +354,7 @@ async def read_origin_selection(
         or (held is None)
         or (approval is None)
         or (native.action.proposal.actor_id != coder.child.binding.actor_id)
-        or (current.registration.work != coder.work)
+        or not coding_work_matches_template(current.registration.work, coder.work)
         or (current.registration.run_id != coder.child.binding.run_id)
         or (current.state != "verifying")
         or (current.worker_id is not None)
@@ -396,6 +397,8 @@ async def read_origin_selection(
     )
     if binding is None:
         raise ValueError("Original C approved plan binding is unavailable")
+    if current.registration.work != binding.work:
+        raise ValueError("Original C native work differs from its exact approved work")
     refs = await reader._checked(
         origin_references(reader, session, control, scope, credential, end_us), credential, end_us
     )

@@ -12,6 +12,9 @@ from nexus.company.management.strategy_transition import (
 from nexus.company.management.transactions import ManagementDeniedError
 from nexus.tests.unit.cycle_admission_fixture import declared
 from nexus.tests.unit.cycle_full_structural_support import configured
+from nexus.tests.unit.plan_admission_witness_fixture import (
+    admission_case_clock as admission_case_clock,
+)
 from nexus.tests.unit.plan_admission_witness_fixture import bound_witness
 from nexus.tests.unit.test_plan_choice_wire_integration import selection
 

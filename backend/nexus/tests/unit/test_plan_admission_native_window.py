@@ -16,6 +16,9 @@ from nexus.tests.unit.cycle_admission_fixture import declared
 from nexus.tests.unit.cycle_catalog_fixture import cycle_catalog
 from nexus.tests.unit.plan_admission_fixture_data import NOW, ordinary_fixture
 from nexus.tests.unit.plan_admission_fixture_session import MetadataSession, qualifier
+from nexus.tests.unit.plan_admission_witness_fixture import (
+    admission_case_clock as admission_case_clock,
+)
 from nexus.tests.unit.plan_admission_witness_fixture import bound_witness
 
 

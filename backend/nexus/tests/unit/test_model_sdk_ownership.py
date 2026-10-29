@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import UTC, datetime
+from typing import cast
 
 import httpx2
 import pytest
@@ -12,6 +14,8 @@ from nexus.builder.contained_query import clock_us
 from nexus.core.llm.company_adapter_contracts import CompanyModelRequest, ModelRequestCancelledError
 from nexus.core.llm.company_pricing import CostQuote
 from nexus.tests.unit.test_company_provider_conformance import (
+    Authorizer,
+    EndpointResolver,
     adapter,
     request,
     response,
@@ -40,10 +44,10 @@ async def test_cancelled_actual_sdk_close_keeps_original_resource_owner(
         return httpx2.Response(200, json=response("openai"))
 
     monkeypatch.setattr(httpx2.AsyncClient, "aclose", close)
-    model = adapter("openai", httpx2.MockTransport(wire))
+    model = adapter("openai", httpx2.MockTransport(wire), timeout_seconds=30)
     task = asyncio.create_task(model.request_once(request(), now=datetime.now(UTC)))
     try:
-        await asyncio.wait_for(closing.wait(), 2)
+        await asyncio.wait_for(closing.wait(), 20)
         task.cancel("First caller stop")
         await asyncio.sleep(0)
         task.cancel("Repeated caller stop")
@@ -65,6 +69,7 @@ async def test_shorter_original_sdk_end_cannot_issue_after_pre_sdk_wait(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     posts: list[str] = []
+    entered, finish = asyncio.Event(), asyncio.Event()
 
     def wire(call: httpx2.Request) -> httpx2.Response:
         posts.append(call.method)
@@ -73,16 +78,31 @@ async def test_shorter_original_sdk_end_cannot_issue_after_pre_sdk_wait(
     async def before(
         request: CompanyModelRequest, quote: CostQuote, eligibility_sha256: str | None
     ) -> datetime:
-        await asyncio.sleep(0.05)
+        entered.set()
+        await finish.wait()
         return datetime.now(UTC)
 
-    model = adapter("openai", httpx2.MockTransport(wire))
+    authority = Authorizer()
+    model = adapter("openai", httpx2.MockTransport(wire), authority)
+    resolver = cast(EndpointResolver, model._resolver)
+    resolver.endpoint = replace(resolver.endpoint, timeout_seconds=10)
     model._before_sdk = before
-    monkeypatch.setattr(model, "_operation_end_us", clock_us() + 10_000, raising=False)
-    outcome = await model.request_once(request(), now=datetime.now(UTC))
-    await asyncio.gather(*model.pending_owners())
+    # Set one original finite end before admission; never renew it after claim.
+    original_end = clock_us() + 5_000_000
+    monkeypatch.setattr(model, "_operation_end_us", original_end)
+    caller = asyncio.create_task(model.request_once(request(), now=datetime.now(UTC)))
+    try:
+        await asyncio.wait_for(entered.wait(), 5)
+        assert authority.claims == 1 and clock_us() < original_end
+        outcome = await asyncio.wait_for(caller, 8)
+        assert outcome.status == "failed" and outcome.billing == "unknown"
+        assert model._operation_end_us == original_end and clock_us() >= original_end
+        assert model.pending_owners()
+    finally:
+        finish.set()
+        await asyncio.gather(caller, *model.pending_owners(), return_exceptions=True)
     assert posts == []
-    assert outcome.status == "failed" and outcome.billing == "unknown"
+    assert not model.pending_owners()
 
 
 async def test_cancellation_during_actual_pre_sdk_check_cannot_issue_later() -> None:

@@ -39,21 +39,34 @@ class Replies:
         return next(self.values)
 
 
-@pytest.mark.parametrize("version", ["company_015", "company_016"])
+@pytest.mark.parametrize("version", ["company_015", "company_016", "company_017"])
 async def test_complete_native_columns_require_a_known_exact_profile(version: str) -> None:
     replies = Replies(tuple(NATIVE_EVENT_FIELDS), version)
     assert await native_event_capability(cast(AsyncSession, replies))
     assert len(replies.queries) == 3
 
 
-@pytest.mark.parametrize("version", [None, 16, "company_014", "company_017", "company_016-extra"])
+@pytest.mark.parametrize(
+    "version",
+    [
+        None,
+        True,
+        False,
+        16,
+        17,
+        "company_014",
+        "company_018",
+        "company_016-extra",
+        "company_017-extra",
+    ],
+)
 async def test_unknown_profile_does_not_inherit_native_event_capability(version: object) -> None:
     replies = Replies(tuple(NATIVE_EVENT_FIELDS), version)
     with pytest.raises(BrainDeniedError, match="profile version"):
         await native_event_capability(cast(AsyncSession, replies))
 
 
-@pytest.mark.parametrize("version", ["company_015", "company_016"])
+@pytest.mark.parametrize("version", ["company_015", "company_016", "company_017"])
 async def test_missing_native_column_denies_even_a_known_profile(version: str) -> None:
     replies = Replies(tuple(NATIVE_EVENT_FIELDS)[1:], version)
     with pytest.raises(BrainDeniedError, match="incomplete"):
@@ -61,14 +74,19 @@ async def test_missing_native_column_denies_even_a_known_profile(version: str) -
     assert len(replies.queries) == 1
 
 
-async def test_legacy_column_shape_uses_only_legacy_sql() -> None:
-    replies = Replies(("company_id", "event_id"), "company_014")
+@pytest.mark.parametrize("version", ["company_008", "company_014", "company_017"])
+@pytest.mark.parametrize("names", [(), ("company_id", "event_id")])
+async def test_legacy_column_shape_uses_only_legacy_sql(
+    version: str, names: tuple[str, ...]
+) -> None:
+    replies = Replies(names, version)
     assert not await native_event_capability(cast(AsyncSession, replies))
     assert len(replies.queries) == 1
 
 
-async def test_complete_columns_without_profile_table_do_not_qualify() -> None:
-    replies = Replies(tuple(NATIVE_EVENT_FIELDS), "company_016", table=None)
+@pytest.mark.parametrize("version", ["company_015", "company_016", "company_017"])
+async def test_complete_columns_without_profile_table_do_not_qualify(version: str) -> None:
+    replies = Replies(tuple(NATIVE_EVENT_FIELDS), version, table=None)
     with pytest.raises(BrainDeniedError, match="profile is not qualified"):
         await native_event_capability(cast(AsyncSession, replies))
     assert len(replies.queries) == 2

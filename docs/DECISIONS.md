@@ -4075,3 +4075,146 @@ The actual cross-process saved-file regression and140 relevant financial checks
 pass. These are supplied-SQL component proofs, not actual C admission, migration,
 provider quality or release acceptance. No dependency, provider, allowance,
 schema application or historical-byte rewrite follows.
+
+## ADR-138 — One fixed Nexus Python/npm recipe with separate image qualification
+
+**Date:** 2026-10-17
+**Status:** accepted source design; image and native activation remain unqualified
+**Decided by:** Codex within the approved Nexus supervised release
+**Relates to:** ADR-106, ADR-129–130 and ADR-136–137
+
+### Context
+Nexus needs its own Python/uv backend and npm/TypeScript frontend checks. The
+StockFlow Node/CSV recipe cannot prove those inputs or behavior. Public wheel
+metadata and host packaging/build results establish preparation facts, not an
+immutable image, cold offline dependency closure or native execution capability.
+
+### Decision
+Add one closed Nexus recipe over the existing generic `runtime.v2` branch with
+`runtime_inputs=None` and the actual `EngineeringNativeBuilderRunner`. Retain the
+same concrete coding-origin, factory, artifacts, freshness, containment, native
+ledger and independent E/EV graph. The four fixed commands—backend, frontend-test,
+frontend-build and behavior—run in both baseline and post phases. No model or
+request body selects executables, dependencies, images, paths, queues or limits.
+
+Freeze the exact committed Nexus source, project locks, public wheel hashes and
+npm integrity/platform descriptors, build requirements, installed dependency
+trees and wrapper assets. An image-resident manifest pins those inputs and its
+base leaf. A separate binding joins that manifest hash to the actual final image
+reference, configuration ID, platform and qualification evidence. Embedding the
+final image identity in its own manifest would introduce a self-hash cycle.
+Missing base, test closure, cold offline or image facts deny recipe composition.
+The explicit metadata CLI only describes preparation and grants no execution.
+
+Keep source and dependencies read-only, with bounded copies and declared caches
+in the original noexec scratch envelope. Compare stable physical file identity
+before and after reads, including nanosecond modification/change times and
+excluding access time, which an ordinary read may advance. Preserve nofollow,
+single-link, byte/hash, source/patch and visible-path checks. Reuse the original
+command/job/parent ends, quotas, output/log caps and owned cleanup; no renewed
+window or cancellation-as-settlement rule is introduced.
+
+Require a newly frozen source and fresh full-ten declaration before admission.
+Do not widen a consumed root or relabel the earlier A6 protocol input. Real
+canonical assertions produce the existing behavior evidence; the original
+seven-criterion checker and distinct E/EV remain mandatory. This bounded target
+checks canonical-contract maintenance and current frontend regression mechanics,
+not semantic coding quality or company completion.
+
+### Alternatives considered
+A new execution framework duplicates the existing permit and containment path.
+Reusing Node/CSV configuration changes the target being proved. Warm host caches,
+mutable tags and package-manager network fallback cannot establish offline image
+inputs. Keep those cases denied rather than infer readiness from preparation.
+
+### Consequences
+Source checks and repaired first-read counterexamples support this composition.
+Actual amd64 image/dependency closure, eight-phase timing, original kernel/parent/
+source/lease/owned-stop oracles and independent E/EV still require qualification.
+ARM64 needs its own image, native dependencies and actual runtime evidence.
+No package acquisition, image build, native run, provider activation, schema
+application, deployment or authority promotion follows from this decision.
+
+
+## ADR-139 — Distinct DBOS deployment versions for registered model applications
+
+### Status
+Accepted 2026-10-17; source implementation and focused checks are separate from
+fresh PostgreSQL/startup and company application acceptance.
+
+### Context
+The retained A6 v7 coder child failed in DBOS 3.2 startup before listening to its
+queue. Both independent workers used deployment version `v1`; the shared system
+database had already registered that version to `nexus-planning`. A restricted
+repeatable-read, read-only transaction confirmed the planning version owner and
+the unclaimed, enqueued coding command. Workflow ABI identity and application
+deployment identity had been conflated.
+
+### Decision
+Keep logical `company.planning.v1` / `company.coding.v1`, workflow version `v1`,
+application names and distinct queues unchanged. Map only their exact closed
+server registrations to deployment versions `nexus-planning-v1` and
+`nexus-coding-v1`. Worker configuration, transactional enqueue and current DBOS
+metadata checks use the same mapping. No table, migration, registration wire,
+model request, native counter, budget, source or timing contract changes.
+
+Accept the old deployment tuple `v1` only in an explicit metadata-only path
+joined to the original native issued effect, action, permanent dispatch and
+command. Existing native hold, receipt and known/unknown checks remain. An old
+unissued queue row cannot become a current dispatch or provider request. Do not
+rename, re-own, update, requeue or resume consumed v7 rows. Issued replay cannot
+read credentials or protected bodies, reacquire a lease or issue another call.
+
+### Consequences
+Legacy unrelated workflow profiles retain their existing versions. Newly
+installed S/P/U and other independent Nexus applications must declare distinct
+deployment identities before admission; this change does not install those roles.
+A fresh namespace and separately released DBOS startup/enqueue compatibility
+probe must establish the new two-application behavior before fresh application
+acceptance. Source tests alone establish no provider, native-builder, quality,
+company-completion or release qualification.
+
+
+## ADR-140 — Renew only an expired unused invitation for the configured preview owner
+
+**Date:** 2026-10-17
+**Status:** accepted source design; actual preview inspection and rollout remain separate
+**Decided by:** Codex within the authorized owner first-setup repair
+
+### Context
+The owner has not completed password setup. Pilot invitations have an absolute
+8-hour lifetime and are consumed when signup saves the password. A loaded login
+form or healthy service cannot prove the invitation is current. Initialization
+refuses existing task files; team/workspace invitations are a different mechanism.
+A standalone credential rewrite can race signup and overwrite a completed password.
+
+### Decision
+Add explicit metadata-only inspection and expired-unused renewal for only the
+original owner in the exact local-preview configuration. Bind principal, company,
+workspace, fixed recipient and account path. Refuse any existing password,
+unexpired invitation, foreign binding or changed record. Preserve every sibling,
+identity, directory and role; do not reset or initialize an account.
+
+Signup and renewal share one nonblocking cross-process final-writer lock. Password
+hashing and current company access checks precede signup's final commit; do not
+hold the writer lock across hashing. Recheck the original stored record and
+invitation expiry under that lock. Retain actual file/hash/commit thread owners
+through repeated caller cancellation, and close the exact file/lock descriptors.
+
+Write the new invitation only to an explicit fresh private0600 file under a
+private directory, using exclusive nofollow creation and verified byte readback.
+Durably publish that user file before adopting its digest and new8-hour expiry.
+A later failed account commit can leave an unadopted private output; never report
+success or automatically retry it. Never overwrite old browser credentials.
+The CLI returns status/expiry/path metadata only, without secret values, hashes
+or raw private validation input. Inspection grants no access; signup still checks
+current company membership and uses the existing password verifier/JWT issuer.
+
+### Consequences
+Focused real private-file, process-lock, signup/login, expiry, one-use, cancellation
+and failure-conservation tests support the source boundary. This does not verify
+the actual owner's password/invitation state. Before live renewal, Root must review
+and choose a guarded API rollout or explicit quiescence: an older running signup
+writer does not honor the new lock. No preview credential read, renewal, restart,
+browser control, directory change or provider/native activation follows from this
+source decision.

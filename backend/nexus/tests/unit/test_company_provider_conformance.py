@@ -189,8 +189,13 @@ def response(provider: str) -> dict[str, object]:
 
 
 def adapter(
-    provider: str, handler: httpx2.MockTransport, authority: Authorizer | None = None
+    provider: str,
+    handler: httpx2.MockTransport,
+    authority: Authorizer | None = None,
+    *,
+    timeout_seconds: float = 1,
 ) -> CompanyModelAdapters:
+    """Keep the short default; response tests may opt into a bounded SDK setup window."""
     endpoint = ServerEndpoint(
         endpoint_id="fixture-endpoint",
         provider=provider,
@@ -200,7 +205,7 @@ def adapter(
         else "https://offline.invalid",
         api_key=SecretStr(KEY),
         transport=handler,
-        timeout_seconds=1,
+        timeout_seconds=timeout_seconds,
     )
     return CompanyModelAdapters(
         catalog(provider), EndpointResolver(endpoint), authority or Authorizer()
@@ -217,7 +222,9 @@ async def test_single_sdk_native_request_has_exact_family_model_cap_and_complete
         captured.append(wire)
         return httpx2.Response(200, json=response(provider))
 
-    result = await adapter(provider, httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter(provider, httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert result.status == "response" and result.billing == "known"
     assert result.usage is not None and result.usage.output_tokens == 20
     assert result.usage.reasoning_tokens == 5 and len(captured) == 1
@@ -289,7 +296,9 @@ async def test_wire_usage_never_uses_sdk_default_zero_or_unsupported_billing(
         count += 1
         return httpx2.Response(200, json=body)
 
-    result = await adapter(provider, httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter(provider, httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert result.status == "failed" and result.billing == "unknown" and result.usage is None
     assert count == 1
 
@@ -310,7 +319,9 @@ async def test_transient_or_malformed_failure_has_one_wire_attempt_and_unknown_h
             return httpx2.Response(200, content=b"not-json")
         return httpx2.Response(429, json={"error": {"message": "offline busy", "code": 429}})
 
-    result = await adapter(provider, httpx2.MockTransport(handle)).request_once(request(), now=NOW)
+    result = await adapter(provider, httpx2.MockTransport(handle), timeout_seconds=10).request_once(
+        request(), now=NOW
+    )
     assert result.status == "failed" and result.billing == "unknown" and count == 1
 
 
@@ -350,7 +361,12 @@ async def test_required_trusted_one_time_exact_claim_precedes_any_provider_reque
         return httpx2.Response(200, json=response("openai"))
 
     authority = Authorizer(denied=denial == "denied", wrong=denial == "wrong")
-    calls = adapter("openai", httpx2.MockTransport(handle), authority)
+    calls = adapter(
+        "openai",
+        httpx2.MockTransport(handle),
+        authority,
+        timeout_seconds=10 if denial == "duplicate" else 1,
+    )
     if denial == "duplicate":
         assert (await calls.request_once(request(), now=NOW)).billing == "known"
     result = await calls.request_once(request(), now=NOW)
@@ -407,7 +423,7 @@ async def test_function_calls_are_returned_as_validated_proposals_never_executed
         return httpx2.Response(200, json=body)
 
     tool = ModelTool(name="lookup", description="Read a bounded fact", parameters=TOOL_SCHEMA)
-    result = await adapter(provider, httpx2.MockTransport(handle)).request_once(
+    result = await adapter(provider, httpx2.MockTransport(handle), timeout_seconds=10).request_once(
         request(output_schema=None, tools=(tool,)), now=NOW
     )
     assert result.status == "response" and len(result.tool_calls) == 1 and len(captured) == 1
@@ -435,7 +451,9 @@ async def test_known_usage_is_retained_when_native_output_schema_is_invalid(prov
             }
         ]
     result = await adapter(
-        provider, httpx2.MockTransport(lambda _: httpx2.Response(200, json=body))
+        provider,
+        httpx2.MockTransport(lambda _: httpx2.Response(200, json=body)),
+        timeout_seconds=10,
     ).request_once(request(), now=NOW)
     assert result.status == "failed" and result.billing == "known" and result.usage is not None
 
@@ -523,7 +541,9 @@ async def test_unrequested_hosted_or_multimodal_response_preserves_unknown_billi
             }
         ]
     result = await adapter(
-        provider, httpx2.MockTransport(lambda _: httpx2.Response(200, json=body))
+        provider,
+        httpx2.MockTransport(lambda _: httpx2.Response(200, json=body)),
+        timeout_seconds=10,
     ).request_once(request(), now=NOW)
     assert result.status == "failed" and result.billing == "unknown"
 
@@ -547,7 +567,9 @@ async def test_credential_echo_is_rejected_without_serializing_it(provider: str)
             {"content": {"role": "model", "parts": [{"text": text}]}, "finishReason": "STOP"}
         ]
     result = await adapter(
-        provider, httpx2.MockTransport(lambda _: httpx2.Response(200, json=body))
+        provider,
+        httpx2.MockTransport(lambda _: httpx2.Response(200, json=body)),
+        timeout_seconds=10,
     ).request_once(request(), now=NOW)
     assert result.status == "failed" and result.billing == "known"
     assert KEY not in result.model_dump_json()
@@ -575,6 +597,8 @@ async def test_credential_echo_in_tool_call_metadata_cannot_be_serialized() -> N
     ]
     tool = ModelTool(name="lookup", description="Read a fact", parameters=TOOL_SCHEMA)
     result = await adapter(
-        "openai", httpx2.MockTransport(lambda _: httpx2.Response(200, json=body))
+        "openai",
+        httpx2.MockTransport(lambda _: httpx2.Response(200, json=body)),
+        timeout_seconds=10,
     ).request_once(request(output_schema=None, tools=(tool,)), now=NOW)
     assert result.status == "failed" and KEY not in result.model_dump_json()

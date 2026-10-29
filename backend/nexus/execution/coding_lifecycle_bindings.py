@@ -17,7 +17,10 @@ from nexus.company.management.canonical import canonical_sha256
 from nexus.company.management.control_support import current_charter, current_mandate, db_clock
 from nexus.company.management.goal_store import GoalStore
 from nexus.company.management.lifecycle import PlanRevision
-from nexus.company.management.nexus_coding_catalog import select_configured_nexus_plan
+from nexus.company.management.nexus_coding_catalog import (
+    coding_work_matches_template,
+    select_configured_nexus_plan,
+)
 from nexus.company.management.plan_models import (
     ManagementOwnerDecision,
     ManagementPlanHead,
@@ -132,7 +135,7 @@ async def approved_r2_locked(
         or bound.plan != plan_reference(record)
         or work is None
         or bound.child != slot.child
-        or bound.work != slot.work
+        or not coding_work_matches_template(bound.work, slot.work)
         or goal.definition.owner_id != control.owner_id
         or goal.definition.mandate != admission.mandate
         or mandate.mandate.owner_id != control.owner_id
@@ -143,7 +146,7 @@ async def approved_r2_locked(
         raise ManagementDeniedError("Coding actual approved r2/owner/Goal/registration differs")
     native = snapshot(work)
     if (
-        native.registration.work != slot.work
+        native.registration.work != bound.work
         or native.registration.run_id != slot.child.binding.run_id
     ):
         raise ManagementDeniedError("Coding immutable native C registration differs")

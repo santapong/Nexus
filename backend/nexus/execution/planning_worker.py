@@ -22,11 +22,11 @@ from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.planning_history import NativePlanningHistory, native_history
 from nexus.execution.planning_services import (
     APPLICATION,
+    APPLICATION_VERSION,
     CLIENT_SECONDS,
     ENTRY_SECONDS,
     LEASE_SECONDS,
     QUEUE,
-    VERSION,
     WORKFLOW,
     PlanningOperation,
     PlanningServices,
@@ -296,7 +296,7 @@ def configure_planning_worker(services: PlanningServices, system_database_url: s
     DBOS(
         config={
             "name": APPLICATION,
-            "application_version": VERSION,
+            "application_version": APPLICATION_VERSION,
             "system_database_url": system_database_url,
             "run_migrations": False,
             "executor_id": str(services.worker_id),

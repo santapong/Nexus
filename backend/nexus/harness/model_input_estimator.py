@@ -45,9 +45,10 @@ _SOURCES = (
         "7d402369aa6c8907f140ffd632cca7127519e1f59e33752cc83660497aa558b4",
     ),
 )
-_ADAPTER_SHA = "ba3838636baf93dde7485c3ffa67c51b2a6f65925adb50554b95f11ff12bf375"
+_ADAPTER_SHA = "9d13761be948144ede270a33513b406db430b9cdbaee02b8ba379fdafeb19bc1"
+_TRANSPORT_SHA = "134417155647bc83c1a4b6eb00b83a4050b85ac9fcd7ec4a2956e206587c466a"
 RECIPE_ID = "company-full-context-input"
-RECIPE_REVISION = "v1"
+RECIPE_REVISION = "v2"
 
 
 def _source_hash(path: Path, expected: str) -> str:
@@ -78,17 +79,19 @@ def input_conformance_reference() -> str:
         for name, relative, expected in _SOURCES
     )
     adapter = Path(__file__).resolve().parents[1] / "core/llm/company_adapter_sdk.py"
+    transport = adapter.with_name("company_transport.py")
     encoded = json.dumps(
         {
             "method": "model_input_ceiling_v1",
             "versions": versions,
             "sources": sources,
             "adapter": _source_hash(adapter, _ADAPTER_SHA),
+            "transport": _source_hash(transport, _TRANSPORT_SHA),
         },
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
-    return "company-input-ceiling-v1:" + hashlib.sha256(encoded).hexdigest()
+    return "company-input-ceiling-v2:" + hashlib.sha256(encoded).hexdigest()
 
 
 @dataclass(frozen=True, slots=True, init=False)

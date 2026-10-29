@@ -90,6 +90,21 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "nexus/db/seed.py" = ["E501"]  # Seed data has long string literals
+# Historical legacy findings are checked by scripts/check_legacy_ruff_baseline.py.
+# Run that guard alongside `ruff check .`; it verifies published revisions and
+# the exact unsuppressed diagnostics, including their complete source spans.
+"alembic/env.py" = ["F401", "I001"]
+"alembic/versions/001_initial_schema.py" = ["I001", "UP007", "UP035"]
+"alembic/versions/002_dead_letters_and_a2a_tokens.py" = ["E501", "I001", "UP007", "UP035"]
+"alembic/versions/003_eval_results.py" = ["E501", "I001", "UP007", "UP035"]
+"alembic/versions/004_phase4_multi_tenant.py" = ["E501", "I001", "UP007", "UP035"]
+"alembic/versions/005_performance_indexes.py" = ["UP007", "UP035"]
+"alembic/versions/007_phase5_track_b_c.py" = ["E501", "I001"]
+"alembic/versions/008_phase5_remaining.py" = ["E501", "I001", "UP007", "UP035"]
+"alembic/versions/009_security_and_federation.py" = ["I001", "UP007", "UP035"]
+"alembic/versions/010_conference_room_messaging.py" = ["I001", "UP007", "UP035"]
+"alembic/versions/011_workspace_storage.py" = ["I001", "UP007", "UP035"]
+"alembic/versions/016_attachments.py" = ["I001", "UP007", "UP035"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["nexus"]
@@ -117,6 +132,23 @@ module = [
     "docx.*",
     "pypdf.*",
     "croniter.*",
+]
+ignore_missing_imports = true
+
+# These legacy integrations are optional and absent from the locked company
+# runtime. When unavailable, their SDK APIs are Any and remain unqualified;
+# do not suppress missing imports for unrelated modules.
+[[tool.mypy.overrides]]
+module = [
+    "opentelemetry.exporter.otlp.proto.http.trace_exporter",
+    "opentelemetry.sdk.resources",
+    "opentelemetry.sdk.trace",
+    "opentelemetry.sdk.trace.export",
+    "langfuse",
+    "stripe",
+    "temporalio.client",
+    "temporalio.worker",
+    "e2b_code_interpreter",
 ]
 ignore_missing_imports = true
 

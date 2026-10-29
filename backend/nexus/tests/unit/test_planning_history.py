@@ -15,7 +15,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nexus.company.contracts.actions import ActionProposal
 from nexus.execution import planning_history as module
 from nexus.execution.planning_history import native_history, require_workflow_binding
-from nexus.execution.planning_services import APPLICATION, QUEUE, VERSION, WORKFLOW
+from nexus.execution.planning_services import (
+    APPLICATION,
+    APPLICATION_VERSION,
+    QUEUE,
+    VERSION,
+    WORKFLOW,
+)
 from nexus.execution.runtime_models import ExecutionWork
 from nexus.harness.canonical import action_hash
 from nexus.harness.journal import CompanyJournal
@@ -35,7 +41,7 @@ def test_only_exact_stored_planning_queue_input_is_metadata_bound(fault: str | N
     row: dict[str, object] = {
         "name": WORKFLOW,
         "queue_name": QUEUE,
-        "application_version": VERSION,
+        "application_version": APPLICATION_VERSION,
         "application_name": APPLICATION,
         "serialization": "portable_json",
         "inputs": json.dumps({"positionalArgs": [selected.model_dump_json()], "namedArgs": {}}),
@@ -57,10 +63,12 @@ def test_only_exact_stored_planning_queue_input_is_metadata_bound(fault: str | N
 
 
 @pytest.mark.parametrize("crossed_recipe", [False, True])
+@pytest.mark.parametrize("legacy_unissued", [False, True])
 async def test_actual_producer_recipe_header_is_consumed_by_native_history(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     crossed_recipe: bool,
+    legacy_unissued: bool,
 ) -> None:
     """Actual producer/history composition over supplied rows; no SQL, lease or SDK proof."""
     configured, selected = services(tmp_path), command()
@@ -125,7 +133,7 @@ async def test_actual_producer_recipe_header_is_consumed_by_native_history(
     queue.mappings.return_value.one_or_none.return_value = {
         "name": WORKFLOW,
         "queue_name": QUEUE,
-        "application_version": VERSION,
+        "application_version": "v1" if legacy_unissued else APPLICATION_VERSION,
         "application_name": APPLICATION,
         "serialization": "portable_json",
         "inputs": json.dumps({"positionalArgs": [selected.model_dump_json()], "namedArgs": {}}),
@@ -155,8 +163,8 @@ async def test_actual_producer_recipe_header_is_consumed_by_native_history(
     monkeypatch.setattr(module, "dispatched_binding", dispatch)
     body = AsyncMock(side_effect=AssertionError("History must not read protected input"))
     monkeypatch.setattr(configured.prepared, "load_worker", body)
-    if crossed_recipe:
-        with pytest.raises(ValueError, match="dispatch/action binding"):
+    if crossed_recipe or legacy_unissued:
+        with pytest.raises(ValueError):
             await native_history(configured, selected)
     else:
         value = await native_history(configured, selected)

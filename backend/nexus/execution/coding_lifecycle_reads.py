@@ -29,7 +29,10 @@ from nexus.execution.coding_dispatch import CodingDispatchRecord
 from nexus.execution.coding_history import require_workflow_binding
 from nexus.execution.coding_lifecycle_bindings import owner_locked
 from nexus.execution.coding_lifecycle_contracts import CodingLifecycleRead, CodingLifecycleStatus
+from nexus.execution.coding_services import REGISTRATION
 from nexus.execution.dispatch_models import SegmentDispatch
+from nexus.execution.effect_support import effect_record
+from nexus.execution.model_workflow_identity import require_issued_model_binding
 from nexus.execution.runtime_contracts import EffectState
 from nexus.execution.runtime_models import EffectIntent, ExecutionWork
 from nexus.execution.runtime_recovery import dispatched_binding
@@ -111,7 +114,18 @@ async def existing_dispatch(
                 .mappings()
                 .one_or_none()
             )
-            require_workflow_binding(command, cast(Mapping[str, object] | None, queue))
+            if effect is None:
+                require_workflow_binding(command, cast(Mapping[str, object] | None, queue))
+            else:
+                if effect.intent_fence > work.fence or snapshot(work).counters.model_requests < 1:
+                    raise ManagementDeniedError("Coding issued replay lacks its original attempt")
+                require_issued_model_binding(
+                    command,
+                    cast(Mapping[str, object] | None, queue),
+                    REGISTRATION,
+                    effect_record(effect),
+                    record.proposal_hash,
+                )
             result = CodingDispatchRecord(
                 command=command, workflow_id=command.workflow_id, disposition="existing"
             )

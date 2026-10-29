@@ -192,6 +192,43 @@ def test_actual_complete_family_metadata_can_have_zero_calls_without_company_com
     assert len(value.unissued_task_ids) == 11 and value.totals.known_spent_usd == 0
 
 
+@pytest.mark.parametrize("fault", [None, "planner_title", "budget", "quota"])
+def test_all_nine_model_titles_keep_family_registration_fields_exact(fault: str | None) -> None:
+    profile, capture = complete_capture()
+    rows = list(capture.works)
+    for index in range(2, len(rows)):
+        row = rows[index]
+        assert row.work is not None
+        actual = row.work.registration.work.model_copy(
+            update={"title": "Model proposed " + str(index)}
+        )
+        if fault == "budget" and index == 2:
+            actual = actual.model_copy(update={"budget_usd": Decimal(".2")})
+        registered = row.work.registration.model_copy(update={"work": actual})
+        if fault == "quota" and index == 2:
+            registered = registered.model_copy(
+                update={"quota": registered.quota.model_copy(update={"model_requests": 2})}
+            )
+        rows[index] = row.model_copy(
+            update={"work": row.work.model_copy(update={"registration": registered})}
+        )
+    if fault == "planner_title":
+        row = rows[1]
+        assert row.work is not None
+        registered = row.work.registration.model_copy(
+            update={
+                "work": row.work.registration.work.model_copy(
+                    update={"title": "Changed immutable L"}
+                )
+            }
+        )
+        rows[1] = row.model_copy(
+            update={"work": row.work.model_copy(update={"registration": registered})}
+        )
+    result = project_family_costs(profile, capture.model_copy(update={"works": tuple(rows)}), {})
+    assert result.complete_membership is (fault is None)
+
+
 def test_root_native_registration_drift_cannot_claim_complete_family() -> None:
     profile, capture = complete_capture()
     root = capture.works[0]

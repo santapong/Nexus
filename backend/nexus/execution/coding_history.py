@@ -14,14 +14,17 @@ from nexus.company.management.coding_prepared_contracts import prepared_referenc
 from nexus.company.management.planning_prepared_contracts import PlanningModelParameters
 from nexus.company.management.scheduling_queue import BINDING
 from nexus.execution.coding_services import (
-    APPLICATION,
-    QUEUE,
+    REGISTRATION,
     VERSION,
     WORKFLOW,
     CodingServices,
 )
 from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.effect_support import effect_record
+from nexus.execution.model_workflow_identity import (
+    require_current_model_binding,
+    require_issued_model_binding,
+)
 from nexus.execution.runtime_contracts import EffectRecord
 from nexus.execution.runtime_models import EffectIntent, ExecutionWork
 from nexus.execution.runtime_recovery import dispatched_binding
@@ -46,23 +49,8 @@ class NativeCodingHistory:
 
 
 def require_workflow_binding(command: SegmentCommand, row: Mapping[str, object] | None) -> None:
-    """Match actual DBOS projected metadata; this pure check grants no read or issuance."""
-    if row is None or tuple(
-        row[key]
-        for key in (
-            "name",
-            "queue_name",
-            "application_version",
-            "application_name",
-            "serialization",
-        )
-    ) != (WORKFLOW, QUEUE, VERSION, APPLICATION, "portable_json"):
-        raise ValueError("Coding native DBOS workflow ABI differs")
-    raw = row["inputs"]
-    if not isinstance(raw, str):
-        raise ValueError("Coding stored DBOS input is unavailable")
-    if json.loads(raw) != {"positionalArgs": [command.model_dump_json()], "namedArgs": {}}:
-        raise ValueError("Coding actual DBOS input differs from its permanent command")
+    """Current unissued metadata requires the distinct application deployment version."""
+    require_current_model_binding(command, row, REGISTRATION)
 
 
 async def native_history(services: CodingServices, command: SegmentCommand) -> NativeCodingHistory:
@@ -110,7 +98,6 @@ async def native_history(services: CodingServices, command: SegmentCommand) -> N
             .mappings()
             .one_or_none()
         )
-        require_workflow_binding(command, cast(Mapping[str, object] | None, queue))
         record = pending_action_record(row)
         proposal = record.proposal
         prepared_reference(proposal)  # Exact saved C source-proof marker, never a Brain alias.
@@ -147,6 +134,7 @@ async def native_history(services: CodingServices, command: SegmentCommand) -> N
             raise ValueError("Coding native dispatch/action binding differs")
         saved = await session.get(EffectIntent, (command.company_id, command.action_id))
         if saved is None:
+            require_workflow_binding(command, cast(Mapping[str, object] | None, queue))
             return NativeCodingHistory(None, parameters.request_hash)
         effect = effect_record(saved)
         hold = await session.get(CostHold, command.action_id)
@@ -225,5 +213,12 @@ async def native_history(services: CodingServices, command: SegmentCommand) -> N
             or hold.state not in {"held", "unknown"}
         ):
             raise ValueError("Coding unknown history cannot assert a known receipt or charge")
+        require_issued_model_binding(
+            command,
+            cast(Mapping[str, object] | None, queue),
+            REGISTRATION,
+            effect,
+            record.proposal_hash,
+        )
     services.require_composition()
     return NativeCodingHistory(effect, parameters.request_hash)

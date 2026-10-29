@@ -104,7 +104,7 @@ async def test_actual_sdk_record_timeout_does_not_release_over_live_file_thread(
         posts.append(call.method)
         return httpx2.Response(200, json=response("openai"))
 
-    consumer, prepared = composition(tmp_path, httpx2.MockTransport(wire))
+    consumer, prepared = composition(tmp_path, httpx2.MockTransport(wire), timeout_seconds=30)
     store = consumer.evidence
     started, finish = threading.Event(), threading.Event()
     native_record = AsyncMock()
@@ -143,6 +143,8 @@ async def test_actual_sdk_record_timeout_does_not_release_over_live_file_thread(
     async def record(
         gate: PersistentModelCallAuthorizer, call: CompanyModelRequest, result: CompanyModelResult
     ) -> RecordedModelOutcome:
+        # The recording stall must begin after the one real SDK mock handoff.
+        assert posts == ["POST"]
         actual = envelope().model_copy(
             update={
                 "request": call,

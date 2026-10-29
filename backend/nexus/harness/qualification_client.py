@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
+from threading import Lock
 from typing import Literal, cast
 from uuid import uuid5
 
@@ -24,6 +25,7 @@ from nexus.core.llm.company_adapter_contracts import (
 from nexus.core.llm.company_adapter_sdk import outputs, request_model, sdk_model
 from nexus.core.llm.company_endpoints import ServerEndpointBinding
 from nexus.core.llm.company_pricing import reconcile_cost
+from nexus.core.llm.company_transport import transport_guard
 from nexus.core.llm.company_wire_usage import WireObserver
 from nexus.core.llm.qualification_contracts import QualificationRecipe, capture_sdk_pins
 from nexus.execution.effect_store import EffectStore
@@ -84,6 +86,7 @@ class QualificationClient:
         self._store, self._root = evidence_store, evidence_store._root
         self._end, self._used = end_us, False
         self._aborted = self._caller_interrupted = False
+        self._stop_lock = Lock()
         self._sdk_error: asyncio.CancelledError | None = None
         self._owners: list[asyncio.Task[object]] = []
         self._bound_dependencies = (factory, effects, resolver, evidence_store, self._check)
@@ -210,12 +213,14 @@ class QualificationClient:
                     result = await asyncio.shield(task)
                 return result, first or self._sdk_error
             except asyncio.CancelledError as error:
-                self._aborted = True
+                with self._stop_lock:
+                    self._aborted = True
                 first = first or error
                 if not task.cancelled():
                     continue
             except Exception:
-                self._aborted = True
+                with self._stop_lock:
+                    self._aborted = True
             # No fresh cleanup window, task cancellation, late adoption or second call.
             return CompanyModelResult(
                 request_id=self._request.request_id,
@@ -230,17 +235,18 @@ class QualificationClient:
         try:
             if self._aborted:
                 raise asyncio.CancelledError("Qualification caller stopped before SDK")
-            async with sdk_model(row, endpoint, observer) as model:
-                await self._sdk_pins()  # Actual source reads stay outside native transactions.
-                if self._aborted:
-                    raise asyncio.CancelledError("Qualification caller stopped before SDK")
-                await self._check.revalidate_before_sdk()
-                self._current()
-                if self._aborted:
-                    raise asyncio.CancelledError("Qualification caller stopped before SDK")
-                async with asyncio.timeout(max(0, self._end - clock_us()) / 1_000_000):
-                    response = await request_model(model, self._request)
-                self._current()
+            with transport_guard(lambda: self._aborted, self._end, self._stop_lock):
+                async with sdk_model(row, endpoint, observer) as model:
+                    await self._sdk_pins()  # Actual source reads stay outside native transactions.
+                    if self._aborted:
+                        raise asyncio.CancelledError("Qualification caller stopped before SDK")
+                    await self._check.revalidate_before_sdk()
+                    self._current()
+                    if self._aborted:
+                        raise asyncio.CancelledError("Qualification caller stopped before SDK")
+                    async with asyncio.timeout(max(0, self._end - clock_us()) / 1_000_000):
+                        response = await request_model(model, self._request)
+                    self._current()
             self._current()
             if observer.usage is None:
                 raise ValueError("Qualification complete wire usage is unavailable")

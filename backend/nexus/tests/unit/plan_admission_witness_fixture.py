@@ -1,9 +1,10 @@
 """Transient signed fixture witness through the real verifier; no credential file or issuer API."""
 
 import secrets
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import jwt
+import pytest
 from pydantic import SecretStr
 
 from nexus.company.management.plans import RunBinding
@@ -12,6 +13,19 @@ from nexus.company.notifications.worker_identity import (
     NotificationWorkerIdentities,
 )
 from nexus.tests.unit.plan_admission_fixture_data import NOW, AdmissionFixture
+
+
+@pytest.fixture(autouse=True)
+def admission_case_clock(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> None:
+    """One actual per-case anchor for test data, SQL clock and genuine witness issuance."""
+    from nexus.tests.unit import plan_admission_fixture_data as data
+    from nexus.tests.unit import plan_admission_fixture_session as session
+    from nexus.tests.unit import plan_admission_fixture_values as values
+
+    anchor = datetime.now(UTC).replace(microsecond=0)
+    for module in (data, session, values, request.module):
+        monkeypatch.setattr(module, "NOW", anchor, raising=False)
+    monkeypatch.setitem(globals(), "NOW", anchor)
 
 
 class Provider:

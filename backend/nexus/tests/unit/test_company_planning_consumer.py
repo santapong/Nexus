@@ -5,6 +5,7 @@ The >400-line exception keeps the actual two-SDK fixture, protected evidence and
 interpretation/cancellation matrix adjacent, without a separate fixture framework.
 """
 
+import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -40,7 +41,7 @@ from nexus.core.llm.company_adapter_contracts import (
     ServerEndpoint,
     request_hash,
 )
-from nexus.core.llm.company_pricing import CostQuote, TokenBounds, TokenUsage
+from nexus.core.llm.company_pricing import CostQuote, TokenBounds, TokenUsage, reconcile_cost
 from nexus.core.llm.company_registry import ModelRegistry
 from nexus.execution.management_services import ManagementExecutionServices
 from nexus.execution.runtime_store import ExecutionStore
@@ -56,7 +57,11 @@ from nexus.tests.unit.test_company_provider_conformance import EndpointResolver,
 
 
 def composition(
-    tmp_path: Path, transport: httpx2.AsyncBaseTransport, provider: str = "openai"
+    tmp_path: Path,
+    transport: httpx2.AsyncBaseTransport,
+    provider: str = "openai",
+    *,
+    timeout_seconds: float = 1,
 ) -> tuple[RegisteredPlanningConsumer, PreparedPlanningRequest]:
     call, context, binding, scope, recipe, lease = prepared_inputs()
     registry = planning_registry(provider)
@@ -78,7 +83,7 @@ def composition(
         base_url="https://offline.invalid/v1",
         api_key=SecretStr("fake-test-key"),
         transport=transport,
-        timeout_seconds=1,
+        timeout_seconds=timeout_seconds,
     )
     management = ManagementExecutionServices(
         PlanAdmissionCatalog(
@@ -124,13 +129,14 @@ def planning_registry(provider: str) -> ModelRegistry:
 
 
 @pytest.mark.parametrize("provider", ["openai", "google"])
-@pytest.mark.parametrize("semantic", ["valid", "cycle", "foreign"])
+@pytest.mark.parametrize("semantic", ["valid", "cycle", "foreign", "delayed"])
 async def test_actual_sdk_single_post_and_recorded_file_readback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, provider: str, semantic: str
 ) -> None:
     import json
 
     calls = []
+    release_wire = asyncio.Event()
     emitted = content()
     tasks = emitted["tasks"]
     assert isinstance(tasks, list)
@@ -140,8 +146,10 @@ async def test_actual_sdk_single_post_and_recorded_file_readback(
     elif semantic == "foreign":
         tasks[0]["evidence_ids"] = ["00000000-0000-0000-0000-000000000999"]
 
-    def wire(call: httpx2.Request) -> httpx2.Response:
+    async def wire(call: httpx2.Request) -> httpx2.Response:
         calls.append(call.method)
+        if semantic == "delayed":
+            await release_wire.wait()
         assert prepared.request.output_schema is not None
         expected_comment = json.loads(prepared.request.output_schema.document)["$comment"]
         # This assertion covers the actual pinned SDK's emitted JSON, not a fake client.
@@ -169,7 +177,12 @@ async def test_actual_sdk_single_post_and_recorded_file_readback(
             ]
         return httpx2.Response(200, json=document)
 
-    consumer, prepared = composition(tmp_path, httpx2.MockTransport(wire), provider)
+    consumer, prepared = composition(
+        tmp_path,
+        httpx2.MockTransport(wire),
+        provider,
+        timeout_seconds=1 if semantic == "delayed" else 30,
+    )
 
     async def claim(
         gate: PersistentModelCallAuthorizer, call: CompanyModelRequest, quote: CostQuote
@@ -214,11 +227,19 @@ async def test_actual_sdk_single_post_and_recorded_file_readback(
             owner_id=call.actor_id,
         )
         artifact = await consumer.evidence.save(envelope)
+        if result.billing == "unknown":
+            return RecordedModelOutcome(artifact=artifact, billing="unknown", stop_required=True)
+        assert result.billing == "known" and result.usage is not None
+        actual = reconcile_cost(envelope.model.price, result.usage, now=envelope.source_event_at)
         return RecordedModelOutcome(
             artifact=artifact,
             billing="known",
-            actual_usd=Decimal("0.000360"),
-            stop_required=False,
+            actual_usd=actual.amount_usd,
+            stop_required=(
+                result.status != "response"
+                or result.usage.input_tokens > call.bounds.input_tokens
+                or result.usage.output_tokens > call.bounds.max_output_tokens
+            ),
             receipt_id=uuid5(call.action_id, "model-receipt-v1"),
         )
 
@@ -233,7 +254,32 @@ async def test_actual_sdk_single_post_and_recorded_file_readback(
     monkeypatch.setattr(
         ManagementExecutionServices, "execution_store", lambda self, factory: execution
     )
-    outcome = await consumer.request_once(prepared, now=datetime.now(UTC))
+    try:
+        outcome = await consumer.request_once(prepared, now=datetime.now(UTC))
+    finally:
+        release_wire.set()
+        pending = consumer.pending_owners()
+        if pending:
+            _, remaining = await asyncio.wait(pending, timeout=5)
+            assert not remaining
+    if semantic == "delayed":
+        assert calls == ["POST"]
+        assert outcome.candidate is None and outcome.denial == "model_outcome"
+        assert outcome.governed.provider_result.billing == "unknown"
+        assert outcome.governed.provider_result.error_code == "sdk_resources_unresolved"
+        assert outcome.governed.recorded is not None
+        assert outcome.governed.recorded.billing == "unknown"
+        assert outcome.governed.recorded.actual_usd is None
+        assert outcome.governed.recorded.receipt_id is None
+        assert outcome.governed.stop_required
+        assert outcome.governed.release_status == "failed"
+        release.assert_not_awaited()
+        saved = await consumer.evidence.load(outcome.governed.recorded.artifact)
+        assert saved.result == outcome.governed.provider_result
+        with pytest.raises(ValueError, match="one planning request"):
+            await consumer.request_once(prepared, now=datetime.now(UTC))
+        assert calls == ["POST"]
+        return
     assert outcome.governed.recorded is not None
     assert outcome.governed.ledger_billing == "known" and not outcome.governed.stop_required
     assert outcome.governed.release_status == "released"

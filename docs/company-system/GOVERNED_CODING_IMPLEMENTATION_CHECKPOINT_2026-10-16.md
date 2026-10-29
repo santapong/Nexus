@@ -1,8 +1,98 @@
 # Governed Nexus coding implementation checkpoint
 
-Checked 2026-10-16. Nexus remains the sole delivery target. This records partial
+**Paused at the owner's request on2026-10-17; no release completion.**
+
+Checked 2026-10-17, Asia/Bangkok. Nexus remains the sole delivery target. This records partial
 implementation after owner-application commit `3fda71b`; it is not a release or a
 claim that a coder has executed in the real company database.
+
+## Latest actual and preparation gate — 2026-10-17
+
+Actual A6 v7 advances through one planner SDK MockTransport request, protected L
+candidate, same-root r2 and separate owner approval. C preparation creates its
+protected pending request; cold recomposition, saved-wait recovery, input/review,
+exact decision, atomic dispatch and duplicate-dispatch protection are exercised.
+The coder worker then exits before listening to its queue: DBOS3.2 already owns
+deployment version `v1` under `nexus-planning`, so `nexus-coding` cannot claim it.
+Pytest fails99.72s; terminal101.991s rechecks all2,267 runtime pins unchanged.
+There is no C model attempt or issued intent, and the complete C/J cycle is unproven.
+
+The separate restricted NOSUPER/NOBYPASS and operator repeatable-read READ ONLY
+audits explicitly roll back with matching74-table counts. L is verifying/model1,
+C is awaiting_approval/model0, every tool count is0, and root owns model0/tool0/
+plan-revision1. L's USD0.004164 hold reconciles to known USD0.000002. C's unissued
+USD0.010507 reservation remains HELD with actual cost null; daily and Work ledgers
+conserve held USD0.010507 plus spent USD0.000002. DBOS retains one SUCCESS and one
+ENQUEUED command, with no worker lease or other application connection. Only the
+owned v7 cluster is stopped (exit0/status3), with failed data and queue retained.
+No reset, refund, re-owning, requeue or consumed-binding retry occurred.
+
+ERROR-234 is fixed at the C routing boundary: its no-tool typed patch and upfront
+quote now share code/structured_output requirements. Actual v7 crosses preparation;
+the focused repair passes134 checks/23.02s and configured strict/Ruff9. Generic
+whole-input/actual-tool denials and model capability, budget and price guards stay
+intact. The distinct ERROR-235 deployment-version repair holds16 files with148
+focused checks/25.89s and configured strict/Ruff23. It maps only exact current L/C
+registrations to `nexus-planning-v1` and `nexus-coding-v1`, retaining logical ABI
+`v1`. Legacy metadata is readable only after original issued-native proof; an old
+unissued command cannot activate. ADR-139 records this source design. The fresh DBOS
+compatibility microprobe and final combined freeze/unit/static run are NOT STARTED.
+A6 v8 is unexecuted; source checks do not establish either result.
+
+The full2,266-pin unit run is terminal FAILED:5,686 passed,17 failed, zero skipped
+in790.34s; actual coverage63.644004% is below the unchanged80% gate. Configured
+normal strict/Ruff/format158 pass on that same earlier cohort. The subsequent
+8-file test/helper repair uses a genuine per-case600-second witness anchor,
+Bangkok billing-day alignment and actual filesystem-leaf barriers, preserving
+production guards and original finite ends. Its127 functional cases pass118.04s
+under actual coverage; subset15.093471% still exits1 against80%. The combined freeze/unit/static
+run on the repaired version/auth/fixture union is NOT STARTED. The pushed `1dcf415`
+5,585-unit result remains historical, separate evidence; no PR gate is waived.
+
+The owner's original invitation was expired and unused. Reviewed auth source
+passes71 focused checks and strict/Ruff5, and the actual scoped renewal preserves
+password/account, sibling, directory and role state. Readiness at19:18:14UTC on
+2026-10-16 confirms API health200, login200 and genuine protected identity401.
+The new invitation expires2026-10-17T03:13:30Z (10:13 Bangkok); no password signup
+or signed-in browser acceptance is verified. Secret contents were not inspected.
+The first frozen-source API start failed because `pilot_preview._git_document`
+requires a Git checkout. Restoration uses the actual Git layout, with no model,
+provider, queue or native activation. This is a local-preview limitation, not
+frozen-runtime or deployment qualification (ERROR-236/237, ADR-140).
+
+Host offline Python wheel and exact-lock Node/npm builds,14 prepared public test
+wheels and mixed-recipe43 focused checks remain packaging/source evidence. They
+do not qualify a portable image, installed test closure, cold-cache build or ARM64.
+A complete Nexus-owned operating cycle, genuine multiple-provider quality and
+US$5/day operation, native independent E/EV, Strategy/presentation/support,
+owner browser UAT, reporting/email, private deployment, independent restore/
+rollback and24-hour soak remain required. Board promotion stays explicitly gated;
+automatic Meta Harness remains deferred. The owner has requested stopping this
+build; these are outstanding resume gates, not a release claim or a new schedule.
+
+Private evidence (exact scopes remain separate):
+
+- V7 `TEST_TERMINAL_1.json` (af641967),
+  `FAILED_WORKER_VERSION_READONLY_AUDIT_1.json` (26d01c21) and
+  `OWNED_CLUSTER_STOP_1.json` (d366980f) under
+  `/var/tmp/nexus-coding-application-actual-checks-20261016-7`.
+- `WORKER_MODEL_WORKFLOW_VERSION_SOURCE_1.json` (3ea211b2) under
+  `/var/tmp/nexus-model-workflow-version-checks-20261017-1`.
+- `UNIT_RECEIPT_1.json` (58397116) and `STATIC_RECEIPT_1.json` under
+  `/var/tmp/nexus-combined-code-regression-20261017-1`.
+- `FIXTURE_TIME_SOURCE_1.json` (f6ae3058) under
+  `/var/tmp/nexus-unit-fixture-time-checks-20261017-1`.
+- `WORKER_OWNER_INVITATION_SOURCE_2.json` (a9ee1744) under
+  `/var/tmp/nexus-owner-invitation-repair-checks-20261017-1`;
+  independent `OWNER_INVITATION_REVIEW_1.json` (8bdc668d) under
+  `/var/tmp/nexus-owner-invitation-independent-review-20261017-1`.
+- Metadata-only `FINAL_READINESS_3.json` under
+  `/home/santapong/.codex/nexus-owner-preview-20261016-1/invitation-renewal-run-20261017-1`.
+  Do not read the invitation output or account/credential files to inspect this
+  readiness evidence.
+
+Earlier component detail below retains its original scope and overlapping counts;
+it is not a combined current-source release result.
 
 ## Behavior implemented and held
 
@@ -105,7 +195,8 @@ before fixture writes pass a normal-umask positive check. No guard was relaxed.
 
 ## Active implementation and next milestone
 
-Root plus three bounded workers continue the remaining connections:
+The following connections remain incomplete at the owner-requested stop. They are
+resume work, not instructions to launch another run:
 
 1. M's exact33-file C lifecycle/configuration/API/CLI/runtime composition is held:
    323 relevant checks/139.15s, including74 M cases, configured strict/Ruff33.
@@ -134,13 +225,13 @@ publication/build is not invented as an automatic UI action. Source checks pass,
 including tsc+Vite19.63s and a real route-schema render with all prior paths kept;
 signed-in owner browser acceptance remains pending.
 
-Normal company001–017 now installs in the first actual isolated A6 database,
-with74 FORCERLS tables and the public DBOS migration. Original001–016 and all
-failed/held histories stay intact. That scenario then fails before accounts or
-native/model issuance on a test-fixture JSON boundary. Combined source review and
-coherent functional regression pass; meaningful coverage, the strict fixture
-repair and a fresh actual namespace remain next. These do not replace genuine
-provider quality or a native build.
+Normal company001–017 installs with74 FORCERLS tables and public DBOS migration.
+The first A6 fixture failed before accounts/issuance at a JSON boundary; later v4
+records one planner request and v5 reaches approved same-root r2 before its C
+prepare denial. Original001–016, all failed histories and distinct source inputs
+stay intact. The complete fresh L→C/J cycle, meaningful global coverage, genuine
+provider quality and native build remain required; see the latest checkpoint
+above rather than treating an earlier source hold as execution proof.
 
 Strategy/presentation/support outputs, actual native/ARM64 qualification, owner
 browser acceptance, email, private deployment, independent restore/rollback and
@@ -199,8 +290,18 @@ model request is reached. A failure-specific restricted NOSUPER/NOBYPASS and
 operator RR READ ONLY audit explicitly rolls back both snapshots and confirms
 all74 company tables, DBOS workflows and other app connections are zero. Root
 stops only its own cluster, preserving the database, claim, source and logs.
-The same six-file author scope is repairing the strict JSON boundary and
-nominating fresh v2 selectors; the actual bounded worker remains unexecuted.
+The same six-file author scope holds source3: strict JSON plus the actual
+namespaced registry hash in the three checked descriptions, preserving all
+validators/assertions. Pure positives/UUID/copied-pin/old-selector denials and
+strict/Ruff6 pass. Fresh v2 gets through that catalog, then fails1case/5.84s at
+PilotCredentialFile's ten accounts against the existing maximum eight.
+Its separate restricted/operator RR READ ONLY audit/rollback agrees on only
+controls1/directory1/memberships10, with zero registered/native Work, attempts,
+intents, dispatches, holds, budgets, DBOS workflows or other app connections.
+Root stops only its owned v2 cluster, retaining all state. A five-identity fixture
+for owner/L/C/E/EV and a fresh v3 namespace are in progress; all ten registered
+source-reader principals and the production account bound remain required.
+The actual bounded worker remains unexecuted.
 
 - Cancellation source: `/var/tmp/nexus-coding-cancel-repair-checks-20261016-1/ROOT_CODING_CANCEL_REPAIR_SOURCE_1.json`, SHA256 `ea3c7034f430084dc898e90d51ede7d5fe36af423281719cc73b668b55f3b6e4`.
 - Cancellation checks: `/var/tmp/nexus-coding-cancel-repair-checks-20261016-1/ROOT_CODING_CANCEL_REPAIR_CHECKS_1.json`, SHA256 `c1132554b1ea4f71f686b35256f341fe8177a8f19e7458fcc6c6d4c6b5076462`.
@@ -230,7 +331,10 @@ Latest held receipts (all under `/var/tmp`, checked2026-10-16):
 - Owner interface: `nexus-coding-owner-ui-checks-20261016-1/ROOT_CODING_OWNER_UI_SOURCE_1.json`, SHA256 `d1438c03a63b821b944a3ce982d469c5a54d657046955a3f80c03a5d8ea14997`; checks `4f54417471da802ee66c16b7c5fc245ed699793198c9aa8147755098b995259e`.
 - Actual acceptance inputs: `nexus-coding-repository-checks-20261016-1/ROOT_C_APPLICATION_SOURCE_SELECTION_1.json`, SHA256 `95f42cf97ab1fadf21cd3bd5dbc68cf54619d65f145ea4ae86ae2334364b9a6c`: actual canonical.py/ARCHITECTURE.md blob metadata and unchanged tree/archive rechecked in0.159293s; no authority/ingestion proof.
 
-All implementation evidence is local and uncommitted at this checkpoint. The
+The tested coding source checkpoint is committed and pushed as `1dcf415` on
+`feat/company-foundation`, with all165 selected staged hashes verified. Main and
+develop remain unchanged. Six integration fixture files and two normal-head test
+forwards are separate pending test work. The
 actual isolated normal017/DBOS install and failed pre-account fixture attempt are
 recorded above. No provider request, owner account change, preview reset, native
-run, remote push or deployment was performed by this package.
+run or deployment was performed by this package.

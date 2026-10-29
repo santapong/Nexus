@@ -18,6 +18,7 @@ from nexus.execution.dbos_contracts import SegmentCommand
 from nexus.execution.dispatch_store import reserve_dispatch
 from nexus.execution.effect_support import require_effect_authority
 from nexus.execution.management_checks import require_management_execution
+from nexus.execution.model_workflow_identity import application_version
 from nexus.execution.runtime_contracts import AttemptKind
 from nexus.execution.runtime_store import next_segment_id
 from nexus.execution.runtime_support import require_runtime_scope, snapshot
@@ -174,6 +175,7 @@ async def enqueue_candidate(
 async def _enqueue_exact(
     session: AsyncSession, command: SegmentCommand, registration: WorkflowRegistration
 ) -> None:
+    deployment_version = application_version(registration)
     payload = command.model_dump_json()
     result = await session.scalar(
         ENQUEUE,
@@ -182,7 +184,7 @@ async def _enqueue_exact(
             "queue_name": registration.queue_name,
             "payload": json.dumps(payload),
             "workflow_id": command.workflow_id,
-            "version": registration.workflow_version,
+            "version": deployment_version,
             "application_name": registration.application_name,
         },
     )
@@ -200,7 +202,7 @@ async def _enqueue_exact(
     ) != (
         registration.workflow_name,
         registration.queue_name,
-        registration.workflow_version,
+        deployment_version,
         registration.application_name,
         "portable_json",
     ):

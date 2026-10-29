@@ -215,6 +215,8 @@ def services_from_store(
     prepared: PreparedCodingRequest,
     lease: ExecutionLease,
     transport: httpx2.AsyncBaseTransport,
+    *,
+    endpoint_timeout_seconds: float = 1,
 ) -> CodingServices:
     """Reuse the actual H graph and roots; no copied/fake private proof."""
     row = next(
@@ -228,7 +230,7 @@ def services_from_store(
         api_family=row.api_family,
         base_url="https://offline.invalid/v1",
         api_key=SecretStr("synthetic-no-vendor-key"),
-        timeout_seconds=1,
+        timeout_seconds=endpoint_timeout_seconds,
         transport=transport,
     )
     directory = root / "model"

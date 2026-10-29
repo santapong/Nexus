@@ -35,6 +35,7 @@ from nexus.core.llm.company_adapter_contracts import (
     ToolProposal,
 )
 from nexus.core.llm.company_registry import ModelRegistration
+from nexus.core.llm.company_transport import GuardedAsyncClient
 from nexus.core.llm.company_wire_usage import WireObserver
 
 
@@ -96,11 +97,7 @@ async def sdk_model(
         if row.provider == "google":
             _require_single_google_response(response)
 
-    async with httpx2.AsyncClient(
-        transport=endpoint.transport,
-        timeout=endpoint.timeout_seconds,
-        event_hooks={"response": [observe]},
-    ) as http:
+    async with GuardedAsyncClient(endpoint, observe) as http:
         profile: ModelProfile = {
             "supports_tools": "tools" in row.capabilities,
             "supports_json_schema_output": "structured_output" in row.capabilities,

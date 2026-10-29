@@ -31,7 +31,10 @@ from nexus.company.management.coding_prepared_contracts import (
 )
 from nexus.company.management.cycle_cost_contracts import HistoricalCostSources
 from nexus.company.management.nexus_coding_admission import NexusCodingAdmission
-from nexus.company.management.nexus_coding_catalog import select_configured_nexus_plan
+from nexus.company.management.nexus_coding_catalog import (
+    coding_work_matches_template,
+    select_configured_nexus_plan,
+)
 from nexus.company.management.owner_view_sources import OwnerViewSources
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog
 from nexus.company.management.plan_models import ManagementPlanRevision
@@ -124,7 +127,8 @@ async def current_native(
         or select_configured_nexus_plan(catalog, plan.payload) != "execution"
         or plan.payload.coding_admission_sha256 != canonical_sha256(admission)
         or native.current.child != slot.child
-        or native.current.work != slot.work
+        or not coding_work_matches_template(native.current.work, slot.work)
+        or native.current.work not in plan.payload.plan.items
         or native.current.procedure_id != admission.procedure.procedure_id
         or native.goal != admission.goal
     ):

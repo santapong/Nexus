@@ -49,7 +49,7 @@ async def test_native_event015_physical_columns_and_profile_are_qualified(
     async with native_schema_factory() as session, session.begin():
         assert await native_event_capability(session)
         version = await session.scalar(text("SELECT version_num FROM company_alembic_version"))
-        assert version == "company_016"
+        assert version == "company_017"
         connection = await session.connection()
         columns = await connection.run_sync(
             lambda sync: inspect(sync).get_columns("company_brain_events")

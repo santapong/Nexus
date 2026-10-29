@@ -92,7 +92,18 @@ async def test_existing_owner_dispatch_precedes_fresh_actor_body_and_r2_lookup(
 
 
 @pytest.mark.parametrize(
-    "fault", [None, "r1", "head", "decision", "family", "registration", "payload"]
+    "fault",
+    [
+        None,
+        "model_title",
+        "native_title",
+        "r1",
+        "head",
+        "decision",
+        "family",
+        "registration",
+        "payload",
+    ],
 )
 async def test_current_r2_loader_reads_actual_full_native_family_before_c_role_is_derived(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fault: str | None
@@ -145,6 +156,74 @@ async def test_current_r2_loader_reads_actual_full_native_family_before_c_role_i
     assert isinstance(decision, ManagementOwnerDecision)
     record = f.stored[(ManagementPlanRevision, (admission.company_id, head.current_revision_id))]
     assert isinstance(record, ManagementPlanRevision)
+    if fault in {"model_title", "native_title"}:
+        from nexus.company.management.canonical import canonical_sha256
+        from nexus.company.management.lifecycle import PlanRevision
+        from nexus.company.management.plan_models import ManagementPlanTask
+        from nexus.company.management.plan_registration import registration
+        from nexus.company.management.revision_store import plan_reference
+        from nexus.execution.runtime_support import registration_digest
+
+        payload = admission.payload("execution", origin=planning_origin(admission))
+        actual_work = admission.slots[1].work.model_copy(update={"title": "Model proposed coder"})
+        payload = payload.model_copy(
+            update={
+                "plan": payload.plan.model_copy(
+                    update={"items": (payload.plan.items[0], actual_work, *payload.plan.items[2:])}
+                )
+            }
+        )
+        record.snapshot_json, record.sha256 = payload.model_dump_json(), canonical_sha256(payload)
+        decision.payload_sha256 = record.sha256
+        revision = PlanRevision(
+            company_id=record.company_id,
+            plan_id=record.plan_id,
+            plan_revision_id=record.plan_revision_id,
+            revision=record.revision,
+            sha256=record.sha256,
+            payload=payload,
+            proposed_by=record.proposed_by,
+            recorded_at=record.recorded_at,
+        )
+        request = registration(
+            admission.slots[1].child.binding, actual_work, admission.slots[1].child.quota
+        )
+        f.work.registration_json, f.work.registration_hash = (
+            request.model_dump_json(),
+            registration_digest(request),
+        )
+        task = f.stored[
+            (
+                ManagementPlanTask,
+                (admission.company_id, record.plan_revision_id, actual_work.task_id),
+            )
+        ]
+        assert isinstance(task, ManagementPlanTask)
+        task.work_sha256 = f.work.registration_hash
+        for task_id, bound in tuple(f.bindings.items()):
+            f.bindings[task_id] = bound.model_copy(
+                update={
+                    "plan": plan_reference(revision),
+                    **(
+                        {"work": actual_work, "work_sha256": f.work.registration_hash}
+                        if task_id == actual_work.task_id
+                        else {}
+                    ),
+                }
+            )
+        if fault == "native_title":
+
+            async def approved(*args: object, **kwargs: object) -> PlanRevision:
+                return revision
+
+            monkeypatch.setattr(module, "require_nexus_owner_family_locked", approved)
+            altered = request.model_copy(
+                update={"work": actual_work.model_copy(update={"title": "Different native title"})}
+            )
+            f.work.registration_json, f.work.registration_hash = (
+                altered.model_dump_json(),
+                registration_digest(altered),
+            )
     if fault == "head":
         head.current_revision_id = UUID(int=999)
     elif fault == "decision":
@@ -157,13 +236,17 @@ async def test_current_r2_loader_reads_actual_full_native_family_before_c_role_i
         raw = json.loads(record.snapshot_json)
         raw["coding_admission_sha256"] = "f" * 64
         record.snapshot_json = json.dumps(raw)
-    if fault is None:
+    if fault in {None, "model_title"}:
         bundle, end = await module.approved_r2_locked(
             value.services, f.session, f.control, scope, owner, clock_us() + 5_000_000
         )
         assert bundle.plan.revision == 2 and len(bundle.plan.payload.children) == 10
         assert bundle.binding.child == admission.slots[1].child
-        assert bundle.work.registration.work == admission.slots[1].work
+        if fault is None:
+            assert bundle.work.registration.work == admission.slots[1].work
+        else:
+            assert bundle.work.registration.work == bundle.binding.work
+            assert bundle.binding.work.title == "Model proposed coder"
         assert end > clock_us()
     else:
         with pytest.raises(ValueError):
@@ -185,7 +268,12 @@ async def test_owner_existing_dispatch_requires_original_fixed_dbos_metadata_wit
 
     from nexus.execution import coding_lifecycle_bindings as bindings
     from nexus.execution import coding_lifecycle_reads as metadata
-    from nexus.execution.coding_services import APPLICATION, QUEUE, VERSION, WORKFLOW
+    from nexus.execution.coding_services import (
+        APPLICATION,
+        APPLICATION_VERSION,
+        QUEUE,
+        WORKFLOW,
+    )
     from nexus.execution.dispatch_models import SegmentDispatch
     from nexus.execution.runtime_models import EffectIntent, ExecutionWork
     from nexus.harness.canonical import action_hash
@@ -234,7 +322,7 @@ async def test_owner_existing_dispatch_requires_original_fixed_dbos_metadata_wit
     projected = {
         "name": WORKFLOW,
         "queue_name": QUEUE,
-        "application_version": VERSION,
+        "application_version": APPLICATION_VERSION,
         "application_name": APPLICATION,
         "serialization": "portable_json",
         "inputs": json.dumps({"positionalArgs": [actual.model_dump_json()], "namedArgs": {}}),

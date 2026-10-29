@@ -22,11 +22,11 @@ from nexus.execution.coding_history import NativeCodingHistory, native_history
 from nexus.execution.coding_operation import CodingOperation, clock_now
 from nexus.execution.coding_services import (
     APPLICATION,
+    APPLICATION_VERSION,
     CLIENT_SECONDS,
     ENTRY_SECONDS,
     LEASE_SECONDS,
     QUEUE,
-    VERSION,
     WORKFLOW,
     CodingServices,
 )
@@ -311,7 +311,7 @@ def configure_coding_worker(services: CodingServices, system_database_url: str) 
     DBOS(
         config={
             "name": APPLICATION,
-            "application_version": VERSION,
+            "application_version": APPLICATION_VERSION,
             "system_database_url": system_database_url,
             "run_migrations": False,
             "executor_id": str(services.worker_id),

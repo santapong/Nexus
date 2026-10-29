@@ -33,6 +33,24 @@ def reader(root: Path) -> CycleModelReader:
     return CycleModelReader(async_sessionmaker(), catalog, FileModelEvidenceStore(root))
 
 
+@pytest.mark.parametrize("hour, day", [(16, 16), (17, 17)])
+def test_intent_fixture_retains_actual_bangkok_billing_boundary(
+    monkeypatch: pytest.MonkeyPatch, hour: int, day: int
+) -> None:
+    from datetime import UTC, date, datetime
+
+    from nexus.harness.journal_budget import billing_day
+    from nexus.tests.unit import selected_intent_boundary_fixture as fixture
+
+    instant = datetime(2026, 10, 16, hour, tzinfo=UTC)
+    monkeypatch.setattr(fixture, "datetime", SimpleNamespace(now=lambda _: instant))
+    value = fixture.intent_boundary()
+    assert value.now == instant
+    assert value.hold.day == billing_day(instant) == date(2026, 10, day)
+    with pytest.raises(ValueError, match="timezone-aware"):
+        billing_day(instant.replace(tzinfo=None))
+
+
 def test_old_six_role_catalog_cannot_be_labelled_whole_full_company(tmp_path: Path) -> None:
     _, catalog = case()
     with pytest.raises(ValueError):
@@ -549,22 +567,32 @@ async def test_original_deadline_denies_late_private_result_but_retains_its_actu
         return await original(reference)
 
     monkeypatch.setattr(concrete.evidence, "load", blocked)
+    end_us = clock_us() + 5_000_000
     caller = asyncio.create_task(
         concrete.read(
             value.scope,
             value.owner,
             value.selected.action.proposal.action_id,
-            end_us=clock_us() + 250_000,
+            end_us=end_us,
         )
     )
-    await asyncio.wait_for(entered.wait(), 2)
-    with pytest.raises(TimeoutError):
-        await caller
-    pending = concrete.pending_owners()
-    assert pending
-    finish.set()
-    await asyncio.gather(*pending)
-    assert not concrete.pending_owners()
+    try:
+        await asyncio.wait_for(entered.wait(), max(0, end_us - clock_us()) / 1_000_000)
+        with pytest.raises(TimeoutError):
+            await caller
+        pending = concrete.pending_owners()
+        assert pending
+        finish.set()
+        await asyncio.gather(*pending)
+        assert not concrete.pending_owners()
+    finally:
+        finish.set()
+        if not caller.done():
+            caller.cancel()
+        await asyncio.gather(caller, return_exceptions=True)
+        pending = concrete.pending_owners()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
 
 
 async def test_other_model_roles_without_saved_header_do_not_read_private_bytes(

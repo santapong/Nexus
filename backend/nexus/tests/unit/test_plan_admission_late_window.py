@@ -12,6 +12,9 @@ from nexus.company.management.plan_support import validate_plan
 from nexus.company.management.transactions import ManagementDeniedError
 from nexus.tests.unit.plan_admission_fixture_data import ordinary_fixture
 from nexus.tests.unit.plan_admission_fixture_session import MetadataSession, qualifier
+from nexus.tests.unit.plan_admission_witness_fixture import (
+    admission_case_clock as admission_case_clock,
+)
 from nexus.tests.unit.plan_admission_witness_fixture import witness
 
 

@@ -25,6 +25,7 @@ from nexus.company.management.coding_prepared_contracts import (
     prepared_reference,
 )
 from nexus.company.management.control_support import db_clock
+from nexus.company.management.nexus_coding_catalog import coding_work_matches_template
 from nexus.company.management.owner_view_sources import owner_brain_scope
 from nexus.company.management.plan_registration import registration
 from nexus.company.management.plan_support import CurrentPlanBinding
@@ -99,7 +100,7 @@ async def select_coding_review(
     assert admission is not None
     slot = admission.slots[1]
     parameters = PlanningModelParameters.model_validate_json(json.dumps(proposal.parameters))
-    expected = registration(slot.child.binding, slot.work, slot.child.quota)
+    expected = registration(slot.child.binding, binding.work, slot.child.quota)
     if (
         (
             scope.company_id,
@@ -119,7 +120,7 @@ async def select_coding_review(
         or work.registration_hash != registration_digest(expected)
         or work.registration_hash != binding.work_sha256
         or binding.child != slot.child
-        or binding.work != slot.work
+        or not coding_work_matches_template(binding.work, slot.work)
         or binding.procedure_id != admission.procedure.procedure_id
         or (proposal.company_id, proposal.task_id, proposal.trace_id, proposal.actor_id)
         != (work.company_id, work.task_id, work.trace_id, work.actor_id)

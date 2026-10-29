@@ -41,6 +41,7 @@ from nexus.company.management.cycle_model_reader import (
     stored_coding_profile,
 )
 from nexus.company.management.nexus_coding_admission import NexusCodingAdmission
+from nexus.company.management.nexus_coding_catalog import coding_work_matches_template
 from nexus.company.management.plan_catalog import PlanAdmissionCatalog
 from nexus.company.management.plan_models import ManagementProcedure
 from nexus.company.management.plan_registration import registration
@@ -201,8 +202,13 @@ def project_family_costs(
         elif slot is not None and (
             row.parent_task_id != admission.procedure.binding.task_id
             or row.root_task_id != admission.procedure.binding.task_id
+            or (
+                row.work.registration.work != slot.work
+                if slot.role == "planner"
+                else not coding_work_matches_template(row.work.registration.work, slot.work)
+            )
             or row.work.registration
-            != registration(slot.child.binding, slot.work, slot.child.quota)
+            != registration(slot.child.binding, row.work.registration.work, slot.child.quota)
             or (row.actor_id, row.workspace_id, row.allocation_usd)
             != (
                 slot.child.binding.actor_id,
@@ -427,7 +433,16 @@ class CycleCostSnapshotReader:
             [await native_cost_selection(session, scope.company_id, row.id) for row in actions]
         )
         action_ids = {row.id for row in actions}
-        profile = await stored_coding_profile(session, admission)
+        profile = await stored_coding_profile(
+            session,
+            admission,
+            works=tuple(
+                row.work.registration.work
+                for row in works
+                if row.work is not None
+                and row.task_id not in {root.task_id, admission.slots[0].work.task_id}
+            ),
+        )
         blockers = []
         budgets = []
         for task in ids:

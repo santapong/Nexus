@@ -90,7 +90,7 @@ def test_default_component_estimate_codec_omits_the_new_optional_field() -> None
     "change",
     [
         {"recipe_id": "client-made"},
-        {"revision": "v2"},
+        {"revision": "v3"},
         {"conformance_reference": "random-string-is-not-source-evidence"},
     ],
 )
@@ -239,3 +239,53 @@ def test_changed_actual_sdk_version_or_source_cannot_mint_conformance(
     file.write_text("modified framing")
     with pytest.raises(ValueError):
         estimator_module._source_hash(file, "0" * 64)
+
+
+LEGACY_REFERENCE = (
+    "company-input-ceiling-v1:6382e9740502d59ecf1f749d1390aae212b76bcc47400d73856d5f2fd3d4260f"
+)
+CURRENT_REFERENCE = (
+    "company-input-ceiling-v2:dcc1018a8dcc259b92557bfa5fbaf36d4fb181dfc58d4cdaee072bc4bc5d03ac"
+)
+
+
+def test_current_reviewed_guard_and_adapter_have_new_exact_recipe_identity() -> None:
+    assert RECIPE_REVISION == "v2"
+    current = input_conformance_reference()
+    assert current == CURRENT_REFERENCE and current != LEGACY_REFERENCE
+    assert recipe().conformance_reference == current
+
+
+@pytest.mark.parametrize("pin", ["_ADAPTER_SHA", "_TRANSPORT_SHA"])
+def test_altered_adapter_or_guard_source_does_not_mint_conformance(
+    monkeypatch: pytest.MonkeyPatch, pin: str
+) -> None:
+    monkeypatch.setattr(estimator_module, pin, "0" * 64)
+    with pytest.raises(ValueError, match="source differs from reviewed framing"):
+        input_conformance_reference()
+
+
+def test_legacy_recipe_and_estimate_remain_readable_but_cannot_authorize_fresh_estimator() -> None:
+    registry, current = supported(), recipe()
+    legacy = ModelInputRecipe.model_validate(
+        current.model_dump() | {"revision": "v1", "conformance_reference": LEGACY_REFERENCE}
+    )
+    legacy = ModelInputRecipe.model_validate_json(legacy.model_dump_json())
+    call = request(bounds=bounds(), data_classification="public")
+    fresh = FullContextInputEstimator(registry, current).estimate(call, registry, current)
+    assert fresh.whole_request is not None
+    old_whole = fresh.whole_request.model_copy(
+        update={
+            "recipe_sha256": canonical_sha256(legacy),
+            "conformance_reference": LEGACY_REFERENCE,
+        }
+    )
+    old = InputEstimate.model_validate(
+        fresh.model_dump() | {"recipe_revision": "v1", "whole_request": old_whole}
+    )
+    old = InputEstimate.model_validate_json(old.model_dump_json())
+    require_input_estimate(call, old, legacy)  # Synthetic historical join remains readable.
+    with pytest.raises(ValueError, match="independently bound input estimate"):
+        require_input_estimate(call, old, current)
+    with pytest.raises(ValueError, match="no matching reviewed SDK composition"):
+        FullContextInputEstimator(registry, legacy)

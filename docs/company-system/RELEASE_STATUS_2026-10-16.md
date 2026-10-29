@@ -1,20 +1,25 @@
 # Nexus — current product progress
 
-Checked2026-10-16, Asia/Bangkok. **Nexus is the sole delivery target.** The owner
+**Resumed at the owner's request on 2026-10-28; no release completion.**
+Current task states and 28 October checks are in the [local Nexus task board](../../TASKS.md).
+The detailed 17 October results below are historical, except where identified as
+still open on that board.
+
+Checked2026-10-17, Asia/Bangkok. **Nexus is the sole delivery target.** The owner
 requested a faster workflow after approximately three days. StockFlow is an
 optional later test project, outside the release critical path.
 
 Active plan: [Nexus-focused delivery](NEXUS_FOCUSED_DELIVERY_PLAN_2026-10-16.md).
 The supervised release is incomplete; default native execution stays off.
 
-| Capability | Current state | Next observable result |
+| Capability | Recorded status (date where noted) | Next observable result |
 | --- | --- | --- |
 | Architecture, contracts and governance | Implemented; scoped PostgreSQL/DBOS approval, budget and recovery acceptance passed | Current integrated operating profile and real usage |
-| Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents now ingested in a running local preview | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
+| Company Brain | Backend/offline acceptance passed29/30 with all critical cases; three committed Nexus documents had been ingested in the local preview at that time | Verify actual search and source citations in the signed-in browser; genuine LLM quality remains open |
 | Management and owner interface | Real Today, Overview, Plan, Work, Approval and Report pages exist; Knowledge navigation and goal creation are implemented | Verify saved goal visibility, then connect the same goal to proposed work and reporting |
 | Knowledge → goal UI | **Implemented and source-checked; browser acceptance pending** | Sign in, search, inspect a citation, save a goal and confirm it in the company view |
 | Management-generated planning | **Actual public owner application/recovery passes HTTP/PG/DBOS/SDK-mock**, candidate, same-root revision2 and no-call replay; separate conservation audit passes | Genuine compatible operating profile/model quality and owner browser acceptance |
-| Governed coding | Complete profile, input, C gate/runtime/review/publication and33-file owner application have held checks; owner coding interface source/build and combined scoped review pass; published-patch E/EV source connection held | Complete coherent regression, actual fresh funded L→C cycle and native E/EV |
+| Governed coding | **28 October: actual v11 owner planning→coding→publication passes with two SDK mock requests; separate restricted read-only conservation audit passes** | Same-cohort full regression and native E/EV; genuine provider quality remains separate |
 | Whole-cycle accounting | C historical-header integration140 relevant/strictRuff8 and Plan/Report family-finance interface source/build pass; original saved-wire join repaired | Actual SQL conservation and signed-in Report UI; missing proof stays unconfirmed |
 | Genuine model operation | Owner Model Checks/API, fixed DBOS worker and protected results implemented; actual HTTP/DBOS/SDK-mock core plus separate conservation audit verified. Opt-in application composition passes focused source checks | Real conformance and representative quality; models remain disabled |
 | Strategy, presentation and support | Components and scoped proofs exist; some earlier integration is domain-specific | Nexus-owned outputs with current evidence and role-specific acceptance |
@@ -22,7 +27,103 @@ The supervised release is incomplete; default native execution stays off.
 | Notifications and reporting | Durable/offline recovery pieces verified | Real same-goal owner report/inbox and configured delivery/reconciliation |
 | Private deployment and recovery | **Not qualified** | Pi setup/ARM64, independent restore, private access, rollback and24-hour soak |
 
-## Latest actual result
+## Current 28 October checkpoint
+
+The isolated PostgreSQL17/DBOS3.2 metadata probe verifies the planner/coder
+deployment-version repair with two actual no-op workers. A fresh v11 owner
+application test then passes in 123.48s with two SDK MockTransport requests and
+published coding evidence. The test's outer audit locator counted a pytest
+directory and its symlink twice; a separate read-only audit of the same retained
+synthetic database passed after a controlled restart, then PostgreSQL stopped
+(ERROR-239). The audit found two attempts/intents/dispatches, two publication
+sources, no remaining leases or other app connections and USD0.000004 known
+synthetic spend. Earlier v9/v10 unknown synthetic holds remain retained.
+
+After the transport and estimator changes, fresh v12 completed planning but
+stopped on a coding-preparation 503; the precise cause remains unknown. A
+separate new v13 synthetic run then passed owner planning→coding→publication
+with two SDK mock requests. Its restricted read-only rollback audit confirmed
+two successful intents and reconciled synthetic USD0.000004. PostgreSQL and
+the owned scope stopped. This does not establish native execution or live quality.
+
+The earlier unit/coverage cohort stopped on a timeout-related test failure after
+a mock POST; its synthetic billing outcome remains unknown. A test-only fixture
+repair passed focused checks; the next cohort passed 1,714 cases before a second
+mock billing mismatch. Subsequent targeted repairs retained the failures and
+led to a fresh v9 cohort: all 5,822 unit tests passed, but actual coverage was
+64.148269%, below the unchanged 80% gate. Meaningful same-source integration
+coverage and release acceptance remain open. A separate source check bound the
+builder's nine required files to commit `1dcf415`; image and native qualification
+remain open. This checkpoint
+does not establish live provider quality, native E/EV,
+signed-in owner acceptance, email, private deployment or supervised release.
+See [task board](../../TASKS.md) for the actual current state and evidence.
+
+## Historical 17 October actual result
+
+Actual A6 v7 advances through one planner SDK MockTransport request, protected L
+candidate, same-root r2 and separate owner approval. C preparation creates its
+protected pending request; cold recomposition, saved-wait recovery, input/review,
+exact decision, atomic dispatch and duplicate-dispatch protection are exercised.
+The coder worker then exits before listening to its queue: DBOS3.2 already owns
+deployment version `v1` under `nexus-planning`, so `nexus-coding` cannot claim it.
+Pytest fails99.72s; terminal101.991s rechecks all2,267 runtime pins unchanged.
+There is no C model attempt or issued intent, and the complete C/J cycle is unproven.
+
+The separate restricted NOSUPER/NOBYPASS and operator repeatable-read READ ONLY
+audits explicitly roll back with matching74-table counts. L is verifying/model1,
+C is awaiting_approval/model0, every tool count is0, and root owns model0/tool0/
+plan-revision1. L's USD0.004164 hold reconciles to known USD0.000002. C's unissued
+USD0.010507 reservation remains HELD with actual cost null; daily and Work ledgers
+conserve held USD0.010507 plus spent USD0.000002. DBOS retains one SUCCESS and one
+ENQUEUED command, with no worker lease or other application connection. Only the
+owned v7 cluster is stopped (exit0/status3), with failed data and queue retained.
+No reset, refund, re-owning, requeue or consumed-binding retry occurred.
+
+ERROR-234 is fixed at the C routing boundary: its no-tool typed patch and upfront
+quote now share code/structured_output requirements. Actual v7 crosses preparation;
+the focused repair passes134 checks/23.02s and configured strict/Ruff9. Generic
+whole-input/actual-tool denials and model capability, budget and price guards stay
+intact. The distinct ERROR-235 deployment-version repair holds16 files with148
+focused checks/25.89s and configured strict/Ruff23. It maps only exact current L/C
+registrations to `nexus-planning-v1` and `nexus-coding-v1`, retaining logical ABI
+`v1`. Legacy metadata is readable only after original issued-native proof; an old
+unissued command cannot activate. ADR-139 records this source design. The fresh DBOS
+compatibility microprobe and final combined freeze/unit/static run are NOT STARTED.
+A6 v8 is unexecuted; source checks do not establish either result.
+
+The full2,266-pin unit run is terminal FAILED:5,686 passed,17 failed, zero skipped
+in790.34s; actual coverage63.644004% is below the unchanged80% gate. Configured
+normal strict/Ruff/format158 pass on that same earlier cohort. The subsequent
+8-file test/helper repair uses a genuine per-case600-second witness anchor,
+Bangkok billing-day alignment and actual filesystem-leaf barriers, preserving
+production guards and original finite ends. Its127 functional cases pass118.04s
+under actual coverage; subset15.093471% still exits1 against80%. The combined freeze/unit/static
+run on the repaired version/auth/fixture union is NOT STARTED. The pushed `1dcf415`
+5,585-unit result remains historical, separate evidence; no PR gate is waived.
+
+The owner's original invitation was expired and unused. Reviewed auth source
+passes71 focused checks and strict/Ruff5, and the actual scoped renewal preserves
+password/account, sibling, directory and role state. Readiness at19:18:14UTC on
+2026-10-16 confirms API health200, login200 and genuine protected identity401.
+The new invitation expires2026-10-17T03:13:30Z (10:13 Bangkok); no password signup
+or signed-in browser acceptance is verified. Secret contents were not inspected.
+The first frozen-source API start failed because `pilot_preview._git_document`
+requires a Git checkout. Restoration uses the actual Git layout, with no model,
+provider, queue or native activation. This is a local-preview limitation, not
+frozen-runtime or deployment qualification (ERROR-236/237, ADR-140).
+
+Host offline Python wheel and exact-lock Node/npm builds,14 prepared public test
+wheels and mixed-recipe43 focused checks remain packaging/source evidence. They
+do not qualify a portable image, installed test closure, cold-cache build or ARM64.
+A complete Nexus-owned operating cycle, genuine multiple-provider quality and
+US$5/day operation, native independent E/EV, Strategy/presentation/support,
+owner browser UAT, reporting/email, private deployment, independent restore/
+rollback and24-hour soak remain required. Board promotion stays explicitly gated;
+automatic Meta Harness remains deferred. The owner has requested stopping this
+build; these are outstanding resume gates, not a release claim or a new schedule.
+
+Earlier component detail below retains its original2026-10-16 scope.
 
 The [coding implementation checkpoint](GOVERNED_CODING_IMPLEMENTATION_CHECKPOINT_2026-10-16.md)
 records the current source-only packages and a separate actual committed Nexus
@@ -50,9 +151,17 @@ fixture's JSON-to-strict-Python catalog reconstruction before account/company or
 worker/model/native execution. A separate restricted plus operator RR READ ONLY
 audit/rollback confirms74 FORCERLS tables and zero company rows, DBOS workflows
 and app connections. The owned cluster is stopped; all failed data/claim/source
-and logs remain. Fix that fixture and use a fresh v2 namespace. No actual C
-request, native run or owner-preview activation has occurred. The last successful
+and logs remain. Its strict JSON/registry-pin repair passes pure/static checks;
+fresh v2 reaches directory bootstrap, then the fixture's ten-account list exceeds
+the existing eight-account file bound. The separate read-only audit confirms only
+controls1/directory1/memberships10, with zero Work, attempts, intents, dispatches,
+holds, budgets, workflows or other app connections. The owned v2 cluster is
+stopped with state retained; a five-active-identity fixture/fresh v3 is next.
+No actual C request, native run or owner-preview activation has occurred. The last successful
 actual application/model runtime remains the planner scenario below.
+
+Tested coding source is pushed at `1dcf415` on `feat/company-foundation`.
+Develop/main remain unchanged; coverage/actual qualification and release stay open.
 
 The actual public owner application/recovery scenario passes38.43s. It proposes
 and separately approves r1, interrupts after genuine pending publication, cold
@@ -185,6 +294,9 @@ wave. Old frozen runs, actions, budgets and clocks stay preserved.
 
 ## Delivery sequence and time
 
+The owner requested stopping this build on2026-10-17. The estimates below are
+historical effort budgets; work is being handed off with unfinished gates.
+
 A real local **Knowledge → cited evidence → saved Nexus goal → company view**
 is ready for signed-in browser verification. The original1–2 focused working day
 target included this integration and acceptance, which remain open. Saving a goal
@@ -261,10 +373,12 @@ no further request. Forged/foreign/stale origin and tampered protected bytes den
 Source refinements after the run have separately scoped checks; the executed
 source is retained. No real provider quality or connected owner planner is claimed.
 
-The owner's local preview remains unchanged: empty catalog, no launched model
-worker or planner producer. On the owner's first-login report, the existing-account
-form was switched to invitation setup and the known preview email filled. Password
-and invitation entry remain with the owner; no sign-in acceptance is recorded.
+The local preview has no configured model/provider catalog or launched queue/
+native worker. After the owner reported no password yet, the actual expired-unused
+invitation was renewed without a password reset and the API restored in its Git
+checkout layout. The19:18:14UTC readiness check proves health/login200 and
+protected identity401 only. The new invitation expires10:13 Bangkok on2026-10-17;
+password entry and signup remain with the owner, and sign-in is still unverified.
 
 Next implement durable prepared planning inputs and exact owner disclosure, then
 the server-owned bootstrap/producer and explicit application runtime composition.

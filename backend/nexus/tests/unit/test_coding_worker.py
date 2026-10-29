@@ -1,5 +1,10 @@
-"""Actual C orchestration around supplied native history, no DB/SDK process activation."""
+"""Actual C orchestration around supplied native history, no DB/SDK process activation.
 
+Cohesion exception: issued replay, real queue-header decoding and retained worker
+owners share the same native-delivery fixture; splitting it would hide replay scope.
+"""
+
+import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -10,7 +15,13 @@ import pytest
 from nexus.builder.contained_query import clock_us
 from nexus.execution.coding_history import NativeCodingHistory
 from nexus.execution.coding_operation import CodingOperation
-from nexus.execution.coding_services import APPLICATION, QUEUE, VERSION, WORKFLOW
+from nexus.execution.coding_services import (
+    APPLICATION,
+    APPLICATION_VERSION,
+    QUEUE,
+    VERSION,
+    WORKFLOW,
+)
 from nexus.execution.coding_worker import execute_coding_segment
 from nexus.execution.runtime_contracts import EffectRecord
 from nexus.tests.unit.coding_runtime_fixture import command, runtime_case
@@ -106,7 +117,7 @@ async def test_real_c_launcher_uses_pinned_one_shot_queue_api_once(
     sql.assert_awaited_once()
 
 
-@pytest.mark.parametrize("fault", [None, "recipe", "marker"])
+@pytest.mark.parametrize("fault", [None, "recipe", "marker", "legacy_unissued", "legacy_issued"])
 async def test_real_native_history_consumes_exact_producer_parameters_without_private_reads(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -127,11 +138,12 @@ async def test_real_native_history_consumes_exact_producer_parameters_without_pr
         header_reference,
     )
     from nexus.execution import coding_history as module
-    from nexus.execution.runtime_models import ExecutionWork
+    from nexus.execution.runtime_models import EffectIntent, ExecutionWork
     from nexus.harness.canonical import action_hash
     from nexus.harness.journal import CompanyJournal
+    from nexus.harness.journal_budget import billing_day
     from nexus.harness.journal_contracts import LedgerScope
-    from nexus.harness.journal_models import CompanyControl, JournalAction
+    from nexus.harness.journal_models import CompanyControl, CostHold, JournalAction
     from nexus.harness.model_authorizer_contracts import model_action_parameters
 
     value, prepared, lease = runtime_case(tmp_path)
@@ -190,15 +202,52 @@ async def test_real_native_history_consumes_exact_producer_parameters_without_pr
         consumed_at=datetime.now(UTC),
         approval_json=None,
     )
+    effect, hold = None, None
+    if fault == "legacy_issued":
+        from nexus.tests.unit.coding_runtime_fixture import native_work
+
+        work = native_work(value, lease)
+        work.model_requests_used = 1
+        now = datetime.now(UTC)
+        effect = EffectIntent(
+            company_id=selected.company_id,
+            action_id=selected.action_id,
+            task_id=selected.task_id,
+            trace_id=selected.trace_id,
+            run_id=selected.run_id,
+            proposal_hash=action_hash(proposal),
+            intent_fence=1,
+            attempt_kind="model_requests",
+            state="outcome_unknown",
+            created_at=now,
+            receipt_json=None,
+            verification_json=None,
+        )
+        hold = CostHold(
+            company_id=selected.company_id,
+            task_id=selected.task_id,
+            action_id=selected.action_id,
+            amount_usd=proposal.estimated_cost_usd,
+            day=billing_day(now),
+            state="unknown",
+            actual_usd=None,
+        )
     fake = MagicMock(spec=AsyncSession)
     fake.get = AsyncMock(
-        side_effect=lambda model, key: {ExecutionWork: work, JournalAction: action}.get(model)
+        side_effect=lambda model, key: {
+            ExecutionWork: work,
+            JournalAction: action,
+            EffectIntent: effect,
+            CostHold: hold,
+        }.get(model)
     )
     queue = MagicMock()
     queue.mappings.return_value.one_or_none.return_value = {
         "name": WORKFLOW,
         "queue_name": QUEUE,
-        "application_version": VERSION,
+        "application_version": "v1"
+        if fault in {"legacy_unissued", "legacy_issued"}
+        else APPLICATION_VERSION,
         "application_name": APPLICATION,
         "serialization": "portable_json",
         "inputs": json.dumps({"positionalArgs": [selected.model_dump_json()], "namedArgs": {}}),
@@ -223,9 +272,14 @@ async def test_real_native_history_consumes_exact_producer_parameters_without_pr
     monkeypatch.setattr(module, "dispatched_binding", AsyncMock(return_value=selected))
     credential = AsyncMock(side_effect=AssertionError("No fresh JWT in native history"))
     monkeypatch.setattr(type(value.identities), "current", credential)
-    if fault is None:
+    if fault in {None, "legacy_issued"}:
         read = await module.native_history(value, selected)
-        assert read.effect is None and read.request_sha256 == prepared.request_sha256
+        assert read.request_sha256 == prepared.request_sha256
+        if fault == "legacy_issued":
+            assert read.effect is not None and read.effect.state == "outcome_unknown"
+            assert hold is not None and hold.state == "unknown" and hold.actual_usd is None
+        else:
+            assert read.effect is None
     else:
         with pytest.raises(ValueError):
             await module.native_history(value, selected)
@@ -270,9 +324,11 @@ async def test_cancelled_projection_retains_governed_unknown_without_late_candid
     operation.finish()
 
 
+@pytest.mark.parametrize("response_delay", [0.0, 1.2])
 async def test_actual_worker_uses_h_issued_store_load_and_one_real_sdk_post(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    response_delay: float,
 ) -> None:
     """Actual TinyGit/store/SDK/protected files; native SQL, claims and charge delivery supplied."""
     from collections.abc import AsyncIterator
@@ -302,8 +358,9 @@ async def test_actual_worker_uses_h_issued_store_load_and_one_real_sdk_post(
     )
     posts = []
 
-    def wire(request: httpx2.Request) -> httpx2.Response:
+    async def wire(request: httpx2.Request) -> httpx2.Response:
         posts.append(request.method)
+        await asyncio.sleep(response_delay)
         body = json.loads(json.dumps(response("google")))
         row = next(
             row
@@ -314,7 +371,9 @@ async def test_actual_worker_uses_h_issued_store_load_and_one_real_sdk_post(
         body["candidates"][0]["content"]["parts"][0]["text"] = output(prepared)
         return httpx2.Response(200, json=body)
 
-    value = services_from_store(tmp_path, store, prepared, lease, httpx2.MockTransport(wire))
+    value = services_from_store(
+        tmp_path, store, prepared, lease, httpx2.MockTransport(wire), endpoint_timeout_seconds=10
+    )
     selected = command(prepared, lease)
     work = native_work(value, lease)
     seen = bind_real_consumer_delivery(monkeypatch)

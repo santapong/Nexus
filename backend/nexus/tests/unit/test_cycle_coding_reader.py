@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal, cast
 from unittest.mock import AsyncMock
@@ -18,6 +19,103 @@ from nexus.company.management.cycle_model_reader import CycleModelReader
 from nexus.company.management.planning_native_facts import clock_us
 from nexus.harness.model_evidence import ModelEvidence
 from nexus.tests.unit.cycle_coding_fixture import coding_case
+
+
+async def test_history_metadata_accepts_admitted_title_without_altering_native_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from nexus.company.management.coding_prepared_history import validate_history_locked
+
+    f = await coding_case(tmp_path, monkeypatch)
+    native = f.selected.directory.work
+    assert native is not None
+    actual = native.registration.work.model_copy(update={"title": "Model proposed coder"})
+    registered = native.registration.model_copy(update={"work": actual})
+    selected = f.selected.model_copy(
+        update={
+            "directory": f.selected.directory.model_copy(
+                update={"work": native.model_copy(update={"registration": registered})}
+            )
+        }
+    )
+    f.state.selected = selected
+    async with f.transaction() as (session, control, _):
+        observed, _, _ = await validate_history_locked(
+            f.store,
+            session,
+            control,
+            f.scope,
+            f.owner,
+            f.header.action_id,
+            end_us=clock_us() + 10_000_000,
+        )
+    assert observed.directory.work is not None
+    assert observed.directory.work.registration == registered
+    assert observed.directory.work.registration.work.title == "Model proposed coder"
+    assert not f.store.pending_owners()
+
+
+@pytest.mark.parametrize("family", [False, True])
+@pytest.mark.parametrize(
+    "fault", [None, "native_title", "budget", "acceptance", "unapproved", "wrong_owner"]
+)
+async def test_historical_profile_joins_exact_native_work_to_approved_r2(
+    family: bool, fault: str | None
+) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    from uuid import UUID
+
+    from nexus.company.management.canonical import canonical_sha256
+    from nexus.company.management.cycle_model_reader import stored_coding_profile
+    from nexus.company.management.plan_models import ManagementPlanRevision
+    from nexus.tests.unit.test_coding_intent import prepared_case
+    from nexus.tests.unit.test_nexus_coding_admission import planning_origin
+
+    _, catalog, _, _ = prepared_case()
+    admission = catalog.nexus_coding_admission
+    assert admission is not None
+    payload = admission.payload("execution", origin=planning_origin(admission))
+    actual = payload.plan.items[1].model_copy(update={"title": "Model proposed coder"})
+    payload = payload.model_copy(
+        update={
+            "plan": payload.plan.model_copy(
+                update={"items": (payload.plan.items[0], actual, *payload.plan.items[2:])}
+            )
+        }
+    )
+    row = ManagementPlanRevision(
+        company_id=admission.company_id,
+        plan_id=admission.plan_id,
+        plan_revision_id=UUID(int=7001),
+        revision=2,
+        goal_id=admission.goal.goal_id,
+        goal_revision_id=admission.goal.revision_id,
+        mandate_revision_id=admission.mandate.revision_id,
+        sha256=canonical_sha256(payload),
+        snapshot_json=payload.model_dump_json(),
+        proposed_by=admission.procedure.binding.actor_id,
+        recorded_at=datetime.now(UTC),
+    )
+    if fault == "native_title":
+        actual = actual.model_copy(update={"title": "Other native title"})
+    elif fault == "budget":
+        actual = actual.model_copy(update={"budget_usd": Decimal(".2")})
+    elif fault == "acceptance":
+        actual = actual.model_copy(update={"acceptance": ("changed",)})
+    requested = (payload.plan.items[0], actual, *payload.plan.items[2:]) if family else (actual,)
+    approval = SimpleNamespace(
+        owner_id=UUID(int=999) if fault == "wrong_owner" else admission.procedure.binding.actor_id
+    )
+    session = AsyncMock()
+    session.scalars.side_effect = [
+        MagicMock(all=lambda: (row,)),
+        MagicMock(all=lambda: () if fault == "unapproved" else (approval,)),
+    ]
+    assert await stored_coding_profile(session, admission, works=tuple(requested)) is (
+        fault is None
+    )
+    session.get.assert_not_awaited()  # No current head, Goal, lease or fresh execution lookup.
 
 
 def reader(f: object) -> CycleModelReader:

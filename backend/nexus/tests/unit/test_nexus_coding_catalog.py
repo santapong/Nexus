@@ -21,6 +21,42 @@ from nexus.tests.unit.planning_application_fixture import configuration
 from nexus.tests.unit.test_nexus_coding_admission import admission, planning_origin
 
 
+@pytest.mark.parametrize(
+    "field",
+    [
+        None,
+        "budget_usd",
+        "acceptance",
+        "task_id",
+        "trace_id",
+        "goal_id",
+        "department",
+        "depends_on",
+    ],
+)
+def test_only_admitted_display_title_is_normalized_against_fixed_work(field: str | None) -> None:
+    from decimal import Decimal
+    from uuid import UUID
+
+    from nexus.company.management.nexus_coding_catalog import coding_work_matches_template
+
+    fixed = admission().slots[1].work
+    actual = fixed.model_copy(update={"title": "Model proposed coder"})
+    if field is not None:
+        values = {
+            "budget_usd": Decimal(".2"),
+            "acceptance": ("changed",),
+            "task_id": UUID(int=999),
+            "trace_id": UUID(int=998),
+            "goal_id": UUID(int=997),
+            "department": "other",
+            "depends_on": (UUID(int=996),),
+        }
+        actual = actual.model_copy(update={field: values[field]})
+    assert coding_work_matches_template(actual, fixed) is (field is None)
+    assert actual.title == "Model proposed coder" and fixed.title == "Synthetic Nexus coder"
+
+
 def coding_case() -> tuple[NexusCodingAdmission, PlanAdmissionCatalog]:
     """Distinct L/C/S/P/U targets and providers are supplied metadata, never live quality."""
     value, old = admission(), case()[1]
